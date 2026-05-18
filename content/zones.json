@@ -1,1 +1,39 @@
-[]
+[
+  {
+    "id": "forest",
+    "name_ru": "Лес",
+    "level": 1,
+    "description_ru": "Густой лес на окраине города. Относительно безопасен, но мародёры уже добрались сюда.",
+    "resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
+    "mobs": ["marauder", "wild_dog", "mutant"],
+    "boss_id": null,
+    "unique_resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
+    "unlock_condition": "start",
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": ["marauder", "wild_dog"],
+        "enemy_count": [1, 2],
+        "resources": ["wood", "cloth", "food", "rope"],
+        "resource_count": [2, 4],
+        "min_player_level": 1
+      },
+      {
+        "depth": 2,
+        "enemies": ["marauder", "wild_dog", "mutant"],
+        "enemy_count": [2, 3],
+        "resources": ["wood", "leather", "water", "scrap"],
+        "resource_count": [3, 5],
+        "min_player_level": 3
+      },
+      {
+        "depth": 3,
+        "enemies": ["mutant", "marauder"],
+        "enemy_count": [2, 4],
+        "resources": ["wood", "leather", "gunpowder", "scrap"],
+        "resource_count": [4, 6],
+        "min_player_level": 5
+      }
+    ]
+  }
+]
