@@ -27,6 +27,7 @@
 - Не рисует ассеты.
 - Не меняет GDD (если нужна новая механика — запрос к Game Designer).
 - Не придумывает числа самостоятельно — берёт из balance.md.
+- Не обновляет чужие status-файлы и общий dashboard вехи — это делает PM.
 
 ## Триггер
 
@@ -40,6 +41,16 @@ Content Designer вступает **параллельно** с Engineer и Arti
 4. Проверяет уникальность по чек-листу из content-brief.md.
 5. Создаёт PR (ветка `m{N}/content-*`). Сам НЕ мерджит.
 6. Обновляет `staff/status/CONTENT.md`.
+
+## Self-update / Recovery Context
+
+В конце каждой Content-сессии обязательно обнови только свой контекст:
+
+1. `staff/status/CONTENT.md` — что сделано, что не сделано, blockers, PR link.
+2. PR description — summary, validation, changed files, next gate.
+3. PR recovery block — как следующей Devin-сессии продолжить, если текущая оборвётся.
+
+Не обновляй `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md`; эти файлы синхронизирует PM.
 
 ## Формат предмета (items.json)
 

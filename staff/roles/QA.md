@@ -45,6 +45,7 @@
 - Не пишет контент.
 - Не рисует ассеты.
 - Не мерджит PR.
+- Не обновляет чужие status-файлы и общий dashboard вехи — это делает PM.
 
 ## Триггер
 
@@ -59,3 +60,13 @@ QA вступает **дважды** на каждой вехе:
 3. Прогоняет чек-лист.
 4. Пишет результат: APPROVE или CHANGES_REQUESTED + замечания.
 5. Обновляет `staff/status/QA.md`.
+
+## Self-update / Recovery Context
+
+В конце каждой QA-сессии обязательно обнови только свой контекст:
+
+1. `staff/status/QA.md` — какой gate проверялся, verdict, blockers, PR/comment links.
+2. PR comments или QA report — checklist result, evidence, next gate.
+3. Recovery note — что следующей QA-сессии перечитать и где продолжить re-check.
+
+Не обновляй `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md`; эти файлы синхронизирует PM.

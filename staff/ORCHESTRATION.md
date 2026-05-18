@@ -146,9 +146,13 @@ If this session dies, next Devin should:
 1. checkout `<branch>`;
 2. read `staff/status/{ROLE}.md`;
 3. read `staff/handoff/M{N}-{ROLE}.md`;
-4. continue from: `<next concrete step>`;
-5. do not self-merge.
+4. read this PR description and comments;
+5. continue from: `<next concrete step>`;
+6. update only this role status file;
+7. do not self-merge.
 ```
+
+Role sessions must not update `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md`, or other roles' status files. PM synchronizes those after reviewing the role PR.
 
 ## 5. Формат status-файлов
 
