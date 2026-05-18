@@ -45,7 +45,7 @@
 
 | id | name_ru | type | hp | damage_min | damage_max | defense | base_speed | xp_reward | behavior | zone | level |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `marauder` | Мародёр | human | 30 | 5 | 8 | 1 | 90 | 10 | aggressive (`flee` при HP<30%) | forest | 1 |
+| `marauder` | Мародёр | human | 18 | 5 | 8 | 1 | 90 | 10 | aggressive (`flee` при HP<30%) | forest | 1 |
 | `wild_dog` | Дикий пёс | animal | 20 | 8 | 12 | 0 | 120 | 8 | aggressive | forest | 1 |
 | `mutant` | Мутант | mutant | 60 | 10 | 15 | 3 | 70 | 25 | aggressive | forest | 2 |
 
@@ -67,7 +67,7 @@
 | `cloth_jacket` | Тканевая куртка | armor | 1 | 1 | 1 (против `animal`) | 1 | universal |
 | `leather_vest` | Кожаный жилет | armor | 1 | 3 | 0 | 2.5 | universal |
 
-> `vs_melee_bonus` срабатывает только против моба с `type = "animal"` (в MVP — только `wild_dog`). Формально это +1 к `defense` в момент расчёта урона.
+> `vs_melee_bonus` — бонус к `defense` против melee-атак. В M1 melee-атаку (укус/коготь без оружия) проводит только моб с `type = "animal"` — это `wild_dog`. Marauder и mutant в M1 НЕ классифицируются как melee-атакёры для целей этого бонуса (см. также GDD §6 ArmorStats). Эффект: +1 к `defense` в момент расчёта урона.
 
 ---
 
@@ -174,7 +174,7 @@ final_damage       = max(MIN_DAMAGE_FLOOR, weapon_damage_base * roll - target_to
 
 # Защита цели
 target_total_defense = Σ armor.defense (надетой брони)
-                     + Σ armor.vs_melee_bonus (если урон от source.type == "animal" и брон. слот применим)
+                     + Σ armor.vs_melee_bonus (если source — melee-атакёр; в M1 это эквивалентно source.type == "animal", единственный melee-атакёр M1 — wild_dog)
                      + (cover_active ? COVER_DEFENSE_BONUS_PCT * target_total_defense_base : 0)
 
 # Инициатива
