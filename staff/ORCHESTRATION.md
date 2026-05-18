@@ -95,6 +95,17 @@ oplot/
 
 ## 4. Recovery-протокол
 
+### Главный источник факта
+
+Перед любым recovery PM читает:
+
+1. `staff/status/M{N}.md` — единый dashboard текущей вехи.
+2. `staff/STATE_MACHINE.md` — gate-состояния и правила переходов.
+3. `staff/status/*.md` — детализация по ролям.
+4. GitHub PR list — фактические ветки, PR, mergeability и комментарии.
+
+Если handoff-файл говорит, что PR уже создан, но GitHub/status-dashboard этого не подтверждают, handoff считается **исходным заданием**, а не фактом.
+
 ### Обрыв Devin-сессии роли
 
 ```
@@ -115,11 +126,28 @@ oplot/
 
 ```
 1. Новая PM-сессия читает:
+   - staff/status/M{N}.md — единый dashboard текущей вехи
+   - staff/STATE_MACHINE.md — текущий gate и правила переходов
    - staff/PLAN.md — какая веха текущая
    - staff/status/PM.md — на каком шаге остановились
    - staff/status/*.md — кто что успел
    - decisions/CHANGELOG.md — последние решения
 2. Продолжает с того шага, на котором остановился предыдущий PM
+```
+
+### Recovery-блок в каждом PR
+
+Каждый role PR должен содержать блок:
+
+```markdown
+## Recovery
+
+If this session dies, next Devin should:
+1. checkout `<branch>`;
+2. read `staff/status/{ROLE}.md`;
+3. read `staff/handoff/M{N}-{ROLE}.md`;
+4. continue from: `<next concrete step>`;
+5. do not self-merge.
 ```
 
 ## 5. Формат status-файлов
