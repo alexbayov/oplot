@@ -35,6 +35,7 @@
 - Не рисует ассеты.
 - Не пишет контент (JSON).
 - Не мерджит свои PR.
+- Не обновляет чужие status-файлы и общий dashboard вехи — это делает PM.
 
 ## Триггер
 
@@ -49,6 +50,16 @@ Engineer вступает **параллельно** с Content Designer и Arti
 5. Тестирует в Chrome mobile-emulator (DevTools → 375x667).
 6. Создаёт PR (ветка `m{N}/eng-*`). Сам НЕ мерджит.
 7. Обновляет `staff/status/ENGINEER.md`.
+
+## Self-update / Recovery Context
+
+В конце каждой Engineer-сессии обязательно обнови только свой контекст:
+
+1. `staff/status/ENGINEER.md` — что сделано, что не сделано, blockers, PR link.
+2. PR description — summary, checks, changed files, next gate.
+3. PR recovery block — как следующей Devin-сессии продолжить, если текущая оборвётся.
+
+Не обновляй `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md`; эти файлы синхронизирует PM.
 
 ## Архитектура (ориентир)
 

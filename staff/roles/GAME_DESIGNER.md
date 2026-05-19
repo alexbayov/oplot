@@ -24,6 +24,7 @@
 - Не рисует ассеты.
 - Не пишет контент (предметы, мобы, рецепты) — это Content Designer.
 - Не решает визуальный стиль — это Artist.
+- Не обновляет чужие status-файлы и общий dashboard вехи — это делает PM.
 
 ## Триггер
 
@@ -36,6 +37,16 @@ Game Designer вступает **первым** на каждой вехе (Ша
 3. Пишет новую секцию GDD + цифры в balance.md.
 4. Создаёт PR (ветка `m{N}/gd-*`). Сам НЕ мерджит.
 5. Обновляет `staff/status/GAME_DESIGNER.md`.
+
+## Self-update / Recovery Context
+
+В конце каждой GD-сессии обязательно обнови только свой контекст:
+
+1. `staff/status/GAME_DESIGNER.md` — что сделано, что не сделано, blockers, PR link.
+2. PR description — summary, checks, changed files, next gate.
+3. PR recovery block — как следующей Devin-сессии продолжить, если текущая оборвётся.
+
+Не обновляй `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md`; эти файлы синхронизирует PM.
 
 ## Формат GDD-секции
 

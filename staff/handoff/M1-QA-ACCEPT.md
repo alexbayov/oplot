@@ -10,7 +10,9 @@
 
 - [x] Engineer PR (`m1/eng-bootstrap`) создан
 - [x] Content PR (`m1/content-mvp`) создан
-- [x] Artist PR (`m1/art-initial`) создан
+- [ ] Artist PR (`m1/art-initial`) создан
+
+> Факт на 2026-05-18: Engineer PR #7 и Content PR #6 есть, Artist PR в GitHub не найден. QA Acceptance заблокирована до появления Artist PR или явного решения PM/Заказчика перенести Artist scope.
 
 ---
 
