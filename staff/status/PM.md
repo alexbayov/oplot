@@ -20,19 +20,20 @@
 - PM/process PR #8 (orchestration dashboard, state machine, communication kit, role self-update rules, PR template) смержен в `main`.
 - Recovery PM-сессия 2026-05-19: фактическое состояние подтверждено по GitHub (PR #6 open/mergeable, PR #7 open/mergeable, PR #8 merged, ветка `m1/art-initial` на remote отсутствует).
 - PR #9 (PM recovery snapshot) расширен: помимо `staff/status/M1.md` и `staff/status/PM.md` внутри того же PR обновлены `staff/LINKS.md` и `staff/CONTEXT.md`.
+- 2026-05-19 — зафиксировано решение «Integration-ветка на веху; merge в `main` только на gate-close» в `staff/decisions/DECISIONS.md`. Процесс-файлы (`STATE_MACHINE.md`, `ORCHESTRATION.md`, `PROCESS.md`) обновлены.
 - PR #9 смержен Alex'ом (`9c232b1`). При мерже был потерян последний коммит (`11fc8f7`, workflow-policy doc), потому что он был push'нут после инициации мерджа в UI.
 - Создана ветка `m1-integration` от `main` (commit `9c232b1`); push'нута на origin.
 - PR #6 (Content) и PR #7 (Engineer) ретаргечены base → `m1-integration` через `git_update_pr_base`.
 - Конфликты на `staff/status/CONTENT.md` (в PR #6) и `staff/status/ENGINEER.md` (в PR #7) pre-resolved через merge `m1-integration → role-branch` с сохранением role-owned версии (PM не трогал `content/*.json`, `src/`, конфиги и ENGINEER's code).
 - Оформлен PM-review APPROVE комментарий на PR #7 (по скопу/anti-scope/types-schema/scene-flow) и retarget-confirm комментарий на PR #6.
-- Открыт PR #10 (workflow-policy follow-up): cherry-pick потерянного коммита + retargeting kickoff'ов на `m1-integration`. Готов к мерджу Alex'ом в `main`.
+- PR #10 (workflow-policy follow-up): cherry-pick потерянного коммита + retargeting kickoff'ов на `m1-integration`. **Merged Alex'ом** (`f322457`). `main` теперь содержит актуальный workflow-policy doc.
+- `m1-integration` синхронизирован с `main` после мержа PR #10 (merge commit pulled in PR #10 content).
 
 ## Что НЕ сделано
 
 - Artist PR `m1/art-initial` не найден.
 - QA Acceptance по `staff/handoff/M1-QA-ACCEPT.md` ещё не запущена как финальный gate.
 - PR #6 и PR #7 ещё не смержены в `m1-integration` (ждут QA Acceptance APPROVE).
-- PR #10 ещё не смержен в `main` (ждёт Alex'а).
 - `m1-integration → main` мердж не открыт (будет открыт после M1 gate-close).
 - M1 ещё не закрыта в `PLAN.md` и `CHANGELOG.md`.
 - `staff/handoff/M1-SUMMARY.md` ещё не создан.

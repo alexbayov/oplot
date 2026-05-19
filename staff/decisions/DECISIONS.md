@@ -33,3 +33,8 @@
 - **Решение:** Все процессы, статусы, промты — в репозитории. GitHub = общая память команды.
 - **Кто:** Заказчик + PM
 - **Обоснование:** Переживает обрывы сессий, всегда актуальный контекст, recovery через status-файлы.
+
+### 2026-05-19 — Integration-ветка на веху; merge в `main` только на gate-close
+- **Решение:** Для каждой вехи M{N} создаётся долгоживущая ветка `m{N}-integration` от `main`. Все role PR (Engineer, Content, Artist) и PM/fix PR в рамках активной вехи таргетятся в `m{N}-integration`. PM мержит role PR в `m{N}-integration` сам после QA Acceptance approve. На gate-close PM открывает единственный PR `m{N}-integration → main`, который мержит Alex/Заказчик. `main` хранит только закрытые вехи. Межвеховые PM-process PR (между закрытием M{N} и стартом M{N+1}) могут таргетиться в `main` и мержатся вручную Alex'ом.
+- **Кто:** Заказчик + PM
+- **Обоснование:** Платформа Devin блокирует автономный PM-merge в `main`/`master` («Devin is subject to the exact same branch protections... Human engineers review PRs before merging»). Integration-ветка даёт PM фактическую автономию в рамках вехи, сохраняет `main` «release-quality», и сокращает вмешательство Alex'а до одного merge на веху. Не обходит платформенные ограничения в обход правил (PAT-header / proxy bypass запрещёны).

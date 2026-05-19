@@ -40,16 +40,16 @@ M{N}_PREPARED
 | `QA_ACCEPT_CHANGES_REQUESTED` | `ROLE_FIX_IN_PROGRESS` | PM запустил fix по нужной роли |
 | `ROLE_FIX_IN_PROGRESS` | `QA_ACCEPT_IN_PROGRESS` | Fix PR готов к повторной QA Acceptance |
 | `QA_ACCEPT_IN_PROGRESS` | `QA_ACCEPT_APPROVED` | QA Acceptance дал approve по всем обязательным PR |
-| `QA_ACCEPT_APPROVED` | `PM_MERGE_IN_PROGRESS` | PM начал merge role PR |
-| `PM_MERGE_IN_PROGRESS` | `M{N}_DONE` | Все PR merged, status/changelog/summary обновлены |
+| `QA_ACCEPT_APPROVED` | `PM_MERGE_IN_PROGRESS` | PM сам мержит role PR в `m{N}-integration` |
+| `PM_MERGE_IN_PROGRESS` | `M{N}_DONE` | Все role PR merged в `m{N}-integration` PM'ом; PR `m{N}-integration → main` мержит Alex/Заказчик; status/changelog/summary обновлены |
 
 ## Обязательные проверки перед gate
 
 ### Перед `ROLE_PRS_READY`
 
-- Engineer PR существует.
-- Content PR существует.
-- Artist PR существует **или** в `staff/status/M{N}.md` зафиксировано явное PM/Customer-решение перенести Artist scope.
+- Engineer PR существует и таргетится в `m{N}-integration`.
+- Content PR существует и таргетится в `m{N}-integration`.
+- Artist PR существует и таргетится в `m{N}-integration` **или** в `staff/status/M{N}.md` зафиксировано явное PM/Customer-решение перенести Artist scope.
 - Каждый PR содержит role, milestone, changed files, checks, recovery note.
 
 ### Перед `QA_ACCEPT_APPROVED`
@@ -62,12 +62,26 @@ M{N}_PREPARED
 
 ### Перед `M{N}_DONE`
 
-- Все approved PR merged.
+- Все approved role PR смержены PM'ом в `m{N}-integration`.
+- PM открыл PR `m{N}-integration → main` и Alex/Заказчик его смержил.
 - `staff/status/M{N}.md` обновлён.
 - `staff/status/*.md` синхронизированы с фактом.
 - `staff/decisions/CHANGELOG.md` обновлён.
 - Создан `staff/handoff/M{N}-SUMMARY.md`.
 - PM подготовил следующий gate или явно остановил проект.
+
+## Интеграционная политика (2026-05-19)
+
+На каждой вехе M{N}:
+
+- Создаётся долгоживущая ветка `m{N}-integration` от текущего `main`.
+- Все role PR и PM/fix PR работы вехи таргетятся в `m{N}-integration`.
+- PM мержит role PR в `m{N}-integration` сам после QA Acceptance approve. Self-merge роли в интеграционную ветку запрещён.
+- На gate-close PM открывает PR `m{N}-integration → main`; его мержит Alex/Заказчик.
+- `main` принимает только закрытые вехи и межвеховые PM-process PR.
+- PR-template recovery block во всех роль-PR должен называть base = `m{N}-integration`.
+
+Обоснование и полный текст решения — `staff/decisions/DECISIONS.md` «2026-05-19 — Integration-ветка на веху; merge в `main` только на gate-close».
 
 ## Текущее состояние M1
 
