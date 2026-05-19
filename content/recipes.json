@@ -1,1 +1,63 @@
-[]
+[
+  {
+    "id": "recipe_pistol",
+    "result_id": "makeshift_pistol",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "scrap", "count": 5 },
+      { "item_id": "wood", "count": 2 },
+      { "item_id": "gunpowder", "count": 3 }
+    ],
+    "tier": 1,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_leather_vest",
+    "result_id": "leather_vest",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "leather", "count": 3 },
+      { "item_id": "cloth", "count": 2 },
+      { "item_id": "rope", "count": 1 }
+    ],
+    "tier": 1,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_bandage",
+    "result_id": "bandage",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "cloth", "count": 3 }
+    ],
+    "tier": 1,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_medkit",
+    "result_id": "medkit",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "bandage", "count": 2 },
+      { "item_id": "cloth", "count": 2 }
+    ],
+    "tier": 1,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_ammo_pistol",
+    "result_id": "ammo_pistol",
+    "result_count": 5,
+    "ingredients": [
+      { "item_id": "gunpowder", "count": 2 },
+      { "item_id": "scrap", "count": 1 }
+    ],
+    "tier": 1,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  }
+]

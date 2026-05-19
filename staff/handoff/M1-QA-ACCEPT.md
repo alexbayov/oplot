@@ -8,11 +8,11 @@
 
 ## Preconditions
 
-- [x] Engineer PR (`m1/eng-bootstrap`) создан
-- [x] Content PR (`m1/content-mvp`) создан
-- [ ] Artist PR (`m1/art-initial`) создан
+- [x] Engineer PR (`m1/eng-bootstrap`) создан — **PR #7** (base = `m1-integration`)
+- [x] Content PR (`m1/content-mvp`) создан — **PR #6** (base = `m1-integration`)
+- [x] Artist PR (`m1/art-initial`) создан — **PR #11** (base = `m1-integration`)
 
-> Факт на 2026-05-18: Engineer PR #7 и Content PR #6 есть, Artist PR в GitHub не найден. QA Acceptance заблокирована до появления Artist PR или явного решения PM/Заказчика перенести Artist scope.
+> Факт на 2026-05-19: все три role PR открыты против `m1-integration` (integration-policy, см. `staff/decisions/DECISIONS.md` 2026-05-19); PM-review APPROVE проставлен в комментариях каждого PR. QA Acceptance теперь не заблокирована.
 
 ---
 

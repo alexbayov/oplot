@@ -33,11 +33,15 @@
 
 ## Текущий M1 snapshot
 
-_Last reconciled with GitHub: 2026-05-19._
+_Last reconciled with GitHub: 2026-05-19 (M1 gate-close)._
 
 - GD spec: approved.
-- Content PR: #6, open, ready for QA Acceptance.
-- Engineer PR: #7, open, ready for QA Acceptance.
-- Artist PR: missing; blocks QA Acceptance unless PM/Customer explicitly defers Artist scope.
-- Process dashboard PR: #8, merged into `main`.
-- Current PM recovery snapshot PR: #9 (open) — reconciles `staff/status/M1.md`, `staff/status/PM.md`, `staff/LINKS.md`, and this file with actual GitHub state.
+- **Integration branch:** `m1-integration` (от `main`, 2026-05-19). Все role PR M1 смержены в `m1-integration` PM-ом. Финальный `m1-integration → main` мерджит Alex/Заказчик на gate-close PR. См. `staff/decisions/DECISIONS.md` «2026-05-19».
+- Content PR #6: merged в `m1-integration`.
+- Engineer PR #7: merged в `m1-integration`. Runtime smoke OK.
+- Artist PR #11: merged в `m1-integration`. 10 placeholder-ассетов, 81.3 КБ / 300 КБ.
+- Process dashboard PR #8: merged в `main`.
+- PM recovery snapshot PR #9: merged в `main`.
+- Workflow-policy follow-up PR #10: merged в `main`.
+- M1 summary: `staff/handoff/M1-SUMMARY.md`.
+- Gate-close PR `m1-integration → main`: open, ждёт мерджа Alex'а. После мерджа M1 закрыта, PM создаёт `m2-integration`.
