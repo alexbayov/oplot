@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §3 runtime smoke пройден в desktop Chrome
+**Последнее действие:** §4 formula sanity завершён
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §4 formula sanity
+**Текущий шаг:** §5 anti-scope checks
 
 ## Текущий gate
 
@@ -62,9 +62,16 @@ Note: overload-return block was not forced by temporary file edits because QA co
 
 ### §4 Formula sanity vs GDD
 
-Статус: pending.
+Статус: CHANGES_REQUESTED.
 
-План: сверить `calcInitiative`, `return_time_s`, `applyAttack`, `applyLootLoss`, `canCraft` против GDD/balance.
+Проверено на Engineer branch `m2/gameplay`:
+- `src/systems/combat.ts`: `calcHeroInitiative` matches GDD §2/§3 (`base_speed - (cur_weight / max_weight) * 50`, overweight → 0).
+- `src/systems/combat.ts`: `applyAttack` matches GDD §2 / `balance.md` (weapon roll, 0.85..1.15 multiplier, defense subtraction, min damage floor 1).
+- `src/systems/weight.ts`: `applyLootLoss` matches GDD §3 / `balance.md` defeat rule (`totalWeight * 0.5`, drop heaviest units first).
+- `src/systems/craft.ts`: `canCraft` matches GDD §4 (`have >= ingredient.count` for every ingredient).
+
+Blocking mismatch:
+- `return_time_s` formula from GDD §1/§3 and `balance.md` is not implemented/used in runtime code. `src/state/balance.ts` defines `BASE_RETURN_TIME_S` and `WEIGHT_PENALTY_FACTOR`, but `rg "return_time|BASE_RETURN_TIME|WEIGHT_PENALTY" src/` finds no formula usage beyond constants. `LootScene.endSortie()` returns directly to `BaseScene` without `ReturnScene`/return duration.
 
 ### §5 Anti-scope checks
 
@@ -86,23 +93,23 @@ Note: overload-return block was not forced by temporary file edits because QA co
 
 ## Findings
 
-Пока нет.
+- §4 blocker: `return_time_s` formula from GDD/balance is not implemented/used in runtime code; `LootScene` returns directly to `BaseScene`.
 
 ## Blockers
 
-Пока нет.
+- Engineer PR #15 needs changes for missing `return_time_s` formula/runtime return duration, unless PM explicitly de-scopes ReturnScene/return time from M2 acceptance.
 
 ## Recovery
 
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §4 formula sanity
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE
-- Next concrete step: review `calcInitiative`, `return_time_s`, `applyAttack`, `applyLootLoss`, and `canCraft` vs GDD §2/§3/§4
+- Current section: §5 anti-scope checks
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED
+- Next concrete step: run anti-scope checks for radio/perks/SDK/third-party UI libs
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; Vite chunk-size warning and one resource 404 are non-blocking
-- Blockers: none
+- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; Vite chunk-size warning and one resource 404 are non-blocking
+- Blockers: missing `return_time_s` runtime implementation unless de-scoped by PM
 
 ## PR / Process
 
