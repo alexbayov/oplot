@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §6 architecture/readability пройдена
+**Последнее действие:** §7 Engineer status note проверен
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §7 Engineer status note
+**Текущий шаг:** final verdict
 
 ## Текущий gate
 
@@ -96,9 +96,14 @@ Blocking mismatch:
 
 ### §7 Engineer status note
 
-Статус: pending.
+Статус: PASS_WITH_NOTE.
 
-План: проверить актуальность `staff/status/ENGINEER.md`; известное stale-состояние отметить как non-blocker, если подтвердится.
+Проверено на Engineer branch `m2/gameplay`: `staff/status/ENGINEER.md` обновлён под M2, но stale относительно финального PR состояния:
+- status still `IN_PROGRESS`.
+- `Что НЕ сделано` still lists systems/scenes/tests/runtime smoke as future work.
+- `Следующий конкретный шаг` still says `src/systems/weight.ts` next, although those files exist and passed §1 checks.
+
+This is a process/status-note issue, not a runtime/code blocker for M2 acceptance.
 
 ## Findings
 
@@ -113,11 +118,11 @@ Blocking mismatch:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §7 Engineer status note
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS; §6 architecture PASS_WITH_NOTE
-- Next concrete step: verify `staff/status/ENGINEER.md` freshness and document note
+- Current section: final verdict
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS; §6 architecture PASS_WITH_NOTE; §7 status PASS_WITH_NOTE
+- Next concrete step: finalize QA verdict and post PR comments
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; §6 architecture clean; Vite chunk-size warning and one resource 404 are non-blocking
+- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; §6 architecture clean; §7 Engineer status stale non-blocker; Vite chunk-size warning and one resource 404 are non-blocking
 - Blockers: missing `return_time_s` runtime implementation unless de-scoped by PM
 
 ## PR / Process
