@@ -36,8 +36,10 @@
 _Last reconciled with GitHub: 2026-05-19._
 
 - GD spec: approved.
-- Content PR: #6, open, ready for QA Acceptance.
-- Engineer PR: #7, open, ready for QA Acceptance.
-- Artist PR: missing; blocks QA Acceptance unless PM/Customer explicitly defers Artist scope.
+- **Integration branch:** `m1-integration` (от `main`, 2026-05-19). Все role PR M1 таргетятся в `m1-integration`; финал `m1-integration → main` делает Alex/Заказчик на gate-close. См. `staff/decisions/DECISIONS.md` «2026-05-19».
+- Content PR: #6, open, base = `m1-integration`, PM APPROVE, конфликт pre-resolved; ждёт QA Acceptance.
+- Engineer PR: #7, open, base = `m1-integration`, PM APPROVE, конфликт pre-resolved; ждёт QA Acceptance.
+- Artist PR: missing. PM-решение 2026-05-19: scope NOT deferred — лончим Artist-сессию (branch `m1/art-initial`, base = `m1-integration`).
 - Process dashboard PR: #8, merged into `main`.
-- Current PM recovery snapshot PR: #9 (open) — reconciles `staff/status/M1.md`, `staff/status/PM.md`, `staff/LINKS.md`, and this file with actual GitHub state.
+- PM recovery snapshot PR: #9, merged into `main`.
+- Workflow-policy follow-up PR: #10, merged into `main` — фиксирует integration-branch policy в процесс-доках и в kickoff'ах.

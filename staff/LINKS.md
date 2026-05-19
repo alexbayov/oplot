@@ -8,18 +8,23 @@
 - Pull requests: https://github.com/alexbayov/oplot/pulls
 - Issues: https://github.com/alexbayov/oplot/issues
 
+## Integration branch
+
+- M1 integration baseline: `m1-integration` (создана от `main` 2026-05-19). Все role PR M1 и PM-fix PR в рамках M1 таргетятся в `m1-integration`. PM сам мержит role PR после QA Acceptance APPROVE. На M1 gate-close PM открывает PR `m1-integration → main`, который мерджит Alex/Заказчик. См. `staff/decisions/DECISIONS.md` «2026-05-19» и `staff/STATE_MACHINE.md`.
+
 ## Active M1 PRs
 
 _Last reconciled with GitHub: 2026-05-19._
 
-| PR | Role | Status |
-|---|---|---|
-| #6 | Content Designer | Open; ready for QA Acceptance |
-| #7 | Engineer | Open; ready for QA Acceptance |
-| #8 | PM / Process | Merged; orchestration dashboard + recovery rules |
-| #9 | PM / Recovery snapshot | Open; current PM recovery PR (reconcile dashboard, LINKS, CONTEXT) |
+| PR | Role | Base | Status |
+|---|---|---|---|
+| #6 | Content Designer | `m1-integration` | Open; PM APPROVE; конфликт pre-resolved; ждёт QA Acceptance |
+| #7 | Engineer | `m1-integration` | Open; PM APPROVE; конфликт pre-resolved; ждёт QA Acceptance |
+| #8 | PM / Process | `main` | Merged; orchestration dashboard + recovery rules |
+| #9 | PM / Recovery snapshot | `main` | Merged; dashboard/LINKS/CONTEXT reconcile |
+| #10 | PM / Workflow policy | `main` | Merged; workflow-policy doc + kickoffs retargeted |
 
-**Next action:** launch Artist via `staff/kickoff/M1-ARTIST.md` (branch `m1/art-initial`), unless PM/Customer explicitly defers Artist scope from M1. After Artist PR exists (or deferral is recorded in `staff/status/M1.md`), gate moves to `ROLE_PRS_READY` and the next kickoff is `staff/kickoff/M1-QA-ACCEPT.md`.
+**Next action:** launch Artist (`staff/kickoff/M1-ARTIST.md`, branch `m1/art-initial` с base = `m1-integration`). PM-решение 2026-05-19: scope NOT deferred. After Artist PR exists, gate moves to `ROLE_PRS_READY` и следующий kickoff — `staff/kickoff/M1-QA-ACCEPT.md`.
 
 ## Start here
 
