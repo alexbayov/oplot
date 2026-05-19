@@ -263,6 +263,15 @@ export class CombatScene extends Phaser.Scene {
 
   private onHeroRetreat(): void {
     if (this.state !== "awaiting_hero") return;
+    this.state = "ended";
+    const sortie = GameState.currentSortie;
+    // Retreat abandons the current fight without ending the sortie:
+    // hero returns to SortieScene if any fights remain, otherwise to BaseScene.
+    if (sortie && sortie.fights_completed < sortie.fights_total) {
+      sortie.cover_active = false;
+      this.scene.start("SortieScene");
+      return;
+    }
     this.endSortie("retreat");
   }
 

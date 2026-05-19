@@ -120,8 +120,10 @@ describe("applyCraft", () => {
 
 describe("formatMissing", () => {
   test("formats with russian names from items map", () => {
+    const wood = items.wood;
+    if (!wood) throw new Error("wood missing from test items map");
     const itemsLocal: Record<string, Item> = {
-      wood: { ...items.wood, name_ru: "Древесина" },
+      wood: { ...wood, name_ru: "Древесина" },
     };
     expect(
       formatMissing([{ item_id: "wood", need: 2, have: 0 }], itemsLocal),

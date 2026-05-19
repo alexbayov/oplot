@@ -3,22 +3,34 @@ import { GameState } from "../state/GameState";
 import { applyCraft, canCraft, formatMissing } from "../systems/craft";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
+interface RecipeSlot {
+  label: string;
+  enabled: boolean;
+  onClick: () => void;
+}
+
 export class CraftScene extends Phaser.Scene {
   public constructor() {
     super("CraftScene");
   }
 
+  public init(data?: { lastCrafted?: string }): void {
+    this.lastCrafted = data?.lastCrafted ?? null;
+  }
+
+  private lastCrafted: string | null = null;
+
   public create(): void {
     createTitle(this, "Мастерская");
-    createPanel(this, 180, 140, 320, 50);
-    createSubtitle(this, 132, "Рецепты:");
+    if (this.lastCrafted) {
+      createSubtitle(this, 80, `Создано: ${this.lastCrafted}`);
+    }
 
     const recipes = Object.values(GameState.data.recipes);
     const items = GameState.data.items;
     const lines: string[] = [];
-    interface RecipeSlot { y: number; label: string; onClick: () => void; enabled: boolean }
     const slots: RecipeSlot[] = [];
-    let y = 180;
+
     for (const recipe of recipes) {
       const resultItem = items[recipe.result_id];
       const resultName = resultItem ? resultItem.name_ru : recipe.result_id;
@@ -31,40 +43,40 @@ export class CraftScene extends Phaser.Scene {
         .join(", ");
       lines.push(
         check.ok
-          ? `${resultName} ← ${ingredientsStr}`
-          : `${resultName} ← ${ingredientsStr} (не хватает: ${formatMissing(check.missing, items)})`,
+          ? `${resultName} ← ${ingredientsStr}  [доступно]`
+          : `${resultName} ← ${ingredientsStr}\n  нет: ${formatMissing(check.missing, items)}`,
       );
       slots.push({
-        y: y + 60,
-        label: check.ok ? `Создать ${resultName}` : `Нужно: ${formatMissing(check.missing, items)}`,
+        label: check.ok ? `Создать: ${resultName}` : `${resultName} — нет ингредиентов`,
         enabled: check.ok,
         onClick: () => {
           if (!check.ok) return;
           const result = applyCraft(recipe, GameState.baseStash);
           GameState.baseStash = result.inventory;
-          this.scene.restart();
+          this.scene.start("CraftScene", { lastCrafted: resultName });
         },
       });
-      y += 80;
     }
-    createPanel(this, 180, 280, 320, 200);
+
+    // Recipe list panel (text top-aligned to avoid overlap with action buttons).
+    createPanel(this, 180, 220, 320, 180);
     this.add
-      .text(180, 280, lines.join("\n"), {
+      .text(180, 138, lines.join("\n"), {
         align: "center",
         color: "#C8C0B0",
         fontFamily: "Arial, sans-serif",
-        fontSize: "12px",
+        fontSize: "11px",
         wordWrap: { width: 300 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5, 0);
 
-    // Place buttons in a fixed-height list at bottom.
-    let btnY = 408;
+    // Action buttons stacked below the panel.
+    let btnY = 348;
+    const step = 44;
     for (const slot of slots) {
-      if (btnY > 580) break;
       createButton(this, btnY, slot.label, slot.onClick);
-      btnY += 36;
+      btnY += step;
     }
-    createButton(this, 596, "Назад", () => this.scene.start("BaseScene"));
+    createButton(this, btnY + 4, "Назад", () => this.scene.start("BaseScene"));
   }
 }
