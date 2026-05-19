@@ -1,1 +1,64 @@
-[]
+[
+  {
+    "id": "marauder",
+    "name_ru": "Мародёр",
+    "type": "human",
+    "zone": "forest",
+    "level": 1,
+    "hp": 18,
+    "damage_min": 5,
+    "damage_max": 8,
+    "defense": 1,
+    "base_speed": 90,
+    "xp_reward": 10,
+    "behavior": "aggressive",
+    "description_ru": "Слабый человеческий противник. Низкий HP — убивается ножом за 3–4 удара. При HP ниже 30% переходит в flee: пропускает ход и теряет 5% инициативы на следующий раунд. В M1 melee-атакёром НЕ считается — vs_melee_bonus куртки против него не работает.",
+    "flavor_ru": "«Сначала кричит про честный бой. Потом — про маму.»",
+    "drop_table": [
+      { "item_id": "cloth", "chance": 0.60, "count_min": 1, "count_max": 2 },
+      { "item_id": "food", "chance": 0.40, "count_min": 1, "count_max": 1 },
+      { "item_id": "ammo_pistol", "chance": 0.15, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "wild_dog",
+    "name_ru": "Дикий пёс",
+    "type": "animal",
+    "zone": "forest",
+    "level": 1,
+    "hp": 20,
+    "damage_min": 8,
+    "damage_max": 12,
+    "defense": 0,
+    "base_speed": 120,
+    "xp_reward": 8,
+    "behavior": "aggressive",
+    "description_ru": "Бывший городской пёс, теперь часть одичавшей стаи. Высокая инициатива — почти всегда ходит первым. Атакует укусом и когтями: единственный melee-атакёр M1, против которого vs_melee_bonus тканевой куртки даёт +1 к защите.",
+    "flavor_ru": "«Кличку никто не помнит. Хозяев тоже.»",
+    "drop_table": [
+      { "item_id": "leather", "chance": 0.70, "count_min": 1, "count_max": 1 },
+      { "item_id": "food", "chance": 0.20, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "mutant",
+    "name_ru": "Мутант",
+    "type": "mutant",
+    "zone": "forest",
+    "level": 2,
+    "hp": 60,
+    "damage_min": 10,
+    "damage_max": 15,
+    "defense": 3,
+    "base_speed": 70,
+    "xp_reward": 25,
+    "behavior": "aggressive",
+    "description_ru": "Медленный, толстый противник техногенного происхождения. Высокий HP и базовая защита, высокий разброс урона. Без особого AI — просто бьёт ближайшего; в группе с псом всегда додавливает вторым.",
+    "flavor_ru": "«Под кожей звенит металл. Под металлом — мясо.»",
+    "drop_table": [
+      { "item_id": "scrap", "chance": 0.50, "count_min": 1, "count_max": 2 },
+      { "item_id": "gunpowder", "chance": 0.30, "count_min": 1, "count_max": 1 },
+      { "item_id": "leather", "chance": 0.10, "count_min": 1, "count_max": 1 }
+    ]
+  }
+]

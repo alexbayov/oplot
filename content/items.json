@@ -1,1 +1,212 @@
-[]
+[
+  {
+    "id": "wood",
+    "name_ru": "Дерево",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 2,
+    "description_ru": "Сухие доски и обрубленные ветки. Основа любой деревянной самоделки — от приклада до подпорки крыши.",
+    "flavor_ru": "«Не сосна — фанера от ящика. Сойдёт.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "scrap",
+    "name_ru": "Металлолом",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 3,
+    "description_ru": "Куски арматуры, листовое железо и горсть гаек. Самый тяжёлый ресурс на килограмм — без него не собрать ни ствол, ни патрон.",
+    "flavor_ru": "«В руке — три кило надежды. И ржавчины.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "cloth",
+    "name_ru": "Ткань",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Обрывки одежды, тряпки от палаток, куски брезента. Универсальное мягкое сырьё для бинтов, аптечек и подбивки жилета.",
+    "flavor_ru": "«Чьё-то было. Теперь — твоё.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "food",
+    "name_ru": "Консервы",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Жестяная банка с не пойми чем. В M1 — только лут с весом и опасностью; настоящее питание включат на следующей вехе.",
+    "flavor_ru": "«Дата производства не читается. Цвет — допустимый.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "water",
+    "name_ru": "Вода",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Мутная вода из лесного ручья во фляге. В M1 — лут на вес; на M2 пригодится для базы и крафта.",
+    "flavor_ru": "«Кипятить. Дважды. Потом ещё раз.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "gunpowder",
+    "name_ru": "Порох",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Серый порошок в бумажном пакете, обмотанном изолентой. Опасный, лёгкий, единственный источник пороховых рецептов.",
+    "flavor_ru": "«Курить — нельзя. Уронить — лучше тоже.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "leather",
+    "name_ru": "Кожа",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 2,
+    "description_ru": "Шкура дикого пса, грубо выделанная ножом на привале. Единственное сырьё для кожаного жилета — иначе ходишь в одной ткани.",
+    "flavor_ru": "«Пёс был быстрее. Ты — упорнее.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "rope",
+    "name_ru": "Верёвка",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Старая верёвка в узлах и подпалинах. Стягивает жилет, помогает таскать тяжёлое — пока не порвётся в самом неудобном месте.",
+    "flavor_ru": "«Узлов больше, чем волокон.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "knife",
+    "name_ru": "Нож",
+    "type": "weapon_melee",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Стартовый клинок героя. Лёгкий, тихий, без расходников — но и урон скромный: мародёра дотачивает за 3–4 удара, мутанта — долго.",
+    "flavor_ru": "«Когда не слышно — иногда полезнее, чем когда больно.»",
+    "recipe_id": null,
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 7,
+      "attack_speed": 100,
+      "noise": "low"
+    }
+  },
+  {
+    "id": "makeshift_pistol",
+    "name_ru": "Самодельный пистолет",
+    "type": "weapon_ranged",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 1.5,
+    "description_ru": "Самосбор из обрезка трубы, пружины и обструганного приклада. Бьёт сильнее ножа и на дистанции, но требует патроны и шумит.",
+    "flavor_ru": "«Один выстрел — две молитвы. Иногда срабатывает.»",
+    "recipe_id": "recipe_pistol",
+    "stats": {
+      "damage_min": 9,
+      "damage_max": 14,
+      "attack_speed": 80,
+      "noise": "medium",
+      "ammo_id": "ammo_pistol",
+      "ammo_per_shot": 1
+    }
+  },
+  {
+    "id": "cloth_jacket",
+    "name_ru": "Тканевая куртка",
+    "type": "armor",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 1,
+    "description_ru": "Стартовая куртка из плотной ткани. Слабая защита от прямого удара, но укусы и когти животных режут через неё хуже (vs_melee_bonus: +1 против wild_dog).",
+    "flavor_ru": "«Швы держат лучше, чем хозяин.»",
+    "recipe_id": null,
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 1
+    }
+  },
+  {
+    "id": "leather_vest",
+    "name_ru": "Кожаный жилет",
+    "type": "armor",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 2.5,
+    "description_ru": "Жилет из выделанной собачьей кожи и тряпок, стянутый верёвкой. Втрое крепче куртки по базовой защите, но килограммом с лишним тяжелее.",
+    "flavor_ru": "«Натёрло плечи — значит, спина целая.»",
+    "recipe_id": "recipe_leather_vest",
+    "stats": {
+      "defense": 3,
+      "vs_melee_bonus": 0
+    }
+  },
+  {
+    "id": "bandage",
+    "name_ru": "Бинт",
+    "type": "consumable",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Полоса чистой ткани, скрученная в рулон. Закрывает свежую рану и возвращает 15 HP — на большее не рассчитывай.",
+    "flavor_ru": "«Не лечит. Откладывает.»",
+    "recipe_id": "recipe_bandage",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 15,
+      "charges": 1
+    }
+  },
+  {
+    "id": "medkit",
+    "name_ru": "Аптечка",
+    "type": "consumable",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Самодельный набор: два бинта, спирт, иголка. Восстанавливает 40 HP — заметно больше одного бинта, но и собрать дороже.",
+    "flavor_ru": "«После такой повязки два часа спишь стоя.»",
+    "recipe_id": "recipe_medkit",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 40,
+      "charges": 1
+    }
+  },
+  {
+    "id": "ammo_pistol",
+    "name_ru": "Патроны (пистолет)",
+    "type": "consumable",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Одна гильза с пороховым зарядом для самодельного пистолета. Один заряд — один выстрел; стакается в инвентаре до 99.",
+    "flavor_ru": "«Считай вслух. Чтобы не ошибиться.»",
+    "recipe_id": "recipe_ammo_pistol",
+    "stats": {
+      "effect_type": "ammo_refill",
+      "effect_value": 1,
+      "charges": 1
+    }
+  }
+]
