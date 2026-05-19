@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §2 M1 regression diff пройден
+**Последнее действие:** §3 runtime smoke пройден в desktop Chrome
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §3 runtime smoke
+**Текущий шаг:** §4 formula sanity
 
 ## Текущий gate
 
@@ -39,18 +39,26 @@ QA Acceptance по M2 выполняется на ветке `qa/m2-acceptance` 
 
 ### §3 Runtime smoke — 7-step MVP flow
 
-Статус: pending.
+Статус: PASS_WITH_NOTE.
 
-План: desktop Chrome, `npm run dev -- --host 127.0.0.1`, запись экрана.
+Среда:
+- `npm run dev -- --host 127.0.0.1`, Vite at `http://127.0.0.1:5173/`.
+- Desktop Chrome.
+- Screen recording evidence: `/home/ubuntu/oplot_m2_runtime_smoke.mp4` (local evidence file, not committed).
 
-Flow:
-1. Base screen
-2. `В вылазку`
-3. Zone select
-4. Combat
-5. Loot
-6. Return
-7. Inventory + craft
+Проверено:
+- App open <5 сек; CDP console check after reload: JS exceptions не обнаружены. Зафиксирован один non-blocking 404 resource error, вероятно favicon/static resource.
+- `BaseScene`: HP, weapon, armor, stash and 3 buttons visible.
+- `MapScene`: единственная зона Forest/Лес visible, `Войти` works.
+- `SortieScene`: depth selection visible, depth 1 starts combat.
+- `CombatScene`: hero/enemy HP, `Атака`, `Укрытие`, `Аптечка`, `Отступить` visible; attack/cover advance turns; marauder flee + wild dog attack path verified.
+- `LootScene`: loot list visible; `Взять всё`, `Следующий бой`, `Возврат на базу` visible; take-all and return to base work.
+- Return to `BaseScene`: HP persisted/restored according to scene flow; stash weight updated after loot return.
+- `InventoryScene`: base stash stacks and per-stack weights visible.
+- `CraftScene`: all 5 recipes visible; after resource seeding via runtime dev shortcut `O`, `Бинт` craft succeeds and updates status to `Создано: Бинт`.
+- Defeat path: by repeatedly using `Укрытие`, hero HP reaches defeat and app returns to `BaseScene`; stash/HP state updates without crash.
+
+Note: overload-return block was not forced by temporary file edits because QA constraints forbid modifying Engineer code/docs in this branch. It will be covered by formula/code review sections.
 
 ### §4 Formula sanity vs GDD
 
@@ -89,11 +97,11 @@ Flow:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §3 runtime smoke
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS
-- Next concrete step: start dev server, record desktop Chrome smoke for Base → vylazka → zone select → combat → loot → return → inventory + craft
+- Current section: §4 formula sanity
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE
+- Next concrete step: review `calcInitiative`, `return_time_s`, `applyAttack`, `applyLootLoss`, and `canCraft` vs GDD §2/§3/§4
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; Vite chunk-size warning is non-blocking
+- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; Vite chunk-size warning and one resource 404 are non-blocking
 - Blockers: none
 
 ## PR / Process
