@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §1 build/static checks пройдены на ветке `m2/gameplay`
+**Последнее действие:** §2 M1 regression diff пройден
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §2 M1 regression diff
+**Текущий шаг:** §3 runtime smoke
 
 ## Текущий gate
 
@@ -29,9 +29,13 @@ QA Acceptance по M2 выполняется на ветке `qa/m2-acceptance` 
 
 ### §2 M1 regression diff
 
-Статус: pending.
+Статус: PASS.
 
-План: проверить diff `m2-integration...m2/gameplay` по `content/`, `assets/`, `docs/`, `src/types/` на регрессии M1.
+Команды:
+- `git diff --stat m2-integration...m2/gameplay -- content/ assets/ docs/ src/types/`
+- `git diff --name-status m2-integration...m2/gameplay -- content/ assets/ docs/ src/types/`
+
+Результат: output пустой. Engineer PR #15 не меняет M1 baseline areas `content/`, `assets/`, `docs/`, `src/types/`; регрессий M1 в scoped diff не обнаружено.
 
 ### §3 Runtime smoke — 7-step MVP flow
 
@@ -85,11 +89,11 @@ Flow:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §2 M1 regression diff
-- Done sections: §1 build/static PASS
-- Next concrete step: run `git diff m2-integration...m2/gameplay -- content/ assets/ docs/ src/types/` and document M1 regression result
+- Current section: §3 runtime smoke
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS
+- Next concrete step: start dev server, record desktop Chrome smoke for Base → vylazka → zone select → combat → loot → return → inventory + craft
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; Vite chunk-size warning is non-blocking
+- Findings: §1 PASS; §2 no M1 baseline diff; Vite chunk-size warning is non-blocking
 - Blockers: none
 
 ## PR / Process
