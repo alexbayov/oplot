@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** QA Acceptance стартован для Engineer PR #15
+**Последнее действие:** §1 build/static checks пройдены на ветке `m2/gameplay`
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §1 build/static
+**Текущий шаг:** §2 M1 regression diff
 
 ## Текущий gate
 
@@ -16,13 +16,16 @@ QA Acceptance по M2 выполняется на ветке `qa/m2-acceptance` 
 
 ### §1 Build/static checks
 
-Статус: pending.
+Статус: PASS.
 
-План проверок:
-- `npm run typecheck`
-- `npm run lint`
-- `npm run test`
-- `npm run build`
+Проверено на ветке `m2/gameplay` после `npm install`:
+- `npm install` — PASS, 0 vulnerabilities.
+- `npm run typecheck` — PASS.
+- `npm run lint` — PASS.
+- `npm run test` — PASS: 4 files / 46 tests passed.
+- `npm run build` — PASS.
+
+Примечание: Vite показал предупреждение о chunk > 500 kB (`dist/assets/index-*.js` ~1.5 MB). Это не blocker для M2, потому что build успешен, а предупреждение вызвано Phaser bundle.
 
 ### §2 M1 regression diff
 
@@ -82,11 +85,11 @@ Flow:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §1 build/static
-- Done sections: none
-- Next concrete step: read required M2 QA context, then run `npm run typecheck && npm run lint && npm run test && npm run build`
+- Current section: §2 M1 regression diff
+- Done sections: §1 build/static PASS
+- Next concrete step: run `git diff m2-integration...m2/gameplay -- content/ assets/ docs/ src/types/` and document M1 regression result
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: none yet
+- Findings: §1 PASS; Vite chunk-size warning is non-blocking
 - Blockers: none
 
 ## PR / Process
