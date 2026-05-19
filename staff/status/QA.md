@@ -1,95 +1,96 @@
 # Status: QA
 
-**Текущая веха:** M1
-**Последнее действие:** Spec Review (re-review после GD QA-fix)
-**Статус:** SPEC_APPROVE__ACCEPTANCE_BLOCKED
-**Дата:** 2026-05-18
+**Текущая веха:** M1 — Технический скелет
+**Последнее действие:** Acceptance Testing по role PR #6, #7, #11
+**Статус:** ACCEPTANCE_APPROVE_ALL
+**Дата:** 2026-05-19
 
 ## Текущий gate
 
-- QA Spec Review: **APPROVE**.
-- QA Acceptance: **BLOCKED**, потому что Content PR #6 и Engineer PR #7 готовы, но Artist PR `m1/art-initial` не найден.
+QA Acceptance по M1 завершена. Все обязательные role PR проверены против `m1-integration` и получают **APPROVE**:
 
-QA Acceptance можно запускать только после появления Artist PR или явного решения PM/Заказчика перенести Artist scope из M1.
+| PR | Роль | Ветка | Verdict |
+|---|---|---|---|
+| #7 | Engineer | `m1/eng-bootstrap` | **APPROVE** |
+| #6 | Content Designer | `m1/content-mvp` | **APPROVE** |
+| #11 | Artist / Asset Lead | `m1/art-initial` | **APPROVE** |
 
-## Детали (re-review, 2026-05-18)
+## Acceptance report — 2026-05-19
 
-Повторное ревью `docs/GDD.md` и `docs/balance.md` после мержа GD QA-fix PR #4 (коммит `57da1f7`). Чек-лист — `staff/handoff/M1-QA-SPEC.md`. Файлы GDD/balance в этом ревью НЕ правил (по FORBIDDEN из брифинга).
+### PR #7 Engineer — APPROVE
 
-### Блокирующее из прошлого ревью — закрыто
+Проверено локально на ветке `m1/eng-bootstrap`, diff против `m1-integration`.
 
-**QA #1: «Мародёр — слабый (3–4 удара ножом)».** Закрыт.
+**Checks run:**
+- `npm install` — passed, 0 vulnerabilities.
+- `npm run typecheck` — passed.
+- `npm run lint` — passed.
+- `npm run build` — passed.
+- `npm run dev -- --host 127.0.0.1` + Chrome runtime-smoke — passed.
 
-- `docs/balance.md` §Мобы (строка 48): `marauder` теперь `hp=18`, `defense=1`.
-- `docs/GDD.md` §5 (строка 317): описание заменено со «Стандартный противник» на «Слабый человеческий противник. Низкий HP — убивается ножом за 3–4 удара (см. `balance.md` §Мобы: HP=18, defense=1). При HP<30% переходит в `flee`…». `flee` при HP<30% сохранён.
-- Сверка по формулам §2 GDD / §Формулы balance.md:
-  - knife: damage 4–7 (avg 5.5), roll 0.85–1.15 (avg 1.0) → база 5.5
-  - `final_damage = max(MIN_DAMAGE_FLOOR, 5.5 * 1.0 − 1) = 4.5` урона/удар
-  - `18 / 4.5 = 4 удара` — попадает ровно в требование «3–4».
-  - Best-case (knife=7, roll=1.15): `7.05 − 1 = 6.05` → `18 / 6.05 ≈ 3` удара.
-  - Описание моба теперь синхронно с числами.
+**Checklist evidence:**
+- BootScene существует и стартует первой; `create()` переводит в `BaseScene`.
+- BaseScene показывает `ОПЛОТ`, кнопки `В вылазку`, `Крафт`, `Инвентарь`.
+- MapScene показывает MVP-зону `Лес` и вход в вылазку.
+- SortieScene / CombatScene / InventoryScene / CraftScene присутствуют как M1-заглушки.
+- CombatScene показывает действия `Атака`, `Укрытие`, `Аптечка`, `Вернуться на базу`.
+- `src/types/` содержит `Item`, `Mob`, `Recipe`, `Zone`; поля соответствуют GDD §6 (`damage_min` / `damage_max`, `levels[]`, `vs_melee_bonus`).
+- Поиск по `src/`: `any` и закомментированный код не найдены.
+- `.gitignore` содержит `node_modules/` и `dist/`.
 
-### Minor из прошлого ревью
+**Note:** production `dist/` после `npm run build` = ~1.5 MiB. Это выше handoff-пункта `< 1 МБ`, но ниже project/platform limit `< 5 MB` из GDD/QA role; превышение вызвано базовым Phaser bundle. Для M1 skeleton это не блокер.
 
-**QA #2: семантика `vs_melee_bonus`.** Закрыт.
+**Runtime smoke:** Base → Map → Sortie → Combat → Base → Craft → Base → Inventory прошёл; browser console без ошибок.
 
-- `docs/GDD.md` §6.1 `ArmorStats`: комментарий расширен до однозначной формулировки: «доп. защита против melee-атак. В M1 применяется ТОЛЬКО когда атакует моб с `type = "animal"` (wild_dog) — единственный melee-атакёр MVP… В M2+ условие переключится на отдельное поле `Mob.attack_kind`.»
-- `docs/balance.md` §Броня (примечание под таблицей) и §Формулы (`target_total_defense`) — обе формулировки переписаны с явным условием «в M1 эквивалентно `source.type == "animal"`, единственный melee-атакёр — wild_dog».
-- Запутанности между «vs melee» и «vs animal» больше нет; Engineer на стыке M1→M2 получит явное указание, куда мигрировать условие.
+### PR #6 Content — APPROVE
 
-**QA #3: edge-case при 2 мобах на `depth=1`.** Снят после фикса #1.
+Проверено локально на ветке `m1/content-mvp`, diff против `m1-integration`.
 
-- 2 мародёра/бой × 2 боя при `depth=1` (`fights_per_depth=2`): hero `base_speed=100` > marauder `90`, инициатива у героя.
-- На каждого мародёра уходит ~4 хода героя, при HP<30% (HP<5.4) включается `flee` (пропуск хода). Суммарный урон по герою за 2 боя ≈ 80–90 → hero ≥ 10 HP без аптечки. Старт даёт `bandage` ×2 — запас на 3-й бой.
-- Требование «герой выживает 1–2 боя без аптечки» выполнено и на верхней границе мобов в марадёрской ветке.
+**Checks run:**
+- JSON parse для `content/items.json`, `mobs.json`, `recipes.json`, `zones.json`, `radio.json` — passed.
+- Counts: 15 items, 3 mobs, 5 recipes, 1 zone, `radio.json` пустой — passed.
+- Reference validation: recipes→items, mob drops→items, zone mobs→mobs, zone resources→items — passed.
+- Balance validation vs `docs/balance.md` и canon tables GDD §7.1–7.4 — passed.
 
----
+**Checklist evidence:**
+- Items: 8 resources + 2 weapons + 2 armor + 3 consumables; все required поля заполнены.
+- Item weights/stats совпадают с balance.md (`knife`, `makeshift_pistol`, `cloth_jacket`, `leather_vest`, `bandage`, `medkit`, `ammo_pistol`).
+- Mobs: `marauder`, `wild_dog`, `mutant`; статы и drop tables совпадают с balance/GDD.
+- Recipes: 5 canonical recipes; ingredients/results resolve to canonical items.
+- Zone: single `forest`, 3 depth levels, `boss_id: null`, refs valid.
+- Anti-scope: нет радио-сигналов, перков, extra zones, M2+ mobs/items.
 
-## Чек-лист (re-review, всё закрыто)
+### PR #11 Artist — APPROVE
 
-### Полнота
-- [x] Вылазка (выбор зоны → бой → лут → возврат) — GDD §1 Core Loop
-- [x] Бой пошаговый, 2 типа оружия (`knife` / `makeshift_pistol`), 3 действия (Атака / Укрытие / Аптечка) — GDD §2
-- [x] 3 моба со статами и поведением — GDD §5 + balance.md §Мобы
-- [x] Инвентарь и система веса — GDD §3 + balance.md §Hero / §Формулы
-- [x] Крафт, 5 рецептов — GDD §4 + balance.md §Рецепты
-- [x] JSON-схемы (`Item`, `Mob`, `Recipe`, `Zone`) — GDD §6
+Проверено локально на ветке `m1/art-initial`, diff против `m1-integration`.
 
-### Баланс
-- [x] Герой выживает 1–2 боя без аптечки — HP=100, `cloth_jacket` def=1, при 1–2 мародёрах за бой проходит.
-- [x] **Мародёр — слабый (3–4 удара ножом)** — `hp=18 / defense=1`, среднее 4 удара, см. расчёт выше.
-- [x] Мутант — сильный (нужен пистолет или аптечка) — нож по 60 HP / (4.5−3) ≈ 24 удара, пистолет 60 / 8.5 ≈ 7 выстрелов. Стимулирует крафт пистолета.
-- [x] Вес реалистичен — рюкзак 30 кг, нож 0.5 кг, пистолет 1.5 кг, броня 1–2.5 кг.
-- [x] XP-прогрессия — `xp_to_next(level) = 25*level^2 − 25*level + 50`, до 2 уровня 50 XP; мародёр 10 XP, пёс 8 XP, мутант 25 XP → 5–7 боёв на `depth=1`. В ориентир 5–8.
-- [x] Рецепты логичны — `pistol = scrap+wood+gunpowder`; `vest = leather+cloth+rope`; `bandage = cloth`; `medkit = bandage+cloth`; `ammo = gunpowder+scrap`.
+**Checks run:**
+- style-guide coverage: Military Graphic Novel, HEX palette, sprite sizes, fonts, art pipeline — passed.
+- PNG dimensions/file sizes via Pillow — passed.
+- Transparency check for hero/items alpha extrema — passed.
+- Visual distinguishability/contact sheet spot-check — passed.
 
-### Anti-scope (нет лишнего)
-- [x] Нет радио-системы (только заглушка §10 для M6)
-- [x] Нет перков/навыков (заглушка §8 для M4)
-- [x] Нет модульной брони (заглушка §11 для M5+)
-- [x] Нет мини-боссов (`boss_id = null`, тип `"boss"` помечен «НЕ в MVP»)
-- [x] Нет других зон, кроме `forest`
-- [x] Нет Yandex SDK (заглушка §12 для M8)
-
-### Непротиворечивость
-- [x] Числа в GDD совпадают с balance.md (`marauder.hp=18` синхронно описан и в §5 GDD, и в §Мобы balance.md).
-- [x] JSON-схемы покрывают все упомянутые поля (`vs_melee_bonus` есть и в `ArmorStats`, и в §Броня balance.md, и в формуле §Формулы).
-- [x] Формулы используют поля из JSON-схем (`armor.defense`, `armor.vs_melee_bonus`, `source.type`, `cover_active`, `cur_weight`, `max_weight`).
-
----
-
-## Итог
-
-**APPROVE.** Блокер закрыт, минор закрыт, регрессий в остальных пунктах чек-листа не нашёл. Спека M1 готова к передаче Engineer'у.
+**Checklist evidence:**
+- `docs/style-guide.md` описывает общий стиль, anti-style, HEX palette, fonts, sprite sizes, UI rules, M2+ art pipeline and M1 placeholder pipeline.
+- `assets/sprites/hero.png`: 128×128, RGBA, alpha `(0, 255)`, 7.4 KiB.
+- 8 resource icons in `assets/sprites/items/`: each 64×64, RGBA, alpha `(0, 255)`, visually distinguishable.
+- `assets/backgrounds/forest.png`: 800×600, RGB dense background, 51.9 KiB, dark forest style.
+- Total M1 asset size: 81.3 KiB / 300 KiB budget.
+- Anti-scope: no mob sprites, no UI kit, no animations, no pixel-art direction.
 
 ## Блокеры
-- Нет.
 
-## PR
-- QA Spec Review re-check (этот PR): обновление `staff/status/QA.md` (verdict: `APPROVE`).
-- Прошлый QA-PR (`CHANGES_REQUESTED`, #3) — закрыт мержем GD-фикса #4.
+Нет.
+
+## PR / Recovery
+
+- QA-report branch: `qa/m1-acceptance-report` (base = `m1-integration`).
+- This QA session updates only `staff/status/QA.md`.
+- Next gate after PM reviews QA-report: PM may merge approved role PRs #6, #7, #11 into `m1-integration` and proceed with M1 close process.
 
 ## История
-- 2026-05-18 — Spec Review #1: `CHANGES_REQUESTED` (блокер: marauder не «слабый»; minor: `vs_melee_bonus` семантика).
-- 2026-05-18 — GD QA-fix PR #4 смержен в `main` (commit `57da1f7`).
-- 2026-05-18 — Spec Review #2 (re-review): `APPROVE`.
+
+- 2026-05-18 — Spec Review #1: `CHANGES_REQUESTED` (marauder weakness blocker; `vs_melee_bonus` semantic minor).
+- 2026-05-18 — GD QA-fix PR #4 merged.
+- 2026-05-18 — Spec Review #2: `APPROVE`.
+- 2026-05-19 — Acceptance Testing for PR #6/#7/#11: `APPROVE` all.
