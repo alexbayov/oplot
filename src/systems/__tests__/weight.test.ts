@@ -1,5 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { applyLootLoss, canAddItem, computeWeight } from "../weight";
+import {
+  BASE_RETURN_TIME_S,
+  HERO_MAX_WEIGHT_KG,
+  WEIGHT_PENALTY_FACTOR,
+} from "../../state/balance";
+import {
+  applyLootLoss,
+  canAddItem,
+  computeReturnTime,
+  computeWeight,
+} from "../weight";
 import { item } from "./_helpers";
 import type { Item } from "../../types";
 
@@ -58,6 +68,31 @@ describe("canAddItem", () => {
   test("handles count > 1", () => {
     expect(canAddItem(0, "wood", 15, 30, items)).toBe(true);
     expect(canAddItem(0, "wood", 16, 30, items)).toBe(false);
+  });
+});
+
+describe("computeReturnTime", () => {
+  // balance.md §Формулы:
+  // return_time_s = BASE_RETURN_TIME_S * (1 + (cur/max) * WEIGHT_PENALTY_FACTOR).
+  // With defaults BASE_RETURN_TIME_S=30, WEIGHT_PENALTY_FACTOR=1.0, HERO_MAX_WEIGHT_KG=30.
+  test("zero weight → base return time (30s)", () => {
+    expect(computeReturnTime(0, HERO_MAX_WEIGHT_KG)).toBe(BASE_RETURN_TIME_S);
+  });
+
+  test("half weight (15/30) → 45s", () => {
+    // 30 * (1 + 0.5 * 1.0) = 45.
+    expect(computeReturnTime(15, HERO_MAX_WEIGHT_KG)).toBe(
+      BASE_RETURN_TIME_S * (1 + 0.5 * WEIGHT_PENALTY_FACTOR),
+    );
+    expect(computeReturnTime(15, HERO_MAX_WEIGHT_KG)).toBe(45);
+  });
+
+  test("full weight (30/30) → 60s", () => {
+    // 30 * (1 + 1.0 * 1.0) = 60.
+    expect(computeReturnTime(30, HERO_MAX_WEIGHT_KG)).toBe(
+      BASE_RETURN_TIME_S * (1 + 1.0 * WEIGHT_PENALTY_FACTOR),
+    );
+    expect(computeReturnTime(30, HERO_MAX_WEIGHT_KG)).toBe(60);
   });
 });
 

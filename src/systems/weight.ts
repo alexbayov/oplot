@@ -1,4 +1,8 @@
-import { LOOT_LOSS_ON_DEFEAT } from "../state/balance";
+import {
+  BASE_RETURN_TIME_S,
+  LOOT_LOSS_ON_DEFEAT,
+  WEIGHT_PENALTY_FACTOR,
+} from "../state/balance";
 import type { InventoryStack } from "../state/types";
 import type { Item } from "../types";
 
@@ -14,6 +18,20 @@ export const computeWeight = (
     total += item.weight_kg * stack.count;
   }
   return total;
+};
+
+// GDD §1/§3 + balance.md §Формулы:
+// return_time_s = BASE_RETURN_TIME_S * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR).
+// Drives ReturnScene tween — heavier pack = longer trip back to base.
+// Edge case: maxWeight = 0 → BASE_RETURN_TIME_S (avoid NaN/Infinity).
+export const computeReturnTime = (
+  curWeight: number,
+  maxWeight: number,
+): number => {
+  if (maxWeight <= 0) return BASE_RETURN_TIME_S;
+  return (
+    BASE_RETURN_TIME_S * (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR)
+  );
 };
 
 // Used by LootScene to gate the «Взять» button per GDD §3 edge-case.

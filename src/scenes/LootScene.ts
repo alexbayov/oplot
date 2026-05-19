@@ -118,19 +118,10 @@ export class LootScene extends Phaser.Scene {
   }
 
   private endSortie(): void {
-    const sortie = GameState.currentSortie;
-    if (!sortie) return;
-    const player = GameState.player;
-    // Merge backpack into stash.
-    let stash = GameState.baseStash;
-    for (const stack of player.backpack) {
-      stash = addToStack(stash, stack.item_id, stack.count);
-    }
-    GameState.baseStash = stash;
-    player.backpack = [];
-    player.hp = player.hp_max;
-    GameState.currentSortie = null;
-    this.scene.start("BaseScene");
+    if (!GameState.currentSortie) return;
+    // Backpack merge / heal / sortie cleanup happens in ReturnScene onComplete
+    // so the return tween duration enforces return_time_s.
+    this.scene.start("ReturnScene");
   }
 
 }
