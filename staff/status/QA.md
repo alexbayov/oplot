@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §5 anti-scope checks пройдены
+**Последнее действие:** §6 architecture/readability пройдена
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §6 architecture/readability
+**Текущий шаг:** §7 Engineer status note
 
 ## Текущий gate
 
@@ -85,9 +85,14 @@ Blocking mismatch:
 
 ### §6 Architecture/readability
 
-Статус: pending.
+Статус: PASS_WITH_NOTE.
 
-План: проверить использование `GameState`, чистоту systems, отсутствие `any`.
+Проверено на Engineer branch `m2/gameplay`:
+- `GameState` centralizes player/content/sortie/base stash; scenes use it consistently (`BootScene`, `BaseScene`, `MapScene`, `SortieScene`, `CombatScene`, `LootScene`, `InventoryScene`, `CraftScene`).
+- `src/systems/{combat,weight,craft,loot}.ts` remain Phaser-free/pure runtime logic; Phaser imports stay in scenes.
+- `rg "\\bany\\b" src/ --glob "*.ts"`: no `any` type usage; only comment text says helper avoids `any`.
+- `rg "TODO|FIXME|HACK|console.log" src/ --glob "*.ts"`: no matches.
+- Note: `BaseScene` has a DEV-only `O` cheat guarded by `import.meta.env.DEV`; build/static checks passed and this does not affect production bundle path for M2 acceptance.
 
 ### §7 Engineer status note
 
@@ -108,11 +113,11 @@ Blocking mismatch:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §6 architecture/readability
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS
-- Next concrete step: review `GameState` usage, pure systems, and `any` usage
+- Current section: §7 Engineer status note
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS; §6 architecture PASS_WITH_NOTE
+- Next concrete step: verify `staff/status/ENGINEER.md` freshness and document note
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; Vite chunk-size warning and one resource 404 are non-blocking
+- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; §6 architecture clean; Vite chunk-size warning and one resource 404 are non-blocking
 - Blockers: missing `return_time_s` runtime implementation unless de-scoped by PM
 
 ## PR / Process
