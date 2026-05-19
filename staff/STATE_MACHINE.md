@@ -83,6 +83,7 @@ M{N}_PREPARED
 
 Обоснование и полный текст решения — `staff/decisions/DECISIONS.md` «2026-05-19 — Integration-ветка на веху; merge в `main` только на gate-close».
 
-## Текущее состояние M1
+## Текущее состояние
 
-См. `staff/status/M1.md`.
+- **Активная веха:** M2 — Играбельный MVP. См. `staff/status/M2.md`.
+- **Закрытая веха M1:** см. `staff/status/M1.md` и `staff/handoff/M1-SUMMARY.md`.

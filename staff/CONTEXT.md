@@ -15,7 +15,8 @@
 | Что | Файл |
 |---|---|
 | Процесс и роли | `staff/TEAM.md`, `staff/PROCESS.md`, `staff/ORCHESTRATION.md` |
-| Текущий gate M1 | `staff/status/M1.md` |
+| Текущий gate (актуальная веха) | `staff/status/M2.md` |
+| Завершённая веха M1 | `staff/status/M1.md`, `staff/handoff/M1-SUMMARY.md` |
 | State machine | `staff/STATE_MACHINE.md` |
 | План вех | `staff/PLAN.md` |
 | Механики | `docs/GDD.md` |
@@ -31,17 +32,17 @@
 - QA всегда отдельная сессия от той роли, которую проверяет.
 - PR не self-merge. Мерджит PM после нужного gate.
 
-## Текущий M1 snapshot
+## Текущий M2 snapshot
 
-_Last reconciled with GitHub: 2026-05-19 (M1 gate-close)._
+_Last reconciled with GitHub: 2026-05-19 (M2 kickoff)._
 
-- GD spec: approved.
-- **Integration branch:** `m1-integration` (от `main`, 2026-05-19). Все role PR M1 смержены в `m1-integration` PM-ом. Финальный `m1-integration → main` мерджит Alex/Заказчик на gate-close PR. См. `staff/decisions/DECISIONS.md` «2026-05-19».
-- Content PR #6: merged в `m1-integration`.
-- Engineer PR #7: merged в `m1-integration`. Runtime smoke OK.
-- Artist PR #11: merged в `m1-integration`. 10 placeholder-ассетов, 81.3 КБ / 300 КБ.
-- Process dashboard PR #8: merged в `main`.
-- PM recovery snapshot PR #9: merged в `main`.
-- Workflow-policy follow-up PR #10: merged в `main`.
-- M1 summary: `staff/handoff/M1-SUMMARY.md`.
-- Gate-close PR `m1-integration → main`: open, ждёт мерджа Alex'а. После мерджа M1 закрыта, PM создаёт `m2-integration`.
+- **Активная веха:** M2 — Играбельный MVP. См. `staff/status/M2.md`.
+- **Integration branch:** `m2-integration` (от `main`, 2026-05-19, commit `1244c5f`). Все role PR M2 таргетятся в `m2-integration`. На M2 gate-close PM открывает PR `m2-integration → main`, который мерджит Alex/Заказчик.
+- **Активные роли M2:** Engineer (главная работа M2). Content/Artist/GD на M2 не запускаются (см. anti-scope в `staff/status/M2.md`).
+- **QA Acceptance** возвращается формальной сессией на M2 (на M1 она была заменена PM-integration smoke — это разовое решение, см. `staff/decisions/DECISIONS.md` 2026-05-19).
+
+## Закрытая веха M1
+
+- M1 «Технический скелет» закрыта 2026-05-19 gate-close PR #12 (`m1-integration → main`).
+- Полный summary — `staff/handoff/M1-SUMMARY.md`.
+- M1 PR-реестр (merged): #6 Content, #7 Engineer, #11 Artist, #13 QA Acceptance — все в `m1-integration`; #8/#9/#10/#12 — в `main`.
