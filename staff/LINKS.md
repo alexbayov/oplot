@@ -14,17 +14,19 @@
 
 ## Active M1 PRs
 
-_Last reconciled with GitHub: 2026-05-19._
+_Last reconciled with GitHub: 2026-05-19 (M1 gate-close)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| #6 | Content Designer | `m1-integration` | Open; PM APPROVE; конфликт pre-resolved; ждёт QA Acceptance |
-| #7 | Engineer | `m1-integration` | Open; PM APPROVE; конфликт pre-resolved; ждёт QA Acceptance |
+| #6 | Content Designer | `m1-integration` | Merged 2026-05-19 |
+| #7 | Engineer | `m1-integration` | Merged 2026-05-19 |
 | #8 | PM / Process | `main` | Merged; orchestration dashboard + recovery rules |
 | #9 | PM / Recovery snapshot | `main` | Merged; dashboard/LINKS/CONTEXT reconcile |
 | #10 | PM / Workflow policy | `main` | Merged; workflow-policy doc + kickoffs retargeted |
+| #11 | Artist | `m1-integration` | Merged 2026-05-19 |
+| (gate-close) | PM | `main ← m1-integration` | Open; M1 final merge, делает Alex/Заказчик |
 
-**Next action:** launch Artist (`staff/kickoff/M1-ARTIST.md`, branch `m1/art-initial` с base = `m1-integration`). PM-решение 2026-05-19: scope NOT deferred. After Artist PR exists, gate moves to `ROLE_PRS_READY` и следующий kickoff — `staff/kickoff/M1-QA-ACCEPT.md`.
+**Next action:** Alex мерджит gate-close PR `m1-integration → main`. После этого PM создаёт `m2-integration` от свежего `main` и открывает kickoff'ы M2. На M1 формальная QA Acceptance-сессия не запускалась — заменена PM-integration smoke по решению Заказчика 2026-05-19 (см. `staff/decisions/DECISIONS.md`).
 
 ## Start here
 

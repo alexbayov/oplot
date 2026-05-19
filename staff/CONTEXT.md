@@ -33,13 +33,15 @@
 
 ## Текущий M1 snapshot
 
-_Last reconciled with GitHub: 2026-05-19._
+_Last reconciled with GitHub: 2026-05-19 (M1 gate-close)._
 
 - GD spec: approved.
-- **Integration branch:** `m1-integration` (от `main`, 2026-05-19). Все role PR M1 таргетятся в `m1-integration`; финал `m1-integration → main` делает Alex/Заказчик на gate-close. См. `staff/decisions/DECISIONS.md` «2026-05-19».
-- Content PR: #6, open, base = `m1-integration`, PM APPROVE, конфликт pre-resolved; ждёт QA Acceptance.
-- Engineer PR: #7, open, base = `m1-integration`, PM APPROVE, конфликт pre-resolved; ждёт QA Acceptance.
-- Artist PR: missing. PM-решение 2026-05-19: scope NOT deferred — лончим Artist-сессию (branch `m1/art-initial`, base = `m1-integration`).
-- Process dashboard PR: #8, merged into `main`.
-- PM recovery snapshot PR: #9, merged into `main`.
-- Workflow-policy follow-up PR: #10, merged into `main` — фиксирует integration-branch policy в процесс-доках и в kickoff'ах.
+- **Integration branch:** `m1-integration` (от `main`, 2026-05-19). Все role PR M1 смержены в `m1-integration` PM-ом. Финальный `m1-integration → main` мерджит Alex/Заказчик на gate-close PR. См. `staff/decisions/DECISIONS.md` «2026-05-19».
+- Content PR #6: merged в `m1-integration`.
+- Engineer PR #7: merged в `m1-integration`. Runtime smoke OK.
+- Artist PR #11: merged в `m1-integration`. 10 placeholder-ассетов, 81.3 КБ / 300 КБ.
+- Process dashboard PR #8: merged в `main`.
+- PM recovery snapshot PR #9: merged в `main`.
+- Workflow-policy follow-up PR #10: merged в `main`.
+- M1 summary: `staff/handoff/M1-SUMMARY.md`.
+- Gate-close PR `m1-integration → main`: open, ждёт мерджа Alex'а. После мерджа M1 закрыта, PM создаёт `m2-integration`.
