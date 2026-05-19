@@ -2,8 +2,15 @@
 
 **Текущая веха:** M1
 **Последнее действие:** Spec Review (re-review после GD QA-fix)
-**Статус:** APPROVE
+**Статус:** SPEC_APPROVE__ACCEPTANCE_BLOCKED
 **Дата:** 2026-05-18
+
+## Текущий gate
+
+- QA Spec Review: **APPROVE**.
+- QA Acceptance: **BLOCKED**, потому что Content PR #6 и Engineer PR #7 готовы, но Artist PR `m1/art-initial` не найден.
+
+QA Acceptance можно запускать только после появления Artist PR или явного решения PM/Заказчика перенести Artist scope из M1.
 
 ## Детали (re-review, 2026-05-18)
 

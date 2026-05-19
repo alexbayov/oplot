@@ -1,18 +1,29 @@
 # Status: Artist
 
-**Текущая веха:** M0
-**Статус:** NOT_STARTED
+**Текущая веха:** M1 — Технический скелет
+**Статус:** NOT_STARTED_BLOCKER
 **Последнее обновление:** 2026-05-18
 
 ## Что сделано
-- Нет (M0 — только каркас процесса)
+
+- Handoff и kickoff для Artist подготовлены:
+  - `staff/handoff/M1-ARTIST.md`
+  - `staff/kickoff/M1-ARTIST.md`
 
 ## Что НЕ сделано
-- style-guide.md (начнётся на M1)
-- Ассеты (начнётся на M1)
+
+- PR `m1/art-initial` не найден в GitHub.
+- `docs/style-guide.md` всё ещё содержит placeholder-секции.
+- M1 assets не найдены:
+  - `assets/sprites/hero.png`
+  - 8 resource icons в `assets/sprites/items/`
+  - `assets/backgrounds/forest.png`
+- `staff/status/ARTIST.md` не был обновлён Artist-сессией до этого recovery.
 
 ## Блокеры
-- Ждём закрытия M0 и подготовки kickoff для M1
+
+- Отсутствие Artist PR блокирует `QA Acceptance M1`, если PM/Заказчик явно не перенесут Artist scope.
 
 ## PR
-- Нет
+
+- Нет.

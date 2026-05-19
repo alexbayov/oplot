@@ -34,6 +34,7 @@
 - Не пишет GDD.
 - Не создаёт контент (JSON).
 - Не рисует с нуля, если есть AI-генерация + обработка.
+- Не обновляет чужие status-файлы и общий dashboard вехи — это делает PM.
 
 ## Триггер
 
@@ -48,6 +49,16 @@ Artist вступает **параллельно** с Engineer и Content Design
 5. Проверяет размерный бюджет.
 6. Создаёт PR (ветка `m{N}/art-*`). Сам НЕ мерджит.
 7. Обновляет `staff/status/ARTIST.md`.
+
+## Self-update / Recovery Context
+
+В конце каждой Artist-сессии обязательно обнови только свой контекст:
+
+1. `staff/status/ARTIST.md` — что сделано, что не сделано, blockers, PR link.
+2. PR description — summary, asset budget, changed files, next gate.
+3. PR recovery block — как следующей Devin-сессии продолжить, если текущая оборвётся.
+
+Не обновляй `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md`; эти файлы синхронизирует PM.
 
 ## Размерный бюджет (ориентир)
 
