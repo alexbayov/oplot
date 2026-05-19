@@ -59,22 +59,24 @@ oplot/
 ### Шаг 0: Подготовка (PM делает сам)
 
 1. Проверь PLAN.md: M{N-1} помечена [x] DONE.
-2. Напиши `staff/prompts/M{N}.md` — сводный ТЗ по ролям.
-3. Напиши 6 файлов kickoff: `staff/kickoff/M{N}-{ROLE}.md`.
-4. Напиши 6 файлов handoff: `staff/handoff/M{N}-{ROLE}.md`.
-5. Обнови `staff/status/PM.md`: текущая веха = M{N}, статус = KICKOFF.
-6. Закоммить всё в main.
+2. Создай ветку `m{N}-integration` от `main` и запушь на remote. Это baseline всех role PR вехи.
+3. Напиши `staff/prompts/M{N}.md` — сводный ТЗ по ролям.
+4. Напиши 6 файлов kickoff: `staff/kickoff/M{N}-{ROLE}.md`. Каждый должен явно указывать base = `m{N}-integration`.
+5. Напиши 6 файлов handoff: `staff/handoff/M{N}-{ROLE}.md`.
+6. Обнови `staff/status/PM.md`: текущая веха = M{N}, статус = KICKOFF.
 7. Скажи Alex'у: «M{N} готова к запуску. Начинай с GD».
 
 ### Шаг 1-5: См. PROCESS.md §1.1
 
 ### Шаг 6: Закрытие
 
-1. Замерджи все PR.
-2. Обнови PLAN.md: M{N} = [x] DONE.
-3. Обнови decisions/CHANGELOG.md.
-4. Обнови все status/*.md.
-5. Подготовь M{N+1} (вернись к Шаг 0).
+1. PM мержит все approved role PR в `m{N}-integration` сам после QA Acceptance approve. Role-сессии никогда не мержат себя сами.
+2. PM открывает единственный gate-close PR `m{N}-integration → main` с описанием вехи и чек-листом.
+3. Alex/Заказчик мержит gate-close PR в `main` вручную.
+4. PM обновляет PLAN.md: M{N} = [x] DONE.
+5. PM обновляет decisions/CHANGELOG.md и пишет `staff/handoff/M{N}-SUMMARY.md`.
+6. PM обновляет все status/*.md.
+7. Подготовь M{N+1} (вернись к Шаг 0).
 
 ## 3. Как Alex использует kickoff
 

@@ -20,6 +20,7 @@
 - PM/process PR #8 (orchestration dashboard, state machine, communication kit, role self-update rules, PR template) смержен в `main`.
 - Recovery PM-сессия 2026-05-19: фактическое состояние подтверждено по GitHub (PR #6 open/mergeable, PR #7 open/mergeable, PR #8 merged, ветка `m1/art-initial` на remote отсутствует).
 - PR #9 (этот PM recovery snapshot) расширен: помимо `staff/status/M1.md` и `staff/status/PM.md` внутри того же PR обновлены `staff/LINKS.md` и `staff/CONTEXT.md` (PR #8 зафиксирован как merged, PR #9 добавлен в active list, добавлена ссылка на next-action — Artist kickoff).
+- 2026-05-19 — зафиксировано решение «Integration-ветка на веху; merge в main только на gate-close». PR #9 расширен до включения в процесс-файлы (`staff/decisions/DECISIONS.md`, `staff/STATE_MACHINE.md`, `staff/ORCHESTRATION.md`, `staff/PROCESS.md`).
 
 ## Что НЕ сделано
 
