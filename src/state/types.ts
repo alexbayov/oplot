@@ -22,12 +22,13 @@ export interface SortieState {
   depth: 1 | 2 | 3;
   fights_total: number;
   fights_completed: number;
-  // Remaining enemy ids for the next CombatScene encounter.
-  current_enemies: string[];
-  // Resources pre-rolled for the depth, drained as the player progresses.
-  zone_loot_pool: InventoryStack[];
-  // Loot dropped during the current/just-finished combat, shown in LootScene.
+  // All combats for this sortie are rolled up-front so retries can't cherry-pick easy mobs.
+  encounters: string[][];
+  // Zone resources pre-rolled at sortie start, drained per fight.
+  zone_loot_remaining: InventoryStack[];
+  // Loot dropped during the most recent combat, presented in LootScene.
   pending_loot: InventoryStack[];
+  // Set when hero used "Укрытие"; expires at hero's next turn.
   cover_active: boolean;
 }
 

@@ -5,6 +5,7 @@ import { BootScene } from "./scenes/BootScene";
 import { CombatScene } from "./scenes/CombatScene";
 import { CraftScene } from "./scenes/CraftScene";
 import { InventoryScene } from "./scenes/InventoryScene";
+import { LootScene } from "./scenes/LootScene";
 import { MapScene } from "./scenes/MapScene";
 import { SortieScene } from "./scenes/SortieScene";
 
@@ -20,6 +21,7 @@ const config: Phaser.Types.Core.GameConfig = {
     MapScene,
     SortieScene,
     CombatScene,
+    LootScene,
     InventoryScene,
     CraftScene,
   ],
