@@ -1,96 +1,96 @@
 # Status: QA
 
-**Текущая веха:** M1 — Технический скелет
-**Последнее действие:** Acceptance Testing по role PR #6, #7, #11
-**Статус:** ACCEPTANCE_APPROVE_ALL
+**Текущая веха:** M2 — Playable MVP
+**Последнее действие:** QA Acceptance стартован для Engineer PR #15
+**Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
+**Текущий шаг:** §1 build/static
 
 ## Текущий gate
 
-QA Acceptance по M1 завершена. Все обязательные role PR проверены против `m1-integration` и получают **APPROVE**:
+QA Acceptance по M2 выполняется на ветке `qa/m2-acceptance` от `m2-integration`.
 
-| PR | Роль | Ветка | Verdict |
-|---|---|---|---|
-| #7 | Engineer | `m1/eng-bootstrap` | **APPROVE** |
-| #6 | Content Designer | `m1/content-mvp` | **APPROVE** |
-| #11 | Artist / Asset Lead | `m1/art-initial` | **APPROVE** |
+Объект проверки: Engineer PR #15 (`m2/gameplay` → `m2-integration`).
 
-## Acceptance report — 2026-05-19
+## Acceptance report — M2 Engineer PR #15
 
-### PR #7 Engineer — APPROVE
+### §1 Build/static checks
 
-Проверено локально на ветке `m1/eng-bootstrap`, diff против `m1-integration`.
+Статус: pending.
 
-**Checks run:**
-- `npm install` — passed, 0 vulnerabilities.
-- `npm run typecheck` — passed.
-- `npm run lint` — passed.
-- `npm run build` — passed.
-- `npm run dev -- --host 127.0.0.1` + Chrome runtime-smoke — passed.
+План проверок:
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
 
-**Checklist evidence:**
-- BootScene существует и стартует первой; `create()` переводит в `BaseScene`.
-- BaseScene показывает `ОПЛОТ`, кнопки `В вылазку`, `Крафт`, `Инвентарь`.
-- MapScene показывает MVP-зону `Лес` и вход в вылазку.
-- SortieScene / CombatScene / InventoryScene / CraftScene присутствуют как M1-заглушки.
-- CombatScene показывает действия `Атака`, `Укрытие`, `Аптечка`, `Вернуться на базу`.
-- `src/types/` содержит `Item`, `Mob`, `Recipe`, `Zone`; поля соответствуют GDD §6 (`damage_min` / `damage_max`, `levels[]`, `vs_melee_bonus`).
-- Поиск по `src/`: `any` и закомментированный код не найдены.
-- `.gitignore` содержит `node_modules/` и `dist/`.
+### §2 M1 regression diff
 
-**Note:** production `dist/` после `npm run build` = ~1.5 MiB. Это выше handoff-пункта `< 1 МБ`, но ниже project/platform limit `< 5 MB` из GDD/QA role; превышение вызвано базовым Phaser bundle. Для M1 skeleton это не блокер.
+Статус: pending.
 
-**Runtime smoke:** Base → Map → Sortie → Combat → Base → Craft → Base → Inventory прошёл; browser console без ошибок.
+План: проверить diff `m2-integration...m2/gameplay` по `content/`, `assets/`, `docs/`, `src/types/` на регрессии M1.
 
-### PR #6 Content — APPROVE
+### §3 Runtime smoke — 7-step MVP flow
 
-Проверено локально на ветке `m1/content-mvp`, diff против `m1-integration`.
+Статус: pending.
 
-**Checks run:**
-- JSON parse для `content/items.json`, `mobs.json`, `recipes.json`, `zones.json`, `radio.json` — passed.
-- Counts: 15 items, 3 mobs, 5 recipes, 1 zone, `radio.json` пустой — passed.
-- Reference validation: recipes→items, mob drops→items, zone mobs→mobs, zone resources→items — passed.
-- Balance validation vs `docs/balance.md` и canon tables GDD §7.1–7.4 — passed.
+План: desktop Chrome, `npm run dev -- --host 127.0.0.1`, запись экрана.
 
-**Checklist evidence:**
-- Items: 8 resources + 2 weapons + 2 armor + 3 consumables; все required поля заполнены.
-- Item weights/stats совпадают с balance.md (`knife`, `makeshift_pistol`, `cloth_jacket`, `leather_vest`, `bandage`, `medkit`, `ammo_pistol`).
-- Mobs: `marauder`, `wild_dog`, `mutant`; статы и drop tables совпадают с balance/GDD.
-- Recipes: 5 canonical recipes; ingredients/results resolve to canonical items.
-- Zone: single `forest`, 3 depth levels, `boss_id: null`, refs valid.
-- Anti-scope: нет радио-сигналов, перков, extra zones, M2+ mobs/items.
+Flow:
+1. Base screen
+2. `В вылазку`
+3. Zone select
+4. Combat
+5. Loot
+6. Return
+7. Inventory + craft
 
-### PR #11 Artist — APPROVE
+### §4 Formula sanity vs GDD
 
-Проверено локально на ветке `m1/art-initial`, diff против `m1-integration`.
+Статус: pending.
 
-**Checks run:**
-- style-guide coverage: Military Graphic Novel, HEX palette, sprite sizes, fonts, art pipeline — passed.
-- PNG dimensions/file sizes via Pillow — passed.
-- Transparency check for hero/items alpha extrema — passed.
-- Visual distinguishability/contact sheet spot-check — passed.
+План: сверить `calcInitiative`, `return_time_s`, `applyAttack`, `applyLootLoss`, `canCraft` против GDD/balance.
 
-**Checklist evidence:**
-- `docs/style-guide.md` описывает общий стиль, anti-style, HEX palette, fonts, sprite sizes, UI rules, M2+ art pipeline and M1 placeholder pipeline.
-- `assets/sprites/hero.png`: 128×128, RGBA, alpha `(0, 255)`, 7.4 KiB.
-- 8 resource icons in `assets/sprites/items/`: each 64×64, RGBA, alpha `(0, 255)`, visually distinguishable.
-- `assets/backgrounds/forest.png`: 800×600, RGB dense background, 51.9 KiB, dark forest style.
-- Total M1 asset size: 81.3 KiB / 300 KiB budget.
-- Anti-scope: no mob sprites, no UI kit, no animations, no pixel-art direction.
+### §5 Anti-scope checks
 
-## Блокеры
+Статус: pending.
 
-Нет.
+План: проверить отсутствие radio/perks/SDK/third-party UI libs outside M2 scope.
 
-## PR / Recovery
+### §6 Architecture/readability
 
-- QA-report branch: `qa/m1-acceptance-report` (base = `m1-integration`).
+Статус: pending.
+
+План: проверить использование `GameState`, чистоту systems, отсутствие `any`.
+
+### §7 Engineer status note
+
+Статус: pending.
+
+План: проверить актуальность `staff/status/ENGINEER.md`; известное stale-состояние отметить как non-blocker, если подтвердится.
+
+## Findings
+
+Пока нет.
+
+## Blockers
+
+Пока нет.
+
+## Recovery
+
+- Role: QA Acceptance Critic
+- Milestone: M2 Playable MVP
+- Branch: `qa/m2-acceptance`
+- Current section: §1 build/static
+- Done sections: none
+- Next concrete step: read required M2 QA context, then run `npm run typecheck && npm run lint && npm run test && npm run build`
+- Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
+- Findings: none yet
+- Blockers: none
+
+## PR / Process
+
+- QA-report branch: `qa/m2-acceptance` (base = `m2-integration`).
 - This QA session updates only `staff/status/QA.md`.
-- Next gate after PM reviews QA-report: PM may merge approved role PRs #6, #7, #11 into `m1-integration` and proceed with M1 close process.
-
-## История
-
-- 2026-05-18 — Spec Review #1: `CHANGES_REQUESTED` (marauder weakness blocker; `vs_melee_bonus` semantic minor).
-- 2026-05-18 — GD QA-fix PR #4 merged.
-- 2026-05-18 — Spec Review #2: `APPROVE`.
-- 2026-05-19 — Acceptance Testing for PR #6/#7/#11: `APPROVE` all.
+- No Engineer code/content/assets/docs changes are allowed in this branch.
