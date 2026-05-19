@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §7 Engineer status note проверен
-**Статус:** IN_PROGRESS
+**Последнее действие:** final verdict: CHANGES_REQUESTED
+**Статус:** CHANGES_REQUESTED
 **Дата:** 2026-05-19
-**Текущий шаг:** final verdict
+**Текущий шаг:** done
 
 ## Текущий gate
 
@@ -107,22 +107,40 @@ This is a process/status-note issue, not a runtime/code blocker for M2 acceptanc
 
 ## Findings
 
-- §4 blocker: `return_time_s` formula from GDD/balance is not implemented/used in runtime code; `LootScene` returns directly to `BaseScene`.
+- §1 PASS: typecheck, lint, tests (46), build passed; Vite chunk-size warning is non-blocking.
+- §2 PASS: no M1 baseline diff in `content/`, `assets/`, `docs/`, `src/types/`.
+- §3 PASS_WITH_NOTE: desktop Chrome 7-step smoke completed with screen recording; no JS exceptions; one non-blocking 404 resource error.
+- §4 CHANGES_REQUESTED: `return_time_s` formula from GDD/balance is not implemented/used in runtime code; `LootScene` returns directly to `BaseScene`.
+- §5 PASS: anti-scope clean (no radio/perks/SDK/third-party UI libs).
+- §6 PASS_WITH_NOTE: architecture clean; DEV-only `O` cheat is guarded by `import.meta.env.DEV`.
+- §7 PASS_WITH_NOTE: `staff/status/ENGINEER.md` is stale, non-blocker.
 
 ## Blockers
 
 - Engineer PR #15 needs changes for missing `return_time_s` formula/runtime return duration, unless PM explicitly de-scopes ReturnScene/return time from M2 acceptance.
+
+## Final verdict
+
+CHANGES_REQUESTED.
+
+Required fix:
+- Implement/use the GDD/balance return-time formula: `return_time_s = BASE_RETURN_TIME_S * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)` in the return-to-base flow, or get explicit PM de-scope and document it.
+
+Non-blocking notes:
+- `staff/status/ENGINEER.md` is stale relative to final M2 work.
+- Vite chunk-size warning is non-blocking for M2 because build succeeds and Phaser bundle is expected.
+- One 404 resource error during runtime smoke is non-blocking because gameplay flow and JS runtime were healthy.
 
 ## Recovery
 
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: final verdict
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS; §6 architecture PASS_WITH_NOTE; §7 status PASS_WITH_NOTE
-- Next concrete step: finalize QA verdict and post PR comments
+- Current section: final verdict complete
+- Done sections: §1 PASS; §2 PASS; §3 PASS_WITH_NOTE; §4 CHANGES_REQUESTED; §5 PASS; §6 PASS_WITH_NOTE; §7 PASS_WITH_NOTE
+- Next concrete step: PM/Engineer should address `return_time_s` or explicitly de-scope it; PM should create QA-report PR from `qa/m2-acceptance` to `m2-integration` because Devin PR tool cannot see repo
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; §6 architecture clean; §7 Engineer status stale non-blocker; Vite chunk-size warning and one resource 404 are non-blocking
+- Findings: final verdict CHANGES_REQUESTED due missing `return_time_s`; all other sections pass or pass with non-blocking notes
 - Blockers: missing `return_time_s` runtime implementation unless de-scoped by PM
 
 ## PR / Process
