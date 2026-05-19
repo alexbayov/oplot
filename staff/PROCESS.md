@@ -28,7 +28,8 @@
 │  ШАГ 0: PM готовит веху                                     │
 │  - Пишет staff/prompts/M{N}.md (ТЗ по ролям)               │
 │  - Пишет kickoff/M{N}-*.md + handoff/M{N}-*.md (6 пар)     │
-│  - Коммитит в main                                          │
+│  - Создаёт ветку m{N}-integration от main (baseline)        │
+│  - Коммитит в main (межвеховый PM PR — мержит Alex)         │
 │  - Говорит Alex'у: «M{N} готова к запуску»                  │
 └────────────────────────────────────────────────────────────┘
                         │
@@ -71,8 +72,10 @@
                         ▼
 ┌────────────────────────────────────────────────────────────┐
 │  ШАГ 5: PM закрывает веху                                   │
-│  - Мерджит все PR                                           │
-│  - Обновляет PLAN.md, CHANGELOG.md, status/*.md             │
+│  - PM сам мерджит role PR в m{N}-integration                │
+│  - PM открывает PR m{N}-integration → main                  │
+│  - Alex/Заказчик мерджит gate-close PR в main            │
+│  - Обновляет PLAN.md, CHANGELOG.md, status/*.md, SUMMARY    │
 │  - Готовит промты M{N+1}                                    │
 │  - Говорит Alex'у: «M{N} закрыта, готов к M{N+1}?»         │
 └────────────────────────────────────────────────────────────┘
@@ -90,13 +93,14 @@
                    «апрув плана», либо список правок. До апрува сессия НЕ работает.
 4. ВЫПОЛНЕНИЕ    → строго по утверждённому плану + по handoff'у.
                    Если обнаружена дыра — стоп, вопрос Alex'у.
-5. PR            → ветка m{N}/<role>-<scope>, описание + чек-лист + recovery block,
+5. PR            → ветка m{N}/<role>-<scope>, base = `m{N}-integration`,
+                   описание + чек-лист + recovery block,
                    БЕЗ self-merge. Сессия сообщает Alex'у ссылку на PR.
 6. ОТЧЁТ         → обновляет только staff/status/{ROLE}.md, блокирующее Alex'у:
                    «PR <ссылка>, готов к ревью PM».
 ```
 
-**Никакой self-merge.** Любая роль создаёт PR и НЕ мерджит. Мерджит только PM.
+**Никакой self-merge.** Любая роль создаёт PR и НЕ мерджит. Мерджит PM (в `m{N}-integration`). Финальный gate-close PR `m{N}-integration → main` мерджит Alex/Заказчик.
 
 **Self-update правило:** роль обновляет только свой status-файл и PR recovery block. Общий dashboard `staff/status/M{N}.md`, `PLAN.md`, `CHANGELOG.md` и чужие `status/*.md` обновляет только PM.
 
