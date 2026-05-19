@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** §4 formula sanity завершён
+**Последнее действие:** §5 anti-scope checks пройдены
 **Статус:** IN_PROGRESS
 **Дата:** 2026-05-19
-**Текущий шаг:** §5 anti-scope checks
+**Текущий шаг:** §6 architecture/readability
 
 ## Текущий gate
 
@@ -75,9 +75,13 @@ Blocking mismatch:
 
 ### §5 Anti-scope checks
 
-Статус: pending.
+Статус: PASS.
 
-План: проверить отсутствие radio/perks/SDK/third-party UI libs outside M2 scope.
+Проверено на Engineer branch `m2/gameplay`:
+- `src/` + `content/`: no radio/радио matches.
+- `src/` + `content/`: no perk/перки matches.
+- `src/`: no Yandex SDK / `ysdk` / ads integration. `reward` matches are only `xp_reward` fields, not SDK rewards.
+- `package.json`: no third-party UI libs/frameworks; runtime dependency remains Phaser only.
 
 ### §6 Architecture/readability
 
@@ -104,11 +108,11 @@ Blocking mismatch:
 - Role: QA Acceptance Critic
 - Milestone: M2 Playable MVP
 - Branch: `qa/m2-acceptance`
-- Current section: §5 anti-scope checks
-- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED
-- Next concrete step: run anti-scope checks for radio/perks/SDK/third-party UI libs
+- Current section: §6 architecture/readability
+- Done sections: §1 build/static PASS; §2 M1 regression diff PASS; §3 runtime smoke PASS_WITH_NOTE; §4 formula sanity CHANGES_REQUESTED; §5 anti-scope PASS
+- Next concrete step: review `GameState` usage, pure systems, and `any` usage
 - Engineer PR: #15 (`m2/gameplay` → `m2-integration`)
-- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; Vite chunk-size warning and one resource 404 are non-blocking
+- Findings: §1 PASS; §2 no M1 baseline diff; §3 smoke flow works; §4 `return_time_s` missing; §5 anti-scope clean; Vite chunk-size warning and one resource 404 are non-blocking
 - Blockers: missing `return_time_s` runtime implementation unless de-scoped by PM
 
 ## PR / Process
