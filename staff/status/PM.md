@@ -2,7 +2,7 @@
 
 **Текущая веха:** M1 — Технический скелет
 **Статус:** IN_PROGRESS
-**Последнее обновление:** 2026-05-18
+**Последнее обновление:** 2026-05-19
 **Текущий gate:** `M1_PARALLEL_PRODUCTION_IN_PROGRESS`
 
 ## Что сделано
@@ -17,6 +17,8 @@
 - Engineer PR #7 создан, открыт, mergeable, runtime navigation test приложен в PR-комментарии.
 - Создан единый dashboard `staff/status/M1.md`.
 - Добавлена orchestration state machine `staff/STATE_MACHINE.md`.
+- PM/process PR #8 (orchestration dashboard, state machine, communication kit, role self-update rules, PR template) смержен в `main`.
+- Recovery PM-сессия 2026-05-19: фактическое состояние подтверждено по GitHub (PR #6 open/mergeable, PR #7 open/mergeable, PR #8 merged, ветка `m1/art-initial` на remote отсутствует).
 
 ## Что НЕ сделано
 
@@ -25,6 +27,7 @@
 - PR #6 и PR #7 ещё не смержены.
 - M1 ещё не закрыта в `PLAN.md` и `CHANGELOG.md`.
 - `staff/handoff/M1-SUMMARY.md` ещё не создан.
+- `staff/LINKS.md` всё ещё помечает PR #8 как Open — обновлю это в следующем PM dashboard PR (например, при закрытии M1).
 
 ## Блокеры
 
