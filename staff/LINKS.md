@@ -10,11 +10,16 @@
 
 ## Active M1 PRs
 
+_Last reconciled with GitHub: 2026-05-19._
+
 | PR | Role | Status |
 |---|---|---|
 | #6 | Content Designer | Open; ready for QA Acceptance |
 | #7 | Engineer | Open; ready for QA Acceptance |
-| #8 | PM / Process | Open; orchestration dashboard + recovery rules |
+| #8 | PM / Process | Merged; orchestration dashboard + recovery rules |
+| #9 | PM / Recovery snapshot | Open; current PM recovery PR (reconcile dashboard, LINKS, CONTEXT) |
+
+**Next action:** launch Artist via `staff/kickoff/M1-ARTIST.md` (branch `m1/art-initial`), unless PM/Customer explicitly defers Artist scope from M1. After Artist PR exists (or deferral is recorded in `staff/status/M1.md`), gate moves to `ROLE_PRS_READY` and the next kickoff is `staff/kickoff/M1-QA-ACCEPT.md`.
 
 ## Start here
 

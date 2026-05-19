@@ -33,8 +33,11 @@
 
 ## Текущий M1 snapshot
 
+_Last reconciled with GitHub: 2026-05-19._
+
 - GD spec: approved.
-- Content PR: #6, ready for QA Acceptance.
-- Engineer PR: #7, ready for QA Acceptance.
+- Content PR: #6, open, ready for QA Acceptance.
+- Engineer PR: #7, open, ready for QA Acceptance.
 - Artist PR: missing; blocks QA Acceptance unless PM/Customer explicitly defers Artist scope.
-- Process dashboard PR: #8.
+- Process dashboard PR: #8, merged into `main`.
+- Current PM recovery snapshot PR: #9 (open) — reconciles `staff/status/M1.md`, `staff/status/PM.md`, `staff/LINKS.md`, and this file with actual GitHub state.
