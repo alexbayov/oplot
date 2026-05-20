@@ -1,69 +1,69 @@
 # Status: PM
 
-**Текущая веха:** M2 — Играбельный MVP (закрывается)
-**Статус:** M2_DONE (PM merges #15/#16/#17 в m2-integration завершены; этот PR pm/m2-finalize закрывает M2 dashboard, дальше — gate-close PR для Alex'а)
-**Последнее обновление:** 2026-05-20 (после QA APPROVE re-review и PM merges)
-**Текущий gate:** `M2_DONE`
+**Текущая веха:** M3 — Расширение мира
+**Статус:** M3_PREPARED (PM kickoff в работе; `m3-integration` создан от свежего `main`; этот PR `pm/m3-kickoff` готовит dashboards и kickoff/handoff материалы под 6 ролей M3)
+**Последнее обновление:** 2026-05-20 (после Alex merged M2 gate-close PR #19)
+**Текущий gate:** `M3_PREPARED`
 
 ## История
 
 - **M0 — Каркас процесса:** DONE 2026-05-18. PR #1.
-- **M1 — Технический скелет:** DONE 2026-05-19. Gate-close PR #12 merged Alex'ом в `main`. Полный summary — `staff/handoff/M1-SUMMARY.md`. M1 deliverables: Phaser 3 + TS + Vite skeleton, GDD §1–§6, 15 items / 3 mobs / 5 recipes / 1 forest zone, 10 placeholder-ассетов, integration-branch workflow введён.
-- **M2 — Играбельный MVP:** DONE 2026-05-20 (PM merges все 4 role/PM PR в m2-integration; ждёт gate-close merge от Alex). См. `staff/status/M2.md` и `staff/handoff/M2-SUMMARY.md`.
+- **M1 — Технический скелет:** DONE 2026-05-19. Gate-close PR #12 merged Alex'ом в `main`. Полный summary — `staff/handoff/M1-SUMMARY.md`.
+- **M2 — Играбельный MVP:** DONE 2026-05-20. Gate-close PR #19 merged Alex'ом в `main`. Полный summary — `staff/handoff/M2-SUMMARY.md`. Core loop полный, 4 системы, 9 сцен, 49 unit-тестов, build 1.5 MB.
+- **M3 — Расширение мира:** IN_PROGRESS, PM kickoff 2026-05-20.
 
-## Что сделано на M2 (итог)
+## Что планируется на M3
 
-- Создана интеграционная ветка `m2-integration` от `main` (commit `1244c5f`).
-- Подготовлены kickoff/handoff материалы и M2 dashboard.
-- **PR #14** `pm/m2-kickoff → main` — merged 2026-05-19 Alex'ом (M2 kickoff materials).
-- **PR #15** `m2/gameplay → m2-integration` — merged 2026-05-20 PM. Engineer-реализация: core loop, 4 системы, 9 сцен (incl. ReturnScene), 49 vitest тестов. Две сессии: исходная (steps 1–12) + continuation (ReturnScene fix после QA-blocker).
-- **PR #16** `pm/m2-status-sync-eng-pr15 → m2-integration` — merged 2026-05-20 PM (исторический gate move на PARALLEL_PRODUCTION_IN_PROGRESS).
-- **PR #17** `qa/m2-acceptance → m2-integration` — merged 2026-05-20 PM. QA Acceptance two-pass (CHANGES_REQUESTED → APPROVE), PR открыт PM-ом (git-manager proxy не дал QA-сессии push PR).
-- **Этот PR** `pm/m2-finalize → m2-integration` — gate → M2_DONE, M2-SUMMARY, CHANGELOG, обновление dashboard.
+См. `staff/status/M3.md` для полного scope/anti-scope/DoD. Кратко:
 
-## PM-процесс lessons learned на M2
+- **GD M3 amendment**: §5.4 (5 новых мобов с уникальным AI), §6.4.M3 (2 новые зоны Склад + Город с zone-exclusive ресурсами и unlock_condition), новая §7 (radio system structure — JSON-схема + UI-flow, заглушка для M3 без реальной логики ветвлений). Плюс `balance.md` §M3 (числа).
+- **QA Spec M3 review**: ревью GD-amendment, право вето.
+- **Параллельно после GD merge + QA Spec APPROVE:**
+  - **Content M3**: +15 items (всего 30), +5 mobs (всего 8), +10 recipes (всего 15), +2 zones (всего 3), +2-3 dummy radio signals.
+  - **Engineer M3**: multi-zone runtime + 5 mob AI behaviors + RadioScene stub + RadioSignal type + тесты (≥ 56).
+  - **Artist M3**: 5 mob sprites + 2 backgrounds + ~10 item icons. Pillow pipeline placeholder-класса.
+- **QA Acceptance M3**: full §1–§8 проверка после 3 ready role-PR.
+- **PM finalize M3**: gate → M3_DONE, M3-SUMMARY, CHANGELOG.
+- **Gate-close M3**: `m3-integration → main`, мерджит Alex.
 
-- **Token-budget**: Engineer-сессия с планом 13 пунктов сжёг лимит на step 13. На M3+ разбивать скоуп на 3-5 действий на сессию (recovery-safe continuation pattern).
-- **Recovery-safe PR**: ранний Draft PR обязателен (PR #15 был открыт после steps 1–2, что спасло работу после смерти сессии).
-- **QA-blocker на спек-нарушения**: QA нашла, что Engineer не реализовал `return_time_s` / `ReturnScene` из GDD §1 + balance.md. PM верифицировал локально и запустил 5-действенную Engineer continuation. Урок: PM-promo для Engineer должен явно перечислять сцены из GDD §1 диаграммы (не опираться на «я всё сделал»).
-- **PAT-hygiene**: QA-сессия случайно залогировала PAT в tool-output (fallback-команда с trailing newline). PAT ротирован. На M3+ role-promo явный запрет: PAT только в Authorization header, никогда в URL или echo/print.
-- **Git-proxy 403**: git-manager прокси не имеет write на alexbayov/oplot в PM/QA-сессиях. На M2 PM использовал temp PAT, затем Alex сохранил org-scope secret `GITHUB_PAT_OPLOT`. На M3+ PM-сессия будет использовать его без ручных запросов.
+## Lessons learned M2 (применяются на M3)
 
-## Что НЕ сделано (по дизайну, ждёт Alex'а)
-
-- Gate-close PR `m2-integration → main` — PM открывает после этого pm/m2-finalize merge; мерджит Alex/Заказчик.
-- Старт M3 — после merge gate-close в main.
-
-## Плановые решения M2 (зафиксированы в kickoff'ах и подтверждены QA APPROVE)
-
-- **GD amendment не нужен:** GDD §1–§6 уже покрывает M2 механики (core loop, бой, инвентарь/вес, крафт, мобы). Это подтверждено по результатам M2.
-- **Content на M2 не запускается:** canonical M1 content (15/3/5/1) хватило для MVP. Любые правки чисел — через `docs/balance.md`, не через `content/*.json`.
-- **Artist на M2 не запускается:** M1 placeholder-ассеты использованы. Реальный арт — M3+.
-- **QA Acceptance возвращается** формальной сессией на M2 (на M1 заменена PM-integration smoke — разовое решение, см. `staff/decisions/DECISIONS.md` 2026-05-19).
+- **Token-budget**: план role-сессии **строго 5-7 пунктов** (НЕ 13 как у M2 Engineer). Если больше — разбивать на continuation. Прописано во всех M3 kickoff'ах.
+- **Recovery-safe PR**: ранний Draft PR обязателен (после первой 1-2 правки). Прописано во всех M3 kickoff'ах.
+- **PAT-hygiene**: PAT только в Authorization header / env var, никогда в URL / echo / print. Прописано во всех M3 kickoff'ах explicitly.
+- **Git-proxy 403**: PM-сессия использует org-scope secret `GITHUB_PAT_OPLOT` напрямую через REST API / git auth. Manual PAT не требуется ни для PM, ни для role merges.
+- **QA-blocker** на спек-нарушения требует PM-верификации локально (1 раз QA нашла отсутствие ReturnScene на M2) → промо для Engineer M3 явно перечисляет 3 deliverables: multi-zone, 5 mob AI, RadioScene stub.
+- **Anti-scope discipline**: каждый kickoff M3 явно перечисляет, что НЕ входит в M3 (перки M4, боссы M5, полная радио-логика M6, модули, Yandex SDK).
 
 ## Блокеры
 
-- Нет. M2 закрыта по PM-стороне. Ждёт Alex/Заказчика для merge gate-close PR `m2-integration → main`.
+- Нет. PM kickoff PR `pm/m3-kickoff` готовится для merge в `m3-integration`. После merge — следующий шаг GD M3 amendment session.
 
-## PR
+## PR (активные)
 
-- PM-process M2 kickoff PR #14 `pm/m2-kickoff → main`: **merged 2026-05-19** Alex'ом.
-- Engineer M2 PR #15 `m2/gameplay → m2-integration`: **merged 2026-05-20** PM. 5 commits (incl. ReturnScene fix после QA-blocker).
-- PM status-sync PR #16 `pm/m2-status-sync-eng-pr15 → m2-integration`: **merged 2026-05-20** PM. Исторический gate move.
-- QA Acceptance M2 PR #17 `qa/m2-acceptance → m2-integration`: **merged 2026-05-20** PM. Two-pass review APPROVED.
-- PM M2 finalize PR `pm/m2-finalize → m2-integration`: этот PR.
-- Gate-close M2 PR `m2-integration → main`: откроется PM-ом после merge этого PR. Мерджит Alex.
-- M1 PR-реестр (closed): #6/#7/#11/#13 → `m1-integration`; #8/#9/#10/#12 → `main`.
+- **Этот PR** `pm/m3-kickoff → m3-integration`: M3 dashboard + 6 kickoff + 6 handoff материалов + PLAN/CONTEXT/LINKS/CHANGELOG update.
+- **TBD** GD M3 amendment PR `m3/gd-amendment → m3-integration` — следующий шаг после merge этого PR.
+- **TBD** QA Spec M3 PR `qa/m3-spec-review → m3-integration` — после GD PR open.
+- **TBD** Content / Engineer / Artist M3 PRs (parallel) — после GD merge + QA Spec APPROVE.
+- **TBD** QA Acceptance M3 PR — после 3 role PR Ready.
+- **TBD** PM finalize M3 + gate-close M3.
+
+## История PR (закрытые вехи)
+
+- M2 (closed): #14 → main, #15/#16/#17/#18 → m2-integration, #19 (gate-close) → main.
+- M1 (closed): #6/#7/#11/#13 → m1-integration, #8/#9/#10/#12 → main.
 
 ## Что делать новой PM-сессии (recovery)
 
-1. Прочитай `staff/status/PM.md` (этот файл), `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md`, `staff/STATE_MACHINE.md`, `staff/PLAN.md`.
-2. Проверь статус gate-close PR `m2-integration → main`:
-   - Если открыт и не смержен: попроси Alex'а смержить (не self-merge).
-   - Если смержен → M2 официально закрыта. Старт M3.
-3. **Старт M3** (после gate-close merge):
-   - создай `m3-integration` от свежего `main`;
-   - подготовь `staff/kickoff/M3-*.md` + `staff/handoff/M3-*.md` под план M3 (см. `staff/PLAN.md` §3);
-   - обнови `staff/status/M3.md`, `staff/CONTEXT.md`, `staff/LINKS.md` под активную M3.
-4. **Лессон M2:** не давай role-сессии план > 5-7 действий. Ранний Draft PR + recovery-блок обязательны. PAT только в Authorization header.
-5. Не пиши код/контент/ассеты сам. Не self-merge gate-close. Обновляй только `staff/status/PM.md`, `staff/status/M{N}.md`, `staff/PLAN.md`, `staff/decisions/CHANGELOG.md`, `staff/decisions/DECISIONS.md`, `staff/handoff/M{N}-SUMMARY.md`, `staff/CONTEXT.md`, `staff/LINKS.md`.
+1. Прочитай `staff/status/PM.md` (этот файл), `staff/status/M3.md`, `staff/handoff/M2-SUMMARY.md`, `staff/STATE_MACHINE.md`, `staff/PLAN.md`.
+2. Проверь статус M3 на GitHub:
+   - Если этот PR `pm/m3-kickoff → m3-integration` ещё не смержен — попроси Alex'а смержить.
+   - Если смержен — координируй активные role-сессии (см. `staff/status/M3.md` PR-реестр).
+3. **Координация ролей M3** (after kickoff merge):
+   - Сначала GD M3 amendment (single session).
+   - После GD PR open → QA Spec M3 (parallel review).
+   - После GD merge + QA Spec APPROVE → Content / Engineer / Artist (3 parallel sessions, каждый ≤ 5-7 действий).
+   - После 3 PR Ready → QA Acceptance M3.
+   - После QA APPROVE → PM merges все role PR в `m3-integration`, открывает finalize PR (gate → M3_DONE), затем gate-close PR `m3-integration → main` для Alex.
+4. **Лессоны M2** (PRESERVED, важны для M3): план role-сессии ≤ 5-7 действий, recovery-safe ранний Draft PR, PAT-hygiene, anti-scope discipline.
+5. Не пиши код/контент/ассеты сам. Не self-merge gate-close. PM обновляет только: `staff/status/PM.md`, `staff/status/M{N}.md`, `staff/PLAN.md`, `staff/decisions/CHANGELOG.md`, `staff/decisions/DECISIONS.md`, `staff/handoff/M{N}-SUMMARY.md`, `staff/CONTEXT.md`, `staff/LINKS.md`.

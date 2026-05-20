@@ -37,3 +37,16 @@
 - Build clean: 1504.30 kB JS / 347.65 kB gzip — под бюджет 2 MB Yandex Games.
 - Workflow lessons зафиксированы в `staff/status/PM.md`: token-budget (3-5 действий на role-сессию), recovery-safe ранний Draft PR, PAT-hygiene (только в Authorization header), org-scope secret `GITHUB_PAT_OPLOT` для PM merge без ручных запросов.
 - Gate-close PR `m2-integration → main` открывает PM после merge pm/m2-finalize; мерджит Alex/Заказчик.
+- M2 закрыта: gate-close PR #19 merged Alex'ом 2026-05-20.
+
+## 2026-05-20 — M3: Kickoff (Расширение мира)
+
+См. `staff/status/M3.md` для полного скоупа.
+
+- M3 «Расширение мира» стартует: 3 зоны (Лес есть, +Склад +Город), 8 мобов (3 есть, +5 новых), 15 рецептов (5 есть, +10 новых), radio system structure stub.
+- `m3-integration` создана от свежего `main` (HEAD `3a40709` — M2 gate-close).
+- PM kickoff PR `pm/m3-kickoff → m3-integration` несёт M3 dashboard + 6 kickoff + 6 handoff материалов (GD / QA Spec / Content / Engineer / Artist / QA Acceptance) + обновление `PLAN.md` (M2 → DONE, M3 → IN_PROGRESS) + `CONTEXT.md` + `LINKS.md` + `staff/status/PM.md`.
+- Lessons learned M2 явно прошиты в каждый M3 kickoff: token-budget (план ≤ 5-7 пунктов), recovery-safe ранний Draft PR, PAT-hygiene (только в Authorization header, никогда в URL/echo/print), anti-scope discipline (явный перечень что НЕ входит в M3 на уровне каждой роли).
+- M3 anti-scope: нет перков (M4), нет боссов (M5), нет полной радио-логики (M6), нет модулей оружия, нет Yandex SDK (M8), нет сторонних UI-библиотек.
+- Org-scope secret `GITHUB_PAT_OPLOT` сохранён и используется PM-сессией для merge без ручного PAT-запроса.
+- Последовательность M3: GD amendment → QA Spec → (Content + Engineer + Artist параллельно) → QA Acceptance → PM finalize → gate-close.
