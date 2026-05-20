@@ -15,7 +15,8 @@
 | Что | Файл |
 |---|---|
 | Процесс и роли | `staff/TEAM.md`, `staff/PROCESS.md`, `staff/ORCHESTRATION.md` |
-| Текущий gate (актуальная веха) | `staff/status/M2.md` |
+| Текущий gate (M2 закрывается) | `staff/status/M2.md` |
+| M2 summary (итог) | `staff/handoff/M2-SUMMARY.md` |
 | Завершённая веха M1 | `staff/status/M1.md`, `staff/handoff/M1-SUMMARY.md` |
 | State machine | `staff/STATE_MACHINE.md` |
 | План вех | `staff/PLAN.md` |
@@ -32,14 +33,13 @@
 - QA всегда отдельная сессия от той роли, которую проверяет.
 - PR не self-merge. Мерджит PM после нужного gate.
 
-## Текущий M2 snapshot
+## Текущий snapshot (M2 закрывается)
 
-_Last reconciled with GitHub: 2026-05-19 (M2 kickoff)._
+_Last reconciled with GitHub: 2026-05-20 (M2_DONE; gate-close pending Alex)._
 
-- **Активная веха:** M2 — Играбельный MVP. См. `staff/status/M2.md`.
-- **Integration branch:** `m2-integration` (от `main`, 2026-05-19, commit `1244c5f`). Все role PR M2 таргетятся в `m2-integration`. На M2 gate-close PM открывает PR `m2-integration → main`, который мерджит Alex/Заказчик.
-- **Активные роли M2:** Engineer (главная работа M2). Content/Artist/GD на M2 не запускаются (см. anti-scope в `staff/status/M2.md`).
-- **QA Acceptance** возвращается формальной сессией на M2 (на M1 она была заменена PM-integration smoke — это разовое решение, см. `staff/decisions/DECISIONS.md` 2026-05-19).
+- **Веха M2 — Играбельный MVP:** закрыта по PM-стороне 2026-05-20. PM merges всех 4 role/PM PR в `m2-integration` завершены (PR #15 Engineer, #16 PM status sync, #17 QA Acceptance APPROVED, pm/m2-finalize). Жду Alex'а для merge gate-close PR `m2-integration → main`.
+- Полный summary — `staff/handoff/M2-SUMMARY.md`.
+- **Активная ветка:** `m2-integration`. После gate-close merge в `main` стартует M3.
 
 ## Закрытая веха M1
 
