@@ -1,9 +1,9 @@
 # Status: PM
 
 **Текущая веха:** M2 — Играбельный MVP
-**Статус:** M2_PREPARED (kickoff materials готовы, ждём запуска Engineer-сессии Alex'ом)
-**Последнее обновление:** 2026-05-19
-**Текущий gate:** `M2_PREPARED`
+**Статус:** PARALLEL_PRODUCTION_IN_PROGRESS (Engineer Draft PR #15 open, план апрувлен, steps 1–2 запушены)
+**Последнее обновление:** 2026-05-19 (после открытия Engineer Draft PR #15)
+**Текущий gate:** `PARALLEL_PRODUCTION_IN_PROGRESS`
 
 ## История
 
@@ -19,13 +19,16 @@
   - `staff/kickoff/M2-ENG.md` + `staff/handoff/M2-ENG.md` — Engineer M2 (главная роль вехи: реализует core loop, бой, лут+вес, инвентарь, крафт).
   - `staff/kickoff/M2-QA-ACCEPT.md` + `staff/handoff/M2-QA-ACCEPT.md` — формальная QA Acceptance-сессия возвращается на M2.
 - Обновлены `staff/CONTEXT.md`, `staff/LINKS.md` — указывают на M2 как активную веху.
-- Открыт межвеховый PM-process PR `pm/m2-kickoff → main` (этот PR).
+- PR #14 `pm/m2-kickoff → main` — **merged 2026-05-19** Alex'ом.
+- Engineer-сессия запущена; план 13 пунктов **апрувлен PM** (с 3 уточнениями: dev-cheat за `import.meta.env.DEV`, sceneUi.ts минимальный, recovery cadence).
+- Engineer открыл Draft PR #15 `m2/gameplay → m2-integration`, запушены steps 1–2 (`src/state/{balance,types,GameState}.ts` + `staff/status/ENGINEER.md`). Baseline зелёный (`typecheck`/`lint`/`build`).
 
-## Что НЕ сделано (по дизайну, ждёт Alex'а или ролей)
+## Что НЕ сделано (по дизайну, ждёт ролей)
 
-- Merge этого PM-process PR в `main` — Alex/Заказчик (после merge'а CONTEXT/LINKS на main отражают M2 active, и любая новая Devin-сессия видит правильный gate-state без чтения других веток).
-- Запуск Engineer M2 Devin-сессии — Alex (промт = `staff/kickoff/M2-ENG.md`).
-- Запуск QA Acceptance M2 — PM запускает после Engineer PR ready и PM-ревью.
+- Engineer #15 продолжает работу по плану (steps 3–13: системы weight/combat/loot/craft → сцены Boot/Base/Map/Sortie/Combat/Loot/Inventory/Craft → vitest unit-tests → runtime smoke 7-step MVP-flow в Chrome).
+- Engineer переводит #15 в Ready после прохода всех `npm` команд и runtime smoke.
+- Запуск QA Acceptance M2 — PM запускает после Engineer Ready (снят Draft) по `staff/kickoff/M2-QA-ACCEPT.md`.
+- Gate-close PR `m2-integration → main` — PM открывает после QA APPROVE; merge'ит Alex/Заказчик.
 
 ## Плановые решения M2 (зафиксированы в kickoff'ах)
 
@@ -36,12 +39,13 @@
 
 ## Блокеры
 
-- Нет. Жду merge PM-process PR в `main` и запуска Engineer Devin-сессии.
+- Нет. Жду продолжения Engineer #15 по плану и его перевода в Ready.
 
 ## PR
 
-- PM-process M2 kickoff PR `pm/m2-kickoff → main`: open (этот PR).
-- Engineer M2 PR `m2/gameplay → m2-integration`: not yet created.
+- PM-process M2 kickoff PR #14 `pm/m2-kickoff → main`: **merged 2026-05-19** Alex'ом.
+- Engineer M2 PR #15 `m2/gameplay → m2-integration`: **open (Draft)**, steps 1–2 запушены, WIP по плану 13 пунктов.
+- PM status-sync PR `pm/m2-status-sync-eng-pr15 → m2-integration`: open (этот PR; sync статус-файлов под gate-move на PARALLEL_PRODUCTION_IN_PROGRESS).
 - QA Acceptance M2 PR `qa/m2-acceptance → m2-integration`: not yet created.
 - Gate-close M2 PR `m2-integration → main`: not yet created.
 - M1 PR-реестр (closed): #6/#7/#11/#13 → `m1-integration`; #8/#9/#10/#12 → `main`.

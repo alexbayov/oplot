@@ -15,16 +15,17 @@
 
 ## Active M2 PRs
 
-_Last reconciled with GitHub: 2026-05-19 (M2 kickoff)._
+_Last reconciled with GitHub: 2026-05-19 (Engineer Draft PR #15 opened)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| (this PR) | PM / M2 kickoff | `main ← pm/m2-kickoff` | Open; межвеховый PM-process PR, мерджит Alex/Заказчик |
-| (Engineer) | Engineer | `m2-integration ← m2/gameplay` | Not yet created |
+| #14 | PM / M2 kickoff | `main ← pm/m2-kickoff` | **Merged 2026-05-19** Alex'ом — kickoff/handoff docs на main и m2-integration |
+| #15 | Engineer | `m2-integration ← m2/gameplay` | **Open (Draft)** 2026-05-19 — план апрувлен PM, steps 1–2 (GameState skeleton + balance.ts) запушены. WIP. |
+| (this PR) | PM / status sync | `m2-integration ← pm/m2-status-sync-eng-pr15` | Open; PM-fix статус-PR после открытия Engineer Draft PR #15 |
 | (QA) | QA Acceptance | `m2-integration ← qa/m2-acceptance` | Not yet created |
 | (gate-close) | PM | `main ← m2-integration` | Not yet created; открывается на M2 gate-close |
 
-**Next action:** Alex мерджит этот PM-process PR в `main` (один клик), запускает Engineer-сессию по `staff/kickoff/M2-ENG.md`. PM подхватывает Engineer plan → PR-review → QA Acceptance kickoff → merge в `m2-integration` → gate-close PR.
+**Next action:** Engineer продолжает работу по плану (систэмы → сцены → vitest → runtime smoke), пушит подшаги в #15 и обновляет Recovery-блок. PM наблюдает прогресс, подхватывает Engineer ready (снят Draft) → запускает QA Acceptance по `staff/kickoff/M2-QA-ACCEPT.md`.
 
 ## Merged M1 PRs (история)
 
