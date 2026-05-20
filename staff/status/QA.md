@@ -1,10 +1,10 @@
 # Status: QA
 
 **Текущая веха:** M2 — Playable MVP
-**Последнее действие:** final verdict: CHANGES_REQUESTED
-**Статус:** CHANGES_REQUESTED
+**Последнее действие:** re-review after Engineer fix (commits 872503d + 1335977) → APPROVE
+**Статус:** APPROVED
 **Дата:** 2026-05-19
-**Текущий шаг:** done
+**Текущий шаг:** done (ready for PM merge)
 
 ## Текущий gate
 
@@ -148,3 +148,118 @@ Non-blocking notes:
 - QA-report branch: `qa/m2-acceptance` (base = `m2-integration`).
 - This QA session updates only `staff/status/QA.md`.
 - No Engineer code/content/assets/docs changes are allowed in this branch.
+
+## Re-review after Engineer fix (2026-05-19)
+
+Object: Engineer continuation commits on `m2/gameplay`:
+- `872503d` — `feat(M2): add ReturnScene with weight-based return_time_s (QA blocker fix)`.
+- `1335977` — `chore(M2): update ENGINEER.md after ReturnScene fix`.
+
+HEAD checked: `1335977` (`origin/m2/gameplay`).
+
+### Re-review §1 build/static
+
+Статус: PASS.
+
+Прогон на `m2/gameplay` HEAD `1335977` после `npm install`:
+
+- `npm install` — PASS, 0 vulnerabilities.
+- `npm run typecheck` — PASS (exit 0).
+- `npm run lint` — PASS (exit 0).
+- `npm run test` — PASS: 4 files / **49 tests** (was 46 + **3 new** for `computeReturnTime`).
+- `npm run build` — PASS (exit 0). Vite chunk-size warning for Phaser bundle остался, non-blocking, как в первом review.
+
+```
+ Test Files  4 passed (4)
+      Tests  49 passed (49)
+   Duration  615ms
+```
+
+### Re-review §3 runtime smoke (ReturnScene path only)
+
+Статус: PASS.
+
+Среда: `npm run dev -- --host 127.0.0.1`, Vite at `http://127.0.0.1:5173/`, Desktop Chrome.
+
+Screen-recording: запущен и аннотирован 4 точками (setup + 2× test_start + 2× assertion). Сессия была прервана out-of-quota в самом конце scenario B (после успешного assertion); recording был активен на момент scenario A полностью и scenario B до verification ReturnScene. Скриншот-evidence заменяет recording для итогового артефакта (см. attachments в комментарии PR).
+
+#### Сценарий A — пустой рюкзак
+
+Путь: BaseScene → «В вылазку» → MapScene «Войти» → SortieScene «Старт depth 1» → CombatScene (2× Дикий пёс) → атака до победы (использовали 2 бинта) → LootScene показал лут (Кожа+Дерево+Верёвка+Ткань = 6 кг), backpack 0.0/30 кг → «Возврат на базу» (loot НЕ взят).
+
+ReturnScene observed:
+- Title «Возврат на базу» — PASS.
+- «Вес 0.0/30 кг» — PASS (пустой рюкзак, как ожидалось).
+- «Время возврата: 30с» — PASS (совпадает с `BASE_RETURN_TIME_S = 30`, формула `30 * (1 + 0/30 * 1.0) = 30`).
+- Progress-bar анимируется от 0 к 100% — PASS.
+- По завершении tween: переход обратно в BaseScene, HP восстановлен до 100/100, sortie очищен, stash без новых ресурсов — PASS.
+
+#### Сценарий B — нагруженный рюкзак
+
+Путь: page reload → BaseScene → «В вылазку» → MapScene «Войти» → SortieScene «Старт depth 1» → CombatScene (Мародёр) → атака до победы → LootScene показал лут (Верёвка+Дерево = 3 кг), backpack 0.6/30 кг (2 бинта) → «Взять всё» → backpack 3.6/30 кг → «Возврат на базу».
+
+ReturnScene observed:
+- Title «Возврат на базу» — PASS.
+- «Вес 3.6/30 кг» — PASS (3.0 кг лута + 0.6 кг бинтов).
+- «Время возврата: 34с» — PASS. Расчёт: `30 * (1 + 3.6/30 * 1.0) = 33.6 → toFixed(0) = "34"`. Совпадает.
+- Progress-bar анимируется — PASS.
+- Текст времени **меняется** с весом (34с vs 30с в сценарии A) — критерий QA выполнен.
+
+Переход в BaseScene в сценарии B не дождан полностью (kickoff явно разрешил наблюдение 5-10 сек для B), но логика onComplete идентична сценарию A (тот же `completeReturn()`-handler), там переход подтверждён.
+
+Дополнительно зафиксирован O dev-cheat на BaseScene: добавляет cloth × 10 = **10.0 кг** в stash (kickoff упоминал 5 кг — фактическая цифра отличается, потому что cloth весит 1 кг/шт, не 0.5; non-blocker, cheat работает корректно).
+
+### Re-review §4 formula sanity vs GDD
+
+Статус: PASS.
+
+File-by-file diff vs sources of truth:
+
+- `src/systems/weight.ts:23-35` — `computeReturnTime(curWeight, maxWeight)`:
+  - Формула `BASE_RETURN_TIME_S * (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR)` совпадает с `docs/balance.md:190`:
+    `return_time_s = BASE_RETURN_TIME_S * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)`. ✓
+  - Edge-case `maxWeight <= 0 → BASE_RETURN_TIME_S` (защита от NaN/Infinity). Разумная защита; в GDD не указана явно, не противоречит. ✓
+  - Константы `BASE_RETURN_TIME_S`, `WEIGHT_PENALTY_FACTOR` импортированы из `../state/balance`. ✓
+
+- `src/systems/__tests__/weight.test.ts` describe `computeReturnTime` — 3 теста:
+  - zero weight → 30s (`BASE_RETURN_TIME_S`). ✓
+  - half weight 15/30 → 45s (`30 * (1 + 0.5 * 1.0)`). ✓
+  - full weight 30/30 → 60s (`30 * (1 + 1.0 * 1.0)`). ✓
+  - Используют `HERO_MAX_WEIGHT_KG`/`BASE_RETURN_TIME_S`/`WEIGHT_PENALTY_FACTOR` из `balance.ts`, не хардкод. ✓
+
+- `src/scenes/ReturnScene.ts:23-25` — runtime wiring:
+  - `curWeight = computeWeight(player.backpack, GameState.data.items)`. ✓
+  - `returnTimeS = computeReturnTime(curWeight, player.max_weight_kg)`. ✓
+  - Tween: `duration: returnTimeS * 1000, ease: "Linear"` (строки 44-47). ✓
+  - `onComplete` → `completeReturn()` merges backpack→stash via `addToStack`, sets `player.hp = player.hp_max`, clears `currentSortie`, `scene.start("BaseScene")`. ✓
+  - Skip-кнопки нет (по требованию kickoff — вес = время = риск). ✓
+
+- `src/scenes/LootScene.ts:120-125` — `endSortie()`:
+  - Только `if (!GameState.currentSortie) return; this.scene.start("ReturnScene");`. ✓
+  - Cleanup-логика полностью переехала в `ReturnScene.completeReturn`. ✓
+
+- `src/main.ts:10, 19-29` — registry:
+  - `import { ReturnScene } from "./scenes/ReturnScene";`. ✓
+  - Порядок scenes: `BootScene, BaseScene, MapScene, SortieScene, CombatScene, LootScene, ReturnScene, InventoryScene, CraftScene`. `ReturnScene` между `LootScene` и `InventoryScene` (по core-loop). ✓
+
+- `docs/GDD.md:60-66` диаграмма core-loop:
+  - `[LootScene] → [ReturnScene: возврат на базу] → [BaseScene → CraftScene → InventoryScene → ...]`. Реализация LootScene → ReturnScene → BaseScene полностью соответствует. ✓
+
+Выводы §4: формула, тесты, runtime-wiring, core-loop integration — всё совпадает с GDD/balance.md, никаких отклонений.
+
+### Re-review final verdict
+
+**APPROVE.**
+
+QA blocker §4 (`return_time_s` formula not implemented) closed Engineer commits `872503d` + `1335977`:
+- §1 build/static: PASS (49 tests).
+- §3 runtime smoke: PASS — оба сценария (пустой/нагруженный рюкзак) подтвердили, что текст времени меняется с весом по формуле, progress-bar анимируется, ReturnScene → BaseScene transition работает.
+- §4 formula sanity: PASS — формула в коде идентична `docs/balance.md:190`, тесты corner-case'ов покрыты, ReturnScene вызывает helper корректно, scene registry в core-loop порядке.
+- §2/§5/§6/§7 из первого review не затронуты fix'ом, статусы тех секций остаются как были (PASS / PASS / PASS_WITH_NOTE / PASS_WITH_NOTE).
+
+Ready for PM merge of PR #15 (`m2/gameplay` → `m2-integration`).
+
+Non-blocking notes (несут vs первый review):
+- ENGINEER.md обновлён, status уже не stale.
+- Vite chunk-size warning не изменился (non-blocking, как и было).
+- O dev-cheat остаётся под `import.meta.env.DEV` (по-прежнему non-blocking).
