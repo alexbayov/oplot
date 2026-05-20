@@ -10,22 +10,23 @@
 
 ## Integration branch
 
-- **M2 integration baseline:** `m2-integration` (создана от `main` 2026-05-19, commit `1244c5f`). Все role PR M2 и PM-fix PR в рамках M2 таргетятся в `m2-integration`. PM сам мержит role PR после QA Acceptance APPROVE. На M2 gate-close PM открывает PR `m2-integration → main`, который мерджит Alex/Заказчик. См. `staff/decisions/DECISIONS.md` «2026-05-19» и `staff/STATE_MACHINE.md`.
+- **M2 integration baseline (закрывается):** `m2-integration` (создана от `main` 2026-05-19, commit `1244c5f`). На этот момент в `m2-integration` смержены PR #15 (Engineer), #16 (PM status sync), #17 (QA Acceptance) и этот PR (pm/m2-finalize). Gate-close PR `m2-integration → main` открывает PM после merge этого PR; мерджит Alex/Заказчик.
 - M1 integration baseline `m1-integration` была закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## Active M2 PRs
+## M2 PRs (final reconciliation)
 
-_Last reconciled with GitHub: 2026-05-19 (Engineer Draft PR #15 opened)._
+_Last reconciled with GitHub: 2026-05-20 (M2 gate-close pending Alex merge)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| #14 | PM / M2 kickoff | `main ← pm/m2-kickoff` | **Merged 2026-05-19** Alex'ом — kickoff/handoff docs на main и m2-integration |
-| #15 | Engineer | `m2-integration ← m2/gameplay` | **Open (Draft)** 2026-05-19 — план апрувлен PM, steps 1–2 (GameState skeleton + balance.ts) запушены. WIP. |
-| (this PR) | PM / status sync | `m2-integration ← pm/m2-status-sync-eng-pr15` | Open; PM-fix статус-PR после открытия Engineer Draft PR #15 |
-| (QA) | QA Acceptance | `m2-integration ← qa/m2-acceptance` | Not yet created |
-| (gate-close) | PM | `main ← m2-integration` | Not yet created; открывается на M2 gate-close |
+| #14 | PM / M2 kickoff | `main ← pm/m2-kickoff` | **Merged 2026-05-19** Alex'ом |
+| #15 | Engineer | `m2-integration ← m2/gameplay` | **Merged 2026-05-20** PM — core loop, 4 системы, 9 сцен (incl. ReturnScene), 49 vitest тестов |
+| #16 | PM / status sync | `m2-integration ← pm/m2-status-sync-eng-pr15` | **Merged 2026-05-20** PM — исторический gate move |
+| #17 | QA Acceptance | `m2-integration ← qa/m2-acceptance` | **Merged 2026-05-20** PM — two-pass APPROVED |
+| (this PR) | PM / finalize | `m2-integration ← pm/m2-finalize` | Open — gate → M2_DONE, M2-SUMMARY, CHANGELOG |
+| (gate-close) | PM | `main ← m2-integration` | Pending; откроется PM-ом после merge этого PR; мерджит Alex |
 
-**Next action:** Engineer продолжает работу по плану (систэмы → сцены → vitest → runtime smoke), пушит подшаги в #15 и обновляет Recovery-блок. PM наблюдает прогресс, подхватывает Engineer ready (снят Draft) → запускает QA Acceptance по `staff/kickoff/M2-QA-ACCEPT.md`.
+**Next action:** Alex мерджит gate-close PR `m2-integration → main` → M2 официально закрывается, стартует M3.
 
 ## Merged M1 PRs (история)
 
@@ -45,21 +46,22 @@ _Last reconciled with GitHub: 2026-05-19 (Engineer Draft PR #15 opened)._
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| Current (M2) status | `staff/status/M2.md` |
+| M2 status (закрывается) | `staff/status/M2.md` |
+| M2 summary (итог) | `staff/handoff/M2-SUMMARY.md` |
 | M1 summary (закрыта) | `staff/handoff/M1-SUMMARY.md` |
 | PM playbook | `staff/ORCHESTRATION.md` |
 | Role workflow | `staff/PROCESS.md` |
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M2 — active)
+## Role briefs (M2 — closed)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
-| Engineer | `staff/kickoff/M2-ENG.md` | `staff/handoff/M2-ENG.md` | `staff/status/ENGINEER.md` |
-| QA Acceptance | `staff/kickoff/M2-QA-ACCEPT.md` | `staff/handoff/M2-QA-ACCEPT.md` | `staff/status/QA.md` |
+| Engineer | `staff/kickoff/M2-ENG.md` | `staff/handoff/M2-ENG.md` | `staff/status/ENGINEER.md` (DONE по PR #15) |
+| QA Acceptance | `staff/kickoff/M2-QA-ACCEPT.md` | `staff/handoff/M2-QA-ACCEPT.md` | `staff/status/QA.md` (APPROVED по PR #17) |
 
-Content / Artist / GD / QA Spec на M2 не запускаются (см. anti-scope в `staff/status/M2.md`). Если по ходу M2 PM решит открыть fix-сессию одной из этих ролей — промт будет дописан в рамках fix-PR.
+Content / Artist / GD / QA Spec на M2 не запускались (см. anti-scope в `staff/status/M2.md`). Решение подтверждено QA APPROVE.
 
 ## Role briefs (M1 — закрытые, история)
 
