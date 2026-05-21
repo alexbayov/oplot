@@ -10,6 +10,7 @@ import {
 } from "./balance";
 import type {
   ContentData,
+  GameProgress,
   GameStateShape,
   InventoryStack,
   PlayerState,
@@ -32,6 +33,12 @@ const createEmptyContent = (): ContentData => ({
   mobs: {},
   recipes: {},
   zones: {},
+  radioSignals: [],
+});
+
+const createDefaultProgress = (): GameProgress => ({
+  forest_depth_2_completed: false,
+  any_warehouse_sortie_completed: false,
 });
 
 const state: GameStateShape = {
@@ -39,6 +46,7 @@ const state: GameStateShape = {
   data: createEmptyContent(),
   currentSortie: null,
   baseStash: [{ item_id: "bandage", count: HERO_START_BANDAGES }],
+  progress: createDefaultProgress(),
 };
 
 export const GameState = {
@@ -66,12 +74,19 @@ export const GameState = {
   set baseStash(value: InventoryStack[]) {
     state.baseStash = value;
   },
+  get progress(): GameProgress {
+    return state.progress;
+  },
+  set progress(value: GameProgress) {
+    state.progress = value;
+  },
   // Reset to factory defaults (used by tests and after defeat smoke).
   reset(): void {
     state.player = createDefaultPlayer();
     state.data = createEmptyContent();
     state.currentSortie = null;
     state.baseStash = [{ item_id: "bandage", count: HERO_START_BANDAGES }];
+    state.progress = createDefaultProgress();
   },
   // HERO_BASE_SPEED exposed for systems/combat.
   baseSpeed: HERO_BASE_SPEED,
