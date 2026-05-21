@@ -35,11 +35,11 @@
 
 ## Текущий snapshot (M3 in-progress)
 
-_Last reconciled with GitHub: 2026-05-20 (M3 kickoff)._
+_Last reconciled with GitHub: 2026-05-21 (m3-integration HEAD = `79fb694`)._
 
-- **Веха M3 — Расширение мира (в работе):** PM kickoff 2026-05-20. `m3-integration` создана от свежего `main` (HEAD M2 gate-close). Документы/dashboards готовятся в `pm/m3-kickoff`. Следующий шаг — GD M3 amendment (5 новых мобов + 2 новые зоны + radio stub structure).
+- **Веха M3 — Расширение мира (в работе):** spec фаза закрыта. PR #20 PM kickoff + PR #21 GD M3 amendment + PR #22 QA Spec APPROVE все смержены в `m3-integration` 2026-05-20. **Следующий шаг — параллельный запуск Content + Engineer + Artist** (`m3/content`, `m3/world`, `m3/art` → `m3-integration`).
 - **Активная ветка:** `m3-integration`. Все M3 role PR таргетятся туда. Gate-close PR `m3-integration → main` в конце вехи мерджит Alex.
-- Скоуп/роли/DoD — `staff/status/M3.md`.
+- Скоуп/роли/DoD — `staff/status/M3.md`. Текущий gate — `QA_SPEC_APPROVED → PARALLEL_PRODUCTION_READY`.
 
 ## Закрытые вехи
 
