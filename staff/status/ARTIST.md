@@ -1,7 +1,7 @@
 # Status: Artist
 
 **Текущая веха:** M3 — Расширение мира
-**Статус:** IN_PROGRESS (Draft PR #27, step 3/5 — 5 mob sprites + 14 item icons done)
+**Статус:** IN_PROGRESS (Draft PR #27, step 4/5 — 5 mobs + 14 icons + 2 backgrounds done)
 **Ветка:** `m3/art` (base = `m3-integration`)
 **Последнее обновление:** 2026-05-21
 
@@ -46,11 +46,19 @@
 
 Каждая icon — distinct silhouette: PCB chip / oil can with spout / pill bottle + red cross / pinned IC / rifle with stock / L-bar / vest with pouches / dome / mask + filter / box+cross / lightning can / antenna sphere / canister + smoke / vertical cartridge. snake_case naming совпадает с `id` из balance.md §M3 (для Content M3 PR — drop-in совместимость).
 
-### Что НЕ сделано (запланировано в Steps 4-5)
+### Step 4 (DONE) — 2 backgrounds 800×600
+
+| Файл | Размер | Содержание (GDD §6.4.M3) |
+|---|---|---|
+| `assets/backgrounds/warehouse.png` | 800×600, ~45 KB | Стеллажи с ящиками по бокам, подвесная лампа с конусом тёплого света (`#8B7355`), перспективная сетка пола, угольно-чёрный фон `#1A1A1A` + тёмно-серо-зелёные панели `#2D2D2A` |
+| `assets/backgrounds/city.png` | 800×600, ~23 KB | Силуэт разрушенных многоэтажек с case-by-case разбитыми окнами, foreground rubble peaks (irregular polygons, без eye-shapes), туманный градиент, dark sky `#1A1A1A` → `#2D2D2A` |
+
+Backgrounds: post-apocalyptic atmosphere, без персонажей и UI; плотные PNG (handoff §3 разрешает плотный fill).
+
+### Что НЕ сделано (запланировано в Step 5)
 
 | Step | Файлы | Статус |
 |---|---|---|
-| 4 | `assets/backgrounds/{warehouse,city}.png` | PENDING |
 | 5 | `assets/ui/radio_icon.png` (опционально, по handoff §4) + budget check + PR Ready | PENDING |
 
 Все step'ы генерятся одним вызовом `python3 tools/art/gen_m3_assets.py` (тестовый прогон локально: 22 файла, 129 622 байт суммарно = ~127 KB, ≤500 KB бюджет с большим запасом).
