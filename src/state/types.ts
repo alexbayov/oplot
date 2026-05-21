@@ -1,8 +1,15 @@
-import type { Item, Mob, Recipe, Zone } from "../types";
+import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
 
 export interface InventoryStack {
   item_id: string;
   count: number;
+}
+
+// GDD §6.4.M3.3 — minimal progress flags driving Zone.unlock_condition.
+// Additive: M1/M2 path (forest "start") doesn't read these fields.
+export interface GameProgress {
+  forest_depth_2_completed: boolean;
+  any_warehouse_sortie_completed: boolean;
 }
 
 export interface PlayerState {
@@ -37,6 +44,9 @@ export interface ContentData {
   mobs: Record<string, Mob>;
   recipes: Record<string, Recipe>;
   zones: Record<string, Zone>;
+  // M3 GDD §10.M3: radio signals loaded from content/radio.json at boot.
+  // Empty array when the file is missing or content count mismatches (soft-warn).
+  radioSignals: RadioSignal[];
 }
 
 export interface GameStateShape {
@@ -44,4 +54,6 @@ export interface GameStateShape {
   data: ContentData;
   currentSortie: SortieState | null;
   baseStash: InventoryStack[];
+  // M3 GDD §6.4.M3.3 — unlock flags driving MapScene visibility.
+  progress: GameProgress;
 }

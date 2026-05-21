@@ -16,5 +16,10 @@ export type {
   WeaponRangedStats,
 } from "./item";
 export type { DropEntry, Mob, MobBehavior, MobType } from "./mob";
+export type {
+  RadioSignal,
+  RadioSignalOption,
+  RadioSignalOptionId,
+} from "./radio";
 export type { Recipe, RecipeIngredient } from "./recipe";
 export type { Zone, ZoneLevel } from "./zone";

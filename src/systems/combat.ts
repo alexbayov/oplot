@@ -6,7 +6,14 @@ import {
   MIN_DAMAGE_FLOOR,
   WEIGHT_INITIATIVE_PENALTY,
 } from "../state/balance";
-import type { ArmorStats, Item, Mob, WeaponMeleeStats, WeaponRangedStats } from "../types";
+import type {
+  ArmorStats,
+  Item,
+  Mob,
+  MobType,
+  WeaponMeleeStats,
+  WeaponRangedStats,
+} from "../types";
 
 export type Rng = () => number;
 
@@ -39,11 +46,12 @@ export const calcHeroInitiative = (
   return baseSpeed - (curWeight / maxWeight) * WEIGHT_INITIATIVE_PENALTY;
 };
 
-// Defense against an incoming attack. coverActive adds +50% of armor.defense; vs_melee_bonus
-// applies only if the attacker is "animal" (per balance.md §Брони + GDD §6).
+// Defense against an incoming attack. coverActive adds +50% of armor.defense.
+// vs_melee_bonus applies only if attacker is "animal" (GDD §6 / balance.md §Брони);
+// M3 "mech" (relic_drone) is ranged + non-animal so the bonus never triggers (§5.4.5).
 export const calcDefenseAgainst = (
   armor: ArmorStats | null,
-  attackerType: "animal" | "human" | "mutant" | "boss",
+  attackerType: MobType,
   coverActive: boolean,
 ): number => {
   if (!armor) return 0;

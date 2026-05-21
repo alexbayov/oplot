@@ -94,6 +94,35 @@ describe("computeReturnTime", () => {
     );
     expect(computeReturnTime(30, HERO_MAX_WEIGHT_KG)).toBe(60);
   });
+
+  // M3 GDD §6.4.M3.4 / balance.md §M3: warehouse=1.2, city=1.5, forest default=1.0.
+  test("default multiplier (1.0) matches no-arg call (forest backward-compat)", () => {
+    expect(computeReturnTime(0, HERO_MAX_WEIGHT_KG, 1.0)).toBe(
+      computeReturnTime(0, HERO_MAX_WEIGHT_KG),
+    );
+    expect(computeReturnTime(15, HERO_MAX_WEIGHT_KG, 1.0)).toBe(
+      computeReturnTime(15, HERO_MAX_WEIGHT_KG),
+    );
+  });
+
+  test("warehouse multiplier 1.2: zero weight → 36s, half → 54s", () => {
+    expect(computeReturnTime(0, HERO_MAX_WEIGHT_KG, 1.2)).toBe(BASE_RETURN_TIME_S * 1.2);
+    expect(computeReturnTime(15, HERO_MAX_WEIGHT_KG, 1.2)).toBeCloseTo(
+      BASE_RETURN_TIME_S * 1.2 * (1 + 0.5 * WEIGHT_PENALTY_FACTOR),
+    );
+  });
+
+  test("city multiplier 1.5: zero weight → 45s, full → 90s", () => {
+    expect(computeReturnTime(0, HERO_MAX_WEIGHT_KG, 1.5)).toBe(BASE_RETURN_TIME_S * 1.5);
+    expect(computeReturnTime(30, HERO_MAX_WEIGHT_KG, 1.5)).toBe(
+      BASE_RETURN_TIME_S * 1.5 * (1 + 1.0 * WEIGHT_PENALTY_FACTOR),
+    );
+  });
+
+  test("maxWeight ≤ 0 edge case still respects multiplier", () => {
+    expect(computeReturnTime(0, 0, 1.5)).toBe(BASE_RETURN_TIME_S * 1.5);
+    expect(computeReturnTime(0, -1, 1.2)).toBe(BASE_RETURN_TIME_S * 1.2);
+  });
 });
 
 describe("applyLootLoss", () => {

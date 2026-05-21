@@ -20,17 +20,22 @@ export const computeWeight = (
   return total;
 };
 
-// GDD §1/§3 + balance.md §Формулы:
-// return_time_s = BASE_RETURN_TIME_S * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR).
-// Drives ReturnScene tween — heavier pack = longer trip back to base.
-// Edge case: maxWeight = 0 → BASE_RETURN_TIME_S (avoid NaN/Infinity).
+// GDD §1/§3 + balance.md §Формулы (extended by §6.4.M3.4 in M3):
+// return_time_s = BASE_RETURN_TIME_S * zoneMultiplier
+//               * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR).
+// zoneMultiplier defaults to 1.0 so M1/M2 callers (forest) keep historical numbers;
+// warehouse=1.2, city=1.5 (balance.md §M3).
+// Edge case: maxWeight = 0 → BASE_RETURN_TIME_S * zoneMultiplier (avoid NaN/Infinity).
 export const computeReturnTime = (
   curWeight: number,
   maxWeight: number,
+  zoneMultiplier = 1.0,
 ): number => {
-  if (maxWeight <= 0) return BASE_RETURN_TIME_S;
+  if (maxWeight <= 0) return BASE_RETURN_TIME_S * zoneMultiplier;
   return (
-    BASE_RETURN_TIME_S * (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR)
+    BASE_RETURN_TIME_S *
+    zoneMultiplier *
+    (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR)
   );
 };
 
