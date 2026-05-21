@@ -459,3 +459,60 @@ Handoff M3-GD говорил «§7 Radio structure stub», но GD выбрал 
 - Done sections: branch / first commit / Draft PR / 7-checklist verdict / non-blocking notes / final APPROVE.
 - Next concrete step: переключить QA-report PR в Ready, опубликовать verdict на PR #21, заблокировать Alex итогом.
 - Blockers: нет.
+
+---
+
+# M3 Acceptance Review
+
+**Роль:** QA / Acceptance Critic (последняя role-сессия M3, право вето)
+**Веха:** M3 — Расширение мира
+**Дата старта:** 2026-05-21
+**Gate:** QA_ACCEPT_IN_PROGRESS → QA_ACCEPT_APPROVED / CHANGES_REQUESTED
+**Базовая ветка:** `m3-integration` (HEAD `3823395`)
+**QA-report branch:** `qa/m3-acceptance` (base `m3-integration`)
+**PR base:** `m3-integration`
+
+## Объект ревью — 3 role-PR в Ready
+
+| PR | Branch | Head | Role | Что внутри |
+|---|---|---|---|---|
+| #25 | `m3/content` | `24dcb28f` | Content Designer | 5 JSON: mobs (3→8), items (15→29), recipes (5→15), zones (1→3), radio (0→3 dummy) — всё по `balance.md` §M3 |
+| #26 | `m3/world` | `c220fca1` | Engineer | multi-zone runtime, 5 mob AI behaviors, RadioScene UI-stub, +39 vitest (49→89), tsc/lint/build/test зелёные |
+| #27 | `m3/art` | `f44c770b` | Artist | 5 mob sprites + 14 item icons + 2 backgrounds + 1 radio_icon + детерминистичный `tools/art/gen_m3_assets.py`; M3-add 129.8 KB / 500 KB |
+
+PM (orchestrator) уже сделал code-review всех трёх PR'ов с verdict APPROVE. Моя задача — независимая runtime/regression acceptance на **комбинированном** состоянии.
+
+## Combined test branch
+
+`qa/m3-acceptance-test` создан локально от `m3-integration` через octopus-merge:
+- `git merge --no-ff origin/m3/content` — clean (merge made by 'ort' strategy, 6 files, +633/-40).
+- `git merge --no-ff origin/m3/art` — clean (5 mob sprites + 8 item icons + 2 backgrounds + radio_icon + gen_m3_assets.py).
+- `git merge --no-ff origin/m3/world` — clean (23 files, +1189/-107; RadioScene, mobAI/radio/zoneUnlock systems + tests, radio types).
+
+**Все три merge прошли cleanly без конфликтов** — подтверждает PM dry-run от 2026-05-21T15:13Z.
+
+## Progress (recovery-safe checkpoints)
+
+### Done
+- [x] Repo fetched, briefing прочитан (M3.md / M3-QA-ACCEPT.md handoff / launch.md).
+- [x] `qa/m3-acceptance-test` октопус-merge от `m3-integration` — 3 PR'а clean.
+- [x] `qa/m3-acceptance` branch создана от `m3-integration`.
+
+### TODO
+- [ ] Gate 1 — Static checks: `npm install` + `typecheck` + `lint` + `test` (ожидается 89/89) + `build` (≤2 MB).
+- [ ] Gate 2 — Runtime smoke: M2 regression Forest 7-step + M3 multi-zone + 5 mob AI + RadioScene + assets.
+- [ ] Gate 3 — Spec compliance: cross-refs JSON + balance numbers + GDD behaviors + anti-scope + naming + style.
+- [ ] Final verdict в этом же файле + push + Draft → Ready + блокирующее сообщение Alex'у.
+
+## Recovery
+
+- Role: QA Acceptance Critic M3.
+- Milestone: M3 final acceptance.
+- Branch: `qa/m3-acceptance` (base `m3-integration` HEAD `3823395`).
+- Test branch: `qa/m3-acceptance-test` (local, octopus-merge content + art + world).
+- Objects under review: PR #25 (`24dcb28f`), PR #26 (`c220fca1`), PR #27 (`f44c770b`).
+- Done sections: setup + briefing + octopus dry-run + branch create.
+- Next concrete step: запустить Gate 1 (static checks) на `qa/m3-acceptance-test`.
+- Blockers: нет.
+- PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['git_pat']`, никогда не в URL/echo/print.
+- Forbidden: править код/контент/ассеты в чужих PR (#25/#26/#27) — только PR-комментарии и свой QA-report. Self-merge. Push в `main`/`m3-integration` напрямую. Менять чужие `staff/status/*.md` (только свой `staff/status/QA.md`). Предлагать новые M3-фичи. Проверять то, что вне M3 scope (radio выходит за UI-stub — это M6, anti-scope).
