@@ -656,11 +656,19 @@ interface ConsumableStats {
 #### 6.2. `Mob`
 
 ```typescript
-type MobType = "human" | "animal" | "mutant" | "boss";
+type MobType = "human" | "animal" | "mutant" | "boss" | "mech";
 // "boss" — НЕ в MVP, оставлено для совместимости со схемой content-brief.
+// "mech" — ДОБАВЛЕНО в M3 для `relic_drone` (см. §5.4.5). Forward-compat only:
+//   * Ни одно существующее поведение / hard-check НЕ модифицируется.
+//   * В частности, `combat.ts` проверка `attackerType === "animal"` (см. M2 implementation)
+//     для `vs_melee_bonus` к `mech` не относится — `mech` НЕ триггерит этот бонус.
+//   * M1 mobs (`marauder`, `wild_dog`, `mutant`) и их числа в `balance.md` — без изменений.
 
 type MobBehavior = "aggressive" | "defensive" | "passive" | "ambush";
 // MVP использует только "aggressive" (с поведенческой особенностью у marauder — flee при low HP).
+// M3: новые мобы используют `aggressive` или `defensive` (см. §5.4 сводная таблица AI-паттернов).
+// Тонкое поведение (snipe / pack / berserk / armor-pierce) ВЫРАЖЕНО через поле `behavior_id` ниже,
+// а не через расширение этого enum'а (lite расширение — minimize schema churn).
 
 interface DropEntry {
   item_id: string;               // должен существовать в items.json
@@ -682,6 +690,13 @@ interface Mob {
   base_speed: number;            // = initiative моба
   xp_reward: number;
   behavior: MobBehavior;
+  behavior_id?: string;          // M3+: уникальный ID AI-паттерна (см. §5.4.6 сводная таблица).
+                                 //   Для M1 mobs (marauder/wild_dog/mutant) поле отсутствует —
+                                 //   Engineer fallback на классический switch по `id`.
+                                 //   Для M3 mobs — обязательно, Engineer делает switch по `behavior_id`.
+                                 //   Допустимые значения M3: "ranged_keep_distance" | "defensive_cover"
+                                 //     | "berserker_low_hp" | "pack_bonus_when_paired" | "armor_piercing_ranged".
+                                 //   M4+ — расширяется по мере добавления новых паттернов.
   description_ru: string;
   flavor_ru: string;
   drop_table: DropEntry[];
@@ -689,6 +704,10 @@ interface Mob {
 ```
 
 > **Уточнение к `content-brief.md`:** content-brief.md описывает поле `damage` как одно число. Канон GDD M1 расширяет его до `damage_min` / `damage_max`, чтобы соответствовать формуле боя §2. Content Designer обязан использовать `damage_min` / `damage_max`.
+>
+> **M3 schema extensions (см. §5.4):**
+> - `MobType` enum получил значение `"mech"` (forward-compat: M1 mobs не затрагиваются).
+> - `Mob.behavior_id?: string` — опциональное поле для уникального AI-паттерна. Для M1 mobs **не задаётся** (Engineer fallback на existing M2 hard-checks по `id`). Для M3 mobs (5 шт.) — обязательное (один из 5 enum-string значений §5.4.6).
 
 #### 6.3. `Recipe`
 
