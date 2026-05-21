@@ -1,10 +1,61 @@
 # Status: Game Designer
 
-**Текущая веха:** M4 (fixup)
-**Статус:** DONE_PENDING_PM_REVIEW + QA_SPEC_REVIEW
-**Последнее обновление:** 2026-05-21 (M4 GD-fix)
+**Текущая веха:** M4 (amendment + fixup)
+**Статус:** DONE_PENDING_PM_REVIEW + QA_SPEC_APPROVED
+**Последнее обновление:** 2026-05-21 (M4 GD-amendment + GD-fix)
 
 ---
+
+## M4 GD-amendment (ветка `m4/gd-amendment`, PR #32 → `m4-integration`)
+
+**Базируется на M4-integration** (PM kickoff PR #31 merged, HEAD `d8e2a31`). PM approved plan in chat before implementation.
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §8 «Перки и прогрессия (M4)» | **+** XP-источник kill mob, формула `round(40 * level^1.5)`, level-up flow trigger → popup → 3 choices → state update, overkill carry-over + popup queue, empty-pool fallback `veteran_conditioning` |
+| `docs/GDD.md` | §8 anti-scope | **+** явно зафиксировано: skill tree / points / nodes / prereq = M5+ refactor path; active abilities / cooldowns = M5+; bosses / T3 = M5; full radio = M6; Yandex SDK / persistence = M8 |
+| `docs/GDD.md` | §6.5 `Perk` schema | **+** JSON schema: `id`, `name`, `description`, `type`, `stat`, `value`; enum `type`, enum 8 fixed `stat`; validators; forbidden `prereq/tier/cost/cooldown` |
+| `docs/balance.md` | §M4 «Прогрессия» | **+** XP-curve table levels 1–10, 8 mob `xp_reward`, 8 perk numbers, hardcoded fallback note |
+| `staff/status/GAME_DESIGNER.md` | — | этот M4 status block |
+
+### Числа M4
+
+- XP-curve: `xp_to_next(level)=round(40 * level^1.5)`, cumulative L10 = 4442 XP.
+- Mob XP rewards: `marauder 18`, `wild_dog 14`, `mutant 45`, `looter_sniper 28`, `armored_guard 36`, `fanatic_berserker 42`, `pack_rat 22`, `relic_drone 50`.
+- Perks: `tough_skin +15 hp_max`, `sharp_blade damage x1.15`, `lean_pack weight_penalty x0.85`, `lucky_scavenger loot_quantity x1.20`, `keen_eye +0.05 crit_chance`, `reinforced_plates armor_efficiency x1.15`, `quick_hands crafting_speed x0.90`, `fast_learner xp_gain x1.15`.
+- Empty pool fallback: `veteran_conditioning` = hardcoded `LevelUpScene` fallback `hp_max +10`, **не** JSON-перк. Content пишет ровно 8 perks в `content/perks.json`; QA pool count = 8 + 1 hardcoded fallback.
+
+### Коммиты на ветке `m4/gd-amendment` (PR #32)
+
+1. `89a58a5` — `docs(M4): add progression anti-scope skeleton` — recovery-safe Draft PR start.
+2. `d245ba2` — `docs(M4): specify progression flow and XP rules`.
+3. `5086392` — `docs(M4): add Perk JSON schema`.
+4. `273d8a0` — `docs(M4): add progression balance tables`.
+5. (этот commit) — `chore(M4): update GAME_DESIGNER status`.
+
+### Что НЕ сделано (намеренно вне скоупа M4 GD-amendment)
+
+- **`src/`:** не трогал. Engineer реализует progression/perks после QA Spec APPROVE.
+- **`content/*.json`:** не трогал. Content создаст `content/perks.json` с ровно 8 перками из `balance.md` §M4.
+- **`assets/`:** не трогал. Artist создаст 8 perk icons.
+- **GDD §1–§7:** не переписывал; только добавил §6.5 и заполнил §8 placeholder.
+- **M1/M2/M3 числа в `balance.md`:** не менял; только добавил §M4.
+- **Чужие staff-файлы:** не трогал.
+- **Anti-scope:** skill tree / active abilities / cooldowns / bosses / T3 / full radio / Yandex SDK не добавлял.
+
+### Блокеры
+
+- Нет. PR #32 готов к переводу Draft → Ready после финальных локальных проверок и обновления PR description.
+
+### Следующая роль после моего merge
+
+- **QA Spec M4** review'ит GDD §8, GDD §6.5, balance §M4 на соответствие M4 scope / anti-scope.
+- После QA Spec APPROVE + PM merge `m4/gd-amendment → m4-integration` → стартуют Content + Engineer + Artist параллельно.
+
+---
+
 
 ## M4 GD-fix (ветка `m4/gd-fix`, PR #34 → `m4-integration`)
 
