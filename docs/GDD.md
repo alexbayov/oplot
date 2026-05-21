@@ -1004,8 +1004,9 @@ interface Zone {
 
 > Заполняются на соответствующих вехах. На M1 — НЕ трогать.
 
-### 7. Зоны и карта (M3)
-<!-- GD заполнит на M3: новые зоны (Склад, Город), переходы, прогрессия глубины -->
+### 7. Зоны и карта (M3) — DONE
+
+> Заполнено в M3 GD-amendment. Содержимое переехало в **§6.4.M3 «Новые зоны M3»** (Склад + Город, unlock_condition, return_time_multiplier, zone-exclusive resources, depths config). См. также `balance.md` §M3.
 
 ### 8. Перки и прогрессия (M4)
 <!-- GD заполнит на M4: XP-кривая выше 5 уровня, дерево перков, UI прогрессии -->
@@ -1013,8 +1014,105 @@ interface Zone {
 ### 9. Боссы и инстансы (M5)
 <!-- GD заполнит на M5: мини-боссы, дейли-инстансы, чертежи T3+ -->
 
-### 10. Радио и доверие (M6)
-<!-- GD заполнит на M6: сигналы, решения, засады/награды, шкала доверия -->
+### 10. Радио и доверие (M6) — заглушка структуры (M3)
+
+> **Полная логика** (сигналы с ветвлениями, засады, награды, фракционные репутации, шкала доверия) — **M6**.
+> **На M3** заполнено только **§10.M3 «Структура радио (M3 UI-stub)»** ниже — JSON-схема `RadioSignal` + UI-flow + anti-scope. Это нужно, чтобы Content мог наполнить 2-3 dummy-сигнала, а Engineer — реализовать RadioScene как UI-заглушку.
+
+#### 10.M3. Структура радио — M3 UI-stub
+
+> **Скоуп M3:** UI-заглушка. Игрок может зайти в RadioScene с базы, увидеть список сигналов, выбрать сигнал, нажать одну из 2 кнопок — сигнал помечается dismissed и пропадает из списка. **Никаких реальных последствий** (rewards/ambush/faction changes). Это сознательное упрощение M3 — чтобы протестировать UI-поток и форму данных до того как M6 добавит полную игровую логику.
+>
+> **Anti-scope §10.M3:** rewards (M6), ambush / trap_mob_id (M6), trust scale / faction reputation (M6), branching outcomes (M6), per-zone signal triggers (M6), таймеры реального времени между сигналами (M6+).
+
+##### 10.M3.1. JSON-схема `RadioSignal`
+
+```typescript
+type RadioSignalOptionId = "respond" | "ignore";   // ровно 2 опции на M3
+
+interface RadioSignalOption {
+  id: RadioSignalOptionId;
+  label_ru: string;                                // "Откликнуться" | "Игнорировать"
+}
+
+interface RadioSignal {
+  id: string;                                      // snake_case, формат "radio_NNN" или "radio_<theme>"
+  from: string;                                    // отправитель: "unknown" | "survivor_group_a" | "caravan" | ... (свободная строка)
+  subject: string;                                 // краткий заголовок (1 строка для списка)
+  body_ru: string;                                 // 2-4 предложения текста сигнала
+  options: RadioSignalOption[];                    // ровно 2 элемента: [{id: "respond", label_ru: "Откликнуться"}, {id: "ignore", label_ru: "Игнорировать"}]
+  expires_after_sorties: number;                   // > 0; счётчик уменьшается после каждой завершённой вылазки. При 0 → авто-dismissed.
+  dismissed: boolean;                              // M3: устанавливается в true после клика на любую из 2 кнопок. По умолчанию false.
+                                                   // M6 расширит до выбора: { responded: boolean, ignored: boolean, expired: boolean, chosen_option: RadioSignalOptionId | null }
+}
+```
+
+> **M3 → M6 миграция (для PM / GD будущего):** `dismissed: boolean` — это **намеренное упрощение M3**. В M6 поле заменится / расширится до choice-history (какая опция была выбрана, последствия применены ли). На M3 Engineer хранит только булев флаг — этого достаточно для UI-флоу.
+
+> **Поля content-brief.md, относящиеся к M6 (НЕ использовать в M3 stub):** `type` (truth/trap/ambiguous), `zone`, `reward`, `trap_mob_id`, `trust_impact`. В M3 RadioSignal этих полей **нет**. Content на M3 заполняет ТОЛЬКО поля из §10.M3.1 выше. Когда М6 наступит, GD сделает амендмент к §10 и Content добавит недостающие поля к существующим сигналам + новые сигналы.
+
+##### 10.M3.2. UI-flow (M3)
+
+```
+[BaseScene]
+    │ кнопка «Радио» (рядом с «Вылазка» / «Инвентарь» / «Крафт»)
+    ▼
+[RadioScene: список активных сигналов]
+    │ active = signals.filter(s => !s.dismissed && s.expires_after_sorties > 0)
+    │ если active пустой → текст «Эфир пуст», кнопка «Назад» → BaseScene
+    │ иначе → список карточек (subject + from)
+    ▼ клик по карточке
+[RadioScene: детали сигнала]
+    │ показывается body_ru
+    │ две кнопки: «Откликнуться» и «Игнорировать»
+    ▼ клик по любой из 2 кнопок
+[RadioScene: dismiss]
+    │ signal.dismissed = true (persisted в GameState)
+    │ NO rewards / NO ambush / NO faction changes (M6)
+    │ возврат в список активных сигналов (или «Эфир пуст», если был последним)
+    ▼ кнопка «Назад»
+[BaseScene]
+```
+
+##### 10.M3.3. Таймер `expires_after_sorties`
+
+> **M3 minimal-impl:** счётчик уменьшается **только** при `ReturnScene.onComplete()` (успешный возврат с любой вылазки). НЕ уменьшается при поражении (на спорный случай оставим — M6 может изменить).
+>
+> ```typescript
+> // в ReturnScene.onComplete():
+> for (const sig of GameState.data.radioSignals) {
+>   if (!sig.dismissed && sig.expires_after_sorties > 0) {
+>     sig.expires_after_sorties -= 1;
+>     if (sig.expires_after_sorties === 0) sig.dismissed = true;  // авто-протух
+>   }
+> }
+> ```
+>
+> Это **5 LOC в ReturnScene** + поле `radioSignals` в `GameState.data` (Engineer добавляет в `BootScene` грузя `content/radio.json`).
+
+##### 10.M3.4. Anti-scope §10.M3 (что НЕ делает Engineer на M3)
+
+- **Rewards:** игнорирование сигнала или отклик не дают предметов / xp.
+- **Ambush / trap_mob_id:** отклик не запускает спец-вылазку.
+- **Trust / reputation:** отклик не меняет шкалу доверия (её нет в M3 GameState).
+- **Branching outcomes:** обе кнопки делают одно и то же — `dismissed = true`. Player choice сейчас семантический (для нарратива), не механический.
+- **Per-zone signal triggers:** все сигналы доступны сразу, нет привязки «открой Город → появится новый сигнал».
+- **Real-time timers:** счётчик `expires_after_sorties` уменьшается в дискретных тиках (one per sortie return), не в real-time.
+
+##### 10.M3.5. Что готовят другие роли на M3 (cross-refs)
+
+| Роль | Артефакт | Где |
+|---|---|---|
+| Content Designer | 2-3 dummy-сигнала | `content/radio.json` (файл уже существует как `[]`) |
+| Engineer | `RadioScene` + `BootScene` load + `GameState.data.radioSignals` + `expires_after_sorties` decrement | `src/scenes/RadioScene.ts` (новый), `src/scenes/BootScene.ts`, `src/state/GameState.ts`, `src/types/radio.ts` (новый) |
+| Artist | UI-элементы RadioScene (карточка сигнала, кнопка «Радио» на BaseScene) | `assets/ui/` (если нужно — на усмотрение Artist M3) |
+
+##### 10.M3.6. Связь §10.M3 с другими системами
+
+- **§1 Core Loop:** RadioScene вызывается с BaseScene; `expires_after_sorties` декрементится в ReturnScene.
+- **§5.4 / §6.4.M3:** не связано — radio сейчас НЕ влияет на бой / мобов / зоны.
+- **§6 JSON-схемы:** см. §10.M3.1.
+- **M6 эволюция:** этот stub будет расширен амендментом M6 GD: добавятся поля content-brief (`type`, `zone`, `reward`, `trap_mob_id`, `trust_impact`), полная UI-логика последствий, шкала доверия в `GameState.trust`.
 
 ### 11. Модульное оружие и броня (M5+)
 <!-- GD заполнит на M5+: модули, слоты, уникальные статы из компонентов -->
