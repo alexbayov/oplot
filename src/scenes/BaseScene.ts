@@ -36,6 +36,7 @@ export class BaseScene extends Phaser.Scene {
     createButton(this, 380, "В вылазку", () => this.scene.start("MapScene"));
     createButton(this, 436, "Мастерская", () => this.scene.start("CraftScene"));
     createButton(this, 492, "Инвентарь", () => this.scene.start("InventoryScene"));
+    createButton(this, 548, "Радио", () => this.scene.start("RadioScene"));
 
     if (import.meta.env.DEV) {
       this.setupDevCheats();
