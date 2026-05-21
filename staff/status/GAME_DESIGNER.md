@@ -1,20 +1,35 @@
 # Status: Game Designer
 
 **Текущая веха:** M4 (fixup)
-**Статус:** FIX_IN_PROGRESS
-**Последнее обновление:** 2026-05-21 (M4 GD-fix recovery start)
+**Статус:** DONE_PENDING_PM_REVIEW + QA_SPEC_REVIEW
+**Последнее обновление:** 2026-05-21 (M4 GD-fix)
 
 ---
 
-## M4 GD-fix (ветка `m4/gd-fix`, PR TBD → `m4-integration`)
+## M4 GD-fix (ветка `m4/gd-fix`, PR #34 → `m4-integration`)
 
 **Причина:** QA Spec M4 PR #33 verdict CHANGES_REQUESTED: `balance.md` §M4 `xp_reward` values не синхронизированы с baseline mob tables.
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/balance.md` | §Мобы (MVP) | `xp_reward` синхронизирован с §M4: `marauder=18`, `wild_dog=14`, `mutant=45` |
+| `docs/balance.md` | §M3 — Мобы | `xp_reward` синхронизирован с §M4: `looter_sniper=28`, `armored_guard=36`, `fanatic_berserker=42`, `pack_rat=22`, `relic_drone=50` |
+| `docs/balance.md` | TODO Content M4 | добавлены явные TODO обновить `content/mobs.json` в M4 Content PR; HP/damage/AI/drop-tables не меняются |
+| `staff/status/GAME_DESIGNER.md` | — | этот M4 fix status block |
+
+### Что НЕ сделано
+
+- `content/mobs.json` не трогал: это зона Content M4.
+- `src/`, `assets/`, чужие staff-файлы не трогал.
+- XP-curve и perk values из GD PR #32 не менял.
 
 ### Recovery
 
 - Base: `m4-integration` HEAD `d8e2a31`.
 - Scope: только `docs/balance.md` + `staff/status/GAME_DESIGNER.md`.
-- TODO: синхронизировать §M1/§M3 mob `xp_reward` с §M4 числами, добавить TODO для Content M4 обновить `content/mobs.json`, затем перевести PR Ready.
+- Continue from: PR #34 готов к QA Spec re-review; если изменения запрошены, править только `docs/balance.md` и/или этот status-файл.
 
 ---
 
