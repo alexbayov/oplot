@@ -54,7 +54,7 @@
 | **M0** | Каркас процесса | Все .md (TEAM, PLAN, роли, оркестрация) написаны и закоммичены | PM | **DONE 2026-05-18** |
 | **M1** | Технический скелет | Phaser 3 + TS + Vite, билд в `dist/`, грузится в браузере + GDD + style-guide + canonical content + минимальные ассеты | Engineer + GD + Artist + Content | **DONE 2026-05-19** (см. `staff/handoff/M1-SUMMARY.md`) |
 | **M2** | **Играбельный MVP** | См. MVP-Definition. 1 зона, бой, лут, вес, крафт | Engineer + Content + GD | **DONE 2026-05-20** (см. `staff/handoff/M2-SUMMARY.md`) |
-| **M3** | Расширение мира | 3 зоны (Лес, Склад, Город), 8 мобов, 15 рецептов, радио-заглушка | Content + Engineer + GD + Artist | IN_PROGRESS (kickoff 2026-05-20, см. `staff/status/M3.md`) |
+| **M3** | Расширение мира | 3 зоны (Лес, Склад, Город), 8 мобов, 29 предметов, 15 рецептов, радио-заглушка | Content + Engineer + GD + Artist | **DONE 2026-05-21** (см. `staff/handoff/M3-SUMMARY.md`; ждёт gate-close PR `m3-integration → main`) |
 | **M4** | Перки и прогрессия | XP → уровни → перки (8 перков), UI прогрессии | GD + Engineer | NOT_STARTED |
 | **M5** | Боссы и инстансы | Мини-боссы в зонах, дейли-инстанс, чертежи T3 | GD + Content + Engineer | NOT_STARTED |
 | **M6** | Радио и доверие | Полноценная система радио: сигналы, решения, засады/награды | GD + Content + Engineer | NOT_STARTED |
