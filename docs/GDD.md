@@ -368,11 +368,213 @@ final_damage = max(1, mob_damage_roll * roll - hero_total_armor)
 
 #### 5.4. Мобы M3 (5 новых типов)
 
-> **Скоуп:** добавление к §5. M1 mobs (`marauder`, `wild_dog`, `mutant`) **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
+> **Скоуп:** добавление к §5. M1 mobs (`marauder`, `wild_dog`, `mutant`) **НЕ изменяются** — ни числами, ни поведением. Все числа новых мобов — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
 >
-> **Anti-scope §5.4:** перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8).
+> **Anti-scope §5.4:** перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8), позиционная механика боя / distance / range (M2 combat — positionless, см. implementation hints ниже).
 
-<!-- M3 GD-amendment: содержимое §5.4 заполняется в следующем коммите (5 mobs + behavior_id + implementation hints для Engineer). Recovery-block см. PR description. -->
+##### 5.4.0. Принципы дизайна 5 новых AI-паттернов
+
+Каждый новый моб **механически уникален** (не клон M1 marauder/wild_dog/mutant по поведению):
+
+| # | id | name_ru | type | behavior_id | Архетип |
+|---|---|---|---|---|---|
+| 1 | `looter_sniper` | Мародёр-снайпер | `human` | `ranged_keep_distance` | Снайпер: ranged-only, штраф в melee |
+| 2 | `armored_guard` | Бронированный охранник | `human` | `defensive_cover` | Защитник: каждый 2-й ход — Укрытие (+50% defense) |
+| 3 | `fanatic_berserker` | Фанатик-берсерк | `human` | `berserker_low_hp` | Берсерк: при HP<50% damage ×2, base_speed −30 |
+| 4 | `pack_rat` | Стайная крыса-мутант | `mutant` | `pack_bonus_when_paired` | Стая: +50% damage если ≥2 живых `pack_rat` в бою |
+| 5 | `relic_drone` | Реликтовый дрон | `mech` (новый, §6.2) | `armor_piercing_ranged` | Мех: ranged, игнорирует `armor.defense` цели |
+
+**Реестр уникальности относительно M1 (3 архетипа):**
+- M1 `marauder` (flee при low HP) ≠ M3 `fanatic_berserker` (наоборот: low HP → агрессивнее).
+- M1 `wild_dog` (high initiative first strike) ≠ M3 `pack_rat` (initiative обычная, но координация в паре).
+- M1 `mutant` (slow tank, plain attack) ≠ M3 `armored_guard` (defensive cycle), `looter_sniper` (ranged), `relic_drone` (armor pierce).
+
+##### 5.4.1. `looter_sniper` — Мародёр-снайпер (Склад)
+
+| Поле | Значение |
+|---|---|
+| `id` | `looter_sniper` |
+| `name_ru` | Мародёр-снайпер |
+| `type` | `human` |
+| `zone` | `warehouse` |
+| `behavior_id` | `ranged_keep_distance` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Бывший охотник, окопавшийся среди стеллажей Склада. Стреляет издалека, в ближнем бою растерян и неэффективен.
+
+**AI flow.**
+```
+[ход looter_sniper]
+  если у hero текущее оружие.type == "weapon_melee":
+    action = "attack", damage_modifier = 0.5  ; в melee он плохо стреляет
+  иначе (hero вооружён ranged или безоружен):
+    action = "attack", damage_modifier = 1.0  ; нормальный ranged-урон
+```
+
+**Боевой сценарий (что видит игрок на CombatScene).** В turn order looter_sniper обычно ходит во 2-й половине раунда. Если игрок с ножом — мобу выпадает 4-7 damage вместо 9-13. Если у игрока в руках `makeshift_pistol` или `pipe_rifle` — полный 9-13.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> Это **damage modifier, не позиционная механика**. M2 combat **positionless** — у Engineer'а нет понятия distance/position. Реализация: при расчёте урона `looter_sniper` проверь `hero.equipped_weapon.type`. Если `== "weapon_melee"`, умножь mob damage на 0.5. Один if, ~3 LOC.
+
+---
+
+##### 5.4.2. `armored_guard` — Бронированный охранник (Склад)
+
+| Поле | Значение |
+|---|---|
+| `id` | `armored_guard` |
+| `name_ru` | Бронированный охранник |
+| `type` | `human` |
+| `zone` | `warehouse` |
+| `behavior_id` | `defensive_cover` |
+| `behavior` (legacy enum, §6.2) | `defensive` |
+
+**Архетип.** Бывший корпоративный охранник в потрёпанном тактическом снаряжении. Не бьёт сильно, но трудно пробивается. Каждый второй ход — переходит в позицию укрытия и бронируется ещё больше.
+
+**AI flow.**
+```
+[ход armored_guard]
+  if (turn_count_for_this_mob % 2) == 0:           ; чётный его ход (0, 2, 4, ...)
+    action = "attack"
+    cover_active_next_round = false
+  else:                                            ; нечётный (1, 3, 5, ...)
+    action = "cover"                               ; skip turn, повысить defense
+    cover_active_next_round = true                 ; следующая входящая атака против этого моба считается с COVER_DEFENSE_BONUS_PCT=0.5 поверх defense
+```
+
+**Боевой сценарий.** Игрок видит лог: «Охранник атакует — 6 damage» (раунд 1), затем «Охранник занял укрытие» (раунд 2 — пропуск хода). На раунде 2 атаки игрока против `armored_guard` считаются с `coverActive=true` → его `total_defense += 0.5 × base_defense`. На раунде 3 он снова бьёт. И так циклически.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> `computeDefense(armor, coverActive: boolean, attackerType)` **уже принимает `coverActive: boolean`** (см. `src/systems/combat.ts:47-56`, M2). Никакой новой механики не нужно — на каждом 2-м ходу моба сетим `coverActive=true` на следующую атаку против него; в остальные ходы — `false`. ~5 LOC: счётчик `mob.turn_count`, mod 2, флаг на ровный/нечётный ход. Используется existing M2 cover-механика.
+
+---
+
+##### 5.4.3. `fanatic_berserker` — Фанатик-берсерк (Город)
+
+| Поле | Значение |
+|---|---|
+| `id` | `fanatic_berserker` |
+| `name_ru` | Фанатик-берсерк |
+| `type` | `human` |
+| `zone` | `city` |
+| `behavior_id` | `berserker_low_hp` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Член культа «Последнего огня», обкуренный и фанатично злой. Чем ближе к смерти — тем безумнее бьёт, но менее точен (теряет инициативу). Анти-`marauder`: тот при low HP убегает, этот — наоборот.
+
+**AI flow.**
+```
+[ход fanatic_berserker]
+  if (mob.hp / mob.hp_max) < 0.5 and not mob._berserk_triggered:
+    mob.damage_min *= 2
+    mob.damage_max *= 2
+    mob.base_speed -= 30                           ; перерасчёт инициативы со след. раунда
+    mob._berserk_triggered = true                  ; чтобы не баффать повторно
+  action = "attack"                                ; всегда атакует героя
+```
+
+**Боевой сценарий.** На полном HP бьёт 8-12. Когда игрок сбивает его HP ниже 50% (например, до 19/40), лог: «Фанатик орёт и бросается в атаку! +Урон, −Инициатива». Следующая атака — 16-24 damage. Тактический выбор: либо добить до 50% (опасно — он на ходу), либо позволить ему перейти в берсерк и затем добить за 1-2 хода (он медленнее).
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> Trigger однократный (`mob._berserk_triggered = true` после первого срабатывания). Чистая ветка в начале хода моба. `base_speed -= 30` пересчитывает initiative со следующего раунда — это бесплатно, потому что initiative сортируется каждый раунд по `mob.base_speed`. ~6 LOC.
+
+---
+
+##### 5.4.4. `pack_rat` — Стайная крыса-мутант (Город)
+
+| Поле | Значение |
+|---|---|
+| `id` | `pack_rat` |
+| `name_ru` | Стайная крыса-мутант |
+| `type` | `mutant` |
+| `zone` | `city` |
+| `behavior_id` | `pack_bonus_when_paired` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Гибрид крысы и чего-то похуже из городской канализации. По одной — неприятная, но не страшная. В паре — кошмар: координируются на запах. **В одиночку — обычный aggressive; в паре — +50% damage обоим.**
+
+**AI flow.**
+```
+[ход pack_rat]
+  let pack_alive = enemies.filter(e => e.id === "pack_rat" && e.hp > 0).length
+  if pack_alive >= 2:
+    damage_multiplier = 1.5                        ; синергия стаи
+  else:
+    damage_multiplier = 1.0
+  action = "attack", damage = roll(damage_min, damage_max) * damage_multiplier
+```
+
+**Боевой сценарий.** Если в бою 2 `pack_rat` живы (типичный случай — Город `enemy_count [2,3]`), игрок видит «Стайные крысы движутся в координации, атакуют сильнее». Damage за одну атаку: 9-13 вместо 6-9. Тактический выбор: сфокусироваться и быстро убить одну (чтобы вторая стала обычной), либо равномерно бить и страдать от +50% обоих.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> **Минимальная координация — без runtime-state.** При расчёте damage этого моба: `if enemies.filter(e => e.id === 'pack_rat' && e.hp > 0).length >= 2: damage *= 1.5`. Чистый query по живым врагам — никаких новых полей в `Mob`, никакой синхронизации между мобами в раунде. ~4 LOC.
+
+---
+
+##### 5.4.5. `relic_drone` — Реликтовый дрон (Склад + Город, bridge)
+
+| Поле | Значение |
+|---|---|
+| `id` | `relic_drone` |
+| `name_ru` | Реликтовый дрон |
+| `type` | **`mech`** (новый enum, §6.2) |
+| `zone` | `warehouse` И `city` (cross-zone bridge — единственный, появляется в обеих новых зонах) |
+| `behavior_id` | `armor_piercing_ranged` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Полуразряженный военный дрон-разведчик из довоенных запасов корпорации. Жужжит. Стреляет тонкими лазерными импульсами, которые **пробивают любую броню**. Танковать его бессмысленно — нужно прятаться или лечиться.
+
+**AI flow.**
+```
+[ход relic_drone]
+  action = "attack"
+  ; при расчёте урона: hero_total_defense больше НЕ включает hero.equipped_armor.defense
+  ; vs_melee_bonus также НЕ применяется (он только против melee-атакёров; relic_drone — ranged + не "animal")
+  final_damage = max(MIN_DAMAGE_FLOOR, mob_damage * roll - cover_bonus_only)
+```
+
+**Боевой сценарий.** На герое надет `leather_vest` (defense=3) + `cloth_jacket` (defense=1). Против обычного моба total_defense = 4. Против `relic_drone` total_defense = 0 (армор игнорируется). Игрок видит «Дрон пробивает броню!» — единственная защита: действие «Укрытие» (`COVER_DEFENSE_BONUS_PCT = 0.5` от base defense — но base=0 от armor против drone, так что эффект минимальный) или просто лечение.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables). Дроп `electronics` и `circuitry` — единственный «легитимный» источник вне zone-loot.
+
+**Implementation hint (Engineer).**
+> **Это damage modifier, не позиционная механика.** При вычислении урона `relic_drone` по герою: используй формулу §2, но `target_total_defense` пересчитай **без** `Σ armor.defense`. Конкретно: `target_total_defense = (cover_active ? COVER_DEFENSE_BONUS_PCT * 0 : 0) = 0`. Эффективно — `final_damage = max(MIN_DAMAGE_FLOOR, mob_damage * roll)`.
+>
+> **`mech` enum hard-checks:** `combat.ts:51 attackerType === "animal"` — `relic_drone` не «animal» → `vs_melee_bonus` НЕ применяется. Это **поведение по умолчанию**, никаких изменений в `computeDefense` не нужно. См. §6.2 mech enum note.
+
+---
+
+##### 5.4.6. Сводная таблица AI-паттернов
+
+| behavior_id | Триггер | Эффект | Состояние |
+|---|---|---|---|
+| `ranged_keep_distance` | hero.weapon.type == "weapon_melee" | damage × 0.5 | stateless |
+| `defensive_cover` | turn_count % 2 == 1 | coverActive=true на след. атаку, skip turn | counter в mob |
+| `berserker_low_hp` | mob.hp / hp_max < 0.5 (single-shot) | damage × 2, base_speed −30 | flag `_berserk_triggered` |
+| `pack_bonus_when_paired` | enemies.filter(...).length ≥ 2 | damage × 1.5 | stateless query |
+| `armor_piercing_ranged` | (всегда) | ignore armor.defense | stateless |
+
+##### 5.4.7. Connection / Edge-cases
+
+- **Mixed wave (старый + новый моб в одном бою):** все правила применяются независимо. Например, в Городе depth 3 могут спавниться `pack_rat × 2` + `mutant × 1` + `relic_drone × 1` — каждый ходит по своему `behavior_id`, AI друг с другом не общаются (кроме query enemies для `pack_bonus_when_paired`).
+- **`relic_drone` дроп `electronics`/`circuitry`:** zone-exclusive ресурсы Склада (`electronics`) и Города (`circuitry`) — единственный способ получить эти ресурсы помимо zone-loot из §6.4.M3.
+- **`fanatic_berserker` после берсерка не возвращается в норму:** даже если игрок отлечит его (что в M3 невозможно — мобы НЕ хилятся), `_berserk_triggered` остаётся true. Безвозвратный bаff.
+- **`pack_rat` solo (один остался живым):** теряет +50% damage сразу же со следующего хода. Тактический поинт: фокус-файр работает.
+
+#### Связь §5.4 с другими системами
+
+- **§2 Бой:** все 5 новых behaviors используют **существующую** combat-формулу из §2; правки касаются только `attack` action и damage-расчёта моба, никаких новых action-типов не вводится (только `defensive_cover` skip+cover, но cover-механика уже в §2).
+- **§6.4.M3 Новые зоны:** конкретные комбинации мобов в `enemies[]` per depth задаёт зона.
+- **§7 Радио (M3 stub):** не связано — радио на M3 не имеет combat-эффектов.
+- **`balance.md` §M3:** все числа (HP, damage, defense, base_speed, xp) — там. Этот раздел описывает **только поведение**, не значения.
 
 ---
 
