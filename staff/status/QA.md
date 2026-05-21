@@ -288,6 +288,174 @@ Non-blocking notes (несут vs первый review):
 - PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['GITHUB_PAT_OPLOT']`, никогда не в URL/echo/print (lesson M2).
 - Forbidden: править GDD/balance/content/src/assets в GD PR; self-merge; push в `main` / `m3-integration` напрямую; менять чужие `staff/status/*.md`; предлагать новые M3-фичи; проверять runtime (это QA Acceptance).
 
-## Чек-листы — пока WIP
+## Объект ревью — артефакты
 
-Будет заполнено финальным verdict commit'ом.
+| Артефакт | Источник | Что смотрел |
+|---|---|---|
+| GD PR | #21 (`m3/gd-amendment` → `m3-integration`), HEAD `9070cad` | весь diff, 762 строки сводного diff |
+| GDD §5.4 (5 мобов M3) | `docs/GDD.md` | новая секция (5.4.0 … 5.4.7) |
+| GDD §6.2 (Mob/Zone schema extensions) | `docs/GDD.md` | enum `mech`, `Mob.behavior_id?`, `Zone.return_time_multiplier?`, расширение `unlock_condition` |
+| GDD §6.4.M3 (2 зоны) | `docs/GDD.md` | `warehouse`, `city` + sub-sections 6.4.M3.0 … 6.4.M3.6 |
+| GDD §10.M3 (radio stub) | `docs/GDD.md` | `RadioSignal` schema + UI-flow + anti-scope |
+| balance §M3 | `docs/balance.md` | mobs/drops/zones/return_time/items/recipes |
+| `docs/content-brief.md` | без изменений в этом PR | использовал как baseline для правил уникальности |
+| `staff/status/GAME_DESIGNER.md` | обновлён GD PR | под M3 |
+| `staff/handoff/M3-GD.md` | baseline | источник checklists |
+| `staff/handoff/M3-QA-SPEC.md` | baseline | мой брифинг |
+| Канонические M1 items | `content/items.json` (15 шт.) | подтверждение cross-refs для drop_tables/recipes |
+| git diff scope | `m3-integration...m3/gd-amendment -- docs/GDD.md docs/balance.md` | 6 «-» строк всего; ни одна не модифицирует M1/M2 числа |
+
+## Метрика diff'а
+
+| Файл | + строк | − строк | Тип изменений |
+|---|---|---|---|
+| `docs/GDD.md` | 481 | 4 | 4 удаления — это (1) MobType enum раcширение, (2) комментарий к `unlock_condition`, (3-4) замена двух placeholder-секций (§7, §10) на реальный контент. M1/M2 содержимое НЕ изменено. |
+| `docs/balance.md` | 210 | 1 | 1 удаление — strikethrough «~~Числа warehouse, city — M3~~» (метка outstanding scope tracker, не M1/M2 число). |
+| `staff/status/GAME_DESIGNER.md` | 75 | (− trivial) | GD статус-апдейт, не предмет моего ревью. |
+| **Всего** | **756 +** | **10 −** | Изменения — purely additive по существу. |
+
+## Checklist 1 — §5.4 «Мобы M3»
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Ровно 5 новых мобов | **PASS** | `looter_sniper`, `armored_guard`, `fanatic_berserker`, `pack_rat`, `relic_drone` — 5 шт. (GDD §5.4.0 сводная таблица + §5.4.1 … §5.4.5 отдельные подсекции). |
+| Каждый имеет уникальный AI-паттерн | **PASS** | 5 уникальных `behavior_id`: `ranged_keep_distance` / `defensive_cover` / `berserker_low_hp` / `pack_bonus_when_paired` / `armor_piercing_ranged`. §5.4.0 явно сверяет уникальность с M1 (`marauder`/`wild_dog`/`mutant`): `fanatic_berserker` инверт `marauder`, `pack_rat` отличен от `wild_dog`, `armored_guard` / `looter_sniper` / `relic_drone` отличны от `mutant`. |
+| Поля `id`, `name_ru`, `type`, `hp`, `damage_min/max`, `defense`, `base_speed`, `xp_reward`, `behavior_id`, zone | **PASS** | balance §M3 — Мобы (5 новых): полная числовая таблица для всех 5 мобов; GDD §5.4 — отдельная карточка для каждого моба с теми же полями. |
+| AI описаны словесно понятно (псевдокод, а не «делает атаку») | **PASS** | Каждый из 5 мобов имеет блок `**AI flow.**` с конкретным псевдокодом (триггер → эффект), плюс `**Боевой сценарий.**` (что видит игрок) и `**Implementation hint (Engineer).**` (~3–6 LOC, ссылки на существующую M2 механику). |
+| Нет AI, требующих перков (M4) / radio-доверия (M6) / multi-phase boss (M5) | **PASS** | Явный anti-scope в §5.4 преамбуле: «перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8), позиционная механика боя». Все 5 паттернов работают на existing M2 combat-формуле без runtime-state расширений (кроме `_berserk_triggered` single-shot flag и `turn_count % 2`). |
+| AI implementable ≤50 LOC | **PASS** | Каждая implementation hint указывает ~3–6 LOC: `ranged_keep_distance` (1 if, ~3 LOC), `defensive_cover` (~5 LOC reuse existing `coverActive` boolean), `berserker_low_hp` (~6 LOC), `pack_bonus_when_paired` (~4 LOC stateless query), `armor_piercing_ranged` (0 LOC новой механики — просто пересчёт total_defense). Σ ≈ 22 LOC; запас огромный. |
+| Минимум 1 моб для Склада, минимум 1 для Города (zone-coverage) | **PASS** | `looter_sniper` + `armored_guard` exclusive Склад; `fanatic_berserker` + `pack_rat` exclusive Город; `relic_drone` — bridge обеих зон (намеренный mech, единственный источник `electronics`/`circuitry`/`oil` вне zone-loot, §5.4.5). |
+| M1 mobs (`marauder`, `wild_dog`, `mutant`) НЕ изменены | **PASS** | §5.4 преамбула: «M1 mobs … НЕ изменяются — ни числами, ни поведением». §6.2: «M1 mobs (marauder, wild_dog, mutant) и их числа в `balance.md` — без изменений». balance.md diff не трогает M1-моб блок. |
+
+**§5.4 verdict: PASS.**
+
+## Checklist 2 — §6.2 «Mob/Zone schema extensions»
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `MobType` enum получает `"mech"` (добавление, не удаление существующих) | **PASS** | diff line 228-229: `type MobType = "human" \| "animal" \| "mutant" \| "boss";` → `... \| "boss" \| "mech";`. Все 4 существующих значения сохранены; добавлено 5-е. Комментарий явно: «Forward-compat only … M1 mobs и их числа в `balance.md` — без изменений.» |
+| `combat.ts` hard-check `attackerType === "animal"` НЕ ломается | **PASS** | §5.4.5 / §6.2 явно: «`combat.ts` проверка `attackerType === "animal"` … для `vs_melee_bonus` к `mech` не относится — `mech` НЕ триггерит этот бонус. Это **поведение по умолчанию**, никаких изменений в `computeDefense` не нужно.» Это backward-compatible — все 3 M1 mob.type values продолжают вести себя по-старому. |
+| `Mob.behavior_id?: string` — optional | **PASS** | diff line 249: `behavior_id?: string; // M3+: уникальный ID AI-паттерна`. M1 mobs **не задают** поле (Engineer fallback на existing switch по `id`). M3 mobs — обязательное (один из 5 enum-string значений, документировано в комментарии). |
+| `Zone.return_time_multiplier?: number` — optional, default 1.0 | **PASS** | diff line 276-278: `return_time_multiplier?: number; // M3+: множитель к BASE_RETURN_TIME_S … Optional, default 1.0. Engineer читает `zone.return_time_multiplier ?? 1.0`. `forest` поле НЕ задаёт → default=1.0 → M1/M2 поведение математически no-op.` |
+| `Zone.unlock_condition` принимает M3 строки без расширения схемы | **PASS** | diff line 275: тип остаётся `string`; в комментарии §6.2 явно перечислены 3 допустимых значения (`"start"`, `"forest_depth_2_completed"`, `"any_warehouse_sortie_completed"`); §6.4.M3.3 даёт implementation hint c switch-case на 3-5 LOC. |
+| M1 mobs остаются без `behavior_id` (Engineer fallback на классический switch) | **PASS** | Документировано в §5.4.0 и §6.2: «Для M1 mobs (marauder/wild_dog/mutant) поле отсутствует — Engineer fallback на классический switch по `id`». Расширение чисто аддитивное. |
+
+**§6.2 verdict: PASS.**
+
+## Checklist 3 — §6.4.M3 «Новые зоны M3»
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Ровно 2 новые зоны | **PASS** | `warehouse` и `city` — 2 шт. (GDD §6.4.M3.0 сводная таблица + §6.4.M3.1 / §6.4.M3.2 отдельные подсекции). |
+| Каждая имеет 2-3 уровня глубины с разными mob-/resource-листами | **PASS** | warehouse: 2 depth (1, 2) — разные `enemies[]` (`marauder/looter_sniper` vs `looter_sniper/armored_guard/relic_drone`), разные `resources[]`. city: 3 depth (1, 2, 3) — разные `enemies[]` (`mutant/pack_rat` vs `pack_rat/fanatic_berserker/relic_drone` vs `fanatic_berserker/relic_drone/mutant`), разные `resources[]`. |
+| Каждая зона имеет минимум 1 zone-exclusive ресурс | **PASS** | warehouse `unique_resources = electronics, oil` (2 шт.); city `unique_resources = medical_supplies, circuitry` (2 шт.). §6.4.M3.5 явно описывает правило non-overlap + единственное исключение для `relic_drone` (намеренный design). |
+| `unlock_condition` реализуемо без новой системы прогрессии (простой switch) | **PASS** | §6.4.M3.3 даёт ТОЧНЫЙ implementation hint: 2 boolean флага в `GameState.progress` + switch-case функция `evaluateUnlockCondition(cond, progress): boolean`. ~10 LOC. Триггеры сетятся в `ReturnScene.onComplete()`. Никаких новых систем (квесты/perks/XP-extensions) не требуется. |
+| Forest зона (M2) НЕ изменена | **PASS** | §6.4.M3 преамбула: «Зона `forest` и её 3 глубины **НЕ изменяются**». `forest` НЕ задаёт `return_time_multiplier` в content/zones.json → fallback default 1.0 → формула эквивалентна M1/M2 версии (математически no-op). |
+| `return_time_multiplier` backward-compat | **PASS** | balance §M3 — Расширенная формула + §6.4.M3.4 implementation hint: caller передаёт `zone.return_time_multiplier ?? 1.0`. M2 vitest `computeReturnTime(curWeight, maxWeight)` вызывают без 3-го аргумента → default 1.0 → старое поведение. Дополнительные vitest на warehouse=1.2 / city=1.5 (см. M3-ENG handoff §5). |
+
+**§6.4.M3 verdict: PASS.**
+
+## Checklist 4 — §10.M3 «Radio structure stub»
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `RadioSignal` JSON-схема описана | **PASS** | §10.M3.1: полный TypeScript `interface RadioSignal { id, from, subject, body_ru, options, expires_after_sorties, dismissed }` + `RadioSignalOption { id, label_ru }` + type alias `RadioSignalOptionId = "respond" \| "ignore"`. |
+| `RadioScene` UI-flow описан (вход → список → выбор → 2 кнопки → выход) | **PASS** | §10.M3.2: ASCII-flow `BaseScene → RadioScene[список активных] → [детали сигнала] → клик одной из 2 кнопок → dismiss → возврат в список (или «Эфир пуст») → BaseScene`. Учитывает edge case пустого списка («Эфир пуст», кнопка «Назад»). |
+| Явно отмечено, что на M3 это заглушка | **PASS** | §10 преамбула: «На M3 заполнено только §10.M3 … Это нужно, чтобы Content мог наполнить 2-3 dummy-сигнала, а Engineer — реализовать RadioScene как UI-заглушку». §10.M3 преамбула: «UI-заглушка … Никаких реальных последствий (rewards/ambush/faction changes)». |
+| Phrase «полная логика — M6» присутствует | **PASS** | §10 преамбула: «Полная логика (сигналы с ветвлениями, засады, награды, фракционные репутации, шкала доверия) — M6». §10.M3.1: «M6 расширит до выбора: …». §10.M3 преамбула + §10.M3.6: «M6 эволюция: этот stub будет расширен амендментом M6 GD». |
+| 2 опции ровно (`respond` / `ignore`) | **PASS** | `RadioSignalOptionId = "respond" \| "ignore"` — exhaustive type alias. `options: RadioSignalOption[]; // ровно 2 элемента: [{id: "respond", label_ru: "Откликнуться"}, {id: "ignore", label_ru: "Игнорировать"}]`. |
+| `expires_after_sorties` числовое | **PASS** | `expires_after_sorties: number; // > 0; счётчик уменьшается после каждой завершённой вылазки. При 0 → авто-dismissed.` Implementation в §10.M3.3 (5 LOC в `ReturnScene.onComplete()`). |
+| `dismissed` boolean | **PASS** | `dismissed: boolean; // M3: устанавливается в true после клика на любую из 2 кнопок. По умолчанию false.` Комментарий явно: «M6 расширит … до choice-history» — миграционный путь продуман. |
+| Anti-scope явно (нет rewards/ambush/trust на M3) | **PASS** | §10.M3.4 «Anti-scope §10.M3 (что НЕ делает Engineer на M3)» — 6 явных пунктов: rewards, ambush, trust, branching outcomes, per-zone triggers, real-time timers. §10.M3.1 примечание: «Поля content-brief.md, относящиеся к M6 (НЕ использовать в M3 stub): type, zone, reward, trap_mob_id, trust_impact. В M3 RadioSignal этих полей нет.» |
+| 2-3 dummy-сигнала как примеры структуры | **PASS_WITH_NOTE** | §10.M3.5 cross-refs делегирует на Content («Content Designer: 2-3 dummy-сигнала в `content/radio.json`»). В самом GDD-amendment'е inline-примеров сигналов нет — это NOT_BLOCKING, поскольку (a) JSON-схема полностью задана, Content имеет всё нужное чтобы наполнить файл; (b) chechlist M3-QA-SPEC уточняет «НЕ как реальный контент — это Content делает» — то есть GD не должен писать контент; (c) разделение ответственности корректное. |
+
+**§10.M3 verdict: PASS (с одним non-blocking note).**
+
+**Numbering note (non-blocking).** Handoff M3-GD §3 говорит о «новой §7», но GD выбрал §10.M3 (заглушка к существующей §10 «Радио и доверие (M6)»). Это **структурно лучше**, чем создавать §7 и сдвигать нумерацию: (a) §10 уже была placeholder именно для радио, расширение естественно; (b) §7 «Зоны и карта (M3)» помечена `— DONE` с cross-ref на §6.4.M3 (содержимое логично переехало в подсекцию §6). Это не отклонение от scope, а изящное решение по placement. Outdated handoff формулировка — задача PM, не GD.
+
+## Checklist 5 — `balance.md` §M3
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Stats для 5 новых мобов согласованы с §5.4 GDD | **PASS** | Сравнил каждое поле в balance.md «M3 — Мобы (5 новых)» таблице vs соответствующие карточки §5.4.1–§5.4.5 GDD. `id`, `name_ru`, `type`, `behavior_id`, `zone` идентичны. HP/damage/defense/base_speed/xp_reward — единственный источник в balance.md (GDD §5.4 не дублирует числа, только AI и tactical descriptions — это правильный «numbers in balance, behavior in GDD» pattern). Numbers AI-модификаторов («damage × 0.5», «damage × 2», «damage × 1.5», «base_speed −30», «turn_count % 2», «hp / hp_max < 0.5», «pack_rat alive ≥ 2») продублированы в balance.md «Модификаторы AI» таблице — согласованы. |
+| Drop tables для 5 мобов есть | **PASS** | balance §M3 «Drop-tables (новые мобы)» — отдельная таблица для каждого из 5 мобов с `item_id @ chance (count_min–count_max)`. |
+| Cross-refs `item_id` ↔ items roster разрешимы | **PASS** | Сверил каждый `item_id` в drop_tables и `recipes.ingredients` против `content/items.json` (15 M1 items) + M3 новые items из balance.md §M3: `looter_sniper`: cloth/ammo_pistol/scrap (M1) + ammo_rifle (M3 new) — все ✓; `armored_guard`: scrap/leather/gunpowder (M1) + electronics (M3) — ✓; `fanatic_berserker`: cloth/food/bandage (M1) + medical_supplies (M3) — ✓; `pack_rat`: leather/food (M1) + circuitry (M3) — ✓; `relic_drone`: scrap (M1) + electronics/circuitry/oil (M3) — ✓. Recipes: все 10 рецептов используют валидные item_id. Конкретно проверил `wood`, `rope`, `medkit`, `water` — все есть в M1 items.json. |
+| Numbers для 10 новых рецептов есть | **PASS** | balance §M3 «Recipes (10 новых)» таблица — 10 строк (`recipe_pipe_rifle`, `recipe_crowbar`, `recipe_tactical_vest`, `recipe_helmet`, `recipe_large_medkit`, `recipe_energy_drink`, `recipe_gas_mask`, `recipe_emp_grenade`, `recipe_smoke_bomb`, `recipe_ammo_rifle`) с полными полями (`result_id`, `result_count`, `ingredients`, `tier`, `craft_time_s`, `unlock_condition`). |
+| Recipes используют zone-exclusive ресурсы (создаёт игровую мотивацию исследовать зоны) | **PASS** | Покрытие задокументировано в самом balance.md: `electronics` (warehouse) → 2 рецепта; `oil` (warehouse) → 3 рецепта; `medical_supplies` (city) → 2 рецепта; `circuitry` (city) → 2 рецепта. 2 рецепта (`recipe_helmet`, `recipe_ammo_rifle`) намеренно без zone-exclusive — даёт «entry-level T2» крафт без необходимости сразу открывать новые зоны. Дизайн-рационал явный. |
+| Existing M1/M2 числа в balance.md НЕ изменены | **PASS** | `git diff origin/m3-integration...origin/m3/gd-amendment -- docs/balance.md` показывает только 1 deletion: вычёркнутый M3 placeholder «~~Числа второй и далее зоны (warehouse, city)~~ — DONE в §M3 ниже» — это outstanding-scope tracker, не число. Все M1/M2 числовые блоки (hero stats, weapons, armor, consumables, recipes M1, XP-таблица, forest zone, формулы M1/M2) — без изменений. |
+| `return_time_multiplier` формула backward-compat | **PASS** | balance §M3 «Расширенная формула return_time_s» + таблицы примеров для forest/warehouse/city: forest zone_mult=1.0 → результат идентичен M1/M2 (60.0 s полный рюкзак, 30.0 s пустой). Engineer hint: caller `computeReturnTime(curWeight, maxWeight)` без 3-го аргумента → default 1.0 → M2 vitest продолжают работать. |
+| Numbers согласованы между §5.4/§6.4.M3 GDD и balance §M3 | **PASS** | §6.4.M3.0 сводная таблица зон содержит `return_time_multiplier` (1.2 / 1.5) — те же числа в balance §M3 «Зоны». `enemy_count`, `resource_count`, `min_player_level`, `fights_per_depth` в GDD §6.4.M3.1/§6.4.M3.2 идентичны balance §M3 «Глубины Склада/Города» таблицам. |
+
+**balance §M3 verdict: PASS.**
+
+## Checklist 6 — Anti-scope
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Нет перков (M4) | **PASS** | Явный anti-scope в §5.4, §6.4.M3, §10.M3, balance §M3 «Скоуп». Никакого `perk`/`talent`/`skill_tree` в diff. `min_player_level` — это existing M1/M2 поле, не M4 perks. |
+| Нет боссов (M5) / multi-stage / phase changes | **PASS** | `boss_id: null` для обеих новых зон. Ни один из 5 mob AI не использует phase change / multi-stage. `fanatic_berserker` имеет single-shot trigger (`_berserk_triggered=true`, не возвращается) — это not «multi-stage», это buff с single transition. |
+| Нет полной radio-логики (M6) | **PASS** | §10.M3.4 «Anti-scope §10.M3»: rewards / ambush / trust / branching outcomes / per-zone triggers / real-time timers — все 6 пунктов явно вне M3. §10.M3.1: 5 M6 полей (`type`, `zone`, `reward`, `trap_mob_id`, `trust_impact`) явно НЕ используются в M3 stub. |
+| Нет модулей оружия (M5+) | **PASS** | balance §M3 «Скоуп» явно: «Модули оружия / брони (head-slot, accessory slots, runes) — M5+ (см. GDD §11 placeholder)». §M3 T2-armor `helmet`: «новый слот (голова). На M3 Engineer держит один armor-slot в hero (как M1/M2). Слот helmet — в M5 (модули). На M3 helmet рассматривается как альтернативная T2-броня». Намеренное упрощение задокументировано. |
+| Нет Yandex SDK (M8) | **PASS** | balance §M3 «Скоуп»: «IAP, реклама, Yandex SDK rewards — M8». §5.4 преамбула: «Yandex SDK (M8)». Никаких `ysdk` / `ads` matches в diff. |
+| Нет коммуны / NPC-членов / газовых зон / звуков-анимаций | **PASS** | Газовые зоны (требующие `gas_mask`) — explicitly M5 в balance §M3 «Скоуп»; `gas_mask` на M3 — «lore stub». Анимации/звуки/коммуна — anti-scope §5.4 преамбула. |
+| Нет XP-системы / уровней выше 5 | **PASS** | balance §M3 «Глубины Города» примечание: «На M3 XP-система потолок = 5 (см. §XP-таблица). Engineer проверяет `player.level >= min_player_level` точно так же, как в M1. Никаких новых уровней XP не вводится.» |
+
+**Anti-scope verdict: PASS.**
+
+## Checklist 7 — Регрессия M1/M2
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §1–§6 GDD не переписаны | **PASS** | `git diff origin/m3-integration...origin/m3/gd-amendment -- docs/GDD.md` — 4 deletion lines всего: (1) MobType enum (additive расширение, все 4 старых значения сохранены); (2) `unlock_condition` комментарий (semantic content тот же, добавлен cross-ref на §6.4.M3); (3-4) замены placeholder section header `### 7. Зоны и карта (M3)` / `### 10. Радио и доверие (M6)` на реальный контент с пометкой `DONE` / `M3 заглушка`. M1/M2 текст (§1 core loop, §2 combat, §3 weight, §4 craft, §5.1-§5.3 mobs M1, §6.1/§6.3/§6.4.MVP схемы forest) полностью сохранён. |
+| §7.1-§7.4 (M1/M2 балансные блоки в balance.md) не тронуты | **PASS** | balance.md diff — только 1 deletion: strikethrough M3 placeholder в верхнем «Не на M3» списке. Hero stats, weapons (knife / makeshift_pistol), armor (cloth_jacket / leather_vest), consumables (bandage / medkit / ammo_pistol), recipes M1 (5 шт.), XP-таблица, forest zone params, формулы M1/M2 — без изменений. |
+| M1/M2 числа в balance.md (`hp_max`, `max_weight`, `LOOT_LOSS_ON_DEFEAT`, etc.) не тронуты | **PASS** | Подтверждено визуально: ни одна строка в M1/M2 балансных таблицах не помечена `-` или `+` в diff. Дополнительно: M2 vitest `computeReturnTime(curWeight, maxWeight)` (без 3-го аргумента) сохраняет существующее поведение через default `zone_multiplier=1.0`. |
+| `staff/status/GAME_DESIGNER.md` обновлён под M3 | **PASS** | diff показывает 75+ insertions в `staff/status/GAME_DESIGNER.md` — GD статус-апдейт. Содержимое этого файла — вне моего scope (это GD-owned file), но факт обновления — checklist item passed. |
+| Cross-refs внутри amendment'а корректны | **PASS** | Все internal references (`§5.4` ↔ `§6.2`, `§5.4` ↔ `balance §M3`, `§6.4.M3` ↔ `balance §M3 — Расширенная формула`, `§10.M3` ↔ `content/radio.json`, `§6.4.M3.4` ↔ M3-ENG handoff §5) — разрешимы. Якоря (`<a id="m3-drop-tables">`, `<a id="m3-recipes">`) добавлены для глубоких ссылок. |
+| Никаких изменений в `content/`, `src/`, `assets/`, других `staff/status/*.md` | **PASS** | `git diff --stat origin/m3-integration...origin/m3/gd-amendment` затрагивает только 3 файла: `docs/GDD.md`, `docs/balance.md`, `staff/status/GAME_DESIGNER.md`. GD строго остался в своей зоне. |
+
+**Регрессия verdict: PASS.**
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | §5.4 «Мобы M3» (ровно 5, уникальный AI, ≤50 LOC, M1 mobs untouched) | **PASS** |
+| 2 | §6.2 «Mob/Zone schema extensions» (mech enum additive, behavior_id optional, return_time_multiplier optional) | **PASS** |
+| 3 | §6.4.M3 «Новые зоны M3» (ровно 2, zone-exclusive resources, unlock switch-implementable, forest untouched) | **PASS** |
+| 4 | §10.M3 «Radio structure stub» (2 options, expires numeric, dismissed boolean, anti-scope явный) | **PASS** (1 non-blocking note: inline dummy-signals делегированы Content — корректно) |
+| 5 | balance §M3 (numbers согласованы, cross-refs resolvable, return_time backward-compat) | **PASS** |
+| 6 | Anti-scope (нет perks/bosses/full-radio/modules/SDK/новых XP) | **PASS** |
+| 7 | Регрессия M1/M2 (§1–§6 / M1/M2 numbers untouched, scope clean) | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+GD M3 amendment (PR #21, HEAD `9070cad`) полностью соответствует брифу `staff/handoff/M3-GD.md` и чек-листам `staff/handoff/M3-QA-SPEC.md`:
+- 5 механически уникальных мобов с реализуемым ≤50 LOC AI.
+- 2 новые зоны с zone-exclusive ресурсами и реализуемыми (≤10 LOC) unlock-условиями.
+- Radio UI-stub схема с явным «полная логика — M6» и 6-пунктовым anti-scope.
+- 10 рецептов с резолвимыми cross-refs.
+- Backward-compatible расширения схем (`mech` enum additive, `behavior_id?` / `return_time_multiplier?` optional).
+- Zero модификаций M1/M2 чисел.
+- Чистый anti-scope (нет perks / bosses / full radio / weapon modules / Yandex SDK / новых XP уровней).
+
+**Готов к merge в `m3-integration`.** После merge Content / Engineer / Artist могут стартовать параллельно (см. `staff/status/M3.md` PR-реестр).
+
+### Single non-blocking note
+
+§10.M3.5 делегирует 2-3 dummy radio-сигнала на Content (`content/radio.json` остаётся `[]` до Content PR). Это **правильное** разделение ролей (GD задаёт схему, Content наполняет контент); checklist M3-QA-SPEC §3 явно: «2-3 dummy-сигнала описаны как примеры структуры (НЕ как реальный контент — это Content делает)». GD выполнил «описание структуры»; Content выполнит «наполнение». Никаких действий от GD не требуется.
+
+### Numbering observation (out-of-band — не influences verdict)
+
+Handoff M3-GD говорил «§7 Radio structure stub», но GD выбрал §10.M3 (заглушка существующей §10 «Радио и доверие (M6)»). Это **структурно лучше**, чем создавать §7 (которая в существующем GDD уже была placeholder для «Зоны и карта (M3)» и помечена `— DONE` с cross-ref на §6.4.M3). Outdated handoff формулировка — это PM-задача синхронизировать брифинг, не GD.
+
+## Recovery (обновлено после финального verdict)
+
+- Role: QA Spec Reviewer M3.
+- Milestone: M3 spec review (GD amendment).
+- Branch: `qa/m3-spec-review` (base `m3-integration`).
+- Object under review: `m3/gd-amendment` HEAD `9070cad` (PR #21).
+- Done sections: branch / first commit / Draft PR / 7-checklist verdict / non-blocking notes / final APPROVE.
+- Next concrete step: переключить QA-report PR в Ready, опубликовать verdict на PR #21, заблокировать Alex итогом.
+- Blockers: нет.
