@@ -366,6 +366,218 @@ final_damage = max(1, mob_damage_roll * roll - hero_total_armor)
 
 ---
 
+#### 5.4. Мобы M3 (5 новых типов)
+
+> **Скоуп:** добавление к §5. M1 mobs (`marauder`, `wild_dog`, `mutant`) **НЕ изменяются** — ни числами, ни поведением. Все числа новых мобов — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
+>
+> **Anti-scope §5.4:** перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8), позиционная механика боя / distance / range (M2 combat — positionless, см. implementation hints ниже).
+
+##### 5.4.0. Принципы дизайна 5 новых AI-паттернов
+
+Каждый новый моб **механически уникален** (не клон M1 marauder/wild_dog/mutant по поведению):
+
+| # | id | name_ru | type | behavior_id | Архетип |
+|---|---|---|---|---|---|
+| 1 | `looter_sniper` | Мародёр-снайпер | `human` | `ranged_keep_distance` | Снайпер: ranged-only, штраф в melee |
+| 2 | `armored_guard` | Бронированный охранник | `human` | `defensive_cover` | Защитник: каждый 2-й ход — Укрытие (+50% defense) |
+| 3 | `fanatic_berserker` | Фанатик-берсерк | `human` | `berserker_low_hp` | Берсерк: при HP<50% damage ×2, base_speed −30 |
+| 4 | `pack_rat` | Стайная крыса-мутант | `mutant` | `pack_bonus_when_paired` | Стая: +50% damage если ≥2 живых `pack_rat` в бою |
+| 5 | `relic_drone` | Реликтовый дрон | `mech` (новый, §6.2) | `armor_piercing_ranged` | Мех: ranged, игнорирует `armor.defense` цели |
+
+**Реестр уникальности относительно M1 (3 архетипа):**
+- M1 `marauder` (flee при low HP) ≠ M3 `fanatic_berserker` (наоборот: low HP → агрессивнее).
+- M1 `wild_dog` (high initiative first strike) ≠ M3 `pack_rat` (initiative обычная, но координация в паре).
+- M1 `mutant` (slow tank, plain attack) ≠ M3 `armored_guard` (defensive cycle), `looter_sniper` (ranged), `relic_drone` (armor pierce).
+
+##### 5.4.1. `looter_sniper` — Мародёр-снайпер (Склад)
+
+| Поле | Значение |
+|---|---|
+| `id` | `looter_sniper` |
+| `name_ru` | Мародёр-снайпер |
+| `type` | `human` |
+| `zone` | `warehouse` |
+| `behavior_id` | `ranged_keep_distance` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Бывший охотник, окопавшийся среди стеллажей Склада. Стреляет издалека, в ближнем бою растерян и неэффективен.
+
+**AI flow.**
+```
+[ход looter_sniper]
+  если у hero текущее оружие.type == "weapon_melee":
+    action = "attack", damage_modifier = 0.5  ; в melee он плохо стреляет
+  иначе (hero вооружён ranged или безоружен):
+    action = "attack", damage_modifier = 1.0  ; нормальный ranged-урон
+```
+
+**Боевой сценарий (что видит игрок на CombatScene).** В turn order looter_sniper обычно ходит во 2-й половине раунда. Если игрок с ножом — мобу выпадает 4-7 damage вместо 9-13. Если у игрока в руках `makeshift_pistol` или `pipe_rifle` — полный 9-13.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> Это **damage modifier, не позиционная механика**. M2 combat **positionless** — у Engineer'а нет понятия distance/position. Реализация: при расчёте урона `looter_sniper` проверь `hero.equipped_weapon.type`. Если `== "weapon_melee"`, умножь mob damage на 0.5. Один if, ~3 LOC.
+
+---
+
+##### 5.4.2. `armored_guard` — Бронированный охранник (Склад)
+
+| Поле | Значение |
+|---|---|
+| `id` | `armored_guard` |
+| `name_ru` | Бронированный охранник |
+| `type` | `human` |
+| `zone` | `warehouse` |
+| `behavior_id` | `defensive_cover` |
+| `behavior` (legacy enum, §6.2) | `defensive` |
+
+**Архетип.** Бывший корпоративный охранник в потрёпанном тактическом снаряжении. Не бьёт сильно, но трудно пробивается. Каждый второй ход — переходит в позицию укрытия и бронируется ещё больше.
+
+**AI flow.**
+```
+[ход armored_guard]
+  if (turn_count_for_this_mob % 2) == 0:           ; чётный его ход (0, 2, 4, ...)
+    action = "attack"
+    cover_active_next_round = false
+  else:                                            ; нечётный (1, 3, 5, ...)
+    action = "cover"                               ; skip turn, повысить defense
+    cover_active_next_round = true                 ; следующая входящая атака против этого моба считается с COVER_DEFENSE_BONUS_PCT=0.5 поверх defense
+```
+
+**Боевой сценарий.** Игрок видит лог: «Охранник атакует — 6 damage» (раунд 1), затем «Охранник занял укрытие» (раунд 2 — пропуск хода). На раунде 2 атаки игрока против `armored_guard` считаются с `coverActive=true` → его `total_defense += 0.5 × base_defense`. На раунде 3 он снова бьёт. И так циклически.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> `computeDefense(armor, coverActive: boolean, attackerType)` **уже принимает `coverActive: boolean`** (см. `src/systems/combat.ts:47-56`, M2). Никакой новой механики не нужно — на каждом 2-м ходу моба сетим `coverActive=true` на следующую атаку против него; в остальные ходы — `false`. ~5 LOC: счётчик `mob.turn_count`, mod 2, флаг на ровный/нечётный ход. Используется existing M2 cover-механика.
+
+---
+
+##### 5.4.3. `fanatic_berserker` — Фанатик-берсерк (Город)
+
+| Поле | Значение |
+|---|---|
+| `id` | `fanatic_berserker` |
+| `name_ru` | Фанатик-берсерк |
+| `type` | `human` |
+| `zone` | `city` |
+| `behavior_id` | `berserker_low_hp` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Член культа «Последнего огня», обкуренный и фанатично злой. Чем ближе к смерти — тем безумнее бьёт, но менее точен (теряет инициативу). Анти-`marauder`: тот при low HP убегает, этот — наоборот.
+
+**AI flow.**
+```
+[ход fanatic_berserker]
+  if (mob.hp / mob.hp_max) < 0.5 and not mob._berserk_triggered:
+    mob.damage_min *= 2
+    mob.damage_max *= 2
+    mob.base_speed -= 30                           ; перерасчёт инициативы со след. раунда
+    mob._berserk_triggered = true                  ; чтобы не баффать повторно
+  action = "attack"                                ; всегда атакует героя
+```
+
+**Боевой сценарий.** На полном HP бьёт 8-12. Когда игрок сбивает его HP ниже 50% (например, до 19/40), лог: «Фанатик орёт и бросается в атаку! +Урон, −Инициатива». Следующая атака — 16-24 damage. Тактический выбор: либо добить до 50% (опасно — он на ходу), либо позволить ему перейти в берсерк и затем добить за 1-2 хода (он медленнее).
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> Trigger однократный (`mob._berserk_triggered = true` после первого срабатывания). Чистая ветка в начале хода моба. `base_speed -= 30` пересчитывает initiative со следующего раунда — это бесплатно, потому что initiative сортируется каждый раунд по `mob.base_speed`. ~6 LOC.
+
+---
+
+##### 5.4.4. `pack_rat` — Стайная крыса-мутант (Город)
+
+| Поле | Значение |
+|---|---|
+| `id` | `pack_rat` |
+| `name_ru` | Стайная крыса-мутант |
+| `type` | `mutant` |
+| `zone` | `city` |
+| `behavior_id` | `pack_bonus_when_paired` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Гибрид крысы и чего-то похуже из городской канализации. По одной — неприятная, но не страшная. В паре — кошмар: координируются на запах. **В одиночку — обычный aggressive; в паре — +50% damage обоим.**
+
+**AI flow.**
+```
+[ход pack_rat]
+  let pack_alive = enemies.filter(e => e.id === "pack_rat" && e.hp > 0).length
+  if pack_alive >= 2:
+    damage_multiplier = 1.5                        ; синергия стаи
+  else:
+    damage_multiplier = 1.0
+  action = "attack", damage = roll(damage_min, damage_max) * damage_multiplier
+```
+
+**Боевой сценарий.** Если в бою 2 `pack_rat` живы (типичный случай — Город `enemy_count [2,3]`), игрок видит «Стайные крысы движутся в координации, атакуют сильнее». Damage за одну атаку: 9-13 вместо 6-9. Тактический выбор: сфокусироваться и быстро убить одну (чтобы вторая стала обычной), либо равномерно бить и страдать от +50% обоих.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables).
+
+**Implementation hint (Engineer).**
+> **Минимальная координация — без runtime-state.** При расчёте damage этого моба: `if enemies.filter(e => e.id === 'pack_rat' && e.hp > 0).length >= 2: damage *= 1.5`. Чистый query по живым врагам — никаких новых полей в `Mob`, никакой синхронизации между мобами в раунде. ~4 LOC.
+
+---
+
+##### 5.4.5. `relic_drone` — Реликтовый дрон (Склад + Город, bridge)
+
+| Поле | Значение |
+|---|---|
+| `id` | `relic_drone` |
+| `name_ru` | Реликтовый дрон |
+| `type` | **`mech`** (новый enum, §6.2) |
+| `zone` | `warehouse` И `city` (cross-zone bridge — единственный, появляется в обеих новых зонах) |
+| `behavior_id` | `armor_piercing_ranged` |
+| `behavior` (legacy enum, §6.2) | `aggressive` |
+
+**Архетип.** Полуразряженный военный дрон-разведчик из довоенных запасов корпорации. Жужжит. Стреляет тонкими лазерными импульсами, которые **пробивают любую броню**. Танковать его бессмысленно — нужно прятаться или лечиться.
+
+**AI flow.**
+```
+[ход relic_drone]
+  action = "attack"
+  ; при расчёте урона: hero_total_defense больше НЕ включает hero.equipped_armor.defense
+  ; vs_melee_bonus также НЕ применяется (он только против melee-атакёров; relic_drone — ranged + не "animal")
+  final_damage = max(MIN_DAMAGE_FLOOR, mob_damage * roll - cover_bonus_only)
+```
+
+**Боевой сценарий.** На герое надет `leather_vest` (defense=3) + `cloth_jacket` (defense=1). Против обычного моба total_defense = 4. Против `relic_drone` total_defense = 0 (армор игнорируется). Игрок видит «Дрон пробивает броню!» — единственная защита: действие «Укрытие» (`COVER_DEFENSE_BONUS_PCT = 0.5` от base defense — но base=0 от armor против drone, так что эффект минимальный) или просто лечение.
+
+**Дроп.** См. [`balance.md` §M3 Drop-tables](./balance.md#m3-drop-tables). Дроп `electronics` и `circuitry` — единственный «легитимный» источник вне zone-loot.
+
+**Implementation hint (Engineer).**
+> **Это damage modifier, не позиционная механика.** При вычислении урона `relic_drone` по герою: используй формулу §2, но `target_total_defense` пересчитай **без** `Σ armor.defense`. Конкретно: `target_total_defense = (cover_active ? COVER_DEFENSE_BONUS_PCT * 0 : 0) = 0`. Эффективно — `final_damage = max(MIN_DAMAGE_FLOOR, mob_damage * roll)`.
+>
+> **`mech` enum hard-checks:** `combat.ts:51 attackerType === "animal"` — `relic_drone` не «animal» → `vs_melee_bonus` НЕ применяется. Это **поведение по умолчанию**, никаких изменений в `computeDefense` не нужно. См. §6.2 mech enum note.
+
+---
+
+##### 5.4.6. Сводная таблица AI-паттернов
+
+| behavior_id | Триггер | Эффект | Состояние |
+|---|---|---|---|
+| `ranged_keep_distance` | hero.weapon.type == "weapon_melee" | damage × 0.5 | stateless |
+| `defensive_cover` | turn_count % 2 == 1 | coverActive=true на след. атаку, skip turn | counter в mob |
+| `berserker_low_hp` | mob.hp / hp_max < 0.5 (single-shot) | damage × 2, base_speed −30 | flag `_berserk_triggered` |
+| `pack_bonus_when_paired` | enemies.filter(...).length ≥ 2 | damage × 1.5 | stateless query |
+| `armor_piercing_ranged` | (всегда) | ignore armor.defense | stateless |
+
+##### 5.4.7. Connection / Edge-cases
+
+- **Mixed wave (старый + новый моб в одном бою):** все правила применяются независимо. Например, в Городе depth 3 могут спавниться `pack_rat × 2` + `mutant × 1` + `relic_drone × 1` — каждый ходит по своему `behavior_id`, AI друг с другом не общаются (кроме query enemies для `pack_bonus_when_paired`).
+- **`relic_drone` дроп `electronics`/`circuitry`:** zone-exclusive ресурсы Склада (`electronics`) и Города (`circuitry`) — единственный способ получить эти ресурсы помимо zone-loot из §6.4.M3.
+- **`fanatic_berserker` после берсерка не возвращается в норму:** даже если игрок отлечит его (что в M3 невозможно — мобы НЕ хилятся), `_berserk_triggered` остаётся true. Безвозвратный bаff.
+- **`pack_rat` solo (один остался живым):** теряет +50% damage сразу же со следующего хода. Тактический поинт: фокус-файр работает.
+
+#### Связь §5.4 с другими системами
+
+- **§2 Бой:** все 5 новых behaviors используют **существующую** combat-формулу из §2; правки касаются только `attack` action и damage-расчёта моба, никаких новых action-типов не вводится (только `defensive_cover` skip+cover, но cover-механика уже в §2).
+- **§6.4.M3 Новые зоны:** конкретные комбинации мобов в `enemies[]` per depth задаёт зона.
+- **§7 Радио (M3 stub):** не связано — радио на M3 не имеет combat-эффектов.
+- **`balance.md` §M3:** все числа (HP, damage, defense, base_speed, xp) — там. Этот раздел описывает **только поведение**, не значения.
+
+---
+
 ### 6. JSON-схемы (TypeScript-интерфейсы) — MVP, M1–M2
 
 > **Источник правды по полям — `docs/content-brief.md`.**
@@ -444,11 +656,19 @@ interface ConsumableStats {
 #### 6.2. `Mob`
 
 ```typescript
-type MobType = "human" | "animal" | "mutant" | "boss";
+type MobType = "human" | "animal" | "mutant" | "boss" | "mech";
 // "boss" — НЕ в MVP, оставлено для совместимости со схемой content-brief.
+// "mech" — ДОБАВЛЕНО в M3 для `relic_drone` (см. §5.4.5). Forward-compat only:
+//   * Ни одно существующее поведение / hard-check НЕ модифицируется.
+//   * В частности, `combat.ts` проверка `attackerType === "animal"` (см. M2 implementation)
+//     для `vs_melee_bonus` к `mech` не относится — `mech` НЕ триггерит этот бонус.
+//   * M1 mobs (`marauder`, `wild_dog`, `mutant`) и их числа в `balance.md` — без изменений.
 
 type MobBehavior = "aggressive" | "defensive" | "passive" | "ambush";
 // MVP использует только "aggressive" (с поведенческой особенностью у marauder — flee при low HP).
+// M3: новые мобы используют `aggressive` или `defensive` (см. §5.4 сводная таблица AI-паттернов).
+// Тонкое поведение (snipe / pack / berserk / armor-pierce) ВЫРАЖЕНО через поле `behavior_id` ниже,
+// а не через расширение этого enum'а (lite расширение — minimize schema churn).
 
 interface DropEntry {
   item_id: string;               // должен существовать в items.json
@@ -470,6 +690,13 @@ interface Mob {
   base_speed: number;            // = initiative моба
   xp_reward: number;
   behavior: MobBehavior;
+  behavior_id?: string;          // M3+: уникальный ID AI-паттерна (см. §5.4.6 сводная таблица).
+                                 //   Для M1 mobs (marauder/wild_dog/mutant) поле отсутствует —
+                                 //   Engineer fallback на классический switch по `id`.
+                                 //   Для M3 mobs — обязательно, Engineer делает switch по `behavior_id`.
+                                 //   Допустимые значения M3: "ranged_keep_distance" | "defensive_cover"
+                                 //     | "berserker_low_hp" | "pack_bonus_when_paired" | "armor_piercing_ranged".
+                                 //   M4+ — расширяется по мере добавления новых паттернов.
   description_ru: string;
   flavor_ru: string;
   drop_table: DropEntry[];
@@ -477,6 +704,10 @@ interface Mob {
 ```
 
 > **Уточнение к `content-brief.md`:** content-brief.md описывает поле `damage` как одно число. Канон GDD M1 расширяет его до `damage_min` / `damage_max`, чтобы соответствовать формуле боя §2. Content Designer обязан использовать `damage_min` / `damage_max`.
+>
+> **M3 schema extensions (см. §5.4):**
+> - `MobType` enum получил значение `"mech"` (forward-compat: M1 mobs не затрагиваются).
+> - `Mob.behavior_id?: string` — опциональное поле для уникального AI-паттерна. Для M1 mobs **не задаётся** (Engineer fallback на existing M2 hard-checks по `id`). Для M3 mobs (5 шт.) — обязательное (один из 5 enum-string значений §5.4.6).
 
 #### 6.3. `Recipe`
 
@@ -519,11 +750,151 @@ interface Zone {
   boss_id: string | null;        // в MVP всегда null
   unique_resources: string[];    // ресурсы, добываемые ТОЛЬКО в этой зоне
   levels: ZoneLevel[];           // 3 объекта для MVP-зоны "forest"
-  unlock_condition: string;      // "start" для forest в MVP
+  unlock_condition: string;      // "start" для forest в MVP; M3 расширяет (см. §6.4.M3)
+  return_time_multiplier?: number; // M3+: множитель к BASE_RETURN_TIME_S (см. §6.4.M3).
+                                   //   Optional, default 1.0. Engineer читает `zone.return_time_multiplier ?? 1.0`.
+                                   //   `forest` поле НЕ задаёт → default=1.0 → M1/M2 поведение математически no-op.
 }
 ```
 
 > **Уточнение к `content-brief.md`:** content-brief.md описывает зону как плоский объект (`resources`, `mobs`, `boss_id`, `unique_resources`). Канон GDD M1 добавляет массив `levels[]` для механики 3-х глубин Леса (§1). Поле `unique_resources` сохраняется ради совместимости; в MVP при одной зоне оно равно полному списку `resources`.
+>
+> **M3 schema extensions (см. §6.4.M3):**
+> - `Zone.return_time_multiplier?: number` — optional, default 1.0. Engineer применяет в расширенной формуле `return_time_s = BASE_RETURN_TIME_S * (zone.return_time_multiplier ?? 1.0) * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)`. `forest` поле НЕ задаёт → M1/M2 числа `balance.md` не меняются.
+> - `Zone.unlock_condition` теперь принимает богаче строки: `"start"` (forest), `"forest_depth_2_completed"` (warehouse), `"any_warehouse_sortie_completed"` (city). Engineer переводит строки в boolean-флаги в `GameState.progress` (см. §6.4.M3 implementation hint).
+> - `ZoneLevel.depth` сужение `1 | 2 | 3` — для warehouse/city допустимы `1 | 2` или `1 | 2 | 3` соответственно (см. §6.4.M3). Тип расширяется до `1 | 2 | 3`, что уже соответствует существующему union (no change to schema).
+
+#### 6.4.M3. Новые зоны M3 (Склад + Город)
+
+> **Скоуп:** добавление к §6.4. Зона `forest` и её 3 глубины **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
+>
+> **Anti-scope §6.4.M3:** перки (M4), боссы (M5), модули оружия (M5+), реальные транспортные/маршрутные системы (M5+), Yandex SDK (M8), позиционная механика боя (M5+).
+
+##### 6.4.M3.0. Сводная таблица новых зон
+
+| id | name_ru | depths | unlock_condition | return_time_multiplier | Mobs (новые + bridge с Леса) | Zone-exclusive resources |
+|---|---|---|---|---|---|---|
+| `warehouse` | Склад | 2 (depth 1, 2) | `forest_depth_2_completed` | **1.2** | `looter_sniper`, `armored_guard`, `relic_drone`, +`marauder` (bridge) | `electronics`, `oil` |
+| `city` | Город | 3 (depth 1, 2, 3) | `any_warehouse_sortie_completed` | **1.5** | `fanatic_berserker`, `pack_rat`, `relic_drone`, +`mutant` (bridge) | `medical_supplies`, `circuitry` |
+
+##### 6.4.M3.1. Зона `warehouse` — Склад
+
+| Поле | Значение |
+|---|---|
+| `id` | `warehouse` |
+| `name_ru` | Склад |
+| `level` | 2 (рекомендуемый уровень игрока на старте — выше Леса) |
+| `description_ru` | «Заброшенный логистический терминал на промзоне. Стеллажи до потолка, ржавая техника, разбросанная упаковка. Мародёры обустроились здесь как у себя дома; чуют любого пришлого.» |
+| `unlock_condition` | `"forest_depth_2_completed"` — открывается после успешного завершения хотя бы одной вылазки в Лес depth 2 (флаг в `GameState.progress.forest_depth_2_completed`). |
+| `return_time_multiplier` | **1.2** (на 20% дольше базового возврата — Склад дальше от Оплота, чем Лес). |
+| `mobs` (агрегат) | `marauder, looter_sniper, armored_guard, relic_drone` |
+| `unique_resources` | `electronics`, `oil` |
+| `resources` (агрегат) | `wood, scrap, cloth, electronics, oil, gunpowder, leather` |
+| `boss_id` | `null` (M3 без боссов) |
+
+**Глубины Склада.**
+
+| depth | enemies | enemy_count | resources | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|---|---|
+| 1 | `marauder`, `looter_sniper` | [1, 2] | `scrap`, `cloth`, `electronics`, `oil` | [2, 4] | 2 | 2 |
+| 2 | `looter_sniper`, `armored_guard`, `relic_drone` | [2, 3] | `scrap`, `electronics`, `oil`, `gunpowder`, `leather` | [3, 5] | 3 | 3 |
+
+**Атмосфера / нарратив.** Игрок впервые встречает ranged-атакующего противника (`looter_sniper`), бронированного противника (`armored_guard`) и mech-противника (`relic_drone`). Открывает доступ к `electronics` и `oil` — двум новым ресурсам, которые нужны для T2-крафта (см. balance.md §M3 recipes).
+
+**Тактический урок зоны (player-side learning).** «Не все противники бьют одинаково. Нож против снайпера — плохой выбор. Броня против дрона — бесполезна.»
+
+##### 6.4.M3.2. Зона `city` — Город
+
+| Поле | Значение |
+|---|---|
+| `id` | `city` |
+| `name_ru` | Город |
+| `level` | 3 (рекомендуемый уровень игрока — выше Склада) |
+| `description_ru` | «Руины делового квартала. Пустые витрины, проваленные перекрытия, выжженные офисы. Здесь живут культы и стаи мутантов; нормальные люди давно ушли.» |
+| `unlock_condition` | `"any_warehouse_sortie_completed"` — открывается после хотя бы одной успешной вылазки в `warehouse` (флаг в `GameState.progress.any_warehouse_sortie_completed`). |
+| `return_time_multiplier` | **1.5** (на 50% дольше базового — Город дальше всех от Оплота, центр карты). |
+| `mobs` (агрегат) | `mutant, fanatic_berserker, pack_rat, relic_drone` |
+| `unique_resources` | `medical_supplies`, `circuitry` |
+| `resources` (агрегат) | `scrap, cloth, food, water, medical_supplies, circuitry, gunpowder, leather` |
+| `boss_id` | `null` (M3 без боссов) |
+
+**Глубины Города.**
+
+| depth | enemies | enemy_count | resources | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|---|---|
+| 1 | `mutant`, `pack_rat` | [2, 3] | `scrap`, `cloth`, `food`, `medical_supplies` | [2, 4] | 3 | 2 |
+| 2 | `pack_rat`, `fanatic_berserker`, `relic_drone` | [2, 4] | `medical_supplies`, `circuitry`, `gunpowder` | [3, 5] | 4 | 3 |
+| 3 | `fanatic_berserker`, `relic_drone`, `mutant` | [3, 5] | `medical_supplies`, `circuitry`, `leather`, `water` | [4, 7] | 5 | 4 |
+
+**Атмосфера / нарратив.** Самая опасная зона M3. Здесь два уникальных City-моба (`fanatic_berserker`, `pack_rat`) + cross-zone bridge `relic_drone`. Открывает доступ к `medical_supplies` и `circuitry` — ключевые ресурсы для T2-расходников и кибер-инвентаря.
+
+**Тактический урок зоны.** «Скорость убийства имеет значение. Берсерка надо завалить до 50% HP, иначе он удвоит урон. Стайных крыс надо разделять. Дрон обходит броню — нужно укрытие и аптечки.»
+
+##### 6.4.M3.3. `unlock_condition` strings — implementation hint (Engineer)
+
+> Минимальная имплементация — без полной системы квестов. Engineer хранит булевы флаги в `GameState.progress`:
+>
+> ```typescript
+> interface GameProgress {
+>   forest_depth_2_completed: boolean;        // true после первой успешной вылазки на forest depth=2
+>   any_warehouse_sortie_completed: boolean;  // true после любой успешной вылазки в warehouse
+>   // M4+: расширяется по мере добавления новых unlock-условий
+> }
+> ```
+>
+> **Триггеры (где сетим флаги):**
+> - `forest_depth_2_completed`: в `ReturnScene.onComplete()`, если `currentSortie.zone === "forest" && currentSortie.depth === 2 && currentSortie.victory === true`.
+> - `any_warehouse_sortie_completed`: в `ReturnScene.onComplete()`, если `currentSortie.zone === "warehouse" && currentSortie.victory === true`.
+>
+> **Проверка в `MapScene`:** для каждой зоны вычислить `unlocked = evaluateUnlockCondition(zone.unlock_condition, GameState.progress)`, где `evaluateUnlockCondition` — простой switch по строкам:
+>
+> ```typescript
+> function evaluateUnlockCondition(cond: string, progress: GameProgress): boolean {
+>   switch (cond) {
+>     case "start": return true;
+>     case "forest_depth_2_completed": return progress.forest_depth_2_completed;
+>     case "any_warehouse_sortie_completed": return progress.any_warehouse_sortie_completed;
+>     default: return false; // unknown condition → locked, soft-warn в console
+>   }
+> }
+> ```
+>
+> Заблокированная зона в `MapScene` показывается серой кнопкой с подсказкой «Откроется после: <читаемое условие>».
+
+##### 6.4.M3.4. `return_time_multiplier` — implementation hint (Engineer)
+
+> Расширенная формула из `balance.md` §Формулы:
+>
+> ```
+> return_time_s = BASE_RETURN_TIME_S
+>               * (zone.return_time_multiplier ?? 1.0)
+>               * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)
+> ```
+>
+> **Обратная совместимость:**
+> - `forest` в `content/zones.json` поле `return_time_multiplier` **не задаёт** → `?? 1.0` → формула эквивалентна M1/M2 версии.
+> - `warehouse` → 1.2, `city` → 1.5.
+>
+> **Где менять:** `src/systems/weight.ts` функция `computeReturnTime` получает третий опциональный параметр `zoneMultiplier: number = 1.0`. Caller в `ReturnScene` передаёт `currentSortie.zone.return_time_multiplier ?? 1.0`. Vitest тесты M2 не сломаются (тесты вызывают `computeReturnTime(curWeight, maxWeight)` без 3-го аргумента → default 1.0 → старое поведение). Добавь ≥2 новых vitest на warehouse=1.2 и city=1.5 (см. M3-ENG handoff §5).
+
+##### 6.4.M3.5. Zone-exclusive ресурсы — нарратив + механика
+
+| Ресурс | Зона | Назначение |
+|---|---|---|
+| `electronics` | warehouse | Крафт T2-брони, T2-расходников (см. balance.md §M3 recipes) |
+| `oil` | warehouse | Крафт T2-оружия, T2-расходников |
+| `medical_supplies` | city | Крафт T2-аптечек и расходников лечения |
+| `circuitry` | city | Крафт `gas_mask` (заглушка для M5 газовых зон) и `emp_grenade` (counter `relic_drone`) |
+
+**Правило (из `content-brief.md`):** ни один из этих ресурсов **не должен** появляться в drop-tables или resource-pools других зон. `relic_drone` — единственное исключение для `electronics` и `circuitry` (см. §5.4.5): дрон может быть найден в обеих новых зонах и оба ресурса дропает. Это **намеренное** дизайн-решение, чтобы дать игроку альтернативный путь добычи (опасный — через мех-бой, не через лут зоны).
+
+##### 6.4.M3.6. Связь §6.4.M3 с другими системами
+
+- **§5.4 Мобы M3:** mob-rosters per zone задают, какие AI игрок встречает в каждой глубине.
+- **§1 Core Loop:** `enemy_count`, `resource_count`, `min_player_level`, `fights_per_depth` — стандартные поля `ZoneLevel`, использует ту же логику что и forest M1.
+- **`balance.md` §M3:** все числа (depth-config + return_time_multiplier + recipes использующие zone-exclusive ресурсы) — там.
+- **`content/zones.json`:** Content Designer заполнит JSON по этой таблице. Cross-refs всех `enemies[*]` и `resources[*]` проверяются на этапе Content PR.
+- **§7 Радио (M3 stub):** не связано напрямую. Polный radio (M6) может вводить per-zone сигналы с засадами, но это вне M3 anti-scope.
 
 ---
 
@@ -633,8 +1004,9 @@ interface Zone {
 
 > Заполняются на соответствующих вехах. На M1 — НЕ трогать.
 
-### 7. Зоны и карта (M3)
-<!-- GD заполнит на M3: новые зоны (Склад, Город), переходы, прогрессия глубины -->
+### 7. Зоны и карта (M3) — DONE
+
+> Заполнено в M3 GD-amendment. Содержимое переехало в **§6.4.M3 «Новые зоны M3»** (Склад + Город, unlock_condition, return_time_multiplier, zone-exclusive resources, depths config). См. также `balance.md` §M3.
 
 ### 8. Перки и прогрессия (M4)
 <!-- GD заполнит на M4: XP-кривая выше 5 уровня, дерево перков, UI прогрессии -->
@@ -642,8 +1014,105 @@ interface Zone {
 ### 9. Боссы и инстансы (M5)
 <!-- GD заполнит на M5: мини-боссы, дейли-инстансы, чертежи T3+ -->
 
-### 10. Радио и доверие (M6)
-<!-- GD заполнит на M6: сигналы, решения, засады/награды, шкала доверия -->
+### 10. Радио и доверие (M6) — заглушка структуры (M3)
+
+> **Полная логика** (сигналы с ветвлениями, засады, награды, фракционные репутации, шкала доверия) — **M6**.
+> **На M3** заполнено только **§10.M3 «Структура радио (M3 UI-stub)»** ниже — JSON-схема `RadioSignal` + UI-flow + anti-scope. Это нужно, чтобы Content мог наполнить 2-3 dummy-сигнала, а Engineer — реализовать RadioScene как UI-заглушку.
+
+#### 10.M3. Структура радио — M3 UI-stub
+
+> **Скоуп M3:** UI-заглушка. Игрок может зайти в RadioScene с базы, увидеть список сигналов, выбрать сигнал, нажать одну из 2 кнопок — сигнал помечается dismissed и пропадает из списка. **Никаких реальных последствий** (rewards/ambush/faction changes). Это сознательное упрощение M3 — чтобы протестировать UI-поток и форму данных до того как M6 добавит полную игровую логику.
+>
+> **Anti-scope §10.M3:** rewards (M6), ambush / trap_mob_id (M6), trust scale / faction reputation (M6), branching outcomes (M6), per-zone signal triggers (M6), таймеры реального времени между сигналами (M6+).
+
+##### 10.M3.1. JSON-схема `RadioSignal`
+
+```typescript
+type RadioSignalOptionId = "respond" | "ignore";   // ровно 2 опции на M3
+
+interface RadioSignalOption {
+  id: RadioSignalOptionId;
+  label_ru: string;                                // "Откликнуться" | "Игнорировать"
+}
+
+interface RadioSignal {
+  id: string;                                      // snake_case, формат "radio_NNN" или "radio_<theme>"
+  from: string;                                    // отправитель: "unknown" | "survivor_group_a" | "caravan" | ... (свободная строка)
+  subject: string;                                 // краткий заголовок (1 строка для списка)
+  body_ru: string;                                 // 2-4 предложения текста сигнала
+  options: RadioSignalOption[];                    // ровно 2 элемента: [{id: "respond", label_ru: "Откликнуться"}, {id: "ignore", label_ru: "Игнорировать"}]
+  expires_after_sorties: number;                   // > 0; счётчик уменьшается после каждой завершённой вылазки. При 0 → авто-dismissed.
+  dismissed: boolean;                              // M3: устанавливается в true после клика на любую из 2 кнопок. По умолчанию false.
+                                                   // M6 расширит до выбора: { responded: boolean, ignored: boolean, expired: boolean, chosen_option: RadioSignalOptionId | null }
+}
+```
+
+> **M3 → M6 миграция (для PM / GD будущего):** `dismissed: boolean` — это **намеренное упрощение M3**. В M6 поле заменится / расширится до choice-history (какая опция была выбрана, последствия применены ли). На M3 Engineer хранит только булев флаг — этого достаточно для UI-флоу.
+
+> **Поля content-brief.md, относящиеся к M6 (НЕ использовать в M3 stub):** `type` (truth/trap/ambiguous), `zone`, `reward`, `trap_mob_id`, `trust_impact`. В M3 RadioSignal этих полей **нет**. Content на M3 заполняет ТОЛЬКО поля из §10.M3.1 выше. Когда М6 наступит, GD сделает амендмент к §10 и Content добавит недостающие поля к существующим сигналам + новые сигналы.
+
+##### 10.M3.2. UI-flow (M3)
+
+```
+[BaseScene]
+    │ кнопка «Радио» (рядом с «Вылазка» / «Инвентарь» / «Крафт»)
+    ▼
+[RadioScene: список активных сигналов]
+    │ active = signals.filter(s => !s.dismissed && s.expires_after_sorties > 0)
+    │ если active пустой → текст «Эфир пуст», кнопка «Назад» → BaseScene
+    │ иначе → список карточек (subject + from)
+    ▼ клик по карточке
+[RadioScene: детали сигнала]
+    │ показывается body_ru
+    │ две кнопки: «Откликнуться» и «Игнорировать»
+    ▼ клик по любой из 2 кнопок
+[RadioScene: dismiss]
+    │ signal.dismissed = true (persisted в GameState)
+    │ NO rewards / NO ambush / NO faction changes (M6)
+    │ возврат в список активных сигналов (или «Эфир пуст», если был последним)
+    ▼ кнопка «Назад»
+[BaseScene]
+```
+
+##### 10.M3.3. Таймер `expires_after_sorties`
+
+> **M3 minimal-impl:** счётчик уменьшается **только** при `ReturnScene.onComplete()` (успешный возврат с любой вылазки). НЕ уменьшается при поражении (на спорный случай оставим — M6 может изменить).
+>
+> ```typescript
+> // в ReturnScene.onComplete():
+> for (const sig of GameState.data.radioSignals) {
+>   if (!sig.dismissed && sig.expires_after_sorties > 0) {
+>     sig.expires_after_sorties -= 1;
+>     if (sig.expires_after_sorties === 0) sig.dismissed = true;  // авто-протух
+>   }
+> }
+> ```
+>
+> Это **5 LOC в ReturnScene** + поле `radioSignals` в `GameState.data` (Engineer добавляет в `BootScene` грузя `content/radio.json`).
+
+##### 10.M3.4. Anti-scope §10.M3 (что НЕ делает Engineer на M3)
+
+- **Rewards:** игнорирование сигнала или отклик не дают предметов / xp.
+- **Ambush / trap_mob_id:** отклик не запускает спец-вылазку.
+- **Trust / reputation:** отклик не меняет шкалу доверия (её нет в M3 GameState).
+- **Branching outcomes:** обе кнопки делают одно и то же — `dismissed = true`. Player choice сейчас семантический (для нарратива), не механический.
+- **Per-zone signal triggers:** все сигналы доступны сразу, нет привязки «открой Город → появится новый сигнал».
+- **Real-time timers:** счётчик `expires_after_sorties` уменьшается в дискретных тиках (one per sortie return), не в real-time.
+
+##### 10.M3.5. Что готовят другие роли на M3 (cross-refs)
+
+| Роль | Артефакт | Где |
+|---|---|---|
+| Content Designer | 2-3 dummy-сигнала | `content/radio.json` (файл уже существует как `[]`) |
+| Engineer | `RadioScene` + `BootScene` load + `GameState.data.radioSignals` + `expires_after_sorties` decrement | `src/scenes/RadioScene.ts` (новый), `src/scenes/BootScene.ts`, `src/state/GameState.ts`, `src/types/radio.ts` (новый) |
+| Artist | UI-элементы RadioScene (карточка сигнала, кнопка «Радио» на BaseScene) | `assets/ui/` (если нужно — на усмотрение Artist M3) |
+
+##### 10.M3.6. Связь §10.M3 с другими системами
+
+- **§1 Core Loop:** RadioScene вызывается с BaseScene; `expires_after_sorties` декрементится в ReturnScene.
+- **§5.4 / §6.4.M3:** не связано — radio сейчас НЕ влияет на бой / мобов / зоны.
+- **§6 JSON-схемы:** см. §10.M3.1.
+- **M6 эволюция:** этот stub будет расширен амендментом M6 GD: добавятся поля content-brief (`type`, `zone`, `reward`, `trap_mob_id`, `trust_impact`), полная UI-логика последствий, шкала доверия в `GameState.trust`.
 
 ### 11. Модульное оружие и броня (M5+)
 <!-- GD заполнит на M5+: модули, слоты, уникальные статы из компонентов -->

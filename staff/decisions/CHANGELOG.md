@@ -37,3 +37,44 @@
 - Build clean: 1504.30 kB JS / 347.65 kB gzip — под бюджет 2 MB Yandex Games.
 - Workflow lessons зафиксированы в `staff/status/PM.md`: token-budget (3-5 действий на role-сессию), recovery-safe ранний Draft PR, PAT-hygiene (только в Authorization header), org-scope secret `GITHUB_PAT_OPLOT` для PM merge без ручных запросов.
 - Gate-close PR `m2-integration → main` открывает PM после merge pm/m2-finalize; мерджит Alex/Заказчик.
+- M2 закрыта: gate-close PR #19 merged Alex'ом 2026-05-20.
+
+## 2026-05-20 — M3: Kickoff (Расширение мира)
+
+См. `staff/status/M3.md` для полного скоупа.
+
+- M3 «Расширение мира» стартует: 3 зоны (Лес есть, +Склад +Город), 8 мобов (3 есть, +5 новых), 15 рецептов (5 есть, +10 новых), radio system structure stub.
+- `m3-integration` создана от свежего `main` (HEAD `3a40709` — M2 gate-close).
+- PM kickoff PR `pm/m3-kickoff → m3-integration` несёт M3 dashboard + 6 kickoff + 6 handoff материалов (GD / QA Spec / Content / Engineer / Artist / QA Acceptance) + обновление `PLAN.md` (M2 → DONE, M3 → IN_PROGRESS) + `CONTEXT.md` + `LINKS.md` + `staff/status/PM.md`.
+- Lessons learned M2 явно прошиты в каждый M3 kickoff: token-budget (план ≤ 5-7 пунктов), recovery-safe ранний Draft PR, PAT-hygiene (только в Authorization header, никогда в URL/echo/print), anti-scope discipline (явный перечень что НЕ входит в M3 на уровне каждой роли).
+- M3 anti-scope: нет перков (M4), нет боссов (M5), нет полной радио-логики (M6), нет модулей оружия, нет Yandex SDK (M8), нет сторонних UI-библиотек.
+- Org-scope secret `GITHUB_PAT_OPLOT` сохранён и используется PM-сессией для merge без ручного PAT-запроса.
+- Последовательность M3: GD amendment → QA Spec → (Content + Engineer + Artist параллельно) → QA Acceptance → PM finalize → gate-close.
+
+## 2026-05-21 — M3: Spec phase closed, parallel production ready
+
+- PM kickoff PR #20 merged в `m3-integration` 2026-05-20 (`pm/m3-kickoff → m3-integration`): M3 dashboard + 6 kickoff + 6 handoff материалов + PLAN/CONTEXT/LINKS/CHANGELOG update.
+- GD M3 amendment PR #21 merged в `m3-integration` 2026-05-20 (`m3/gd-amendment → m3-integration`): GDD §5.4 (5 новых мобов с `behavior_id`), §6.2 (Mob schema extension: `mech` enum + optional `behavior_id` field), §6.4.M3 (2 новые зоны warehouse + city + Zone schema `return_time_multiplier?`), §10.M3 (RadioSignal JSON-схема + UI-flow + anti-scope), `balance.md` §M3 (5 mob stat tables + drop-tables + 2 zone configs + zone-exclusive resources + T2 weapons/armor/consumables + 10 рецептов).
+- QA Spec Review PR #22 merged в `m3-integration` 2026-05-20 (`qa/m3-spec-review → m3-integration`): verdict APPROVE по 7 чек-листам (§5.4 / §6.2 / §6.4.M3 / §10.M3 / balance §M3 / anti-scope / M1-M2 regression).
+- PM status-sync PR `pm/m3-status-sync → m3-integration`: dashboards (`staff/status/M3.md`, `staff/status/PM.md`, `staff/LINKS.md`, `staff/CONTEXT.md`, `staff/decisions/CHANGELOG.md`) приведены под факт GitHub. Gate: `QA_SPEC_APPROVED → PARALLEL_PRODUCTION_READY`.
+- Следующий шаг — параллельный запуск Content + Engineer + Artist role-сессий (PR base = `m3-integration`). Каждая role-сессия следует recovery-safe правилу M2: ранний Draft PR + commit/push после каждого под-шага + PR Recovery block.
+
+## 2026-05-21 — M3 DoD-align: items 29 (не ≥30) под факт balance.md §M3
+
+- **Контекст:** Content M3 role-session подняла факт, что `staff/handoff/M3-CONTENT.md` §1 + `staff/status/M3.md` DoD §3 + `staff/kickoff/M3-CONTENT.md` step 6 ставили цель `items ≥ 30 (~15 новых)`, но `docs/balance.md` §M3 (GD-amendment PR #21, прошедший QA Spec APPROVE PR #22) специфицирует **ровно 14 новых items**: 4 zone-exclusive (electronics / oil / medical_supplies / circuitry) + 2 T2-weapons (pipe_rifle / crowbar) + 3 T2-armor (tactical_vest / helmet / gas_mask) + 5 T2-consumables (large_medkit / energy_drink / emp_grenade / smoke_bomb / ammo_rifle) = 14 → итого 29.
+- **PM-decision (2026-05-21):** фиксируем `items = 29` как фактический скоуп M3, без GD-fix амендмента (который бы убил parallel-production: +1 GD сессия + +1 QA Spec сессия ради одного «филлерного» item, не оправдано). Spec (`balance.md` §M3) сильнее проектной DoD-формулировки «≥ 30», так как spec прошёл QA Spec APPROVE.
+- **Файлы под align:** `staff/status/M3.md` DoD §3 + `Роли` таблица «+15 items» → «+14 items»; `staff/handoff/M3-CONTENT.md` §1 заголовок + чек-лист §1; `staff/kickoff/M3-CONTENT.md` step 6. PR: `pm/m3-dod-align-items → m3-integration`.
+- **Anti-scope:** никаких изменений `docs/`, `src/`, `content/`, `assets/`. PM-only staff-файлы.
+- **Lesson learned для следующих вех:** при PM kickoff (M{N+1}) проверять, что DoD-формулировки в handoff/kickoff/status дают **точные** числа, а не «приблизительно», чтобы GD-amendment + QA Spec не уезжали от dashboards. На M4 это будет шагом checklist'а в `staff/PROCESS.md`.
+
+## 2026-05-21 — M3: Parallel production + QA Acceptance APPROVE
+
+См. полный summary в `staff/handoff/M3-SUMMARY.md`.
+
+- **Content PR #25** merged в `m3-integration` 2026-05-21 (`m3/content → m3-integration`): +5 mobs (всего 8), +14 items (всего 29), +10 recipes (всего 15), +2 zones (warehouse + city, всего 3), +3 dummy radio signals. JSON cross-refs валидны, balance.md §M3 числа полностью сверены, M1 baseline неизменён, forest без `return_time_multiplier` → default 1.0.
+- **Engineer PR #26** merged в `m3-integration` 2026-05-21 (`m3/world → m3-integration`): multi-zone runtime (3 зоны, динамический spawn по zone+mob refs), 5 mob AI behaviors (`berserker`/`ambush`/`shieldbearer`/`leader`/`spawner`), `zoneUnlock.ts` (gating по recipe_unlocked / boss_defeated), radio stub (`RadioScene.ts` + `radioState.ts` без логики), weight zoneMultiplier на возврат. 89/89 vitest passed (49 M2 + 40 M3). Build clean ~1.5 MB.
+- **Artist PR #27** merged в `m3-integration` 2026-05-21 (`m3/art → m3-integration`): 5 mob sprites (128×128, PNG) + 14 item icons (64×64) + 2 zone backgrounds (warehouse 800×600, city 800×600) + radio_icon, всё через детерминистичный `tools/art/gen_m3_assets.py` (Pillow). M3-add: 129.8 KB / 500 KB budget (26%). M1 ассеты не пересоздавались.
+- **QA Acceptance PR #28** merged в `m3-integration` 2026-05-21 (`qa/m3-acceptance → m3-integration`): verdict **APPROVE**. Подход — локальный octopus-merge `qa/m3-acceptance-test` всех 3 role-PR + 3 Gate'а проверки: Gate 1 (static — typecheck/lint/build/vitest 89/89) PASS, Gate 2 (runtime smoke — RadioScene + multi-zone navigation + zoneUnlock) PASS, Gate 3 (spec compliance — radio.json без M6-полей, src/ без M4 perks / M5 boss / M6 trust / M7 modules / M8 SDK, balance §M3 numbers match content/) PASS. **0 blockers**, 3 non-blocking M4 follow-ups (RadioScene rowHeight cosmetic, BootScene M3 asset preload, MobType:"boss" под M5 заранее).
+- **PM finalize PR #29** open (`pm/m3-finalize → m3-integration`): обновление всех PM-owned dashboards под факт #25/#26/#27/#28 merged, создание `staff/handoff/M3-SUMMARY.md`, эта запись CHANGELOG, gate → `M3_DONE_PENDING_GATE_CLOSE`.
+- **Следующий шаг:** после merge PR #29 Alex'ом в `m3-integration` — PM откроет gate-close PR `m3-integration → main` (мерджит Alex/Заказчик, **НЕ** self-merge). После gate-close — M4 kickoff (перки + прогрессия, PLAN §3).
+- **Lessons learned M3** (применять на M4): октопус-merge dry-run в QA Acceptance ловит cross-PR конфликты ранее, чем PM merge sequence; PM kickoff M{N+1} должен иметь точные DoD-числа (а не «≥X»); git-proxy 403 между сессиями обходится через `GIT_ASKPASS` + direct GitHub URL; все role-сессии M3 уложились в 5-7 шагов (token-budget работает); все 4 PR + QA Acceptance открылись Draft в первые 5-10 минут (recovery-safe правило работает).

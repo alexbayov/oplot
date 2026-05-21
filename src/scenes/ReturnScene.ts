@@ -1,6 +1,8 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
+import { tickRadioOnReturn } from "../systems/radio";
 import { computeReturnTime, computeWeight } from "../systems/weight";
+import { applySortieCompletion } from "../systems/zoneUnlock";
 import {
   createPanel,
   createSubtitle,
@@ -10,6 +12,9 @@ import {
 // GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
 // Duration = return_time_s from balance.md §Формулы; heavy pack = longer trip.
 // No skip — weight = time = risk is the whole point of the mechanic.
+// M3 (§6.4.M3.4): zone-specific return_time_multiplier scales the base trip duration;
+// M3 (§6.4.M3.3): on successful return we flip the appropriate unlock_condition flag;
+// M3 (§10.M3.3): every return decrements radioSignal.expires_after_sorties by 1.
 export class ReturnScene extends Phaser.Scene {
   private progressFill?: Phaser.GameObjects.Rectangle;
 
@@ -21,12 +26,20 @@ export class ReturnScene extends Phaser.Scene {
     createTitle(this, "Возврат на базу");
 
     const player = GameState.player;
+    const sortie = GameState.currentSortie;
+    const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
+    const zoneMultiplier = zone?.return_time_multiplier ?? 1.0;
     const curWeight = computeWeight(player.backpack, GameState.data.items);
-    const returnTimeS = computeReturnTime(curWeight, player.max_weight_kg);
+    const returnTimeS = computeReturnTime(
+      curWeight,
+      player.max_weight_kg,
+      zoneMultiplier,
+    );
 
     createPanel(this, 180, 200, 320, 80);
     createSubtitle(this, 180, `Вес ${curWeight.toFixed(1)}/${player.max_weight_kg} кг`);
-    createSubtitle(this, 220, `Время возврата: ${returnTimeS.toFixed(0)}с`);
+    const zoneLabel = zone ? ` · ${zone.name_ru}` : "";
+    createSubtitle(this, 220, `Время возврата: ${returnTimeS.toFixed(0)}с${zoneLabel}`);
 
     // Progress bar: filled rect grows from 0 → barWidth over returnTimeS seconds.
     const barWidth = 280;
@@ -52,6 +65,20 @@ export class ReturnScene extends Phaser.Scene {
 
   private completeReturn(): void {
     const player = GameState.player;
+    const sortie = GameState.currentSortie;
+    const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
+    // Successful return: flip unlock flags BEFORE clearing the sortie. fights_completed > 0
+    // guards against marking "completed" if the hero immediately retreated.
+    if (sortie && zone && sortie.fights_completed > 0) {
+      GameState.progress = applySortieCompletion(
+        GameState.progress,
+        zone,
+        sortie.depth,
+        true,
+      );
+    }
+    // M3 radio tick — anti-scope: state only, no rewards/ambush.
+    tickRadioOnReturn(GameState.data.radioSignals);
     // Merge backpack into stash (logic moved from LootScene.endSortie).
     let stash = GameState.baseStash;
     for (const stack of player.backpack) {

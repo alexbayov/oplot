@@ -10,23 +10,38 @@
 
 ## Integration branch
 
-- **M2 integration baseline (закрывается):** `m2-integration` (создана от `main` 2026-05-19, commit `1244c5f`). На этот момент в `m2-integration` смержены PR #15 (Engineer), #16 (PM status sync), #17 (QA Acceptance) и этот PR (pm/m2-finalize). Gate-close PR `m2-integration → main` открывает PM после merge этого PR; мерджит Alex/Заказчик.
-- M1 integration baseline `m1-integration` была закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
+- **M3 integration baseline (фактически закрыта, ждёт gate-close):** `m3-integration` (создана от `main` 2026-05-20, HEAD `aaf2ae5` — Merge PR #28). Все 9 M3 PR смержены. Gate-close PR `m3-integration → main` PM откроет после merge этого PM finalize PR; мерджит Alex/Заказчик.
+- **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
+- **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M2 PRs (final reconciliation)
+## M3 PRs (фактически закрыта, ждёт gate-close)
 
-_Last reconciled with GitHub: 2026-05-20 (M2 gate-close pending Alex merge)._
+_Last reconciled with GitHub: 2026-05-21 (m3-integration HEAD = `aaf2ae5` Merge PR #28: qa(M3 acceptance) — APPROVE)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| #14 | PM / M2 kickoff | `main ← pm/m2-kickoff` | **Merged 2026-05-19** Alex'ом |
-| #15 | Engineer | `m2-integration ← m2/gameplay` | **Merged 2026-05-20** PM — core loop, 4 системы, 9 сцен (incl. ReturnScene), 49 vitest тестов |
-| #16 | PM / status sync | `m2-integration ← pm/m2-status-sync-eng-pr15` | **Merged 2026-05-20** PM — исторический gate move |
-| #17 | QA Acceptance | `m2-integration ← qa/m2-acceptance` | **Merged 2026-05-20** PM — two-pass APPROVED |
-| (this PR) | PM / finalize | `m2-integration ← pm/m2-finalize` | Open — gate → M2_DONE, M2-SUMMARY, CHANGELOG |
-| (gate-close) | PM | `main ← m2-integration` | Pending; откроется PM-ом после merge этого PR; мерджит Alex |
+| **#20** | PM / M3 kickoff | `m3-integration ← pm/m3-kickoff` | **Merged 2026-05-20 PM** — M3 dashboard + 6 kickoff + 6 handoff |
+| **#21** | GD M3 amendment | `m3-integration ← m3/gd-amendment` | **Merged 2026-05-20 PM** — GDD §5.4 (5 mobs) + §6.2 (Mob schema) + §6.4.M3 (2 zones + Zone schema) + §10.M3 (radio stub) + balance §M3 |
+| **#22** | QA Spec M3 | `m3-integration ← qa/m3-spec-review` | **Merged 2026-05-20 PM** — verdict **APPROVE** по 7 чек-листам |
+| **#23** | PM / status-sync | `m3-integration ← pm/m3-status-sync` | **Merged 2026-05-21 PM** — dashboards under GitHub-fact (#20/#21/#22) |
+| **#24** | PM / DoD-align items=29 | `m3-integration ← pm/m3-dod-align-items` | **Merged 2026-05-21 PM** — DoD `≥30 items` → `29` под balance §M3 |
+| **#25** | Content M3 | `m3-integration ← m3/content` | **Merged 2026-05-21 PM** — +5 mobs / +14 items / +10 recipes / +2 zones / +3 dummy radio signals (JSON only) |
+| **#26** | Engineer M3 | `m3-integration ← m3/world` | **Merged 2026-05-21 PM** — multi-zone runtime + 5 mob AI + RadioScene stub + 89/89 vitest |
+| **#27** | Artist M3 | `m3-integration ← m3/art` | **Merged 2026-05-21 PM** — 5 mob sprites + 14 item icons + 2 backgrounds + radio_icon (129.8 KB / 500 KB) |
+| **#28** | QA Acceptance M3 | `m3-integration ← qa/m3-acceptance` | **Merged 2026-05-21 PM** — verdict **APPROVE** (3 Gate'а PASS на octopus-merge #25/#26/#27, 0 blockers / 3 NB M4 follow-ups) |
+| **(this PR #29)** | PM / finalize | `m3-integration ← pm/m3-finalize` | Open — gate → M3_DONE_PENDING_GATE_CLOSE, M3-SUMMARY, CHANGELOG, status-sync всех PM-owned dashboards |
+| TBD | PM gate-close M3 | `main ← m3-integration` | Pending — открывает PM после merge этого PR; мерджит Alex/Заказчик (НЕ self-merge) |
 
-**Next action:** Alex мерджит gate-close PR `m2-integration → main` → M2 официально закрывается, стартует M3.
+## Merged M2 PRs (история)
+
+| PR | Role | Base | Status |
+|---|---|---|---|
+| #14 | PM / M2 kickoff | `main ← pm/m2-kickoff` | Merged 2026-05-19 Alex'ом |
+| #15 | Engineer | `m2-integration ← m2/gameplay` | Merged 2026-05-20 PM |
+| #16 | PM / status sync | `m2-integration ← pm/m2-status-sync-eng-pr15` | Merged 2026-05-20 PM |
+| #17 | QA Acceptance | `m2-integration ← qa/m2-acceptance` | Merged 2026-05-20 PM |
+| #18 | PM / finalize | `m2-integration ← pm/m2-finalize` | Merged 2026-05-20 PM |
+| #19 | PM / M2 gate-close | `main ← m2-integration` | Merged 2026-05-20 Alex'ом — закрыл M2 |
 
 ## Merged M1 PRs (история)
 
@@ -46,22 +61,33 @@ _Last reconciled with GitHub: 2026-05-20 (M2 gate-close pending Alex merge)._
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| M2 status (закрывается) | `staff/status/M2.md` |
-| M2 summary (итог) | `staff/handoff/M2-SUMMARY.md` |
+| M3 status (done pending gate-close) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
+| M2 summary (закрыта) | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
 | M1 summary (закрыта) | `staff/handoff/M1-SUMMARY.md` |
 | PM playbook | `staff/ORCHESTRATION.md` |
 | Role workflow | `staff/PROCESS.md` |
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M2 — closed)
+## Role briefs (M3 — done pending gate-close)
+
+| Role | Kickoff | Handoff | Status |
+|---|---|---|---|
+| Game Designer | `staff/kickoff/M3-GD.md` | `staff/handoff/M3-GD.md` | `staff/status/GAME_DESIGNER.md` — **DONE** (PR #21 merged) |
+| QA Spec | `staff/kickoff/M3-QA-SPEC.md` | `staff/handoff/M3-QA-SPEC.md` | `staff/status/QA.md` §M3 Spec Review — **APPROVE** (PR #22 merged) |
+| Content | `staff/kickoff/M3-CONTENT.md` | `staff/handoff/M3-CONTENT.md` | `staff/status/CONTENT.md` — **DONE** (PR #25 merged) |
+| Engineer | `staff/kickoff/M3-ENG.md` | `staff/handoff/M3-ENG.md` | `staff/status/ENGINEER.md` — **DONE** (PR #26 merged) |
+| Artist | `staff/kickoff/M3-ARTIST.md` | `staff/handoff/M3-ARTIST.md` | `staff/status/ARTIST.md` — **DONE** (PR #27 merged) |
+| QA Acceptance | `staff/kickoff/M3-QA-ACCEPT.md` | `staff/handoff/M3-QA-ACCEPT.md` | `staff/status/QA.md` §M3 Acceptance Review — **APPROVE** (PR #28 merged) |
+
+## Role briefs (M2 — closed, история)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
 | Engineer | `staff/kickoff/M2-ENG.md` | `staff/handoff/M2-ENG.md` | `staff/status/ENGINEER.md` (DONE по PR #15) |
 | QA Acceptance | `staff/kickoff/M2-QA-ACCEPT.md` | `staff/handoff/M2-QA-ACCEPT.md` | `staff/status/QA.md` (APPROVED по PR #17) |
 
-Content / Artist / GD / QA Spec на M2 не запускались (см. anti-scope в `staff/status/M2.md`). Решение подтверждено QA APPROVE.
+Content / Artist / GD / QA Spec на M2 не запускались (решение подтверждено QA APPROVE).
 
 ## Role briefs (M1 — закрытые, история)
 
