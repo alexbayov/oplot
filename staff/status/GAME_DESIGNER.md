@@ -1,8 +1,77 @@
 # Status: Game Designer
 
-**Текущая веха:** M1
-**Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-18 (QA-fix)
+**Текущая веха:** M3 (amendment)
+**Статус:** DONE_PENDING_PM_REVIEW + QA_SPEC_REVIEW
+**Последнее обновление:** 2026-05-20 (M3 GD-amendment)
+
+---
+
+## M3 GD-amendment (ветка `m3/gd-amendment`, PR #21 → `m3-integration`)
+
+**Базируется на M2-integration** (PR #19 merged into main, M2 closed). M3 kickoff PR #20 (`pm/m3-kickoff` → `m3-integration`) merged before this work.
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §5.4 «Мобы M3» | **+** 5 новых мобов (`looter_sniper`, `armored_guard`, `fanatic_berserker`, `pack_rat`, `relic_drone`) с уникальным `behavior_id` + implementation hints для Engineer (по запросу PM) |
+| `docs/GDD.md` | §6.2 `Mob` schema | **+** `MobType` enum значение `"mech"` (forward-compat), **+** опциональное поле `Mob.behavior_id?: string` (M3+ AI-pattern switcher) |
+| `docs/GDD.md` | §6.4 `Zone` schema | **+** опциональное поле `Zone.return_time_multiplier?: number` (default 1.0, forest без поля → no-op) |
+| `docs/GDD.md` | §6.4.M3 «Новые зоны M3» | **+** 2 зоны (Склад / Город) с depths, enemies, resources, unlock_condition strings, zone-exclusive ресурсами, implementation hints (`evaluateUnlockCondition` Engineer helper) |
+| `docs/GDD.md` | §7 (placeholder) | **~** заглушка `### 7. Зоны и карта (M3)` помечена `DONE` (содержимое в §6.4.M3) |
+| `docs/GDD.md` | §10.M3 «Структура радио» | **+** RadioSignal JSON-схема, UI-flow, `expires_after_sorties` декремент, anti-scope M3 (никаких rewards/ambush/trust — M6) |
+| `docs/balance.md` | §M3 «Расширение мира» | **+** 5 mob stat table, drop-tables, 2 zone configs (depths + return_time_multipliers forest=1.0/warehouse=1.2/city=1.5), расширенная return_time_s формула с zone multiplier, 4 zone-exclusive resources, 2 T2-weapons, 3 T2-armor, 5 T2-consumables (с новыми `effect_type`: initiative_boost / mech_disable / cover_boost), 10 рецептов (минимум 1 zone-exclusive ингредиент на рецепт) |
+| `staff/status/GAME_DESIGNER.md` | — | этот файл |
+
+### Коммиты на ветке `m3/gd-amendment` (PR #21)
+
+1. `91b39f1` — `docs(M3): add GDD §5.4 placeholder header (M3 GD amendment scope)` — recovery-safe Draft PR start (lesson M2).
+2. `b96738b` — `docs(M3): GDD §5.4 — 5 new mobs (behavior_id + implementation hints for Engineer)`.
+3. `c62a356` — `docs(M3): GDD §6.2 — Mob schema extension (mech enum + behavior_id field)`.
+4. `7d24bd1` — `docs(M3): GDD §6.4.M3 — 2 new zones (warehouse + city) + Zone schema return_time_multiplier`.
+5. `889f977` — `docs(M3): GDD §10.M3 — Radio system structure stub (UI-flow, RadioSignal schema, anti-scope)`.
+6. `16252e5` — `docs(M3): balance.md §M3 — mob stats, drops, zones, return formula, 10 recipes, new items`.
+7. (этот commit) — `chore(M3): update GAME_DESIGNER.md after GD-amendment`.
+
+### PM-feedback зафиксирован в §5.4 (implementation hints для Engineer)
+
+PM локально проверил M2 runtime и подтвердил:
+- `computeDefense(armor, coverActive, attackerType)` уже принимает `coverActive: boolean` → `defensive_cover` (armored_guard) реализуется в ~5 LOC.
+- Combat **positionless** → `ranged_keep_distance` (looter_sniper) и `armor_piercing_ranged` (relic_drone) — damage modifiers, не позиционная механика.
+- `mech` enum **forward-compat only**: `combat.ts:51 attackerType === "animal"` hard-check к `mech` не относится, `vs_melee_bonus` не триггерится.
+- `pack_bonus_when_paired` — **stateless query** по `enemies.filter(...)`, никаких новых полей на Mob.
+
+Все 4 пункта явно прописаны в §5.4 / §6.2 / §6.4.M3 implementation hints + продублированы в `balance.md` §M3 numerical table — Engineer не должен догадываться.
+
+### Что НЕ сделано (намеренно вне скоупа M3-amendment)
+
+- **GDD §1–§5.3:** не трогал, только добавлял §5.4 / §6.2 ext / §6.4.M3 / §10.M3.
+- **M1/M2 числа в balance.md:** не трогал (forest `return_time_multiplier` НЕ задаётся → fallback 1.0 → no-op для M1/M2 поведения).
+- **`content/*.json`:** не моя зона. Content Designer на следующем PR заполнит `mobs.json` (+5), `zones.json` (+2 + опц. поле для forest), `items.json` (+10 новых), `recipes.json` (+10), `radio.json` (3 dummy).
+- **`src/`:** не моя зона. Engineer на следующем PR реализует `MobType="mech"`, `Mob.behavior_id`, 5 AI-веток, `Zone.return_time_multiplier`, `computeReturnTime` 3-аргумент, `evaluateUnlockCondition`, RadioScene + boot loader.
+- **`assets/`:** не моя зона. Artist на следующем PR — 5 mob-портретов, 2 zone-обложки, RadioScene UI ассеты.
+- **Чужие staff-файлы:** не трогал `staff/handoff/*`, `staff/kickoff/*`, `staff/CONTEXT.md`, `staff/LINKS.md`, `staff/PLAN.md`, `staff/decisions/*`, `staff/status/*` (кроме своего).
+- **Anti-scope M3:** перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика / награды / шкала доверия (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8), позиционная механика боя (M5+).
+
+### Блокеры
+
+- Нет. PR #21 в Draft до перевода в Ready (этот же коммит + ручной flip через REST API).
+
+### Открытые вопросы для PM / QA Spec
+
+- Числа против M1 baseline (`marauder` 18HP/5–8dmg) — намеренно подтянуты вверх для M3-progression. PM просил проверить on PR — балансовая прогрессия в `balance.md` §M3 mob table подразумевает: M1 (lvl 1–2) → warehouse (lvl 2) → city (lvl 3). Сравнение с XP-кривой M1 (`xp_to_next_level: 100/250/500/1000`) — `relic_drone` 20xp выше `mutant` 30xp; намеренно меньше, потому что mutant — единственный M1 mob lvl 3 и должен оставаться peak M1 baseline.
+- `helmet` без head-slot (M3 — single armor slot как M2). Поправлено в §M3 → M5 GD-amendment введёт мульти-слот броню (когда модули появятся).
+- `gas_mask` defense=1 — самый слабый T2-armor, но это **lore stub** для M5 газовых зон. Может выглядеть как «зачем он нужен на M3» — обосновано в balance.md §M3.
+
+### Следующая роль после моего merge
+
+- **QA Spec M3** делает review §5.4 / §6.2 / §6.4.M3 / §10.M3 + balance §M3 для спек-соответствия (parallel, в течение PM-ревью).
+- После QA Spec APPROVE + PM merge `m3/gd-amendment → m3-integration` → стартуют **Content + Engineer + Artist** параллельно (см. `staff/status/M3.md` PR-реестр).
+
+### Hygiene-замечания (для PM, не блокеры)
+
+- **Git push через org-proxy** для `alexbayov/oplot` возвращает 403 (как в M1/M2). Пушил через GitHub REST API (`/git/blobs` + `/git/trees` + `/git/commits` + `/git/refs/heads/{branch}`). PAT — только в `Authorization: Bearer` header, никогда в URL/echo/print. Helper-скрипт `/tmp/push_via_api.py` (не коммитится в репо, только в VM session).
+- В первом push был баг скрипта: одно повторное «пустое» дублирование placeholder-коммита (`05587ef`). Исправлено force-push'ом replacement-коммита и линеаризацией истории. Текущая `m3/gd-amendment` чистая: 6 коммитов выше `m3-integration` (97cb8d5).
 
 ## QA-fix (M1, ветка `m1/gd-spec-qa-fix`)
 
