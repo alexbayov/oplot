@@ -366,6 +366,16 @@ final_damage = max(1, mob_damage_roll * roll - hero_total_armor)
 
 ---
 
+#### 5.4. Мобы M3 (5 новых типов)
+
+> **Скоуп:** добавление к §5. M1 mobs (`marauder`, `wild_dog`, `mutant`) **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
+>
+> **Anti-scope §5.4:** перки (M4), боссы / multi-stage / phase changes (M5), полная radio-логика (M6), модули оружия (M5+), реальные звуки/анимации (M7), Yandex SDK (M8).
+
+<!-- M3 GD-amendment: содержимое §5.4 заполняется в следующем коммите (5 mobs + behavior_id + implementation hints для Engineer). Recovery-block см. PR description. -->
+
+---
+
 ### 6. JSON-схемы (TypeScript-интерфейсы) — MVP, M1–M2
 
 > **Источник правды по полям — `docs/content-brief.md`.**
