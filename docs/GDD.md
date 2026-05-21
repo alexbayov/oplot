@@ -764,6 +764,56 @@ interface Zone {
 > - `Zone.unlock_condition` теперь принимает богаче строки: `"start"` (forest), `"forest_depth_2_completed"` (warehouse), `"any_warehouse_sortie_completed"` (city). Engineer переводит строки в boolean-флаги в `GameState.progress` (см. §6.4.M3 implementation hint).
 > - `ZoneLevel.depth` сужение `1 | 2 | 3` — для warehouse/city допустимы `1 | 2` или `1 | 2 | 3` соответственно (см. §6.4.M3). Тип расширяется до `1 | 2 | 3`, что уже соответствует существующему union (no change to schema).
 
+#### 6.5. `Perk`
+
+> **Скоуп §6.5 / M4:** только 8 пассивных перков из flat pool. Схема намеренно малая: Content пишет ровно 8 JSON-объектов, Engineer применяет stat modifier.
+>
+> **Anti-scope §6.5 / M4:** нет `prereq`, `tier`, `cost`, `cooldown`, active effects, triggered effects и дерева навыков. Эти поля — M5+ refactor path.
+
+```typescript
+type PerkModifierType = "additive" | "multiplicative" | "percentage";
+
+type PerkStat =
+  | "hp_max"
+  | "damage"
+  | "weight_penalty_multiplier"
+  | "loot_quantity_multiplier"
+  | "crit_chance"
+  | "armor_efficiency"
+  | "crafting_speed_multiplier"
+  | "xp_gain_multiplier";
+
+interface Perk {
+  id: string;                    // snake_case, уникален в perks.json
+  name: string;                  // отображаемое имя
+  description: string;           // кратко объясняет числовой эффект
+  type: PerkModifierType;        // enum: additive | multiplicative | percentage
+  stat: PerkStat;                // ровно один из 8 M4 stat enum выше
+  value: number;                 // > 0
+}
+```
+
+Пример:
+
+```json
+{
+  "id": "tough_skin",
+  "name": "Закалённая кожа",
+  "description": "+15 HP к максимальному здоровью.",
+  "type": "additive",
+  "stat": "hp_max",
+  "value": 15
+}
+```
+
+Валидаторы для Content / QA:
+
+- `id` — snake_case, уникален.
+- `type` — строго enum `[additive, multiplicative, percentage]`.
+- `stat` — строго enum из 8 значений выше; в M4 каждый stat используется ровно одним перком.
+- `value` — `number > 0`.
+- Запрещённые поля для M4: `prereq`, `tier`, `cost`, `cooldown`.
+
 #### 6.4.M3. Новые зоны M3 (Склад + Город)
 
 > **Скоуп:** добавление к §6.4. Зона `forest` и её 3 глубины **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
