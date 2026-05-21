@@ -1,7 +1,7 @@
 # Status: Artist
 
 **Текущая веха:** M3 — Расширение мира
-**Статус:** IN_PROGRESS (Draft PR #27, step 2/5 — 5 mob sprites done)
+**Статус:** IN_PROGRESS (Draft PR #27, step 3/5 — 5 mob sprites + 14 item icons done)
 **Ветка:** `m3/art` (base = `m3-integration`)
 **Последнее обновление:** 2026-05-21
 
@@ -34,11 +34,22 @@
 
 Все 5 мобов visually distinct (не recolor) — разные silhouettes + signature props (винтовка / щит / факел / 4 лапы / hexagonal frame).
 
-### Что НЕ сделано (запланировано в Steps 3-5)
+### Step 3 (DONE) — 14 item icons 64×64
+
+| Категория | Файлы | Тир | Бюджет факт |
+|---|---|---|---|
+| Zone-exclusive ресурсы (warehouse) | `electronics.png`, `oil.png` | T1 (grey frame `#9E9E9E`) | ~4.7 KB |
+| Zone-exclusive ресурсы (city) | `medical_supplies.png`, `circuitry.png` | T1 (grey frame `#9E9E9E`) | ~4.8 KB |
+| T2 оружие | `pipe_rifle.png`, `crowbar.png` | T2 (green frame `#4CAF50`) | ~4.2 KB |
+| T2 броня | `tactical_vest.png`, `helmet.png`, `gas_mask.png` | T2 (green frame `#4CAF50`) | ~7.8 KB |
+| T2 расходники | `large_medkit.png`, `energy_drink.png`, `emp_grenade.png`, `smoke_bomb.png`, `ammo_rifle.png` | T2 (green frame `#4CAF50`) | ~13.1 KB |
+
+Каждая icon — distinct silhouette: PCB chip / oil can with spout / pill bottle + red cross / pinned IC / rifle with stock / L-bar / vest with pouches / dome / mask + filter / box+cross / lightning can / antenna sphere / canister + smoke / vertical cartridge. snake_case naming совпадает с `id` из balance.md §M3 (для Content M3 PR — drop-in совместимость).
+
+### Что НЕ сделано (запланировано в Steps 4-5)
 
 | Step | Файлы | Статус |
 |---|---|---|
-| 3 | `assets/sprites/items/{electronics,oil,medical_supplies,circuitry,pipe_rifle,crowbar,tactical_vest,helmet,gas_mask,large_medkit,energy_drink,emp_grenade,smoke_bomb,ammo_rifle}.png` (14 icons) | PENDING |
 | 4 | `assets/backgrounds/{warehouse,city}.png` | PENDING |
 | 5 | `assets/ui/radio_icon.png` (опционально, по handoff §4) + budget check + PR Ready | PENDING |
 
