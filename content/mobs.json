@@ -83,5 +83,96 @@
       { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
       { "item_id": "ammo_rifle", "chance": 0.20, "count_min": 1, "count_max": 1 }
     ]
+  },
+  {
+    "id": "armored_guard",
+    "name_ru": "Бронированный охранник",
+    "type": "human",
+    "zone": "warehouse",
+    "level": 2,
+    "hp": 35,
+    "damage_min": 7,
+    "damage_max": 10,
+    "defense": 4,
+    "base_speed": 75,
+    "xp_reward": 18,
+    "behavior": "defensive",
+    "behavior_id": "defensive_cover",
+    "description_ru": "Бывший корпоративный охранник в потрёпанном тактическом снаряжении. Бьёт скромно (7-10), но defense=4 пробивается долго. Каждый второй ход уходит в укрытие: пропускает атаку, но на следующую входящую защиту против него считается с COVER_DEFENSE_BONUS_PCT (+50% к base defense). Тактика — бить в окно атаки (нечётные ходы — он, чётные — ты).",
+    "flavor_ru": "«Жетон выгорел, но рефлексы — нет. Спасибо тренировкам.»",
+    "drop_table": [
+      { "item_id": "scrap", "chance": 0.70, "count_min": 1, "count_max": 2 },
+      { "item_id": "leather", "chance": 0.40, "count_min": 1, "count_max": 1 },
+      { "item_id": "electronics", "chance": 0.25, "count_min": 1, "count_max": 1 },
+      { "item_id": "gunpowder", "chance": 0.20, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "fanatic_berserker",
+    "name_ru": "Фанатик-берсерк",
+    "type": "human",
+    "zone": "city",
+    "level": 3,
+    "hp": 40,
+    "damage_min": 8,
+    "damage_max": 12,
+    "defense": 2,
+    "base_speed": 100,
+    "xp_reward": 22,
+    "behavior": "aggressive",
+    "behavior_id": "berserker_low_hp",
+    "description_ru": "Член культа «Последнего огня», обкуренный и фанатично злой. Атакует героя каждый ход. Когда его HP падает ниже 50% — однократно срабатывает берсерк: damage ×2 (8-12 → 16-24), но base_speed −30 (100 → 70, теряет инициативу). Анти-мародёр: тот при low HP убегает, этот — наоборот лезет в кучу.",
+    "flavor_ru": "«Огонь всё очистит. Сначала — тебя.»",
+    "drop_table": [
+      { "item_id": "cloth", "chance": 0.50, "count_min": 1, "count_max": 2 },
+      { "item_id": "medical_supplies", "chance": 0.35, "count_min": 1, "count_max": 1 },
+      { "item_id": "food", "chance": 0.20, "count_min": 1, "count_max": 1 },
+      { "item_id": "bandage", "chance": 0.15, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "pack_rat",
+    "name_ru": "Стайная крыса-мутант",
+    "type": "mutant",
+    "zone": "city",
+    "level": 3,
+    "hp": 15,
+    "damage_min": 6,
+    "damage_max": 9,
+    "defense": 0,
+    "base_speed": 110,
+    "xp_reward": 9,
+    "behavior": "aggressive",
+    "behavior_id": "pack_bonus_when_paired",
+    "description_ru": "Гибрид крысы и чего-то похуже из городской канализации. По одной — неприятная, но не страшная (HP 15, dmg 6-9). В паре синхронизируется со второй живой `pack_rat`: damage ×1.5 обеим (9-13). Фокус-фаер по одной — обнуляет бафф остальных мгновенно.",
+    "flavor_ru": "«Их запах знаешь по подвалу. Их зубы — узнаешь сейчас.»",
+    "drop_table": [
+      { "item_id": "leather", "chance": 0.60, "count_min": 1, "count_max": 1 },
+      { "item_id": "food", "chance": 0.30, "count_min": 1, "count_max": 1 },
+      { "item_id": "circuitry", "chance": 0.10, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "relic_drone",
+    "name_ru": "Реликтовый дрон",
+    "type": "mech",
+    "zone": "warehouse",
+    "level": 3,
+    "hp": 28,
+    "damage_min": 8,
+    "damage_max": 11,
+    "defense": 5,
+    "base_speed": 90,
+    "xp_reward": 20,
+    "behavior": "aggressive",
+    "behavior_id": "armor_piercing_ranged",
+    "description_ru": "Полуразряженный военный дрон-разведчик из довоенных запасов корпорации. Стреляет тонкими лазерными импульсами, которые игнорируют armor.defense при расчёте урона по герою (vs_melee_bonus тоже не применяется — `mech` не «animal»). Единственный mob-источник `electronics` / `circuitry` / `oil` помимо zone-loot — намеренный мост между Складом и Городом (см. GDD §5.4.5). В JSON `zone` указан как `warehouse`, но появляется в обеих зонах через `zones.json` enemies[].",
+    "flavor_ru": "«Жужжит. Считывает. Прицеливается. Не торгуется.»",
+    "drop_table": [
+      { "item_id": "electronics", "chance": 0.65, "count_min": 1, "count_max": 2 },
+      { "item_id": "circuitry", "chance": 0.40, "count_min": 1, "count_max": 2 },
+      { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
+      { "item_id": "oil", "chance": 0.20, "count_min": 1, "count_max": 1 }
+    ]
   }
 ]
