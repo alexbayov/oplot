@@ -495,24 +495,54 @@ PM (orchestrator) уже сделал code-review всех трёх PR'ов с v
 
 ### Done
 - [x] Repo fetched, briefing прочитан (M3.md / M3-QA-ACCEPT.md handoff / launch.md).
-- [x] `qa/m3-acceptance-test` октопус-merge от `m3-integration` — 3 PR'а clean.
-- [x] `qa/m3-acceptance` branch создана от `m3-integration`.
+- [x] `qa/m3-acceptance-test` октопус-merge от `m3-integration` — 3 PR'а clean, без конфликтов.
+- [x] `qa/m3-acceptance` branch создана от `m3-integration` + Draft PR #28 открыт.
+- [x] **Gate 1 — Static checks (на октопус-комбинации)** — все четыре команды зелёные:
+  - `npm install --no-audit --no-fund` — 180 пакетов, 0 vulnerabilities.
+  - `npm run typecheck` (`tsc --noEmit`) — чисто.
+  - `npm run lint` (`eslint src/`) — чисто.
+  - `npm run test` (`vitest run`) — **89/89 PASS** (49 M2 baseline + 39 M3 Engineer + 1 sanity, как и обещал Eng в PR #26).
+  - `npm run build` (`vite build`) — `dist/` 1.5 MB ≤ 2 MB.
+- [x] **Gate 2 — Runtime smoke** (через `npm run dev` + Chrome at `http://127.0.0.1:5173/`):
+  - BaseScene: HP 100/100, Уровень 1, Нож + Тканевая куртка, 4 кнопки — `В вылазку` / `Мастерская` / `Инвентарь` / **`Радио`** (M3 кнопка на месте, GDD §10.M3).
+  - **RadioScene list view**: 3 dummy сигнала видны — `caravan — Караван у северного периметра` (4 вылазок), `unknown — SOS на 121.5` (3), `survivor_group_a — Прогноз погоды от Сони` (5). Кнопка `Назад в Оплот` рендерится.
+  - **RadioScene detail view**: клик `Открыть` на `caravan` → body+subject отрисованы, 2 кнопки `Откликнуться` / `Игнорировать` + `Назад к списку`.
+  - **Dismiss flow**: `Откликнуться` на caravan → возврат к списку, остались 2 сигнала; `Игнорировать` на unknown → остался 1 сигнал. Обе ветки одинаково ставят `dismissed=true` (соответствует GDD §10.M3.3 и `radio.ts:26-33`).
+  - **MapScene multi-zone**: 3 зоны в порядке `forest → warehouse → city`. `Лес (ур. 1)` unlocked → `Войти: Лес`. `Склад (ур. 2)` closed → `Закрыто. Откроется после: успешной вылазки в Лес depth 2.` `Город (ур. 3)` closed → `Закрыто. Откроется после: успешной вылазки на Склад.` Заблокированные кнопки полупрозрачные (alpha 0.5), `onClick` early-return — соответствует `MapScene.ts:64-71`.
+  - **M2 regression 7-step Forest MVP**: Map → `Войти: Лес` → SortieScene (Старт depth 1, depth 2/3 закрыты по level-gate) → CombatScene (wild_dog HP 20/20) → 4 хода атак (hero knife dmg ~6.7, wild_dog bite ~7.9/6.5/5.2/6.2) → wild_dog 0/20 → LootScene (Кожа x1 / Консервы x1) → `Возврат на базу` 34с прогресс-бар → BaseScene (Склад 3 стакa · 3.6 кг). M1-AI fallback для `marauder.flee`/`wild_dog` без `behavior_id` сохранён.
+  - **Assets на диске** (read-only, runtime preload вне Engineer's M3 DoD): 5 mob sprites в `assets/sprites/mobs/`, 14 M3 item icons в `assets/sprites/items/`, `warehouse.png` + `city.png` в `assets/backgrounds/`, `radio_icon.png` в `assets/ui/`. M3-add 129.8 KB / 500 KB (см. note #2 ниже про wiring follow-up).
+  - **M3 mob AI** (5 behaviors) не тестировался напрямую в combat runtime — warehouse/city locked, для unlock'а нужен forest depth 2 (player level 3+). Покрытие проверено через **16 vitest** (`mobAI.test.ts`) + ручной review `chooseMobActionV2` (`src/systems/mobAI.ts:71-133`) и его потребителя `CombatScene.runMobTurn` (`src/scenes/CombatScene.ts:152-203`). Все 5 веток (`ranged_keep_distance ×0.5 vs melee` / `defensive_cover` parity + `cover_active` flag → COVER_DEFENSE_BONUS_PCT / `berserker_low_hp` triggered-once + base_speed −30 / `pack_bonus_when_paired ×1.5 if ≥2 alive pack_rat` / `armor_piercing_ranged → ignore_armor_defense`) корректно мутируют `MobRuntimeState` и читаются `CombatScene` без drift'а.
+- [x] **Gate 3 — Spec compliance** (полный прогон `python3 /home/ubuntu/gate3_spec_check.py` — 0 errors):
+  - **Counts** ровно по DoD: items=29 / mobs=8 / recipes=15 / zones=3 / radio=3.
+  - **Uniqueness**: id'ы уникальны во всех 5 JSON.
+  - **Cross-refs**: `recipes.result_id` + `ingredients[*].item_id` ⊆ items; `items.recipe_id` ∈ recipes ∪ {null}; `mobs.drop_table[*].item_id` ⊆ items; `zones.{resources, unique_resources, mobs, levels[*].enemies, levels[*].resources}` ⊆ items ∪ mobs; `weapon_ranged.ammo_id` → `consumable` тип. Всё резолвится.
+  - **Balance.md §M3 spot-check** (5 M3 mobs × 6 stats = 30 числовых полей: hp / damage_min / damage_max / defense / base_speed / xp_reward) — каждое поле сходится с балансной таблицей.
+  - **GDD §5.4 behavior_id mapping**: `looter_sniper → ranged_keep_distance`, `armored_guard → defensive_cover`, `fanatic_berserker → berserker_low_hp`, `pack_rat → pack_bonus_when_paired`, `relic_drone → armor_piercing_ranged` — все 5 совпадают.
+  - **GDD §6.4.M3 unlock conditions**: `forest → start`, `warehouse → forest_depth_2_completed`, `city → any_warehouse_sortie_completed` + `return_time_multiplier` 1.0 / 1.2 / 1.5 — всё на месте.
+  - **M1 preservation**: 3 M1 mob'а (`marauder` 18/1/5/8/90, `wild_dog` 20/0/8/12/120, `mutant` 60/3/10/15/70) — без regress'а.
+  - **Anti-scope** (grep по `src/` + `radio.json`): `radio.json` без M6-полей (`reward` / `trap_mob_id` / `trust_impact` / `type`); `src/` чист от M4 (`\.perks\b`), M5 (`boss` — см. note #3), M6 (`trust_impact` / `trap_mob_id`), M7 (`weapon_modules`), M8 (`YandexGames`). Только корректный enum-член `MobType = "boss"` присутствует как schema-spot, GDD §6.2 канон.
+  - **Naming convention**: `{mob_id}.png` для 5 mob sprites, `{item_id}.png` для 14 item icons, `{zone.id}.png` для warehouse / city backgrounds, `radio_icon.png` — всё snake_case и сходится с JSON id'ами.
+  - **Style/budget**: 129.8 KB / 500 KB, размеры и palette подтверждены детерминистичным `tools/art/gen_m3_assets.py` (по Artist'у в `staff/status/ARTIST.md`).
 
-### TODO
-- [ ] Gate 1 — Static checks: `npm install` + `typecheck` + `lint` + `test` (ожидается 89/89) + `build` (≤2 MB).
-- [ ] Gate 2 — Runtime smoke: M2 regression Forest 7-step + M3 multi-zone + 5 mob AI + RadioScene + assets.
-- [ ] Gate 3 — Spec compliance: cross-refs JSON + balance numbers + GDD behaviors + anti-scope + naming + style.
-- [ ] Final verdict в этом же файле + push + Draft → Ready + блокирующее сообщение Alex'у.
+## Verdict
+
+**APPROVE.** Все три Gate'а пройдены чисто (0 blocker'ов / 0 major / 3 minor для M4 follow-up). Право вето QA НЕ исполняется. PM может мерджить **PR #25 → PR #26 → PR #27** в `m3-integration` (порядок neutral — три merge независимы по PM dry-run).
+
+### Не-блокирующие follow-ups для M4 (NB only)
+
+1. **RadioScene list-view layout overlap (minor cosmetic)** — кнопка `Открыть` визуально пересекается со строкой `Истекает через X вылазок` внутри карточки сигнала (см. screenshot Gate 2). Текст и клик функциональны, проблема чисто визуальная. Engineer'у на M4: либо увеличить `rowHeight` (сейчас 96) до ~120, либо отодвинуть кнопку ниже. `src/scenes/RadioScene.ts:54-68`.
+2. **M3 assets present on disk but not wired into BootScene preload / scenes** — `assets/sprites/mobs/*.png`, M3-only `assets/sprites/items/*.png`, `assets/backgrounds/{warehouse,city}.png`, `assets/ui/radio_icon.png` существуют в репо после merge PR #27, но `BootScene.preload()` (`src/scenes/BootScene.ts:32-38`) грузит только 8 M1 item icons + `hero.png` + `forest.png`. Это соответствует Engineer DoD M3 (§4 handoff требовал только `radio.json` loading — sprite-rendering не в M3 scope), и assets всё равно влезают в budget 129.8 KB / 500 KB. **На M4 integration polish**: расширить preload + отрендерить sprite'ы в `CombatScene` / `LootScene` / `MapScene` / `BaseScene → Радио button icon`.
+3. **`MobType = "boss"` schema-stub (intentional, not a violation)** — `src/types/mob.ts:3` содержит `boss` в enum, но на M3 нет мобов с `type:"boss"`. Это GDD §6.2 канон (forward-compatibility под M5 bosses), не anti-scope-нарушение. Note для будущего QA Acceptance M5 — там этот тип должен начать использоваться.
 
 ## Recovery
 
 - Role: QA Acceptance Critic M3.
-- Milestone: M3 final acceptance.
+- Milestone: M3 final acceptance — **APPROVED**.
 - Branch: `qa/m3-acceptance` (base `m3-integration` HEAD `3823395`).
-- Test branch: `qa/m3-acceptance-test` (local, octopus-merge content + art + world).
+- Test branch: `qa/m3-acceptance-test` (local, octopus-merge content + art + world — три clean merge без конфликтов).
 - Objects under review: PR #25 (`24dcb28f`), PR #26 (`c220fca1`), PR #27 (`f44c770b`).
-- Done sections: setup + briefing + octopus dry-run + branch create.
-- Next concrete step: запустить Gate 1 (static checks) на `qa/m3-acceptance-test`.
+- Done sections: setup / briefing / octopus dry-run / Draft PR / **Gate 1 PASS** / **Gate 2 PASS** / **Gate 3 PASS** / **final APPROVE**.
+- Next concrete step: PM мерджит role-PR в `m3-integration` (порядок свободный), затем M3 gate-close PR + старт M4 kickoff.
 - Blockers: нет.
 - PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['git_pat']`, никогда не в URL/echo/print.
 - Forbidden: править код/контент/ассеты в чужих PR (#25/#26/#27) — только PR-комментарии и свой QA-report. Self-merge. Push в `main`/`m3-integration` напрямую. Менять чужие `staff/status/*.md` (только свой `staff/status/QA.md`). Предлагать новые M3-фичи. Проверять то, что вне M3 scope (radio выходит за UI-stub — это M6, anti-scope).
