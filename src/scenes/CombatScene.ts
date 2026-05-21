@@ -5,17 +5,22 @@ import {
   countInStacks,
   removeFromStack,
 } from "../state/GameState";
+import { COVER_DEFENSE_BONUS_PCT } from "../state/balance";
 import type { InventoryStack } from "../state/types";
 import {
   applyAttack,
   calcDefenseAgainst,
   calcHeroInitiative,
-  chooseMobAction,
   getArmorStats,
   getMeleeWeaponStats,
   getRangedWeaponStats,
 } from "../systems/combat";
 import { generateMobLoot } from "../systems/loot";
+import {
+  chooseMobActionV2,
+  createMobRuntimeState,
+  type MobRuntimeState,
+} from "../systems/mobAI";
 import { applyLootLoss, computeWeight } from "../systems/weight";
 import type { ConsumableItem, Mob } from "../types";
 import {
@@ -27,8 +32,7 @@ import {
 
 interface MobInstance {
   mob: Mob;
-  hp: number;
-  fled: boolean;
+  state: MobRuntimeState;
 }
 
 type CombatState = "awaiting_hero" | "resolving_mobs" | "ended";
@@ -70,7 +74,7 @@ export class CombatScene extends Phaser.Scene {
     this.mobs = enemyIds
       .map((id) => GameState.data.mobs[id])
       .filter((m): m is Mob => Boolean(m))
-      .map((mob) => ({ mob, hp: mob.hp, fled: false }));
+      .map((mob) => ({ mob, state: createMobRuntimeState(mob) }));
     sortie.cover_active = false;
 
     createTitle(this, "Бой");
@@ -117,8 +121,9 @@ export class CombatScene extends Phaser.Scene {
       initiative: calcHeroInitiative(GameState.baseSpeed, weight, player.max_weight_kg),
     });
     this.mobs.forEach((inst, idx) => {
-      if (inst.hp <= 0 || inst.fled) return;
-      order.push({ kind: "mob", mobIndex: idx, initiative: inst.mob.base_speed });
+      if (inst.state.hp <= 0 || inst.state.fled) return;
+      // base_speed may have been mutated by mobAI (berserker_low_hp -30).
+      order.push({ kind: "mob", mobIndex: idx, initiative: inst.state.base_speed });
     });
     order.sort((a, b) => b.initiative - a.initiative);
     return order;
@@ -146,27 +151,46 @@ export class CombatScene extends Phaser.Scene {
 
   private runMobTurn(mobIndex: number): void {
     const inst = this.mobs[mobIndex];
-    if (!inst || inst.hp <= 0 || inst.fled) {
+    if (!inst || inst.state.hp <= 0 || inst.state.fled) {
       this.advanceTurn();
       return;
     }
-    const action = chooseMobAction(inst.mob, inst.hp);
-    if (action.type === "flee") {
-      inst.fled = true;
+    const player = GameState.player;
+    const heroWeapon = GameState.data.items[player.equipped_weapon_id] ?? null;
+    const action = chooseMobActionV2({
+      mob: inst.mob,
+      state: inst.state,
+      allies: this.mobs.map((m) => ({ mob: m.mob, state: m.state })),
+      heroEquippedWeapon: heroWeapon,
+    });
+    if (action.kind === "flee") {
+      inst.state.fled = true;
       this.log(`${inst.mob.name_ru} убегает.`);
       this.updateDisplay();
       this.time.delayedCall(250, () => this.advanceTurn());
       return;
     }
-    // Mob attacks hero.
-    const player = GameState.player;
+    if (action.kind === "cover") {
+      // defensive_cover: mob takes cover instead of attacking. cover_active flag
+      // was set inside chooseMobActionV2; calcHeroAttackDefense() will pick it up
+      // for the hero's next strike against this mob and reset it after the hit.
+      this.log(`${inst.mob.name_ru} прячется в укрытие.`);
+      this.updateDisplay();
+      this.time.delayedCall(250, () => this.advanceTurn());
+      return;
+    }
+    // Attack hero.
     const armorItem = GameState.data.items[player.equipped_armor_id];
-    const armorStats = armorItem ? getArmorStats(armorItem) : null;
+    const armorStats =
+      action.ignore_armor_defense || !armorItem ? null : getArmorStats(armorItem);
     const sortie = GameState.currentSortie;
     const cover = sortie?.cover_active ?? false;
     const defense = calcDefenseAgainst(armorStats, inst.mob.type, cover);
     const result = applyAttack(
-      { damage_min: inst.mob.damage_min, damage_max: inst.mob.damage_max },
+      {
+        damage_min: inst.state.damage_min * action.damage_multiplier,
+        damage_max: inst.state.damage_max * action.damage_multiplier,
+      },
       defense,
       player.hp,
     );
@@ -182,7 +206,7 @@ export class CombatScene extends Phaser.Scene {
 
   private onHeroAttack(): void {
     if (this.state !== "awaiting_hero") return;
-    const aliveIdx = this.mobs.findIndex((m) => m.hp > 0 && !m.fled);
+    const aliveIdx = this.mobs.findIndex((m) => m.state.hp > 0 && !m.state.fled);
     if (aliveIdx === -1) {
       this.advanceTurn();
       return;
@@ -213,10 +237,17 @@ export class CombatScene extends Phaser.Scene {
       this.advanceTurn();
       return;
     }
-    const result = applyAttack(weaponStats, target.mob.defense, target.hp);
-    target.hp = result.defender_hp_after;
+    // defensive_cover mobs: while in cover, defense is multiplied by (1 + 0.5).
+    // Cover is consumed by this single incoming attack.
+    const coverActive = target.state.cover_active;
+    const targetDefense = coverActive
+      ? target.mob.defense * (1 + COVER_DEFENSE_BONUS_PCT)
+      : target.mob.defense;
+    const result = applyAttack(weaponStats, targetDefense, target.state.hp);
+    target.state.hp = result.defender_hp_after;
+    if (coverActive) target.state.cover_active = false;
     this.log(
-      `Герой бьёт ${target.mob.name_ru} на ${result.damage_dealt.toFixed(1)} (HP: ${target.hp.toFixed(0)})`,
+      `Герой бьёт ${target.mob.name_ru} на ${result.damage_dealt.toFixed(1)} (HP: ${target.state.hp.toFixed(0)})`,
     );
     this.updateDisplay();
     this.state = "resolving_mobs";
@@ -284,7 +315,7 @@ export class CombatScene extends Phaser.Scene {
       this.endCombatDefeat();
       return true;
     }
-    const allDownOrFled = this.mobs.every((m) => m.hp <= 0 || m.fled);
+    const allDownOrFled = this.mobs.every((m) => m.state.hp <= 0 || m.state.fled);
     if (allDownOrFled) {
       this.endCombatVictory();
       return true;
@@ -303,7 +334,7 @@ export class CombatScene extends Phaser.Scene {
     let xpGain = 0;
     let mobLoot: InventoryStack[] = [];
     for (const inst of this.mobs) {
-      if (inst.fled) continue;
+      if (inst.state.fled) continue;
       xpGain += inst.mob.xp_reward;
       const drops = generateMobLoot(inst.mob);
       for (const stack of drops) {
@@ -371,9 +402,10 @@ export class CombatScene extends Phaser.Scene {
     }
     if (this.enemyPanel) {
       const lines = this.mobs.map((inst) => {
-        if (inst.fled) return `${inst.mob.name_ru}: убежал`;
-        if (inst.hp <= 0) return `${inst.mob.name_ru}: повержен`;
-        return `${inst.mob.name_ru}: ${inst.hp.toFixed(0)}/${inst.mob.hp}`;
+        if (inst.state.fled) return `${inst.mob.name_ru}: убежал`;
+        if (inst.state.hp <= 0) return `${inst.mob.name_ru}: повержен`;
+        const coverTag = inst.state.cover_active ? " · в укрытии" : "";
+        return `${inst.mob.name_ru}: ${inst.state.hp.toFixed(0)}/${inst.state.hp_max}${coverTag}`;
       });
       this.enemyPanel.setText(lines.join("\n"));
     }
