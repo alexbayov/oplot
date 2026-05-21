@@ -263,3 +263,31 @@ Non-blocking notes (несут vs первый review):
 - ENGINEER.md обновлён, status уже не stale.
 - Vite chunk-size warning не изменился (non-blocking, как и было).
 - O dev-cheat остаётся под `import.meta.env.DEV` (по-прежнему non-blocking).
+
+---
+
+# M3 Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M3 — Расширение мира
+**Объект ревью:** GD PR #21 (`m3/gd-amendment` → `m3-integration`), HEAD `9070cad`
+**QA-report ветка:** `qa/m3-spec-review` (base `m3-integration`, HEAD `97cb8d5`)
+**Дата старта:** 2026-05-19
+**Текущий шаг:** WIP — recovery-safe Draft PR up; full checklist verdict pending.
+
+## Recovery
+
+- Role: QA Spec Reviewer M3.
+- Milestone: M3 spec review (GD amendment).
+- Branch: `qa/m3-spec-review` от `m3-integration` (HEAD m3-integration = `97cb8d5`).
+- Base: `m3-integration`.
+- Object under review: `m3/gd-amendment` HEAD `9070cad` (PR #21).
+- Done sections: branch создана, первый commit + push, Draft PR открыт.
+- Next concrete step: дописать полный verdict по 7 чек-листам, перевести PR в Ready, опубликовать verdict на PR #21, заблокировать Alex итогом.
+- Blockers: нет.
+- PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['GITHUB_PAT_OPLOT']`, никогда не в URL/echo/print (lesson M2).
+- Forbidden: править GDD/balance/content/src/assets в GD PR; self-merge; push в `main` / `m3-integration` напрямую; менять чужие `staff/status/*.md`; предлагать новые M3-фичи; проверять runtime (это QA Acceptance).
+
+## Чек-листы — пока WIP
+
+Будет заполнено финальным verdict commit'ом.
