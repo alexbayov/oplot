@@ -580,6 +580,72 @@ PM (orchestrator) уже сделал code-review всех трёх PR'ов с v
 - GD PR #32 scope (3 файла, +248 / −3): `docs/GDD.md`, `docs/balance.md`, `staff/status/GAME_DESIGNER.md`. `src/`, `content/`, `assets/`, чужие `staff/` — не тронуты.
 - Octopus diff command: `git diff origin/m4-integration..origin/m4/gd-amendment -- docs/ staff/`.
 
-## Verdict (TBD)
+## Checklist 1 — §Прогрессия (XP-источники + XP-curve + level-up flow + overkill + пустой пул)
 
-_Заполнено после прогона всех 7 чек-листов ниже._
+**Статус: PASS.**
+
+1. **XP-источники** — PASS. `docs/GDD.md` §8 «XP-источники» — отдельная подсекция с таблицей, явно фиксирует «Единственный источник XP на M4 — kill mob. Return / craft / loot / exploration XP остаются M5+ refactor path». Формула: `xp_gained = mob.xp_reward * xp_gain_multiplier`. Минимум 1 источник (kill mob) присутствует.
+2. **XP-curve formula** — PASS. `docs/GDD.md` §8 «XP-curve» содержит явный псевдокод:
+
+   ```
+   xp_to_next(level) = round(40 * level^1.5)
+   xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
+   level_up: current_total_xp >= xp_required(current_level + 1)
+   ```
+
+   Та же формула продублирована в `docs/balance.md` §M4 → «XP-curve» с таблицей L1–L10 (см. чек-лист 3).
+3. **Level-up flow** — PASS. `docs/GDD.md` §8 «Level-up flow» содержит ASCII-диаграмму `[CombatScene моб умер] → ProgressionSystem (add XP + level++ + enqueue LevelUpReward) → [LevelUpScene overlay показывает 3 случайных невзятых перка] → [игрок выбирает 1] → GameState.player.perks[] += perk.id + применить stat modifiers → next popup if queue non-empty или возврат в исходную сцену`. Все 4 фазы (триггер → popup → выбор → state update) явно описаны.
+4. **Overkill XP** — PASS. `docs/GDD.md` §8 «Правила» → «**Overkill XP carry over.** XP сверх порога не сгорает. Если один kill даёт сразу несколько уровней, `LevelUpScene` показывает popup'ы очередью: один выбор перка на каждый полученный уровень.» Поведение явное (carry over + popup queue), не неоднозначное.
+5. **Все перки взяты / пустой пул** — PASS. `docs/GDD.md` §8 «Правила» → «**Все 8 перков взяты:** уровень всё равно повышается и XP сохраняется, но JSON-перк не предлагается. Вместо popup выбора `LevelUpScene` автоматически применяет hardcoded fallback `veteran_conditioning`: `+10 hp_max`. Это **не** запись в `content/perks.json` и **не** девятый перк; Content на M4 пишет ровно 8 перков из `balance.md` §M4, а QA считает pool size = 8 + 1 hardcoded fallback.» Дополнительная цитата из `docs/balance.md` §M4 → «M4 — Fallback after all perks» → «`veteran_conditioning` … hardcoded `LevelUpScene` fallback … `hp_max +10` … НЕ JSON-перк; НЕ добавлять в `content/perks.json`. Pool size для Content/QA = 8 perks + 1 hardcoded fallback».
+
+   **PM nit:** «Fallback "veteran_conditioning +10 hp_max" при исчерпании пула — это hardcoded в LevelUpScene (НЕ в content/perks.json). GDD должен это явно зафиксировать, чтобы QA Acceptance Gate 3 не считал «9 перков вместо 8»» — **закрыт корректно**: GDD §8 и balance §M4 явно говорят «не JSON-перк», «pool size = 8 + 1 hardcoded fallback», что развязывает QA Acceptance Gate 3 от количества перков в `content/perks.json` (там должно быть ровно 8).
+
+Plus минор: «Поражение после убийств» edge-case дополнительно прописан («XP за уже убитых мобов сохраняется»). «Повторы перков запрещены, нет stackable» тоже эксплицитно. Это не требования чек-листа, но повышают полноту §Прогрессия.
+
+## Checklist 2 — §6.X Perk JSON schema
+
+**Статус: PASS.**
+
+`docs/GDD.md` §6.5 `Perk` — schema через TypeScript-интерфейс + JSON-пример + блок «Валидаторы для Content / QA».
+
+| Поле | Требование чек-листа | GD M4 amendment | Verdict |
+|---|---|---|---|
+| `id` | snake_case, уникальный | `id: string; // snake_case, уникален в perks.json` + validator «`id` — snake_case, уникален» | PASS |
+| `name` | string, человекочитаемый | `name: string; // отображаемое имя` | PASS |
+| `description` | string | `description: string; // кратко объясняет числовой эффект` | PASS |
+| `type` | enum [additive, multiplicative, percentage] | `type PerkModifierType = "additive" \| "multiplicative" \| "percentage";` + validator «`type` — строго enum `[additive, multiplicative, percentage]`» | PASS |
+| `stat` | enum (8 fixed) | `type PerkStat = "hp_max" \| "damage" \| "weight_penalty_multiplier" \| "loot_quantity_multiplier" \| "crit_chance" \| "armor_efficiency" \| "crafting_speed_multiplier" \| "xp_gain_multiplier";` + validator «`stat` — строго enum из 8 значений выше; в M4 каждый stat используется ровно одним перком» | PASS |
+| `value` | number > 0 | `value: number; // > 0` + validator «`value` — `number > 0`» | PASS |
+
+**Запрещённые поля для M4** (`prereq`, `tier`, `cost`, `cooldown`) — PASS:
+- В §6.5 валидаторах явно: «Запрещённые поля для M4: `prereq`, `tier`, `cost`, `cooldown`.»
+- В §6.5 anti-scope: «нет `prereq`, `tier`, `cost`, `cooldown`, active effects, triggered effects и дерева навыков. Эти поля — M5+ refactor path.»
+- TypeScript-интерфейс `Perk` не содержит запрещённых полей.
+
+Все 8 перков в balance §M4 используют ровно 1 stat из enum, type ∈ {additive, multiplicative} (пересечение разрешённого enum). Проверка значения `value > 0` — см. чек-лист 4.
+
+## Checklist 3 — `balance.md` §M4 XP-curve
+
+**Статус: PASS.**
+
+1. **Таблица L1–10 присутствует** — PASS. `docs/balance.md` §M4 → «M4 — XP-curve» содержит таблицу `| Level | XP required from 0 | XP to next |` с 10 строками (L1 → L10).
+2. **Формула явная и совпадает с GDD §8** — PASS. Цитата: «`xp_to_next(level) = round(40 * level^1.5)` / `xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)`». Один-в-один с GDD §8 «XP-curve».
+3. **Числа в таблице сходятся с формулой** — PASS (пересчитал вручную):
+
+   | L | xp_to_next(L) = round(40 × L^1.5) | xp_required(L) = Σ predecessors | Таблица |
+   |---:|---:|---:|---|
+   | 1 | 40 | 0 | 0 / 40 ✓ |
+   | 2 | round(40 × 2.828) = 113 | 40 | 40 / 113 ✓ |
+   | 3 | round(40 × 5.196) = 208 | 153 | 153 / 208 ✓ |
+   | 4 | round(40 × 8.000) = 320 | 361 | 361 / 320 ✓ |
+   | 5 | round(40 × 11.18) = 447 | 681 | 681 / 447 ✓ |
+   | 6 | round(40 × 14.70) = 588 | 1128 | 1128 / 588 ✓ |
+   | 7 | round(40 × 18.52) = 741 | 1716 | 1716 / 741 ✓ |
+   | 8 | round(40 × 22.63) = 905 | 2457 | 2457 / 905 ✓ |
+   | 9 | round(40 × 27.00) = 1080 | 3362 | 3362 / 1080 ✓ |
+   | 10 | (cap) | 4442 | 4442 / — ✓ |
+
+   Все 10 строк сходятся с формулой.
+4. **Sanity «достижимо за 1–2 часа playthrough»** — PASS (subjective). Cumulative L10 = 4442 XP. Средний `xp_reward` по 8 мобам §M4 (если использовать §M4 числа): (18+14+45+28+36+42+22+50) / 8 = 255/8 ≈ 31.9 XP/моб → ~140 убийств до L10. При длительности боя ~30–60s это укладывается в 70–140 минут активного боя, что попадает в окно «1–2 часа». Не слишком долго и не слишком быстро. Note: при использовании §M1/§M3 baseline numbers (см. чек-лист 6) сумма выше составит ~110 XP/8 ≈ 13.75, что даст ~320 убийств — это уже > 2 часов и потребует rebalance. Эта неоднозначность — следствие cross-spec mismatch в чек-листе 6.
+
+
