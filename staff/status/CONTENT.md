@@ -1,54 +1,92 @@
 # Status: Content Designer
 
-**Текущая веха:** M1 (Технический скелет)
+**Текущая веха:** M3 (Расширение мира)
 **Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-18
+**Последнее обновление:** 2026-05-21
 
 ## Что сделано
 
-### M1 content MVP — 4 JSON файла, ветка `m1/content-mvp`
+### M3 content expansion — 5 JSON файлов, ветка `m3/content` → PR в `m3-integration`
 
-- **`content/items.json`** — 15 предметов по канону `docs/GDD.md` §7.1 / `docs/content-brief.md`:
-  - 8 ресурсов: `wood`, `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `rope` (все `zone_origin: forest`, `stats: {}`, `tier: 1`).
-  - 1 melee-оружие: `knife` (damage 4–7, attack_speed 100, noise low).
-  - 1 ranged-оружие: `makeshift_pistol` (damage 9–14, attack_speed 80, noise medium, ammo_id `ammo_pistol`, ammo_per_shot 1).
-  - 2 брони: `cloth_jacket` (defense 1, vs_melee_bonus 1), `leather_vest` (defense 3, vs_melee_bonus 0).
-  - 3 расходника: `bandage` (heal 15), `medkit` (heal 40), `ammo_pistol` (ammo_refill 1).
-  - Каждый item получил уникальные `description_ru` и `flavor_ru` в тональности «жёсткий реализм + чёрный юмор» из `docs/content-brief.md`.
-- **`content/mobs.json`** — 3 моба по канону `docs/GDD.md` §6.2 / §7.3 / `docs/balance.md` §Мобы:
-  - `marauder` HP=18, dmg 5–8, def=1, speed=90, xp=10 (после QA-fix #4 — «слабый» моб, 3–4 удара ножом, flee при HP<30%).
-  - `wild_dog` HP=20, dmg 8–12, def=0, speed=120, xp=8 (единственный melee-атакёр в M1; против него работает `vs_melee_bonus`).
-  - `mutant` HP=60, dmg 10–15, def=3, speed=70, xp=25 (танк глубин 2–3).
-  - Все `drop_table[]` ссылаются на существующие `item_id` из items.json.
-- **`content/recipes.json`** — 5 рецептов по канону `docs/GDD.md` §7.2 / `docs/balance.md` §Рецепты (после явного APPROVE PM по канону GDD vs. устаревшей таблице M1-CONTENT.md):
-  - `recipe_pistol`, `recipe_leather_vest`, `recipe_bandage`, `recipe_medkit`, `recipe_ammo_pistol`.
-  - `tier=1`, `craft_time_s=0`, `unlock_condition=null` у всех.
-  - `result_id` и все `ingredients[*].item_id` присутствуют в items.json.
-- **`content/zones.json`** — 1 зона `forest` по канону `docs/GDD.md` §6.4 / §7.4:
-  - `levels[]` ровно 3 объекта (depth 1/2/3) с разными `enemies`, `enemy_count`, `resources`, `resource_count`, `min_player_level`.
-  - `boss_id: null`, `unlock_condition: "start"`, `unique_resources` = все 8 ресурсов (одна зона в MVP).
+> Источник правды: `docs/balance.md` §M3 (PM-decision 2026-05-21 — ровно 14 новых items, итого 29; PR #21 merged, QA Spec APPROVE PR #22; PR #24 DoD-align).
+> JSON-схемы: `docs/GDD.md` §6.1 (Item), §6.2 (Mob), §6.3 (Recipe), §6.4.M3 (Zone), §10.M3.1 (RadioSignal).
+> Уникальность: `docs/content-brief.md` (минимум 2 из 4 критериев у каждого нового item/mob).
+
+- **`content/mobs.json`** — 3 → **8 мобов** (+5 новых M3 по `balance.md` §M3 / GDD §5.4):
+  - `looter_sniper` (human, warehouse L2, HP=22, dmg 9–13, def=1, speed=95, xp=14, `behavior_id: ranged_keep_distance`).
+  - `armored_guard` (human, warehouse L2, HP=35, dmg 7–10, def=4, speed=75, xp=18, `behavior_id: defensive_cover`).
+  - `fanatic_berserker` (human, city L3, HP=40, dmg 8–12, def=2, speed=100, xp=22, `behavior_id: berserker_low_hp`).
+  - `pack_rat` (mutant, city L3, HP=15, dmg 6–9, def=0, speed=110, xp=9, `behavior_id: pack_bonus_when_paired`).
+  - `relic_drone` (mech, warehouse+city bridge L3, HP=28, dmg 8–11, def=5, speed=90, xp=20, `behavior_id: armor_piercing_ranged`).
+  - Все drop_table ссылаются на существующие/новые items.
+
+- **`content/items.json`** — 15 → **29 items** (+14 новых M3 по `balance.md` §M3):
+  - 4 zone-exclusive ресурса T1: `electronics` / `oil` (warehouse, weight 1), `medical_supplies` / `circuitry` (city, weight 0.5).
+  - 2 T2-оружия: `pipe_rifle` (weapon_ranged, dmg 14–20, attack_speed 70, noise high, `ammo_id: ammo_rifle`), `crowbar` (weapon_melee, dmg 7–11, attack_speed 90, noise low).
+  - 3 T2-брони: `tactical_vest` (def 4, vs_melee_bonus 0, 3 kg), `helmet` (def 2, 1 kg), `gas_mask` (def 1, 0.5 kg — lore stub для M5 газовых зон).
+  - 5 T2-расходников: `large_medkit` (heal 80), `energy_drink` (initiative_boost 20), `emp_grenade` (mech_disable 1), `smoke_bomb` (cover_boost 50), `ammo_rifle` (ammo_refill для `pipe_rifle`).
+  - У каждого нового item — уникальные `description_ru` + `flavor_ru` в тональности «жёсткий реализм + чёрный юмор» (`docs/content-brief.md`).
+
+- **`content/recipes.json`** — 5 → **15 рецептов** (+10 новых M3 по `balance.md` §M3):
+  - `recipe_pipe_rifle`, `recipe_crowbar`, `recipe_tactical_vest`, `recipe_helmet`, `recipe_large_medkit`, `recipe_energy_drink`, `recipe_gas_mask`, `recipe_emp_grenade`, `recipe_smoke_bomb`, `recipe_ammo_rifle`.
+  - Все T2, `craft_time_s=0`, `unlock_condition=null`.
+  - 8 из 10 рецептов используют минимум 1 zone-exclusive ресурс (правило «крафт мотивирует исследовать зоны»). Исключения — `recipe_helmet` и `recipe_ammo_rifle` (намеренно low-bar T2-крафты на старте M3 без необходимости открывать новые зоны).
+
+- **`content/zones.json`** — 1 → **3 зоны** (+2 новых M3 по `balance.md` §M3 / GDD §6.4.M3):
+  - `warehouse` (level 2, `return_time_multiplier: 1.2`, `unlock_condition: "forest_depth_2_completed"`, `unique_resources: [electronics, oil]`, 2 глубины).
+  - `city` (level 3, `return_time_multiplier: 1.5`, `unlock_condition: "any_warehouse_sortie_completed"`, `unique_resources: [medical_supplies, circuitry]`, 3 глубины).
+  - **`forest` НЕ тронут** — `return_time_multiplier` НЕ задан → fallback на default 1.0 (backward-compat с M1/M2 vitest на `computeReturnTime` без 3-го аргумента).
+
+- **`content/radio.json`** — `[]` → **3 dummy сигнала** по GDD §10.M3.1 (UI-stub):
+  - `radio_001_caravan` (from caravan, expires_after_sorties=4).
+  - `radio_002_sos` (from unknown, expires_after_sorties=3).
+  - `radio_003_weather_chat` (from survivor_group_a, expires_after_sorties=5).
+  - У всех ровно 2 опции (`respond` / `ignore`), `dismissed: false`.
+  - **Anti-scope §10.M3 строго:** НЕТ полей `reward`, `trap_mob_id`, `trust_impact`, `type`, `zone` (всё это в M6).
 
 ### Валидация перед PR
-Локальный скрипт прошёл без ошибок:
-- JSON parse: ok
-- Счётчики: items=15, mobs=3, recipes=5, zones=1 (точные лимиты M1)
-- Уникальные `id` внутри каждого файла
-- Перекрёстные ссылки: `recipes[*].result_id` / `recipes[*].ingredients[*].item_id` / `items[*].recipe_id` / `mobs[*].drop_table[*].item_id` / `weapon_ranged.ammo_id` / `zones[*].resources` / `zones[*].mobs` / `zones[*].levels[*].enemies` / `zones[*].levels[*].resources` — все валидны
-- Сверка чисел с `docs/balance.md`: мобы / оружие / броня / расходники / ресурсы — без расхождений
-- Уникальность `description_ru` и `flavor_ru` у всех 15 предметов
 
-## Что НЕ сделано
-- `content/radio.json` — НЕ трогаю (радио = M4, в M1 файл остаётся пустым `[]` по anti-scope).
-- Engineer-код (`src/`), ассеты (`assets/`), `public/` — не зона Content Designer'a.
-- Документация (`docs/*`), брифинги/роли/промпты/чужие статусы (`staff/handoff/*`, `staff/roles/*`, `staff/prompts/*`, `staff/status/*` кроме `CONTENT.md`) — не трогаю по FORBIDDEN из `staff/handoff/M1-CONTENT.md`.
+Локальный кросс-реф валидатор (`/home/ubuntu/validate_content.py`, не коммитится) — все проверки пройдены:
+
+- **Счётчики:** items=29, mobs=8, recipes=15, zones=3, radio=3 — точно по DoD M3.
+- **Уникальные `id`** в каждом файле.
+- **M1 сохранён:** все 15 items / 3 mobs / 5 recipes / forest zone присутствуют без изменений. `forest` НЕ имеет `return_time_multiplier` — fallback 1.0.
+- **Кросс-рефы:** `recipes[*].result_id` / `recipes[*].ingredients[*].item_id` / `items[*].recipe_id` / `mobs[*].drop_table[*].item_id` / `weapon_ranged.ammo_id` / `zones[*].resources` / `zones[*].unique_resources` / `zones[*].mobs` / `zones[*].levels[*].enemies` / `zones[*].levels[*].resources` — все валидны.
+- **Сверка чисел с `docs/balance.md` §M3:** mobs / items / item stats / recipes / zones — без расхождений.
+- **Уникальность ресурсов между зонами:** zone-exclusive не пересекаются (`electronics`/`oil` только в warehouse; `medical_supplies`/`circuitry` только в city).
+- **Уникальность `description_ru` / `flavor_ru`** у всех items и mobs.
+- **Anti-scope радио:** ни в одном из 3 сигналов нет полей M6 (`reward`, `trap_mob_id`, `trust_impact`, `type`, `zone`).
+
+`npm install && npm run typecheck && npm run test` — зелёные:
+- typecheck: ok (tsc --noEmit без ошибок).
+- vitest: 49/49 passed (combat / craft / loot / weight).
+
+### M1 content MVP — историческая справка (ветка `m1/content-mvp`)
+
+Сделано в предыдущей сессии и смержено в `main` (затем интегрировано в `m3-integration`):
+
+- `content/items.json` — 15 items M1, `content/mobs.json` — 3 mobs M1 (`marauder` HP=18 после QA-fix #4 / `wild_dog` / `mutant`), `content/recipes.json` — 5 recipes M1 (`recipe_pistol` / `recipe_leather_vest` / `recipe_bandage` / `recipe_medkit` / `recipe_ammo_pistol`), `content/zones.json` — 1 зона `forest` с 3 глубинами.
+
+## Что НЕ сделано / НЕ трогал
+
+- `docs/*` — НЕ трогаю (зона Game Designer). По FORBIDDEN брифинга `staff/handoff/M3-CONTENT.md`.
+- `src/*`, `assets/*`, `public/*` — НЕ трогаю (зоны Engineer / Artist).
+- `staff/handoff/*`, `staff/roles/*`, `staff/prompts/*`, `staff/kickoff/*`, `staff/decisions/*`, `staff/status/*` (кроме `CONTENT.md`) — PM-owned, не трогаю.
+- M1-контент (`marauder` / `wild_dog` / `mutant`, 15 M1 items, 5 M1 recipes, `forest` zone) — НЕ изменял. `git diff m3-integration...m3/content -- content/` показывает только additions в массивах + добавление `return_time_multiplier` ТОЛЬКО для warehouse/city.
+- Радио M6-поля (`reward` / `trap_mob_id` / `trust_impact` / `type` / `zone`) — НЕ добавлял (anti-scope §10.M3).
 
 ## Замечания / решения
-- **Рецепты:** в `staff/handoff/M1-CONTENT.md` всё ещё указаны устаревшие `recipe_club` / `recipe_shiv` / «Медикаменты», которые не входят в канонические 15 предметов / 8 ресурсов. PM явно подтвердил (kickoff M1 Content): брать канон из `docs/GDD.md` §7.2 / `docs/balance.md`. Сделано по канону.
-- **`recipe_pistol` vs `recipe_makeshift_pistol`:** GDD §6.3 описывает формат `recipe_<result_id>`, но канон §7.2 фиксирует именно `recipe_pistol`. §7.2 — «единая истина». Следую §7.2.
-- **`Mob.damage_min`/`damage_max`:** `docs/content-brief.md` описывает `Mob.damage` одним числом; канон `docs/GDD.md` §6.2 расширяет до пары min/max ради формулы боя §2. Использовал min/max.
+
+- **Item count = 14 (PM-decision 2026-05-21, документировано в `staff/decisions/CHANGELOG.md`):** `balance.md` §M3 фиксирует ровно 14 новых items (4 + 2 + 3 + 5). Итог 29, не 30. Не выдумывал 15-й item.
+- **`gas_mask`:** наименее полезен механически на M3 (defense=1, vs_melee_bonus=0), но **lore stub для M5** — будущие газовые зоны потребуют `gas_mask` для входа без штрафа. На M3 — просто T2-armor с низкой полезностью, но нужен для нарративной целостности (см. `balance.md` §M3).
+- **`helmet` без head-slot:** на M3 hero держит **один armor-slot** (как M1/M2). `helmet` — альтернативная T2-броня (вместо `tactical_vest`), мульти-слот ввёдётся в M5 GD-амендментом.
+- **Recovery commit `0824db6`:** первый коммит этой сессии (`b9a215f`) случайно откатил PR #23 и PR #24 правки в `staff/decisions/CHANGELOG.md`, `staff/handoff/M3-CONTENT.md`, `staff/kickoff/M3-CONTENT.md`, `staff/status/M3.md` (PM-owned файлы). Recovery commit `0824db6` восстанавливает их к состоянию origin/m3-integration HEAD. Content-файлы (mobs/items/recipes/zones/radio) этим не затронуты.
 
 ## Блокеры
+
 - Нет.
 
 ## PR
-- `m1/content-mvp` → `main`: ссылка добавится после `git push`/`git_create_pr`.
+
+- **`m3/content` → `m3-integration`:** PR #25 (https://github.com/alexbayov/oplot/pull/25) — Ready, ожидает PM-review + QA Acceptance.
+- **`m1/content-mvp` → `main`:** PR не создан в текущей сессии — мир ушёл вперёд: и `main`, и `m3-integration` уже содержат M3-спеку, и нет смысла открывать M1-PR. M1-контент исторически зафиксирован в этом файле выше.

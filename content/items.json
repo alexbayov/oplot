@@ -208,5 +208,214 @@
       "effect_value": 1,
       "charges": 1
     }
+  },
+  {
+    "id": "electronics",
+    "name_ru": "Электроника",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "warehouse",
+    "weight_kg": 1,
+    "description_ru": "Платы, конденсаторы, обрывки шлейфов — то, что осталось от уцелевшей складской автоматики. Zone-exclusive ресурс Склада: иначе только редкий дроп с relic_drone.",
+    "flavor_ru": "«Тут было что-то умное. Теперь — лом и память.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "oil",
+    "name_ru": "Машинное масло",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "warehouse",
+    "weight_kg": 1,
+    "description_ru": "Полупрозрачная мутная жидкость в жестяной канистре. Смазывает затворы, помогает гасить вспышки и заводит ржавчину обратно во что-то рабочее. Zone-exclusive Склада.",
+    "flavor_ru": "«Пахнет гаражом. И, кажется, надеждой.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "medical_supplies",
+    "name_ru": "Медикаменты",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "city",
+    "weight_kg": 0.5,
+    "description_ru": "Блистеры, ампулы, шприцы без иголок — то, что не успели разграбить из городских аптек. Zone-exclusive Города: иначе только редкий дроп с fanatic_berserker.",
+    "flavor_ru": "«Срок годности — пять лет назад. Лучше, чем ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "circuitry",
+    "name_ru": "Микросхемы",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "city",
+    "weight_kg": 0.5,
+    "description_ru": "Тонкие платы с впаянными чипами, выломанные из городской электроники. Zone-exclusive Города: иначе только дроп с relic_drone или pack_rat (очень редко).",
+    "flavor_ru": "«Тонкая работа. Не для пальцев.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "pipe_rifle",
+    "name_ru": "Самопальная винтовка",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 2.5,
+    "description_ru": "Сваренный из обрезков труб длинный ствол с примитивным затвором. Бьёт сильнее и дальше самопального пистолета (14-20 vs 9-14), но медленнее, шумнее и тяжелее. Стреляет винтовочными патронами (`ammo_rifle`), которые с пистолетными несовместимы. Тактическая ниша — anti-tank против armored_guard и mutant.",
+    "flavor_ru": "«Один выстрел слышит весь Склад. Зато промахнуться — невозможно.»",
+    "recipe_id": "recipe_pipe_rifle",
+    "stats": {
+      "damage_min": 14,
+      "damage_max": 20,
+      "attack_speed": 70,
+      "noise": "high",
+      "ammo_id": "ammo_rifle",
+      "ammo_per_shot": 1
+    }
+  },
+  {
+    "id": "crowbar",
+    "name_ru": "Монтировка",
+    "type": "weapon_melee",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 2.0,
+    "description_ru": "Тяжёлая стальная монтировка, подобранная на Складе. Бьёт сильнее ножа (7-11 vs 4-7), но медленнее (90 vs 100 attack_speed) и тяжелее. Тактическая ниша — против armored_guard: пробивает defense=4 надёжнее, чем нож, на бронированных целях окупает потерю скорости.",
+    "flavor_ru": "«Открывает ящики. И всё остальное.»",
+    "recipe_id": "recipe_crowbar",
+    "stats": {
+      "damage_min": 7,
+      "damage_max": 11,
+      "attack_speed": 90,
+      "noise": "low"
+    }
+  },
+  {
+    "id": "tactical_vest",
+    "name_ru": "Тактический жилет",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 3.0,
+    "description_ru": "Старый армейский жилет с керамическими пластинами в карманах. Сильнее кожаного (defense=4 vs 3), но тяжелее (3.0 vs 2.5). Основной T2-ап для слотa брони; требует electronics из Склада для крафта.",
+    "flavor_ru": "«Тяжелее, чем выглядит. Спина запомнит.»",
+    "recipe_id": "recipe_tactical_vest",
+    "stats": {
+      "defense": 4,
+      "vs_melee_bonus": 0
+    }
+  },
+  {
+    "id": "helmet",
+    "name_ru": "Шлем",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 1.0,
+    "description_ru": "Лёгкий стальной шлем с потёртым подшлемником. На M3 — альтернативная T2-броня в общий armor-slot (отдельного head-slot ещё нет — это M5 модульность). Защищает слабее тактического жилета (defense=2), но в 3 раза легче (1.0 vs 3.0). Ниша — мобильные сборки.",
+    "flavor_ru": "«От пули не спасёт. От арматуры — иногда.»",
+    "recipe_id": "recipe_helmet",
+    "stats": {
+      "defense": 2,
+      "vs_melee_bonus": 0
+    }
+  },
+  {
+    "id": "gas_mask",
+    "name_ru": "Противогаз",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Резиновая маска с угольным фильтром и треснувшим стеклом. На M3 — самая слабая T2-броня (defense=1), но lore stub: в M5 появятся газовые зоны, где противогаз будет обязателен для входа. Сейчас — больше нарратив, чем защита.",
+    "flavor_ru": "«Дышишь сквозь резину. Шепчешь — никто не слышит.»",
+    "recipe_id": "recipe_gas_mask",
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 0
+    }
+  },
+  {
+    "id": "large_medkit",
+    "name_ru": "Большая аптечка",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.8,
+    "description_ru": "Полноценный полевой комплект: жгуты, антисептики, обезбол. Восстанавливает 80 HP — вдвое больше обычной аптечки, но требует крафта из medkit + medical_supplies (city-exclusive).",
+    "flavor_ru": "«Хватит и на тебя, и на товарища. Если выберешь.»",
+    "recipe_id": "recipe_large_medkit",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 80,
+      "charges": 1
+    }
+  },
+  {
+    "id": "energy_drink",
+    "name_ru": "Энергетик",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Жестяная банка довоенного «бодрящего» напитка с истёкшим сроком. Даёт +20 к hero.base_speed на 1 бой (сбрасывается после endSortie) — единственный способ опередить быстрых мобов (wild_dog speed=120, pack_rat=110).",
+    "flavor_ru": "«Сахар. Кофеин. Что-то ещё, чего лучше не знать.»",
+    "recipe_id": "recipe_energy_drink",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 20,
+      "charges": 1
+    }
+  },
+  {
+    "id": "emp_grenade",
+    "name_ru": "ЭМИ-граната",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Самодельная гранатка с конденсаторами и контактным взрывателем. Применённая в бою на цели типа `mech` (на M3 — только relic_drone) выставляет ей `skip_next_turn=true` на 1 ход. На не-mech целях — no-op (расход charges впустую). Единственный механический counter к armor-piercing дрона.",
+    "flavor_ru": "«Жужжит. Щёлкает. Тишина. И снова жужжит — но уже не он.»",
+    "recipe_id": "recipe_emp_grenade",
+    "stats": {
+      "effect_type": "mech_disable",
+      "effect_value": 1,
+      "charges": 1
+    }
+  },
+  {
+    "id": "smoke_bomb",
+    "name_ru": "Дымовая шашка",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Самодельная шашка из пороха, ткани и масла. Применённая в бою активирует усиленное укрытие на 1 ход: COVER_DEFENSE_BONUS_PCT × 1.0 (вместо обычного 0.5) — двойное укрытие, дороже по ресурсам. Используется когда нужно пережить один сильный удар (например, raw damage от fanatic_berserker в берсерке).",
+    "flavor_ru": "«Их не видно. Тебя — тоже. Один из вас успеет дотянуться первым.»",
+    "recipe_id": "recipe_smoke_bomb",
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 50,
+      "charges": 1
+    }
+  },
+  {
+    "id": "ammo_rifle",
+    "name_ru": "Патроны (винтовка)",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Винтовочная гильза с увеличенным пороховым зарядом. Несовместима с самопальным пистолетом — нужна `pipe_rifle`. Стакается до 99 в инвентаре.",
+    "flavor_ru": "«Дороже пистолетной. И слышнее.»",
+    "recipe_id": "recipe_ammo_rifle",
+    "stats": {
+      "effect_type": "ammo_refill",
+      "effect_value": 1,
+      "charges": 1
+    }
   }
 ]
