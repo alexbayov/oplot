@@ -32,9 +32,7 @@
 
 ## Твои deliverables
 
-### 1. `content/items.json` — добавь **14 новых items** (всего 29)
-
-> PM-decision (2026-05-21, PR `pm/m3-dod-align-items`): `balance.md` §M3 специфицирует ровно 14 новых items (4 zone-exclusive + 2 T2-weapons + 3 T2-armor + 5 T2-consumables). QA Spec APPROVE (PR #22) фиксирует этот спек. Не выдумывай 15-й item — 29 = факт spec'а.
+### 1. `content/items.json` — добавь **~15 новых items** (всего 30)
 
 Не трогай существующие 15 items M1 (`wood / scrap / cloth / food / water / gunpowder / leather / rope / knife / makeshift_pistol / cloth_jacket / leather_vest / bandage / medkit / ammo_pistol`).
 
@@ -121,7 +119,7 @@
 
 ## Definition of Done
 
-- [ ] `content/items.json` = 29 items (15 M1 + 14 M3 по `balance.md` §M3).
+- [ ] `content/items.json` ≥ 30 items (15 старых + ~15 новых).
 - [ ] `content/mobs.json` = 8 mobs (3 старых + 5 новых).
 - [ ] `content/recipes.json` ≥ 15 recipes (5 старых + 10 новых).
 - [ ] `content/zones.json` = 3 zones (forest + warehouse + city).

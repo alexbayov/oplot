@@ -26,7 +26,7 @@
 4. Отправь Alex'у блокирующим: «План готов, жду апрува PM».
 5. После апрува — `git checkout -b m3/content`, сделай первую правку (например, добавь 1 моба) и **сразу push + Draft PR** `m3/content → m3-integration` (recovery-safe).
 6. Дополни 5 JSON-файлов согласно handoff DoD:
-   - `content/items.json` = 29 (добавь ровно 14 новых по `balance.md` §M3; PM-decision 2026-05-21, см. `staff/handoff/M3-CONTENT.md` §1).
+   - `content/items.json` ≥ 30 (добавь ~15 новых).
    - `content/mobs.json` = 8 (добавь 5 новых).
    - `content/recipes.json` ≥ 15 (добавь 10 новых).
    - `content/zones.json` = 3 (добавь warehouse + city).

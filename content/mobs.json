@@ -60,5 +60,28 @@
       { "item_id": "gunpowder", "chance": 0.30, "count_min": 1, "count_max": 1 },
       { "item_id": "leather", "chance": 0.10, "count_min": 1, "count_max": 1 }
     ]
+  },
+  {
+    "id": "looter_sniper",
+    "name_ru": "Мародёр-снайпер",
+    "type": "human",
+    "zone": "warehouse",
+    "level": 2,
+    "hp": 22,
+    "damage_min": 9,
+    "damage_max": 13,
+    "defense": 1,
+    "base_speed": 95,
+    "xp_reward": 14,
+    "behavior": "aggressive",
+    "behavior_id": "ranged_keep_distance",
+    "description_ru": "Бывший охотник, окопавшийся среди стеллажей Склада. Стреляет издалека: на ranged-оружии бьёт полным уроном 9-13, а в ближнем бою с противником на ноже теряет половину урона — стрелять накоротке у него не получается. Высокий base_speed (95) обычно ставит его во второй половине раунда после быстрых животных, но раньше тяжёлой брони.",
+    "flavor_ru": "«Слышишь сухой щелчок? Это он считает ваши шаги.»",
+    "drop_table": [
+      { "item_id": "cloth", "chance": 0.50, "count_min": 1, "count_max": 2 },
+      { "item_id": "ammo_pistol", "chance": 0.40, "count_min": 1, "count_max": 2 },
+      { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
+      { "item_id": "ammo_rifle", "chance": 0.20, "count_min": 1, "count_max": 1 }
+    ]
   }
 ]
