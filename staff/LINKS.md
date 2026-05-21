@@ -16,17 +16,18 @@
 
 ## M3 PRs (active)
 
-_Last reconciled with GitHub: 2026-05-20 (M3 kickoff)._
+_Last reconciled with GitHub: 2026-05-21 (факт: spec фаза закрыта, m3-integration HEAD = `79fb694`)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| (this PR) | PM / M3 kickoff | `m3-integration ← pm/m3-kickoff` | Open — M3 dashboard, kickoff/handoff materials |
-| TBD | GD M3 amendment | `m3-integration ← m3/gd-amendment` | Pending — §5.4 (5 mobs) + §6.4.M3 (2 zones) + §7 (radio stub) + balance §M3 |
-| TBD | QA Spec M3 | `m3-integration ← qa/m3-spec-review` | Pending — ревью GD-amendment |
-| TBD | Content M3 | `m3-integration ← m3/content` | Pending — +items / +mobs / +recipes / +zones / +radio signals |
-| TBD | Engineer M3 | `m3-integration ← m3/world` | Pending — multi-zone runtime + 5 mob AI + RadioScene stub |
-| TBD | Artist M3 | `m3-integration ← m3/art` | Pending — 5 mob sprites + 2 backgrounds + ~10 item icons |
-| TBD | QA Acceptance M3 | `m3-integration ← qa/m3-acceptance` | Pending — final approve |
+| **#20** | PM / M3 kickoff | `m3-integration ← pm/m3-kickoff` | **Merged 2026-05-20** — M3 dashboard + 6 kickoff + 6 handoff |
+| **#21** | GD M3 amendment | `m3-integration ← m3/gd-amendment` | **Merged 2026-05-20** — GDD §5.4 (5 mobs) + §6.2 (Mob schema) + §6.4.M3 (2 zones + Zone schema) + §10.M3 (radio stub) + balance §M3 |
+| **#22** | QA Spec M3 | `m3-integration ← qa/m3-spec-review` | **Merged 2026-05-20** — verdict **APPROVE** по 7 чек-листам |
+| (this PR) | PM / status-sync | `m3-integration ← pm/m3-status-sync` | Open — dashboards under GitHub-fact (#20/#21/#22 merged); parallel-production launch ready |
+| TBD | Content M3 | `m3-integration ← m3/content` | Pending — ready to launch (+items / +mobs / +recipes / +zones / +radio signals) |
+| TBD | Engineer M3 | `m3-integration ← m3/world` | Pending — ready to launch (multi-zone runtime + 5 mob AI + RadioScene stub) |
+| TBD | Artist M3 | `m3-integration ← m3/art` | Pending — ready to launch (5 mob sprites + 2 backgrounds + ~10 item icons) |
+| TBD | QA Acceptance M3 | `m3-integration ← qa/m3-acceptance` | Pending — после 3 Ready role-PR |
 | TBD | PM finalize M3 | `m3-integration ← pm/m3-finalize` | Pending — gate → M3_DONE, M3-SUMMARY, CHANGELOG |
 | TBD | PM gate-close M3 | `main ← m3-integration` | Pending — мерджит Alex/Заказчик |
 
@@ -71,12 +72,12 @@ _Last reconciled with GitHub: 2026-05-20 (M3 kickoff)._
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
-| Game Designer | `staff/kickoff/M3-GD.md` | `staff/handoff/M3-GD.md` | `staff/status/GAME_DESIGNER.md` (pending) |
-| QA Spec | `staff/kickoff/M3-QA-SPEC.md` | `staff/handoff/M3-QA-SPEC.md` | `staff/status/QA.md` (pending) |
-| Content | `staff/kickoff/M3-CONTENT.md` | `staff/handoff/M3-CONTENT.md` | `staff/status/CONTENT.md` (pending) |
-| Engineer | `staff/kickoff/M3-ENG.md` | `staff/handoff/M3-ENG.md` | `staff/status/ENGINEER.md` (pending) |
-| Artist | `staff/kickoff/M3-ARTIST.md` | `staff/handoff/M3-ARTIST.md` | `staff/status/ARTIST.md` (pending) |
-| QA Acceptance | `staff/kickoff/M3-QA-ACCEPT.md` | `staff/handoff/M3-QA-ACCEPT.md` | `staff/status/QA.md` (pending) |
+| Game Designer | `staff/kickoff/M3-GD.md` | `staff/handoff/M3-GD.md` | `staff/status/GAME_DESIGNER.md` — **DONE** (PR #21 merged) |
+| QA Spec | `staff/kickoff/M3-QA-SPEC.md` | `staff/handoff/M3-QA-SPEC.md` | `staff/status/QA.md` §M3 Spec Review — **APPROVE** (PR #22 merged) |
+| Content | `staff/kickoff/M3-CONTENT.md` | `staff/handoff/M3-CONTENT.md` | `staff/status/CONTENT.md` — **ready to launch** |
+| Engineer | `staff/kickoff/M3-ENG.md` | `staff/handoff/M3-ENG.md` | `staff/status/ENGINEER.md` — **ready to launch** |
+| Artist | `staff/kickoff/M3-ARTIST.md` | `staff/handoff/M3-ARTIST.md` | `staff/status/ARTIST.md` — **ready to launch** |
+| QA Acceptance | `staff/kickoff/M3-QA-ACCEPT.md` | `staff/handoff/M3-QA-ACCEPT.md` | `staff/status/QA.md` (pending — after 3 role PRs Ready) |
 
 ## Role briefs (M2 — closed, история)
 

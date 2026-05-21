@@ -50,3 +50,11 @@
 - M3 anti-scope: нет перков (M4), нет боссов (M5), нет полной радио-логики (M6), нет модулей оружия, нет Yandex SDK (M8), нет сторонних UI-библиотек.
 - Org-scope secret `GITHUB_PAT_OPLOT` сохранён и используется PM-сессией для merge без ручного PAT-запроса.
 - Последовательность M3: GD amendment → QA Spec → (Content + Engineer + Artist параллельно) → QA Acceptance → PM finalize → gate-close.
+
+## 2026-05-21 — M3: Spec phase closed, parallel production ready
+
+- PM kickoff PR #20 merged в `m3-integration` 2026-05-20 (`pm/m3-kickoff → m3-integration`): M3 dashboard + 6 kickoff + 6 handoff материалов + PLAN/CONTEXT/LINKS/CHANGELOG update.
+- GD M3 amendment PR #21 merged в `m3-integration` 2026-05-20 (`m3/gd-amendment → m3-integration`): GDD §5.4 (5 новых мобов с `behavior_id`), §6.2 (Mob schema extension: `mech` enum + optional `behavior_id` field), §6.4.M3 (2 новые зоны warehouse + city + Zone schema `return_time_multiplier?`), §10.M3 (RadioSignal JSON-схема + UI-flow + anti-scope), `balance.md` §M3 (5 mob stat tables + drop-tables + 2 zone configs + zone-exclusive resources + T2 weapons/armor/consumables + 10 рецептов).
+- QA Spec Review PR #22 merged в `m3-integration` 2026-05-20 (`qa/m3-spec-review → m3-integration`): verdict APPROVE по 7 чек-листам (§5.4 / §6.2 / §6.4.M3 / §10.M3 / balance §M3 / anti-scope / M1-M2 regression).
+- PM status-sync PR `pm/m3-status-sync → m3-integration`: dashboards (`staff/status/M3.md`, `staff/status/PM.md`, `staff/LINKS.md`, `staff/CONTEXT.md`, `staff/decisions/CHANGELOG.md`) приведены под факт GitHub. Gate: `QA_SPEC_APPROVED → PARALLEL_PRODUCTION_READY`.
+- Следующий шаг — параллельный запуск Content + Engineer + Artist role-сессий (PR base = `m3-integration`). Каждая role-сессия следует recovery-safe правилу M2: ранний Draft PR + commit/push после каждого под-шага + PR Recovery block.
