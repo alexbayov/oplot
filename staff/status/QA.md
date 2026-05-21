@@ -546,3 +546,40 @@ PM (orchestrator) уже сделал code-review всех трёх PR'ов с v
 - Blockers: нет.
 - PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['git_pat']`, никогда не в URL/echo/print.
 - Forbidden: править код/контент/ассеты в чужих PR (#25/#26/#27) — только PR-комментарии и свой QA-report. Self-merge. Push в `main`/`m3-integration` напрямую. Менять чужие `staff/status/*.md` (только свой `staff/status/QA.md`). Предлагать новые M3-фичи. Проверять то, что вне M3 scope (radio выходит за UI-stub — это M6, anti-scope).
+
+---
+
+# M4 Spec Review
+
+**Текущая веха:** M4 — Перки и прогрессия (spec-review phase)
+**Объект ревью:** GD M4 amendment PR [#32](https://github.com/alexbayov/oplot/pull/32) (`m4/gd-amendment → m4-integration`).
+**Статус:** IN_PROGRESS (verdict pending — 7 чек-листов в работе)
+**Дата:** 2026-05-21
+**QA branch:** `qa/m4-spec-review` (base `m4-integration` HEAD `d8e2a31`)
+
+## Recovery
+
+Если сессия упадёт — следующему Devin делать:
+
+1. `git checkout qa/m4-spec-review && git pull`.
+2. Прочитать:
+   - `staff/CONTEXT.md`
+   - `staff/LINKS.md`
+   - `staff/status/M4.md`
+   - `staff/handoff/M4-QA-SPEC.md` (7 чек-листов)
+   - `staff/handoff/M3-SUMMARY.md`
+   - `docs/GDD.md` + `docs/balance.md` целиком (включая M4 GD-amendment с ветки `origin/m4/gd-amendment`).
+3. Продолжить с: посмотреть какие подсекции «# M4 Spec Review» уже заполнены, добить недостающие чек-листы, записать финальный verdict.
+4. Обновлять ТОЛЬКО `staff/status/QA.md`. НЕ трогать `docs/`, `src/`, `content/`, `assets/`, чужие staff/.
+5. После полного verdict'а — flip PR Draft → Ready и отправить блокирующее сообщение Alex'у: «QA Spec M4 verdict <APPROVE|CHANGES_REQUESTED>, PR <ссылка>».
+6. Не self-merge.
+
+## Объект ревью — артефакты
+
+- GD PR #32 base = `m4-integration` (НЕ main) — подтверждено через `git_view_pr`.
+- GD PR #32 scope (3 файла, +248 / −3): `docs/GDD.md`, `docs/balance.md`, `staff/status/GAME_DESIGNER.md`. `src/`, `content/`, `assets/`, чужие `staff/` — не тронуты.
+- Octopus diff command: `git diff origin/m4-integration..origin/m4/gd-amendment -- docs/ staff/`.
+
+## Verdict (TBD)
+
+_Заполнено после прогона всех 7 чек-листов ниже._
