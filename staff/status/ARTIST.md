@@ -1,52 +1,66 @@
 # Status: Artist
 
-**Текущая веха:** M1 — Технический скелет
-**Статус:** DONE_PENDING_QA_ACCEPT
-**Ветка:** `m1/art-initial` (base = `m1-integration`)
-**Последнее обновление:** 2026-05-19
+**Текущая веха:** M3 — Расширение мира
+**Статус:** IN_PROGRESS (Draft PR, step 1/7 done — генератор + 1 mob)
+**Ветка:** `m3/art` (base = `m3-integration`)
+**Последнее обновление:** 2026-05-21
 
-## Что сделано
+## Recovery block (для будущих сессий)
 
-### 1. `docs/style-guide.md` — финализирован
-- Стиль «Military Graphic Novel» зафиксирован (атмосфера, техника, обводки, тоновая идея, anti-style).
-- Палитра в HEX: база мира (`#1A1A1A`, `#2D2D2A`, `#4A4A3A` хаки, `#8B7355` ржавчина, `#3D5C3A` зелень), UI/текст (`#D4C5A0` песочный, `#8B0000` HP, `#4682B4` энергия), тиры T1–T5, акценты состояний.
-- Шрифты: Oswald заголовки, Roboto основной текст, Roboto Mono числа (рекомендация Engineer'у).
-- Размеры спрайтов: hero 128×128, items 64×64, фон 800×600, UI tap ≥ 48×48.
-- Правила стиля (прозрачный фон, обводки 2–3 px, snake_case naming, PNG на M1).
-- AI-пайплайн задокументирован как процесс для **M2+** (Stable Diffusion / DALL-E / Midjourney + промпт-шаблоны + пост-обработка).
-- Зафиксирован отдельный M1 placeholder pipeline (Pillow, PM-решение 2026-05-19).
-- Размерный бюджет M1 (≤ 300 КБ) и общий лимит проекта (< 5 MB).
+- **Роль:** Artist / Asset Lead, M3
+- **Базовая ветка:** `m3-integration`
+- **Рабочая ветка:** `m3/art`
+- **PR target:** `m3-integration` (НЕ `main`)
+- **План APPROVED PM 2026-05-21** — 7 пунктов с обязательным фиксом: Pillow-генератор коммитится в `tools/art/gen_m3_assets.py` для cross-session reproducibility (continuation of M1 PM-decision 2026-05-19, `staff/decisions/DECISIONS.md`).
+- **Pillow pipeline:** детерминистичный (без рандома). Запуск из repo root: `python3 tools/art/gen_m3_assets.py`. Регенерирует все M3 ассеты идентично.
+- **Палитра/размеры/обводки** строго из `docs/style-guide.md`.
+- **Recovery cadence:** после каждого step push + апдейт PR Recovery block + этого файла.
 
-### 2. M1 placeholder-ассеты — сгенерированы (Pillow)
+## Что сделано (M3, шаг за шагом)
 
-| Файл | Размер (px) | Размер (КБ) | Прозрачный фон | Бюджет |
-|---|---|---|---|---|
-| `assets/sprites/hero.png` | 128 × 128 | 7.4 | да | ≤ 50 КБ |
-| `assets/sprites/items/wood.png` | 64 × 64 | 2.9 | да | ≤ 100 КБ (8 шт суммарно) |
-| `assets/sprites/items/scrap.png` | 64 × 64 | 3.0 | да | (см. выше) |
-| `assets/sprites/items/cloth.png` | 64 × 64 | 3.0 | да | (см. выше) |
-| `assets/sprites/items/food.png` | 64 × 64 | 2.3 | да | (см. выше) |
-| `assets/sprites/items/water.png` | 64 × 64 | 1.8 | да | (см. выше) |
-| `assets/sprites/items/gunpowder.png` | 64 × 64 | 2.6 | да | (см. выше) |
-| `assets/sprites/items/leather.png` | 64 × 64 | 3.1 | да | (см. выше) |
-| `assets/sprites/items/rope.png` | 64 × 64 | 3.3 | да | (см. выше) |
-| `assets/backgrounds/forest.png` | 800 × 600 | 51.9 | нет (плотный) | ≤ 150 КБ |
-| **Сумма M1** |  | **~81.3 КБ** |  | **≤ 300 КБ (использовано 27%)** |
+### Step 1 (DONE) — Генератор + 1-й mob (recovery-safe)
 
-### 3. Соответствие style-guide
-- Палитра из палитры style-guide.
-- Bold обводки 2–3 px на персонаже и иконках.
-- Прозрачные фоны на спрайтах/иконках; плотный фон у `forest.png`.
-- snake_case ASCII naming.
-- Painterly value noise для отхода от flat cartoon.
+- `tools/art/gen_m3_assets.py` — детерминистичный Pillow-генератор для всех M3 ассетов (5 mobs + 14 items + 2 backgrounds + 1 radio UI icon). 2x super-sampling + LANCZOS downsample для smooth outlines. Палитра HEX заимствована из `docs/style-guide.md` §Палитра.
+- `assets/sprites/mobs/looter_sniper.png` — 128×128, прозрачный фон, ~4 KB. Снайпер в low ranged stance с длинной винтовкой; цвета `#4A4A3A` (хаки) + `#8B7355` (ржавый акцент) + чёрная обводка 2 px (style-guide compliant).
 
-## Что НЕ сделано (по плану M1, корректно перенесено в M2+)
+### Что НЕ сделано (запланировано в Steps 2-7)
 
-- Спрайты мобов (M2).
-- UI-кит (M2–M3).
-- Анимации (M3+).
-- AI-генерация ассетов (M2+). На M1 placeholder'ы по PM-решению 2026-05-19.
-- Спрайт-атласы и упаковка (M2+).
+| Step | Файлы | Статус |
+|---|---|---|
+| 2 | `assets/sprites/mobs/{armored_guard,fanatic_berserker,pack_rat,relic_drone}.png` | PENDING |
+| 3 | `assets/sprites/items/{electronics,oil,medical_supplies,circuitry}.png` (T1 zone-exclusive) | PENDING |
+| 4 | `assets/sprites/items/{pipe_rifle,crowbar}.png` (T2 weapons) | PENDING |
+| 5 | `assets/sprites/items/{tactical_vest,helmet,gas_mask,large_medkit,energy_drink,emp_grenade,smoke_bomb,ammo_rifle}.png` (T2 armor+consumables) | PENDING |
+| 6 | `assets/backgrounds/{warehouse,city}.png` | PENDING |
+| 7 | `assets/ui/radio_icon.png` (опционально, по handoff §4) + budget check + PR Ready | PENDING |
+
+Все step'ы генерятся одним вызовом `python3 tools/art/gen_m3_assets.py` (тестовый прогон локально: 22 файла, 129 622 байт суммарно = ~127 KB, ≤500 KB бюджет с большим запасом).
+
+## Бюджет M3
+
+| Категория | Прогноз | Бюджет |
+|---|---|---|
+| 5 mob sprites (128×128) | ~27 KB | ≤ 250 KB |
+| 14 item icons (64×64) | ~33 KB | ≤ 70 KB (handoff ~50) |
+| 2 backgrounds (800×600) | ~66 KB | ≤ 200 KB |
+| 1 radio UI icon (64×64) | ~3 KB | ≤ 5 KB |
+| **Итого M3 add** | **~127 KB** | **≤ 500 KB** |
+| **Project total (M1 + M3)** | **~213 KB** | **≤ 600 KB / 5 MB Яндекс** |
+
+## Соответствие style-guide
+
+- Палитра из `docs/style-guide.md` §Палитра (HEX-точно).
+- Bold обводки 2–3 px на персонаже и иконках (через 2x super-sampling).
+- Прозрачные фоны на спрайтах/иконках; плотные backgrounds.
+- snake_case ASCII naming, file id = content/balance id.
+- T1/T2 tier-frames (`#9E9E9E` / `#4CAF50`) на item-icons.
+
+## Anti-scope
+
+- НЕ трогаю M1 ассеты (`hero.png`, 8 M1 item icons, `forest.png`).
+- НЕ трогаю `src/`, `content/`, `docs/`, чужие `staff/status/*.md`.
+- НЕ pixel-art, не cartoon, не AI-генерация (М7 scope).
+- НЕ self-merge, НЕ push в `main`/`m3-integration` напрямую.
 
 ## Блокеры
 
@@ -54,8 +68,8 @@
 
 ## PR
 
-- `m1/art-initial → m1-integration`. Ссылку проставит PM-сессия в `staff/status/M1.md` после открытия PR. См. PR description: scope / anti-scope / recovery / per-file sizes / contact sheet.
+- `m3/art → m3-integration` — Draft (открывается в step 1, после первого push).
 
 ## Self-update / Recovery
 
-Эта сессия обновила **только** `staff/status/ARTIST.md`. `staff/status/M1.md`, `staff/status/{другие_роли}.md`, `staff/decisions/CHANGELOG.md` и `PLAN.md` синхронизирует PM.
+Эта сессия обновляет **только** `staff/status/ARTIST.md`. `staff/status/M3.md`, `staff/status/{другие_роли}.md`, `staff/decisions/CHANGELOG.md` и `PLAN.md` синхронизирует PM.
