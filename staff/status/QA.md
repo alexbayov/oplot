@@ -549,6 +549,38 @@ PM (orchestrator) уже сделал code-review всех трёх PR'ов с v
 
 ---
 
+# M4 Spec Review — Re-review after GD fix PR #34
+
+**Дата:** 2026-05-21
+**Объект:** GD fix PR #34 (`m4/gd-fix → m4-integration`) merged into `m4-integration` as `837aed2`, плюс исходный GD amendment PR #32.
+**Verdict:** **APPROVE**.
+
+## Что перепроверено
+
+- PR #34 применил выбранную PM/Alex option (a): baseline tables in `docs/balance.md` now use the same M4 `xp_reward` numbers.
+- §Мобы (MVP): `marauder=18`, `wild_dog=14`, `mutant=45`.
+- §M3 — Мобы: `looter_sniper=28`, `armored_guard=36`, `fanatic_berserker=42`, `pack_rat=22`, `relic_drone=50`.
+- §M1/§M3 tables include explicit TODOs for Content M4 to update `content/mobs.json`; Content owns the JSON change.
+- HP/damage/defense/speed/AI/drop-tables are unchanged. No `src/`, `content/`, `assets/` changes in GD fix.
+
+## Updated checklist summary
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | §Прогрессия (XP sources + curve + level-up flow + overkill + empty pool) | **PASS** |
+| 2 | §6.5 Perk JSON schema | **PASS** |
+| 3 | `balance.md` §M4 XP-curve | **PASS** |
+| 4 | `balance.md` §M4 mob `xp_reward` + 8 perk numbers | **PASS** |
+| 5 | Anti-scope M4 | **PASS** |
+| 6 | Consistency with M3 / `xp_reward` cross-spec | **PASS after PR #34** |
+| 7 | Recovery-safe + PR hygiene | **PASS** |
+
+## Final verdict — APPROVE
+
+**QA Spec M4 APPROVE.** The previous blocker is resolved by PR #34. PM may proceed to parallel production (Content + Engineer + Artist) after merging/accepting this QA Spec PR per orchestration rules.
+
+---
+
 # M4 Spec Review
 
 **Текущая веха:** M4 — Перки и прогрессия (spec-review phase)
