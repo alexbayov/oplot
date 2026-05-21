@@ -10,26 +10,27 @@
 
 ## Integration branch
 
-- **M3 integration baseline (в работе):** `m3-integration` (создана от `main` 2026-05-20, HEAD `3a40709` — M2 gate-close). Все M3 role PR таргетятся в `m3-integration`. Gate-close PR `m3-integration → main` откроет PM в конце вехи; мерджит Alex/Заказчик.
+- **M3 integration baseline (фактически закрыта, ждёт gate-close):** `m3-integration` (создана от `main` 2026-05-20, HEAD `aaf2ae5` — Merge PR #28). Все 9 M3 PR смержены. Gate-close PR `m3-integration → main` PM откроет после merge этого PM finalize PR; мерджит Alex/Заказчик.
 - **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
 - **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M3 PRs (active)
+## M3 PRs (фактически закрыта, ждёт gate-close)
 
-_Last reconciled with GitHub: 2026-05-21 (факт: spec фаза закрыта, m3-integration HEAD = `79fb694`)._
+_Last reconciled with GitHub: 2026-05-21 (m3-integration HEAD = `aaf2ae5` Merge PR #28: qa(M3 acceptance) — APPROVE)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#20** | PM / M3 kickoff | `m3-integration ← pm/m3-kickoff` | **Merged 2026-05-20** — M3 dashboard + 6 kickoff + 6 handoff |
-| **#21** | GD M3 amendment | `m3-integration ← m3/gd-amendment` | **Merged 2026-05-20** — GDD §5.4 (5 mobs) + §6.2 (Mob schema) + §6.4.M3 (2 zones + Zone schema) + §10.M3 (radio stub) + balance §M3 |
-| **#22** | QA Spec M3 | `m3-integration ← qa/m3-spec-review` | **Merged 2026-05-20** — verdict **APPROVE** по 7 чек-листам |
-| (this PR) | PM / status-sync | `m3-integration ← pm/m3-status-sync` | Open — dashboards under GitHub-fact (#20/#21/#22 merged); parallel-production launch ready |
-| TBD | Content M3 | `m3-integration ← m3/content` | Pending — ready to launch (+items / +mobs / +recipes / +zones / +radio signals) |
-| TBD | Engineer M3 | `m3-integration ← m3/world` | Pending — ready to launch (multi-zone runtime + 5 mob AI + RadioScene stub) |
-| TBD | Artist M3 | `m3-integration ← m3/art` | Pending — ready to launch (5 mob sprites + 2 backgrounds + ~10 item icons) |
-| TBD | QA Acceptance M3 | `m3-integration ← qa/m3-acceptance` | Pending — после 3 Ready role-PR |
-| TBD | PM finalize M3 | `m3-integration ← pm/m3-finalize` | Pending — gate → M3_DONE, M3-SUMMARY, CHANGELOG |
-| TBD | PM gate-close M3 | `main ← m3-integration` | Pending — мерджит Alex/Заказчик |
+| **#20** | PM / M3 kickoff | `m3-integration ← pm/m3-kickoff` | **Merged 2026-05-20 PM** — M3 dashboard + 6 kickoff + 6 handoff |
+| **#21** | GD M3 amendment | `m3-integration ← m3/gd-amendment` | **Merged 2026-05-20 PM** — GDD §5.4 (5 mobs) + §6.2 (Mob schema) + §6.4.M3 (2 zones + Zone schema) + §10.M3 (radio stub) + balance §M3 |
+| **#22** | QA Spec M3 | `m3-integration ← qa/m3-spec-review` | **Merged 2026-05-20 PM** — verdict **APPROVE** по 7 чек-листам |
+| **#23** | PM / status-sync | `m3-integration ← pm/m3-status-sync` | **Merged 2026-05-21 PM** — dashboards under GitHub-fact (#20/#21/#22) |
+| **#24** | PM / DoD-align items=29 | `m3-integration ← pm/m3-dod-align-items` | **Merged 2026-05-21 PM** — DoD `≥30 items` → `29` под balance §M3 |
+| **#25** | Content M3 | `m3-integration ← m3/content` | **Merged 2026-05-21 PM** — +5 mobs / +14 items / +10 recipes / +2 zones / +3 dummy radio signals (JSON only) |
+| **#26** | Engineer M3 | `m3-integration ← m3/world` | **Merged 2026-05-21 PM** — multi-zone runtime + 5 mob AI + RadioScene stub + 89/89 vitest |
+| **#27** | Artist M3 | `m3-integration ← m3/art` | **Merged 2026-05-21 PM** — 5 mob sprites + 14 item icons + 2 backgrounds + radio_icon (129.8 KB / 500 KB) |
+| **#28** | QA Acceptance M3 | `m3-integration ← qa/m3-acceptance` | **Merged 2026-05-21 PM** — verdict **APPROVE** (3 Gate'а PASS на octopus-merge #25/#26/#27, 0 blockers / 3 NB M4 follow-ups) |
+| **(this PR #29)** | PM / finalize | `m3-integration ← pm/m3-finalize` | Open — gate → M3_DONE_PENDING_GATE_CLOSE, M3-SUMMARY, CHANGELOG, status-sync всех PM-owned dashboards |
+| TBD | PM gate-close M3 | `main ← m3-integration` | Pending — открывает PM после merge этого PR; мерджит Alex/Заказчик (НЕ self-merge) |
 
 ## Merged M2 PRs (история)
 
@@ -60,7 +61,7 @@ _Last reconciled with GitHub: 2026-05-21 (факт: spec фаза закрыта
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| M3 status (в работе) | `staff/status/M3.md` |
+| M3 status (done pending gate-close) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
 | M2 summary (закрыта) | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
 | M1 summary (закрыта) | `staff/handoff/M1-SUMMARY.md` |
 | PM playbook | `staff/ORCHESTRATION.md` |
@@ -68,16 +69,16 @@ _Last reconciled with GitHub: 2026-05-21 (факт: spec фаза закрыта
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M3 — active)
+## Role briefs (M3 — done pending gate-close)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
 | Game Designer | `staff/kickoff/M3-GD.md` | `staff/handoff/M3-GD.md` | `staff/status/GAME_DESIGNER.md` — **DONE** (PR #21 merged) |
 | QA Spec | `staff/kickoff/M3-QA-SPEC.md` | `staff/handoff/M3-QA-SPEC.md` | `staff/status/QA.md` §M3 Spec Review — **APPROVE** (PR #22 merged) |
-| Content | `staff/kickoff/M3-CONTENT.md` | `staff/handoff/M3-CONTENT.md` | `staff/status/CONTENT.md` — **ready to launch** |
-| Engineer | `staff/kickoff/M3-ENG.md` | `staff/handoff/M3-ENG.md` | `staff/status/ENGINEER.md` — **ready to launch** |
-| Artist | `staff/kickoff/M3-ARTIST.md` | `staff/handoff/M3-ARTIST.md` | `staff/status/ARTIST.md` — **ready to launch** |
-| QA Acceptance | `staff/kickoff/M3-QA-ACCEPT.md` | `staff/handoff/M3-QA-ACCEPT.md` | `staff/status/QA.md` (pending — after 3 role PRs Ready) |
+| Content | `staff/kickoff/M3-CONTENT.md` | `staff/handoff/M3-CONTENT.md` | `staff/status/CONTENT.md` — **DONE** (PR #25 merged) |
+| Engineer | `staff/kickoff/M3-ENG.md` | `staff/handoff/M3-ENG.md` | `staff/status/ENGINEER.md` — **DONE** (PR #26 merged) |
+| Artist | `staff/kickoff/M3-ARTIST.md` | `staff/handoff/M3-ARTIST.md` | `staff/status/ARTIST.md` — **DONE** (PR #27 merged) |
+| QA Acceptance | `staff/kickoff/M3-QA-ACCEPT.md` | `staff/handoff/M3-QA-ACCEPT.md` | `staff/status/QA.md` §M3 Acceptance Review — **APPROVE** (PR #28 merged) |
 
 ## Role briefs (M2 — closed, история)
 
