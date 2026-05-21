@@ -750,11 +750,151 @@ interface Zone {
   boss_id: string | null;        // в MVP всегда null
   unique_resources: string[];    // ресурсы, добываемые ТОЛЬКО в этой зоне
   levels: ZoneLevel[];           // 3 объекта для MVP-зоны "forest"
-  unlock_condition: string;      // "start" для forest в MVP
+  unlock_condition: string;      // "start" для forest в MVP; M3 расширяет (см. §6.4.M3)
+  return_time_multiplier?: number; // M3+: множитель к BASE_RETURN_TIME_S (см. §6.4.M3).
+                                   //   Optional, default 1.0. Engineer читает `zone.return_time_multiplier ?? 1.0`.
+                                   //   `forest` поле НЕ задаёт → default=1.0 → M1/M2 поведение математически no-op.
 }
 ```
 
 > **Уточнение к `content-brief.md`:** content-brief.md описывает зону как плоский объект (`resources`, `mobs`, `boss_id`, `unique_resources`). Канон GDD M1 добавляет массив `levels[]` для механики 3-х глубин Леса (§1). Поле `unique_resources` сохраняется ради совместимости; в MVP при одной зоне оно равно полному списку `resources`.
+>
+> **M3 schema extensions (см. §6.4.M3):**
+> - `Zone.return_time_multiplier?: number` — optional, default 1.0. Engineer применяет в расширенной формуле `return_time_s = BASE_RETURN_TIME_S * (zone.return_time_multiplier ?? 1.0) * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)`. `forest` поле НЕ задаёт → M1/M2 числа `balance.md` не меняются.
+> - `Zone.unlock_condition` теперь принимает богаче строки: `"start"` (forest), `"forest_depth_2_completed"` (warehouse), `"any_warehouse_sortie_completed"` (city). Engineer переводит строки в boolean-флаги в `GameState.progress` (см. §6.4.M3 implementation hint).
+> - `ZoneLevel.depth` сужение `1 | 2 | 3` — для warehouse/city допустимы `1 | 2` или `1 | 2 | 3` соответственно (см. §6.4.M3). Тип расширяется до `1 | 2 | 3`, что уже соответствует существующему union (no change to schema).
+
+#### 6.4.M3. Новые зоны M3 (Склад + Город)
+
+> **Скоуп:** добавление к §6.4. Зона `forest` и её 3 глубины **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
+>
+> **Anti-scope §6.4.M3:** перки (M4), боссы (M5), модули оружия (M5+), реальные транспортные/маршрутные системы (M5+), Yandex SDK (M8), позиционная механика боя (M5+).
+
+##### 6.4.M3.0. Сводная таблица новых зон
+
+| id | name_ru | depths | unlock_condition | return_time_multiplier | Mobs (новые + bridge с Леса) | Zone-exclusive resources |
+|---|---|---|---|---|---|---|
+| `warehouse` | Склад | 2 (depth 1, 2) | `forest_depth_2_completed` | **1.2** | `looter_sniper`, `armored_guard`, `relic_drone`, +`marauder` (bridge) | `electronics`, `oil` |
+| `city` | Город | 3 (depth 1, 2, 3) | `any_warehouse_sortie_completed` | **1.5** | `fanatic_berserker`, `pack_rat`, `relic_drone`, +`mutant` (bridge) | `medical_supplies`, `circuitry` |
+
+##### 6.4.M3.1. Зона `warehouse` — Склад
+
+| Поле | Значение |
+|---|---|
+| `id` | `warehouse` |
+| `name_ru` | Склад |
+| `level` | 2 (рекомендуемый уровень игрока на старте — выше Леса) |
+| `description_ru` | «Заброшенный логистический терминал на промзоне. Стеллажи до потолка, ржавая техника, разбросанная упаковка. Мародёры обустроились здесь как у себя дома; чуют любого пришлого.» |
+| `unlock_condition` | `"forest_depth_2_completed"` — открывается после успешного завершения хотя бы одной вылазки в Лес depth 2 (флаг в `GameState.progress.forest_depth_2_completed`). |
+| `return_time_multiplier` | **1.2** (на 20% дольше базового возврата — Склад дальше от Оплота, чем Лес). |
+| `mobs` (агрегат) | `marauder, looter_sniper, armored_guard, relic_drone` |
+| `unique_resources` | `electronics`, `oil` |
+| `resources` (агрегат) | `wood, scrap, cloth, electronics, oil, gunpowder, leather` |
+| `boss_id` | `null` (M3 без боссов) |
+
+**Глубины Склада.**
+
+| depth | enemies | enemy_count | resources | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|---|---|
+| 1 | `marauder`, `looter_sniper` | [1, 2] | `scrap`, `cloth`, `electronics`, `oil` | [2, 4] | 2 | 2 |
+| 2 | `looter_sniper`, `armored_guard`, `relic_drone` | [2, 3] | `scrap`, `electronics`, `oil`, `gunpowder`, `leather` | [3, 5] | 3 | 3 |
+
+**Атмосфера / нарратив.** Игрок впервые встречает ranged-атакующего противника (`looter_sniper`), бронированного противника (`armored_guard`) и mech-противника (`relic_drone`). Открывает доступ к `electronics` и `oil` — двум новым ресурсам, которые нужны для T2-крафта (см. balance.md §M3 recipes).
+
+**Тактический урок зоны (player-side learning).** «Не все противники бьют одинаково. Нож против снайпера — плохой выбор. Броня против дрона — бесполезна.»
+
+##### 6.4.M3.2. Зона `city` — Город
+
+| Поле | Значение |
+|---|---|
+| `id` | `city` |
+| `name_ru` | Город |
+| `level` | 3 (рекомендуемый уровень игрока — выше Склада) |
+| `description_ru` | «Руины делового квартала. Пустые витрины, проваленные перекрытия, выжженные офисы. Здесь живут культы и стаи мутантов; нормальные люди давно ушли.» |
+| `unlock_condition` | `"any_warehouse_sortie_completed"` — открывается после хотя бы одной успешной вылазки в `warehouse` (флаг в `GameState.progress.any_warehouse_sortie_completed`). |
+| `return_time_multiplier` | **1.5** (на 50% дольше базового — Город дальше всех от Оплота, центр карты). |
+| `mobs` (агрегат) | `mutant, fanatic_berserker, pack_rat, relic_drone` |
+| `unique_resources` | `medical_supplies`, `circuitry` |
+| `resources` (агрегат) | `scrap, cloth, food, water, medical_supplies, circuitry, gunpowder, leather` |
+| `boss_id` | `null` (M3 без боссов) |
+
+**Глубины Города.**
+
+| depth | enemies | enemy_count | resources | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|---|---|
+| 1 | `mutant`, `pack_rat` | [2, 3] | `scrap`, `cloth`, `food`, `medical_supplies` | [2, 4] | 3 | 2 |
+| 2 | `pack_rat`, `fanatic_berserker`, `relic_drone` | [2, 4] | `medical_supplies`, `circuitry`, `gunpowder` | [3, 5] | 4 | 3 |
+| 3 | `fanatic_berserker`, `relic_drone`, `mutant` | [3, 5] | `medical_supplies`, `circuitry`, `leather`, `water` | [4, 7] | 5 | 4 |
+
+**Атмосфера / нарратив.** Самая опасная зона M3. Здесь два уникальных City-моба (`fanatic_berserker`, `pack_rat`) + cross-zone bridge `relic_drone`. Открывает доступ к `medical_supplies` и `circuitry` — ключевые ресурсы для T2-расходников и кибер-инвентаря.
+
+**Тактический урок зоны.** «Скорость убийства имеет значение. Берсерка надо завалить до 50% HP, иначе он удвоит урон. Стайных крыс надо разделять. Дрон обходит броню — нужно укрытие и аптечки.»
+
+##### 6.4.M3.3. `unlock_condition` strings — implementation hint (Engineer)
+
+> Минимальная имплементация — без полной системы квестов. Engineer хранит булевы флаги в `GameState.progress`:
+>
+> ```typescript
+> interface GameProgress {
+>   forest_depth_2_completed: boolean;        // true после первой успешной вылазки на forest depth=2
+>   any_warehouse_sortie_completed: boolean;  // true после любой успешной вылазки в warehouse
+>   // M4+: расширяется по мере добавления новых unlock-условий
+> }
+> ```
+>
+> **Триггеры (где сетим флаги):**
+> - `forest_depth_2_completed`: в `ReturnScene.onComplete()`, если `currentSortie.zone === "forest" && currentSortie.depth === 2 && currentSortie.victory === true`.
+> - `any_warehouse_sortie_completed`: в `ReturnScene.onComplete()`, если `currentSortie.zone === "warehouse" && currentSortie.victory === true`.
+>
+> **Проверка в `MapScene`:** для каждой зоны вычислить `unlocked = evaluateUnlockCondition(zone.unlock_condition, GameState.progress)`, где `evaluateUnlockCondition` — простой switch по строкам:
+>
+> ```typescript
+> function evaluateUnlockCondition(cond: string, progress: GameProgress): boolean {
+>   switch (cond) {
+>     case "start": return true;
+>     case "forest_depth_2_completed": return progress.forest_depth_2_completed;
+>     case "any_warehouse_sortie_completed": return progress.any_warehouse_sortie_completed;
+>     default: return false; // unknown condition → locked, soft-warn в console
+>   }
+> }
+> ```
+>
+> Заблокированная зона в `MapScene` показывается серой кнопкой с подсказкой «Откроется после: <читаемое условие>».
+
+##### 6.4.M3.4. `return_time_multiplier` — implementation hint (Engineer)
+
+> Расширенная формула из `balance.md` §Формулы:
+>
+> ```
+> return_time_s = BASE_RETURN_TIME_S
+>               * (zone.return_time_multiplier ?? 1.0)
+>               * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)
+> ```
+>
+> **Обратная совместимость:**
+> - `forest` в `content/zones.json` поле `return_time_multiplier` **не задаёт** → `?? 1.0` → формула эквивалентна M1/M2 версии.
+> - `warehouse` → 1.2, `city` → 1.5.
+>
+> **Где менять:** `src/systems/weight.ts` функция `computeReturnTime` получает третий опциональный параметр `zoneMultiplier: number = 1.0`. Caller в `ReturnScene` передаёт `currentSortie.zone.return_time_multiplier ?? 1.0`. Vitest тесты M2 не сломаются (тесты вызывают `computeReturnTime(curWeight, maxWeight)` без 3-го аргумента → default 1.0 → старое поведение). Добавь ≥2 новых vitest на warehouse=1.2 и city=1.5 (см. M3-ENG handoff §5).
+
+##### 6.4.M3.5. Zone-exclusive ресурсы — нарратив + механика
+
+| Ресурс | Зона | Назначение |
+|---|---|---|
+| `electronics` | warehouse | Крафт T2-брони, T2-расходников (см. balance.md §M3 recipes) |
+| `oil` | warehouse | Крафт T2-оружия, T2-расходников |
+| `medical_supplies` | city | Крафт T2-аптечек и расходников лечения |
+| `circuitry` | city | Крафт `gas_mask` (заглушка для M5 газовых зон) и `emp_grenade` (counter `relic_drone`) |
+
+**Правило (из `content-brief.md`):** ни один из этих ресурсов **не должен** появляться в drop-tables или resource-pools других зон. `relic_drone` — единственное исключение для `electronics` и `circuitry` (см. §5.4.5): дрон может быть найден в обеих новых зонах и оба ресурса дропает. Это **намеренное** дизайн-решение, чтобы дать игроку альтернативный путь добычи (опасный — через мех-бой, не через лут зоны).
+
+##### 6.4.M3.6. Связь §6.4.M3 с другими системами
+
+- **§5.4 Мобы M3:** mob-rosters per zone задают, какие AI игрок встречает в каждой глубине.
+- **§1 Core Loop:** `enemy_count`, `resource_count`, `min_player_level`, `fights_per_depth` — стандартные поля `ZoneLevel`, использует ту же логику что и forest M1.
+- **`balance.md` §M3:** все числа (depth-config + return_time_multiplier + recipes использующие zone-exclusive ресурсы) — там.
+- **`content/zones.json`:** Content Designer заполнит JSON по этой таблице. Cross-refs всех `enemies[*]` и `resources[*]` проверяются на этапе Content PR.
+- **§7 Радио (M3 stub):** не связано напрямую. Polный radio (M6) может вводить per-zone сигналы с засадами, но это вне M3 anti-scope.
 
 ---
 
