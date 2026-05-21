@@ -209,6 +209,214 @@ level_up: cur_xp >= xp_required(level + 1) → level += 1
 - Перки, дерево перков, бонусы перков — **M4**.
 - Модули оружия / брони и их статы — **M5+**.
 - Числа боссов и мини-боссов — **M5**.
-- Числа второй и далее зоны (`warehouse`, `city`) — **M3**.
+- ~~Числа второй и далее зоны (`warehouse`, `city`)~~ — **DONE в §M3 ниже**.
 - Радио-события, шкала доверия, награды/штрафы радио — **M6**.
 - IAP, реклама, Yandex SDK rewards — **M8**.
+
+---
+
+## M3 — Расширение мира
+
+> **Скоуп:** добавление чисел для M3 GD-amendment (5 новых мобов + 2 новые зоны + 10 новых рецептов + расширение формулы возврата). M1/M2 числа выше (mobs, items, weapons, armor, consumables, recipes, XP, forest zone, формулы) **НЕ изменяются**.
+>
+> Спека механик — в [`docs/GDD.md` §5.4 / §6.4.M3 / §10.M3](./GDD.md#54-мобы-m3-5-новых-типов).
+>
+> **Anti-scope §M3:** перки (M4), боссы (M5), полная radio-логика (M6), модули оружия (M5+), Yandex SDK (M8).
+
+### M3 — Мобы (5 новых)
+
+> Дроп-таблицы — [см. §M3 Drop-tables ниже](#m3-drop-tables). `behavior_id` и AI-описание — в [GDD §5.4](./GDD.md#54-мобы-m3-5-новых-типов).
+
+| id | name_ru | type | hp | damage_min | damage_max | defense | base_speed | xp_reward | behavior | behavior_id | zone | level |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `looter_sniper` | Мародёр-снайпер | human | 22 | 9 | 13 | 1 | 95 | 14 | aggressive | `ranged_keep_distance` | warehouse | 2 |
+| `armored_guard` | Бронированный охранник | human | 35 | 7 | 10 | 4 | 75 | 18 | defensive | `defensive_cover` | warehouse | 2 |
+| `fanatic_berserker` | Фанатик-берсерк | human | 40 | 8 | 12 | 2 | 100 | 22 | aggressive | `berserker_low_hp` | city | 3 |
+| `pack_rat` | Стайная крыса-мутант | mutant | 15 | 6 | 9 | 0 | 110 | 9 | aggressive | `pack_bonus_when_paired` | city | 3 |
+| `relic_drone` | Реликтовый дрон | mech | 28 | 8 | 11 | 5 | 90 | 20 | aggressive | `armor_piercing_ranged` | warehouse,city (bridge) | 3 |
+
+**Модификаторы AI (повтор §5.4 для быстрой справки Engineer'у — числа здесь):**
+
+| behavior_id | Эффект (числовой) |
+|---|---|
+| `ranged_keep_distance` | Если `hero.equipped_weapon.type === "weapon_melee"`: `damage × 0.5`. Иначе: `× 1.0`. |
+| `defensive_cover` | На каждом нечётном ходу моба (`turn_count % 2 == 1`): action="cover", `coverActive=true` на след. атаку против моба. `COVER_DEFENSE_BONUS_PCT = 0.5` (existing M1/M2 константа) применяется к его `total_defense`. |
+| `berserker_low_hp` | Single-shot trigger: при первом ходе с `hp / hp_max < 0.5` → `damage_min *= 2`, `damage_max *= 2`, `base_speed -= 30`. Флаг `_berserk_triggered=true`. |
+| `pack_bonus_when_paired` | Каждый ход: если `enemies.filter(e => e.id === "pack_rat" && e.hp > 0).length >= 2` → `damage *= 1.5`. Иначе `× 1.0`. |
+| `armor_piercing_ranged` | При расчёте урона по hero: `target_total_defense` исключает `Σ armor.defense` (но `vs_melee_bonus` всё равно не применяется — `mech` не "animal"). Effectively `final_damage = max(MIN_DAMAGE_FLOOR, mob_damage * roll - cover_only)`. |
+
+<a id="m3-drop-tables"></a>
+### M3 — Drop-tables (новые мобы)
+
+> Все `item_id` ∈ items roster (M1 §7.1 + M3 новые items, см. §M3 Recipes ниже). Cross-refs проверяются на Content PR.
+
+| Моб | drop_table |
+|---|---|
+| `looter_sniper` | `cloth` @ 0.50 (count 1–2); `ammo_pistol` @ 0.40 (count 1–2); `scrap` @ 0.30 (count 1); `ammo_rifle` @ 0.20 (count 1, редкий) |
+| `armored_guard` | `scrap` @ 0.70 (count 1–2); `leather` @ 0.40 (count 1); `electronics` @ 0.25 (count 1, zone-exclusive); `gunpowder` @ 0.20 (count 1) |
+| `fanatic_berserker` | `cloth` @ 0.50 (count 1–2); `medical_supplies` @ 0.35 (count 1, zone-exclusive); `food` @ 0.20 (count 1); `bandage` @ 0.15 (count 1) |
+| `pack_rat` | `leather` @ 0.60 (count 1); `food` @ 0.30 (count 1, редкий — то, что они едят); `circuitry` @ 0.10 (count 1, очень редко — кто-то носил импланты) |
+| `relic_drone` | `electronics` @ 0.65 (count 1–2, zone-exclusive Склада); `circuitry` @ 0.40 (count 1–2, zone-exclusive Города); `scrap` @ 0.30 (count 1); `oil` @ 0.20 (count 1, zone-exclusive Склада) |
+
+> **Дизайн-нота про `relic_drone`:** дрон — единственный mob-источник `electronics`, `circuitry`, `oil` помимо zone-loot. Это **намеренно** даёт игроку второй путь добычи (опасный — через мех-бой) и оправдывает cross-zone bridge характер моба (см. GDD §5.4.5).
+
+### M3 — Зоны (Склад + Город)
+
+> Структура levels[] — в [GDD §6.4.M3](./GDD.md#64m3-новые-зоны-m3-склад--город). Здесь — числа.
+
+| id | name_ru | level | boss_id | mobs (агрегат) | resources (агрегат) | unique_resources | unlock_condition | return_time_multiplier |
+|---|---|---|---|---|---|---|---|---|
+| `warehouse` | Склад | 2 | null | `marauder, looter_sniper, armored_guard, relic_drone` | `wood, scrap, cloth, electronics, oil, gunpowder, leather` | `electronics, oil` | `forest_depth_2_completed` | **1.2** |
+| `city` | Город | 3 | null | `mutant, fanatic_berserker, pack_rat, relic_drone` | `scrap, cloth, food, water, medical_supplies, circuitry, gunpowder, leather` | `medical_supplies, circuitry` | `any_warehouse_sortie_completed` | **1.5** |
+
+**Глубины Склада:**
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 |
+| 2 | [2, 3] | [3, 5] | 3 | 3 |
+
+**Глубины Города:**
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [2, 3] | [2, 4] | 3 | 2 |
+| 2 | [2, 4] | [3, 5] | 4 | 3 |
+| 3 | [3, 5] | [4, 7] | 5 | 4 |
+
+> **Замечание о `min_player_level`.** Поле сохранено для совместимости с §M1 формой `ZoneLevel`. На M3 XP-система потолок = 5 (см. §XP-таблица). Engineer проверяет `player.level >= min_player_level` точно так же, как в M1. Никаких новых уровней XP не вводится.
+
+### M3 — Расширенная формула `return_time_s`
+
+> **Совместимость с M1/M2:** `forest` зона **не задаёт** `return_time_multiplier` в `content/zones.json` → fallback на default 1.0 → формула эквивалентна M1/M2 версии. Все M2 vitest на `computeReturnTime(curWeight, maxWeight)` без 3-го аргумента остаются зелёными.
+
+```
+# M3 расширение существующей формулы (см. §Формулы M1/M2)
+zone_multiplier = zone.return_time_multiplier ?? 1.0       # default 1.0 если поле отсутствует
+return_time_s = BASE_RETURN_TIME_S
+              * zone_multiplier
+              * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)
+
+# Конкретные multipliers:
+# forest    → 1.0  (поле НЕ задано в content/zones.json → fallback default)
+# warehouse → 1.2  (на 20% дольше — Склад дальше Леса)
+# city      → 1.5  (на 50% дольше — Город дальше всех от Оплота)
+```
+
+**Примеры (полный рюкзак 30/30 kg):**
+
+| Зона | zone_mult | base | weight term | return_time_s |
+|---|---|---|---|---|
+| forest | 1.0 | 30 | (1 + 1.0 × 1.0) = 2.0 | 60.0 с (= M1/M2 точное значение) |
+| warehouse | 1.2 | 30 | 2.0 | 72.0 с |
+| city | 1.5 | 30 | 2.0 | 90.0 с |
+
+**Примеры (пустой рюкзак 0/30 kg):**
+
+| Зона | zone_mult | base | weight term | return_time_s |
+|---|---|---|---|---|
+| forest | 1.0 | 30 | (1 + 0 × 1.0) = 1.0 | 30.0 с (= M1/M2) |
+| warehouse | 1.2 | 30 | 1.0 | 36.0 с |
+| city | 1.5 | 30 | 1.0 | 45.0 с |
+
+### M3 — Новые items (для recipes ниже)
+
+> Числовая часть (`weight_kg`, статы) — обязательная. Content Designer заполняет `description_ru` / `flavor_ru` по правилам [content-brief.md](./content-brief.md). Cross-refs всех `id` проверяются на Content PR.
+>
+> **Tiers:** все новые items — T2 кроме zone-exclusive ресурсов (T1).
+
+#### Zone-exclusive ресурсы (T1, 4 шт.)
+
+| id | name_ru | tier | weight_kg | zone_origin | Назначение |
+|---|---|---|---|---|---|
+| `electronics` | Электроника | 1 | 1 | warehouse | `recipe_tactical_vest`, `recipe_emp_grenade` |
+| `oil` | Машинное масло | 1 | 1 | warehouse | `recipe_pipe_rifle`, `recipe_crowbar`, `recipe_smoke_bomb` |
+| `medical_supplies` | Медикаменты | 1 | 0.5 | city | `recipe_large_medkit`, `recipe_energy_drink` |
+| `circuitry` | Микросхемы | 1 | 0.5 | city | `recipe_gas_mask`, `recipe_emp_grenade` |
+
+#### Новое T2-оружие (2 шт.)
+
+| id | name_ru | type | tier | damage_min | damage_max | attack_speed | weight_kg | noise | zone_origin | ammo_id | ammo_per_shot |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `pipe_rifle` | Самопальная винтовка | weapon_ranged | 2 | 14 | 20 | 70 | 2.5 | high | universal | `ammo_rifle` | 1 |
+| `crowbar` | Монтировка | weapon_melee | 2 | 7 | 11 | 90 | 2.0 | low | universal | — | — |
+
+> **Уникальность `pipe_rifle` vs `makeshift_pistol`:** другой ammo_id (`ammo_rifle`), сильнее урон (14-20 vs 9-14), медленнее attack_speed, шумнее (`high` vs `medium`), тяжелее (2.5 vs 1.5). Tactical niche — anti-tank против `armored_guard` и `mutant`. Механически уникален (правила content-brief.md).
+
+> **Уникальность `crowbar` vs `knife`:** сильнее урон (7-11 vs 4-7), но медленнее (90 vs 100 attack_speed) и тяжелее (2.0 vs 0.5). Tactical niche — против `armored_guard` (бьёт сквозь defense=4 надёжнее, чем нож).
+
+#### Новая T2-броня (3 шт.)
+
+| id | name_ru | type | tier | defense | vs_melee_bonus | weight_kg | zone_origin |
+|---|---|---|---|---|---|---|---|
+| `tactical_vest` | Тактический жилет | armor | 2 | 4 | 0 | 3.0 | universal |
+| `helmet` | Шлем | armor | 2 | 2 | 0 | 1.0 | universal |
+| `gas_mask` | Противогаз | armor | 2 | 1 | 0 | 0.5 | universal |
+
+> **Уникальность `tactical_vest` vs `leather_vest`:** сильнее (4 vs 3 defense), но тяжелее (3.0 vs 2.5). Tactical niche — основной T2 ап. Требует `electronics` (warehouse-exclusive) для крафта.
+>
+> **Уникальность `helmet`:** **новый слот** (голова). На M3 Engineer держит **один armor-slot** в hero (как M1/M2). Слот `helmet` — в M5 (модули). На M3 `helmet` рассматривается как **альтернативная T2-броня** (вместо `tactical_vest`), без выделенного head-слота. **Это намеренное упрощение M3** — в M5 GD-амендмент введёт мульти-слот броню.
+>
+> **Уникальность `gas_mask`:** наименее полезен механически на M3 (defense=1), но **lore stub для M5**: будущие газовые зоны потребуют `gas_mask` для входа без штрафа. На M3 — просто T2-armor с низкой полезностью, но нужен для нарративной целостности.
+
+#### Новые T2-расходники (5 шт.)
+
+| id | name_ru | type | tier | weight_kg | effect_type | effect_value | charges | zone_origin |
+|---|---|---|---|---|---|---|---|---|
+| `large_medkit` | Большая аптечка | consumable | 2 | 0.8 | heal | 80 | 1 | universal |
+| `energy_drink` | Энергетик | consumable | 2 | 0.3 | initiative_boost | 20 | 1 | universal |
+| `emp_grenade` | ЭМИ-граната | consumable | 2 | 0.5 | mech_disable | 1 | 1 | universal |
+| `smoke_bomb` | Дымовая шашка | consumable | 2 | 0.3 | cover_boost | 50 | 1 | universal |
+| `ammo_rifle` | Патроны (винтовка) | consumable | 2 | 0.5 | ammo_refill | 1 | 1 | universal |
+
+> **`effect_type` enum extensions (M3, optional в `ItemBase.stats`):**
+> - `heal` (M1 — `bandage`, `medkit`): `effect_value` — сколько HP восстанавливается.
+> - `ammo_refill` (M1 — `ammo_pistol`): `effect_value=1` — заряжает 1 патрон в соответствующее оружие (`ammo_id` равенство).
+> - `initiative_boost` (**M3 новый**): `effect_value=20` — +20 к hero.base_speed на 1 бой (1 combat). Эффект сбрасывается после `endSortie`.
+> - `mech_disable` (**M3 новый**): применяется в бою на цели типа `mech`. Эффект — `mob.skip_next_turn = true` на 1 ход. Не работает на не-mech типах (no-op).
+> - `cover_boost` (**M3 новый**): `effect_value=50` — `coverActive=true` на 1 свой ход + `COVER_DEFENSE_BONUS_PCT * 1.0` (вместо обычного 0.5) — двойное укрытие, дороже.
+>
+> **Implementation hint (Engineer):** все 3 новых effect_type — это **расширения** existing M2 consumable logic. Не нужно новых state-полей в Hero (initiative_boost — temp variable в combat session; mech_disable — поле на target mob; cover_boost — переиспользует coverActive). ~15 LOC суммарно.
+
+<a id="m3-recipes"></a>
+### M3 — Recipes (10 новых)
+
+> Все `result_id` и `ingredient.item_id` ∈ existing M1 items (§7.1) + new M3 items (выше). Каждый рецепт использует **минимум 1 zone-exclusive ресурс** — правило «крафт мотивирует исследовать зоны» (см. handoff M3-CONTENT.md).
+
+| id | result_id | result_count | ingredients | tier | craft_time_s | unlock_condition |
+|---|---|---|---|---|---|---|
+| `recipe_pipe_rifle` | `pipe_rifle` | 1 | `scrap` x5, `wood` x3, `gunpowder` x2, `oil` x1 | 2 | 0 | null |
+| `recipe_crowbar` | `crowbar` | 1 | `scrap` x4, `oil` x1 | 2 | 0 | null |
+| `recipe_tactical_vest` | `tactical_vest` | 1 | `leather` x3, `cloth` x3, `electronics` x1 | 2 | 0 | null |
+| `recipe_helmet` | `helmet` | 1 | `scrap` x3, `leather` x2, `cloth` x1 | 2 | 0 | null |
+| `recipe_large_medkit` | `large_medkit` | 1 | `medkit` x2, `medical_supplies` x1 | 2 | 0 | null |
+| `recipe_energy_drink` | `energy_drink` | 2 | `water` x2, `medical_supplies` x1 | 2 | 0 | null |
+| `recipe_gas_mask` | `gas_mask` | 1 | `cloth` x3, `circuitry` x1, `rope` x1 | 2 | 0 | null |
+| `recipe_emp_grenade` | `emp_grenade` | 1 | `gunpowder` x2, `electronics` x2, `circuitry` x1 | 2 | 0 | null |
+| `recipe_smoke_bomb` | `smoke_bomb` | 2 | `cloth` x2, `gunpowder` x1, `oil` x1 | 2 | 0 | null |
+| `recipe_ammo_rifle` | `ammo_rifle` | 5 | `gunpowder` x3, `scrap` x1 | 2 | 0 | null |
+
+> **Покрытие zone-exclusive ресурсов:**
+> - `electronics` (warehouse) → `recipe_tactical_vest`, `recipe_emp_grenade` (2 рецепта)
+> - `oil` (warehouse) → `recipe_pipe_rifle`, `recipe_crowbar`, `recipe_smoke_bomb` (3 рецепта)
+> - `medical_supplies` (city) → `recipe_large_medkit`, `recipe_energy_drink` (2 рецепта)
+> - `circuitry` (city) → `recipe_gas_mask`, `recipe_emp_grenade` (2 рецепта)
+>
+> `recipe_helmet` и `recipe_ammo_rifle` — **не** требуют zone-exclusive (helmet — стартовый T2 анти-melee, доступен сразу при сборе scrap/leather/cloth в любой зоне; ammo_rifle — обвязка для `pipe_rifle`, без zone-привязки). Это **намеренное** исключение из правила — даёт игроку «низкоуровневые» T2-крафты на старте M3 без необходимости сначала открывать новые зоны.
+
+### M3 — Структура радио (см. GDD §10.M3)
+
+> Числовые поля `RadioSignal` — только `expires_after_sorties` (см. JSON-схема §10.M3.1 GDD). Никаких числовых rewards, damage, trust на M3.
+>
+> Content Designer задаёт `expires_after_sorties` на свой выбор (рекомендация: 2-4 для dummy-сигналов M3). На M6 GD-амендмент введёт балансные правила.
+
+### M3 — Скоуп (что НЕ в balance.md M3)
+
+Эти числа сознательно не заданы на M3; они появятся на своих вехах:
+
+- Перки и их бонусы — **M4** (см. GDD §8 placeholder).
+- Боссы / мини-боссы / T3 чертежи / дейли-инстансы — **M5** (см. GDD §9 placeholder).
+- Модули оружия / брони (head-slot, accessory slots, runes) — **M5+** (см. GDD §11 placeholder).
+- Радио: rewards, ambush damage, trust scale, faction reputation — **M6** (см. GDD §10 placeholder).
+- IAP, реклама, Yandex SDK rewards — **M8** (см. GDD §12 placeholder).
+- Газовые зоны (требующие `gas_mask`) — **M5** (`gas_mask` на M3 — lore stub).
