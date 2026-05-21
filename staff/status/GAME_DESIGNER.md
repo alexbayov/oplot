@@ -1,8 +1,20 @@
 # Status: Game Designer
 
-**Текущая веха:** M3 (amendment)
-**Статус:** DONE_PENDING_PM_REVIEW + QA_SPEC_REVIEW
-**Последнее обновление:** 2026-05-20 (M3 GD-amendment)
+**Текущая веха:** M4 (fixup)
+**Статус:** FIX_IN_PROGRESS
+**Последнее обновление:** 2026-05-21 (M4 GD-fix recovery start)
+
+---
+
+## M4 GD-fix (ветка `m4/gd-fix`, PR TBD → `m4-integration`)
+
+**Причина:** QA Spec M4 PR #33 verdict CHANGES_REQUESTED: `balance.md` §M4 `xp_reward` values не синхронизированы с baseline mob tables.
+
+### Recovery
+
+- Base: `m4-integration` HEAD `d8e2a31`.
+- Scope: только `docs/balance.md` + `staff/status/GAME_DESIGNER.md`.
+- TODO: синхронизировать §M1/§M3 mob `xp_reward` с §M4 числами, добавить TODO для Content M4 обновить `content/mobs.json`, затем перевести PR Ready.
 
 ---
 
