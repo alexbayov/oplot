@@ -85,5 +85,6 @@ M{N}_PREPARED
 
 ## Текущее состояние
 
-- **Активная веха:** M2 — Играбельный MVP. См. `staff/status/M2.md`.
+- **Активная веха:** M3 — Расширение мира. Gate: `M3_DONE_PENDING_GATE_CLOSE` (все 9 M3 PR смержены в `m3-integration`: #20/#21/#22 spec phase + #23/#24 PM align + #25/#26/#27 parallel production + #28 QA Acceptance APPROVE + #29 PM finalize). Осталось: PM открывает gate-close PR `m3-integration → main`, Alex мерджит. Подробно — `staff/status/M3.md` и `staff/handoff/M3-SUMMARY.md`.
+- **Закрытая веха M2:** см. `staff/status/M2.md` и `staff/handoff/M2-SUMMARY.md`.
 - **Закрытая веха M1:** см. `staff/status/M1.md` и `staff/handoff/M1-SUMMARY.md`.
