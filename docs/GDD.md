@@ -1009,7 +1009,10 @@ interface Zone {
 > Заполнено в M3 GD-amendment. Содержимое переехало в **§6.4.M3 «Новые зоны M3»** (Склад + Город, unlock_condition, return_time_multiplier, zone-exclusive resources, depths config). См. также `balance.md` §M3.
 
 ### 8. Перки и прогрессия (M4)
-<!-- GD заполнит на M4: XP-кривая выше 5 уровня, дерево перков, UI прогрессии -->
+
+> **Скоуп M4:** flat pool из 8 пассивных перков, XP за убийство мобов, level-up popup с выбором 1 из 3 случайных невзятых перков.
+>
+> **Anti-scope M4:** skill tree (поинты + ноды + prereq'и), `tier`, `cost` и расширенная экономика перков — это **M5+ refactor path**. Активные ability / cooldowns — M5+. Боссы и T3 — M5. Полная радио-логика — M6. Yandex SDK / persistence / leaderboard — M8. На M4 прогрессия хранится только в session memory.
 
 ### 9. Боссы и инстансы (M5)
 <!-- GD заполнит на M5: мини-боссы, дейли-инстансы, чертежи T3+ -->
