@@ -35,5 +35,73 @@
         "min_player_level": 5
       }
     ]
+  },
+  {
+    "id": "warehouse",
+    "name_ru": "Склад",
+    "level": 2,
+    "description_ru": "Заброшенный логистический терминал на промзоне. Стеллажи до потолка, ржавая техника, разбросанная упаковка. Мародёры обустроились здесь как у себя дома; чуют любого пришлого.",
+    "resources": ["wood", "scrap", "cloth", "electronics", "oil", "gunpowder", "leather"],
+    "mobs": ["marauder", "looter_sniper", "armored_guard", "relic_drone"],
+    "boss_id": null,
+    "unique_resources": ["electronics", "oil"],
+    "unlock_condition": "forest_depth_2_completed",
+    "return_time_multiplier": 1.2,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": ["marauder", "looter_sniper"],
+        "enemy_count": [1, 2],
+        "resources": ["scrap", "cloth", "electronics", "oil"],
+        "resource_count": [2, 4],
+        "min_player_level": 2
+      },
+      {
+        "depth": 2,
+        "enemies": ["looter_sniper", "armored_guard", "relic_drone"],
+        "enemy_count": [2, 3],
+        "resources": ["scrap", "electronics", "oil", "gunpowder", "leather"],
+        "resource_count": [3, 5],
+        "min_player_level": 3
+      }
+    ]
+  },
+  {
+    "id": "city",
+    "name_ru": "Город",
+    "level": 3,
+    "description_ru": "Руины делового квартала. Пустые витрины, проваленные перекрытия, выжженные офисы. Здесь живут культы и стаи мутантов; нормальные люди давно ушли.",
+    "resources": ["scrap", "cloth", "food", "water", "medical_supplies", "circuitry", "gunpowder", "leather"],
+    "mobs": ["mutant", "fanatic_berserker", "pack_rat", "relic_drone"],
+    "boss_id": null,
+    "unique_resources": ["medical_supplies", "circuitry"],
+    "unlock_condition": "any_warehouse_sortie_completed",
+    "return_time_multiplier": 1.5,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": ["mutant", "pack_rat"],
+        "enemy_count": [2, 3],
+        "resources": ["scrap", "cloth", "food", "medical_supplies"],
+        "resource_count": [2, 4],
+        "min_player_level": 3
+      },
+      {
+        "depth": 2,
+        "enemies": ["pack_rat", "fanatic_berserker", "relic_drone"],
+        "enemy_count": [2, 4],
+        "resources": ["medical_supplies", "circuitry", "gunpowder"],
+        "resource_count": [3, 5],
+        "min_player_level": 4
+      },
+      {
+        "depth": 3,
+        "enemies": ["fanatic_berserker", "relic_drone", "mutant"],
+        "enemy_count": [3, 5],
+        "resources": ["medical_supplies", "circuitry", "leather", "water"],
+        "resource_count": [4, 7],
+        "min_player_level": 5
+      }
+    ]
   }
 ]
