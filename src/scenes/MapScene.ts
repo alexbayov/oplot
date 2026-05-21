@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { GAME_HEIGHT } from "../config";
 import { GameState } from "../state/GameState";
 import {
   describeUnlockCondition,
@@ -45,31 +46,35 @@ export class MapScene extends Phaser.Scene {
       return;
     }
 
-    // Stack zone cards top-to-bottom. Each card = mini panel + zone name/desc + entry button.
-    const startY = 150;
-    const rowHeight = 110;
+    // Stack zone cards top-to-bottom. Each card has enough room for two-line wrapped
+    // descriptions plus the entry button without overlap (GAME_HEIGHT 640px budget).
+    const startY = 140;
+    const rowHeight = 150;
     zones.forEach((zone, idx) => {
       const yCenter = startY + idx * rowHeight;
-      createPanel(this, 180, yCenter, 320, rowHeight - 16);
+      createPanel(this, 180, yCenter, 320, rowHeight - 18);
       const unlocked = evaluateUnlockCondition(zone.unlock_condition, GameState.progress);
       const header = `${zone.name_ru} (ур. ${zone.level})`;
       const subtitle = unlocked
         ? zone.description_ru
         : `Закрыто. Откроется после: ${describeUnlockCondition(zone.unlock_condition)}.`;
-      createSubtitle(this, yCenter - 24, header);
-      createSubtitle(this, yCenter + 4, subtitle);
+      createSubtitle(this, yCenter - 50, header);
+      createSubtitle(this, yCenter - 12, subtitle);
       const buttonLabel = unlocked ? `Войти: ${zone.name_ru}` : `Закрыто: ${zone.name_ru}`;
       const onClick = (): void => {
         if (!unlocked) return;
         this.scene.start("SortieScene", { zoneId: zone.id });
       };
-      const btn = createButton(this, yCenter + 34, buttonLabel, onClick);
+      const btn = createButton(this, yCenter + 42, buttonLabel, onClick);
       if (!unlocked) {
         btn.setAlpha(0.5);
       }
     });
 
-    const backY = startY + zones.length * rowHeight + 8;
+    const backY = Math.min(
+      startY + zones.length * rowHeight + 6,
+      GAME_HEIGHT - 24,
+    );
     createButton(this, backY, "Назад в Оплот", () => this.scene.start("BaseScene"));
   }
 }
