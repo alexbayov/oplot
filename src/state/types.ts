@@ -1,4 +1,4 @@
-import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
+import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
 
 export interface InventoryStack {
   item_id: string;
@@ -20,7 +20,7 @@ export interface PlayerState {
   max_weight_kg: number;
   equipped_weapon_id: string;
   equipped_armor_id: string;
-  // Backpack carried during a sortie. Empty when on base.
+  perks: Perk[];
   backpack: InventoryStack[];
 }
 
@@ -47,6 +47,7 @@ export interface ContentData {
   // M3 GDD §10.M3: radio signals loaded from content/radio.json at boot.
   // Empty array when the file is missing or content count mismatches (soft-warn).
   radioSignals: RadioSignal[];
+  perks: Perk[];
 }
 
 export interface GameStateShape {

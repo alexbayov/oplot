@@ -16,6 +16,7 @@ export type {
   WeaponRangedStats,
 } from "./item";
 export type { DropEntry, Mob, MobBehavior, MobType } from "./mob";
+export type { Perk, PerkStat, PerkType } from "./perk";
 export type {
   RadioSignal,
   RadioSignalOption,
