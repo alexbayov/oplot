@@ -1,12 +1,57 @@
 # Status: Content Designer
 
-**Текущая веха:** M3 (Расширение мира)
-**Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-21
+**Текущая веха:** M5 (Боссы и инстансы)
+**Статус:** IN_PROGRESS
+**Последнее обновление:** 2026-05-22
 
 ## Что сделано
 
-### M3 content expansion — 5 JSON файлов, ветка `m3/content` → PR в `m3-integration`
+### M5 content — 4 JSON файла, ветка `m5/content` → PR в `m5-integration`
+
+> Источник правды: `docs/balance.md` §M5 (boss stats, boss-drop, T3 items, T3 recipes, gas zones, daily cool-down, warehouse depth 3).
+> JSON-схемы: `docs/GDD.md` §6.2 (Mob + boss fields), §6.1 (Item), §6.3 (Recipe), §6.4 (Zone + M5 gas/daily/boss extensions), §9 (boss spec).
+> Уникальность: `docs/content-brief.md` (минимум 2 из 4 критериев у каждого нового item/mob).
+
+- **`content/mobs.json`** — 8 → **11 мобов** (+3 M5 boss по `balance.md` §M5.1 / GDD §9.2):
+  - `forest_alpha_mutant` (mutant, boss, forest L5, HP=300, dmg 20–30, def=6, speed=85, xp=150, `behavior_id: berserker_low_hp`, `phase_2_behavior_id: pack_bonus_when_paired`, `phase_threshold: 0.5`, `boss_drop_id: mutated_gland`).
+  - `warehouse_drone_prime` (mech, boss, warehouse L5, HP=350, dmg 25–35, def=8, speed=80, xp=200, `behavior_id: armor_piercing_ranged`, `phase_2_behavior_id: defensive_cover`, `phase_threshold: 0.5`, `boss_drop_id: prime_circuit`).
+  - `city_guard_captain` (human, boss, city L6, HP=400, dmg 22–32, def=10, speed=90, xp=250, `behavior_id: defensive_cover`, `phase_2_behavior_id: ranged_keep_distance`, `phase_threshold: 0.5`, `boss_drop_id: captain_insignia`).
+  - Все 3 boss loot_table: guaranteed boss_drop (chance=1.0, qty=1) + regular loot (chance 0.3–0.5).
+  - M1+M3 mobs **НЕ изменены** (8 regular, role не задан = regular).
+
+- **`content/items.json`** — 29 → **35 items** (+3 boss-drop resources + 3 T3 items по `balance.md` §M5.2 + §M5.4):
+  - 3 boss-drop resources T2: `mutated_gland` (forest, weight 1), `prime_circuit` (warehouse, weight 1), `captain_insignia` (city, weight 1).
+  - 1 T3 melee: `composite_blade` (damage 24–32, attack_speed 85, noise low, weight 3).
+  - 1 T3 ranged: `prime_shotgun` (damage 27–37, attack_speed 65, noise high, weight 4, `ammo_id: ammo_rifle`, `ammo_per_shot: 1`).
+  - 1 T3 armor: `captain_armor` (defense 12, vs_melee_bonus 0, weight 5).
+  - У каждого нового item — уникальные `description_ru` + `flavor_ru`.
+  - M1+M3 items **НЕ изменены**.
+
+- **`content/recipes.json`** — 15 → **18 рецептов** (+3 T3 recipes по `balance.md` §M5.3):
+  - `recipe_composite_blade`: `crowbar`×1 + `mutated_gland`×2 + `scrap`×5 → `composite_blade`×1, tier=3.
+  - `recipe_prime_shotgun`: `pipe_rifle`×1 + `prime_circuit`×2 + `scrap`×6 → `prime_shotgun`×1, tier=3.
+  - `recipe_captain_armor`: `tactical_vest`×1 + `captain_insignia`×2 + `leather`×4 → `captain_armor`×1, tier=3.
+  - Все tier=3, `craft_time_s=0`, `unlock_condition=null`.
+  - Каждый T3 рецепт: T2 base item (потребляется) + boss-drop ×2 + общие ресурсы.
+  - M1+M3 recipes **НЕ изменены**.
+
+- **`content/zones.json`** — 3 zone modified (M5 fields added):
+  - `forest`: `boss_id: "forest_alpha_mutant"`, `daily_reset_hours: 24`. No gas.
+  - `warehouse`: `boss_id: "warehouse_drone_prime"`, `daily_reset_hours: 24`, `is_gas: true`, `gas_damage_per_turn: 5`; depth 2 `is_gas: true`; **new depth 3** (enemy_count [2,3], resource_count [3,5], min_player_level 5, is_gas=true).
+  - `city`: `boss_id: "city_guard_captain"`, `daily_reset_hours: 24`, `is_gas: true`, `gas_damage_per_turn: 8`; depth 2+3 `is_gas: true`.
+  - Существующие M1+M3 zone fields (id, name, unlock_condition, return_time_multiplier, resources, mobs, unique_resources, levels enemies/resources/enemy_count/resource_count/min_player_level) **НЕ изменены**.
+
+### Cross-ref валидация
+
+- ✓ Каждый `mobs[].boss_drop_id` exists в `items[].id`.
+- ✓ Каждый `recipes[].ingredients[].item_id` exists в `items[].id`.
+- ✓ Каждый `recipes[].output_item_id` (result_id) exists в `items[].id`.
+- ✓ Каждый `zones[].boss_id` exists в `mobs[].id` И тот mob имеет `role: "boss"`.
+- ✓ Каждый `zones[].levels[].enemies[]` exists в `mobs[].id`.
+- ✓ Boss stats (HP, damage_min/max, defense, base_speed, xp_reward) совпадают с `balance.md` §M5.1 — без расхождений.
+- ✓ Счётчики: mobs=11, items=35, recipes=18 — точно по DoD M5.
+
+### M3 content expansion — DONE
 
 > Источник правды: `docs/balance.md` §M3 (PM-decision 2026-05-21 — ровно 14 новых items, итого 29; PR #21 merged, QA Spec APPROVE PR #22; PR #24 DoD-align).
 > JSON-схемы: `docs/GDD.md` §6.1 (Item), §6.2 (Mob), §6.3 (Recipe), §6.4.M3 (Zone), §10.M3.1 (RadioSignal).
