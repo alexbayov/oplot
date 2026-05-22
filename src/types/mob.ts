@@ -27,9 +27,10 @@ export interface Mob {
   base_speed: number;
   xp_reward: number;
   behavior: MobBehavior;
-  // GDD §6.2 / §5.4.6: optional unique AI pattern id. M1 mobs omit this and fall
-  // back to chooseMobAction by `id`. M3 mobs set one of the §5.4.6 enum strings.
   behavior_id?: string;
+  // M5 GDD §9: boss 2-phase fields. Regular mobs omit these.
+  phase_threshold?: number;
+  phase_2_behavior_id?: string;
   description_ru: string;
   flavor_ru: string;
   drop_table: DropEntry[];

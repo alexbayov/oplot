@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { VETERAN_CONDITIONING_HP_BONUS } from "../state/balance";
 import { computePerkModifiers } from "../systems/perks";
+import { computeOverkillPopups } from "../systems/xp";
 import type { Perk } from "../types";
 import { createPanel, createTitle } from "./sceneUi";
 
@@ -17,13 +18,19 @@ const SUB_COLOR = "#C8C0B0";
 
 export class LevelUpScene extends Phaser.Scene {
   private candidatePerks: Perk[] = [];
+  private popupQueue = 1;
+  private levelBefore = 0;
 
   public constructor() {
     super("LevelUpScene");
   }
 
-  public init(data: { perks?: Perk[] }): void {
+  public init(data: { perks?: Perk[]; levelBefore?: number; levelAfter?: number }): void {
     this.candidatePerks = data.perks ?? [];
+    const before = data.levelBefore ?? 0;
+    const after = data.levelAfter ?? 0;
+    this.popupQueue = computeOverkillPopups(before, after) || 1;
+    this.levelBefore = before;
   }
 
   public create(): void {
@@ -80,6 +87,12 @@ export class LevelUpScene extends Phaser.Scene {
     const mods = computePerkModifiers(player.perks);
     player.hp_max = 100 + mods.hp_max_additive;
     player.hp = Math.min(player.hp, player.hp_max);
+    this.popupQueue -= 1;
+    if (this.popupQueue > 0) {
+      this.candidatePerks = [];
+      this.scene.restart({ perks: [], levelBefore: this.levelBefore, levelAfter: this.levelBefore });
+      return;
+    }
     this.scene.stop("LevelUpScene");
   }
 

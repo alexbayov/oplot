@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { applyCraft, canCraft, formatMissing } from "../craft";
+import { applyCraft, canCraft, canCraftWithBossDrop, formatMissing } from "../craft";
 import { item, recipe } from "./_helpers";
 import type { Item } from "../../types";
 
@@ -134,5 +134,47 @@ describe("formatMissing", () => {
     expect(
       formatMissing([{ item_id: "ghost", need: 1, have: 0 }], {}),
     ).toBe("ghost 0/1");
+  });
+});
+
+describe("canCraftWithBossDrop — T3 recipes (M5)", () => {
+  const t3Recipe = recipe({
+    id: "recipe_t3_rifle",
+    result_id: "t3_rifle",
+    result_count: 1,
+    ingredients: [{ item_id: "scrap", count: 5 }],
+    tier: 3,
+    boss_drop_ingredient: "boss_core",
+  });
+
+  test("T3 recipe fails when boss-drop ingredient missing", () => {
+    const stash = [{ item_id: "scrap", count: 5 }];
+    const result = canCraftWithBossDrop(t3Recipe, stash);
+    expect(result.ok).toBe(false);
+    expect(result.missing).toEqual([
+      { item_id: "boss_core", need: 1, have: 0 },
+    ]);
+  });
+
+  test("T3 recipe succeeds with boss-drop ingredient present", () => {
+    const stash = [
+      { item_id: "scrap", count: 5 },
+      { item_id: "boss_core", count: 1 },
+    ];
+    const result = canCraftWithBossDrop(t3Recipe, stash);
+    expect(result.ok).toBe(true);
+  });
+
+  test("T3 recipe without boss_drop_ingredient uses base canCraft", () => {
+    const t3NoBoss = recipe({
+      id: "recipe_t3_simple",
+      result_id: "t3_item",
+      result_count: 1,
+      ingredients: [{ item_id: "scrap", count: 3 }],
+      tier: 3,
+    });
+    const stash = [{ item_id: "scrap", count: 3 }];
+    const result = canCraftWithBossDrop(t3NoBoss, stash);
+    expect(result.ok).toBe(true);
   });
 });

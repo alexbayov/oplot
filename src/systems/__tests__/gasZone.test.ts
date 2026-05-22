@@ -1,0 +1,60 @@
+import { describe, expect, test } from "vitest";
+import { computeGasDamage } from "../gasZone";
+import type { PlayerState } from "../../state/types";
+import type { Zone } from "../../types";
+
+const makePlayer = (armorId: string, backpackItems: string[] = []): PlayerState => ({
+  hp: 100,
+  hp_max: 100,
+  level: 1,
+  xp: 0,
+  max_weight_kg: 30,
+  equipped_weapon_id: "knife",
+  equipped_armor_id: armorId,
+  perks: [],
+  backpack: backpackItems.map((id) => ({ item_id: id, count: 1 })),
+});
+
+const makeZone = (isGas: boolean, gasDamage: number): Zone => ({
+  id: "warehouse",
+  name_ru: "Склад",
+  level: 2,
+  description_ru: "",
+  resources: [],
+  mobs: [],
+  boss_id: null,
+  unique_resources: [],
+  levels: [
+    {
+      depth: 2,
+      enemies: [],
+      enemy_count: [1, 1],
+      resources: [],
+      resource_count: [0, 0],
+      min_player_level: 1,
+      is_gas: isGas,
+    },
+  ],
+  unlock_condition: "start",
+  gas_damage_per_turn: gasDamage,
+});
+
+describe("computeGasDamage", () => {
+  test("zone without gas returns 0 damage", () => {
+    const zone = makeZone(false, 5);
+    const player = makePlayer("cloth_jacket");
+    expect(computeGasDamage(zone, 2, player)).toBe(0);
+  });
+
+  test("gas zone without gas_mask returns gas_damage_per_turn", () => {
+    const zone = makeZone(true, 5);
+    const player = makePlayer("cloth_jacket");
+    expect(computeGasDamage(zone, 2, player)).toBe(5);
+  });
+
+  test("gas zone with gas_mask in armor slot returns 0 damage", () => {
+    const zone = makeZone(true, 8);
+    const player = makePlayer("gas_mask");
+    expect(computeGasDamage(zone, 2, player)).toBe(0);
+  });
+});

@@ -1,9 +1,6 @@
 import { MARAUDER_FLEE_HP_RATIO } from "../state/balance";
 import type { Item, Mob } from "../types";
 
-// Per-fight mutable runtime state for a mob — kept out of immutable Mob data so the
-// content schema (mobs.json) stays untouched and inter-fight state doesn't leak.
-// CombatScene stores one per spawned enemy and passes it by reference to the AI fns.
 export interface MobRuntimeState {
   hp: number;
   hp_max: number;
@@ -11,13 +8,12 @@ export interface MobRuntimeState {
   damage_max: number;
   base_speed: number;
   fled: boolean;
-  // Number of own turns this mob has taken (incremented at the start of each turn by AI).
   turn_count: number;
-  // berserker_low_hp single-shot trigger flag (GDD §5.4.3).
   berserk_triggered: boolean;
-  // defensive_cover sets this on a cover turn; calcDefenseAgainst consumes it on the
-  // next incoming attack against this mob, then the caller flips it back to false.
   cover_active: boolean;
+  // M5 GDD §9: boss 2-phase tracking. Regular mobs always phase=1, no transition.
+  phase: 1 | 2;
+  phase_transition_done: boolean;
 }
 
 export const createMobRuntimeState = (mob: Mob): MobRuntimeState => ({
@@ -30,14 +26,31 @@ export const createMobRuntimeState = (mob: Mob): MobRuntimeState => ({
   turn_count: 0,
   berserk_triggered: false,
   cover_active: false,
+  phase: 1,
+  phase_transition_done: false,
 });
+
+export const computePhaseTransition = (
+  mob: Mob,
+  runtimeState: MobRuntimeState,
+): { newPhase: 1 | 2; newBehaviorId: string | null } => {
+  if (mob.role !== "boss") {
+    return { newPhase: 1, newBehaviorId: null };
+  }
+  if (runtimeState.phase_transition_done) {
+    return { newPhase: runtimeState.phase, newBehaviorId: null };
+  }
+  const threshold = mob.phase_threshold ?? 0.5;
+  if (runtimeState.hp_max > 0 && runtimeState.hp / runtimeState.hp_max < threshold) {
+    return { newPhase: 2, newBehaviorId: mob.phase_2_behavior_id ?? null };
+  }
+  return { newPhase: runtimeState.phase, newBehaviorId: null };
+};
 
 export type MobActionV2 =
   | {
       kind: "attack";
-      // Multiplier applied to the rolled mob damage (ranged_keep_distance, pack_bonus).
       damage_multiplier: number;
-      // armor_piercing_ranged → target's Σ armor.defense is excluded from total defense.
       ignore_armor_defense: boolean;
     }
   | { kind: "cover" }
@@ -46,13 +59,10 @@ export type MobActionV2 =
 export interface MobAIContext {
   mob: Mob;
   state: MobRuntimeState;
-  // All alive (or fled) enemy instances including self — pack_bonus queries this.
   allies: { mob: Mob; state: MobRuntimeState }[];
   heroEquippedWeapon: Item | null;
 }
 
-// GDD §5.4.3: when HP first drops below 50% the berserker permanently doubles damage
-// and loses 30 base_speed. Runs once per fight — guarded by berserk_triggered.
 const maybeTriggerBerserk = (state: MobRuntimeState): void => {
   if (state.berserk_triggered) return;
   if (state.hp_max <= 0) return;
@@ -63,15 +73,19 @@ const maybeTriggerBerserk = (state: MobRuntimeState): void => {
   state.berserk_triggered = true;
 };
 
-// AI dispatch by Mob.behavior_id (GDD §5.4.6).
-// Mutates state.turn_count / berserk_triggered / cover_active / damage_*  / base_speed
-// per behavior; returns the action plus the modifiers CombatScene needs for damage calc.
-// M1 mobs (no behavior_id) fall back to the legacy chooseMobAction semantics so the
-// M2 7-step Forest flow stays binary-identical.
 export const chooseMobActionV2 = (ctx: MobAIContext): MobActionV2 => {
   const { mob, state, allies, heroEquippedWeapon } = ctx;
 
-  if (!mob.behavior_id) {
+  // M5: phase transition check before action selection.
+  const transition = computePhaseTransition(mob, state);
+  if (transition.newPhase !== state.phase) {
+    state.phase = transition.newPhase;
+    state.phase_transition_done = true;
+  }
+  const effectiveBehaviorId =
+    transition.newBehaviorId ?? mob.behavior_id;
+
+  if (!effectiveBehaviorId) {
     if (
       mob.id === "marauder" &&
       state.hp_max > 0 &&
@@ -82,14 +96,11 @@ export const chooseMobActionV2 = (ctx: MobAIContext): MobActionV2 => {
     return { kind: "attack", damage_multiplier: 1.0, ignore_armor_defense: false };
   }
 
-  // Berserker trigger runs first so the buff is visible to subsequent damage rolls.
-  if (mob.behavior_id === "berserker_low_hp") {
+  if (effectiveBehaviorId === "berserker_low_hp") {
     maybeTriggerBerserk(state);
   }
 
-  // defensive_cover alternates attack/cover by parity of own-turn counter; cover_active
-  // is set on a cover turn and read by calcDefenseAgainst on the next incoming attack.
-  if (mob.behavior_id === "defensive_cover") {
+  if (effectiveBehaviorId === "defensive_cover") {
     state.turn_count += 1;
     if (state.turn_count % 2 === 0) {
       state.cover_active = true;
@@ -101,7 +112,7 @@ export const chooseMobActionV2 = (ctx: MobAIContext): MobActionV2 => {
 
   state.turn_count += 1;
 
-  switch (mob.behavior_id) {
+  switch (effectiveBehaviorId) {
     case "ranged_keep_distance": {
       const heroMelee = heroEquippedWeapon?.type === "weapon_melee";
       return {
@@ -126,8 +137,6 @@ export const chooseMobActionV2 = (ctx: MobAIContext): MobActionV2 => {
     case "berserker_low_hp":
       return { kind: "attack", damage_multiplier: 1.0, ignore_armor_defense: false };
     default:
-      // Unknown behavior_id — soft fall through to plain attack so Content drift
-      // doesn't crash combat; mismatch is already logged by BootScene soft-warn.
       return { kind: "attack", damage_multiplier: 1.0, ignore_armor_defense: false };
   }
 };

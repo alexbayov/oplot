@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
-import { applyCraft, canCraft, formatMissing } from "../systems/craft";
+import { applyCraft, canCraft, canCraftWithBossDrop, formatMissing } from "../systems/craft";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
 interface RecipeSlot {
@@ -34,7 +34,9 @@ export class CraftScene extends Phaser.Scene {
     for (const recipe of recipes) {
       const resultItem = items[recipe.result_id];
       const resultName = resultItem ? resultItem.name_ru : recipe.result_id;
-      const check = canCraft(recipe, GameState.baseStash);
+      const check = recipe.tier === 3
+        ? canCraftWithBossDrop(recipe, GameState.baseStash)
+        : canCraft(recipe, GameState.baseStash);
       const ingredientsStr = recipe.ingredients
         .map((ing) => {
           const it = items[ing.item_id];
