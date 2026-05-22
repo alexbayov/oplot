@@ -980,4 +980,176 @@ All 7 checklists PASS (0 blockers, 0 major findings).
 - Next concrete step: PM мерджит role-PR (#35 → #36 → #37, order neutral) в `m4-integration`, затем M4 gate-close.
 - Blockers: нет.
 
+---
+
+# M5 Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M5 — Боссы и инстансы
+**Объект ревью:** GD M5 amendment PR [#41](https://github.com/alexbayov/oplot/pull/41) (`m5/gd-amendment → m5-integration`), HEAD `faa0afc`
+**QA-report ветка:** `qa/m5-spec-review` (base `m5-integration`, HEAD `512bb32`)
+**Дата:** 2026-05-22
+**Статус:** DONE — **APPROVE**
+
+## Recovery
+
+- Role: QA Spec Reviewer M5.
+- Milestone: M5 spec review (GD amendment).
+- Branch: `qa/m5-spec-review` от `m5-integration`.
+- Base: `m5-integration`.
+- Object under review: `m5/gd-amendment` HEAD `faa0afc` (PR #41).
+- Done sections: 7-checklist verdict complete — all PASS.
+- Next concrete step: PM merge GD PR #41, then Content/Engineer/Artist start.
+- Blockers: нет.
+- Forbidden: править GDD/balance/content/src/assets; self-merge; push в `main`/`m5-integration` напрямую; менять чужие `staff/status/*.md`; резолвить cross-spec расхождения (эскалация в PM).
+
+## Объект ревью — артефакты
+
+| Артефакт | Источник | Что смотрел |
+|---|---|---|
+| GD PR | #41 (`m5/gd-amendment → m5-integration`), HEAD `faa0afc` | весь diff, 473+ строк |
+| GDD §9 (Боссы и инстансы) | `docs/GDD.md` | 9 sub-sections (§9.1–§9.9) |
+| GDD §6.2 Mob schema extensions | `docs/GDD.md` | 3 optional boss fields |
+| GDD §6.4 Zone/ZoneLevel schema extensions | `docs/GDD.md` | is_gas, gas_damage_per_turn, daily_reset_hours, levels[].is_gas |
+| GDD §5.4 cross-ref | `docs/GDD.md` | boss behaviour reuse note |
+| balance §M5 | `docs/balance.md` | boss stats, boss-drops, T3 recipes/stats, gas damage, daily, warehouse depth 3, anti-scope |
+| `staff/status/GAME_DESIGNER.md` | обновлён GD PR | под M5 |
+
+## Метрика diff
+
+| Файл | + строк | − строк | Тип изменений |
+|---|---|---|---|
+| `docs/GDD.md` | 273 | 5 | 2 удаления — placeholder-комментарий §9 и комментарий к `boss_id` (обе заменены реальным контентом). §1–§8 не изменены. |
+| `docs/balance.md` | 130 | 0 | Чисто аддитивное: §M5. Ноль изменений §M1–§M4. |
+| `staff/status/GAME_DESIGNER.md` | 75 | 3 | GD статус-апдейт под M5 (замена заголовка M4→M5). |
+| **Всего** | **473 +** | **8 −** | Изменения — purely additive по существу. |
+
+## Checklist 1 — GDD §9 «Боссы и инстансы»
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §9 присутствует (не placeholder) | **PASS** | §9 заполнен полностью, 9 sub-sections (§9.1–§9.9), ~228 строк нового контента. |
+| §9.1 Описание явно: 3 boss / depth 3 / 2-phase / guaranteed drop / daily | **PASS** | «Босс — уникальный моб зоны, размещённый на глубине 3 … `Mob.role = "boss"` … 2-фазный бой … гарантированный boss-drop … MobRole runtime gating». |
+| §9.2 Boss roster: 3 boss с id / type / phase_1 / phase_2 / threshold / boss_drop_id | **PASS** | `forest_alpha_mutant` (mutant, berserker→pack_bonus, 0.5, mutated_gland); `warehouse_drone_prime` (mech, armor_piercing→defensive_cover, 0.5, prime_circuit); `city_guard_captain` (human, defensive_cover→ranged, 0.5, captain_insignia). Все phase behaviors ∈ §5.4. |
+| §9.3 Flow 2-фазного боя — trigger `hp/hp_max < phase_threshold` явно | **PASS** | ASCII-flow + implementation hint ~10 LOC. Trigger: `boss.hp / boss.hp_max < boss.phase_threshold AND NOT boss._phase_transitioned`. |
+| §9.4 Дейли-инстанс: kill→unlock, MapScene кнопка, skip depth, 24h cool-down, daily_completed | **PASS** | «После первого убийства … кнопка 'Дейли' … skip to depth=3 … daily_reset_hours=24 … `GameState.progress.daily_completed: Record<ZoneId, number>` (timestamp ms)». |
+| §9.5 Газовые зоны: is_gas / gas_damage_per_turn / gas_mask exemption | **PASS** | «warehouse/city depth 2-3 — газовые … hero.hp -= zone.gas_damage_per_turn каждый раунд … С gas_mask → damage=0». |
+| §9.6 T3 craft chain: boss-drop→T3 recipe→T3 item, 3 recipes (1/зона) | **PASS** | 3 рецепта (composite_blade←crowbar+mutated_gland, prime_shotgun←pipe_rifle+prime_circuit, captain_armor←tactical_vest+captain_insignia). |
+| §9.7 Edge-cases: multi-level-up, boss death, retreat, daily gating, cool-down | **PASS** | 7 edge-cases явно перечислены. |
+| §9.8 Связь с §5.4 / §6.2 / §6.4 / §8 / §2 / §3 / §4 / balance §M5 | **PASS** | 8 cross-refs. |
+| §9.9 Anti-scope M5 явный список ≥7 пунктов | **PASS** | 10 пунктов. |
+
+**§1 verdict: PASS.**
+
+## Checklist 2 — GDD §6.X schema extensions
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `phase_threshold?: number` (optional, required для boss) | **PASS** | Documented: «fraction (0..1) … M1-M4 mobs: absent → no phase transition → backward-compat». |
+| `phase_2_behavior_id?: string` (optional, required для boss) | **PASS** | «Один из 5 behaviour_id §5.4.6 … M1-M4 mobs: absent → no phase swap → backward-compat». |
+| `boss_drop_id?: string \| null` (optional, required для boss) | **PASS** | «id ресурса в items.json … M1-M4 mobs: absent/null → no guaranteed drop → backward-compat». |
+| `ZoneLevel.is_gas?: boolean` (default false) | **PASS** | «флаг газовой глубины … M1-M4 zones: absent → no gas → backward-compat». |
+| `Zone.is_gas?: boolean` / `gas_damage_per_turn?: number` / `daily_reset_hours?: number` | **PASS** | Все optional с defaults и requirements. `gas_damage_per_turn` required если is_gas; `daily_reset_hours` required если boss_id≠null. |
+| Backward-compat: forest без gas_*/daily_* — валиден | **PASS** | Defaults → no-op. |
+| Existing fields не изменены | **PASS** | `boss_id` comment updated only; type `string \| null` unchanged. |
+| M5 schema extension notes в §6.2/§6.4 | **PASS** | Explicit «M5 schema extensions (см. §9):» blocks. |
+
+**§2 verdict: PASS.**
+
+## Checklist 3 — balance.md §M5 boss stats
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §M5 секция присутствует | **PASS** | 8 sub-sections + anti-scope. |
+| §M5.1 Boss stats: 3 строки, числа точные (не «≥») | **PASS** | HP=300/350/400, dmg 20-30/25-35/22-32, def=6/8/10, xp=150/200/250, threshold=0.5. |
+| Sanity: boss HP > regular × 3 | **PASS** | 5.0×/8.75×/10.0×. |
+| Sanity: boss damage > regular × 1.5 | **PASS** | 2.0×/2.73×/2.7×. |
+| Sanity: phase_threshold ∈ (0,1) | **PASS** | Все 3 = 0.5. |
+| Sanity: xp_reward > regular × 5 | **PASS_WITH_NOTE** | forest 150/50=3× (borderline vs handoff «>5×»), warehouse 4×, city 5×. Progression 150→200→250 логична. **_Non-blocking follow-up_**: PM может потребовать ≥5× для forest. |
+| Cross-spec: GDD §9.2 ↔ balance §M5.1 | **PASS** | Все boss id/phase behaviors/drop_id/threshold/type идентичны. |
+
+**§3 verdict: PASS** (1 non-blocking note).
+
+## Checklist 4 — balance.md §M5 T3 + gas + daily
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §M5.2 Boss-drops: 3 items, type=resource, weight=1 | **PASS** | mutated_gland / prime_circuit / captain_insignia. |
+| §M5.3 T3 recipes: 3 строки, T2 base + boss_drop × 2 + other ingredients | **PASS** | composite_blade / prime_shotgun / captain_armor. |
+| §M5.4 T3 item stats: 3 строки, sane upgrade vs T2 | **PASS** | 3.1×/1.9×/3.0×. Не ×1000. |
+| §M5.5 Gas zone damage: warehouse 5 HP/turn, city 8 HP/turn, depth 2-3 | **PASS** | Sane: 20/32 HP gas-only за full depth fight. С gas_mask → 0. |
+| §M5.6 daily_reset_hours=24 | **PASS** | Для всех 3 зон. |
+| §M5 anti-scope совпадает с §9.9 | **PASS** | 8 пунктов anti-scope + 8 пунктов scope. |
+
+**§4 verdict: PASS.**
+
+## Checklist 5 — Anti-scope M5
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §9.9 перечисляет ≥7 пунктов | **PASS** | 10 пунктов. |
+| balance §M5 anti-scope совпадает | **PASS** | 8+8 пунктов, ключевые совпадают. |
+| Grep: hits только в anti-scope блоках | **PASS** | `rg -ni "module\|радио\|skill[_ ]tree\|cinematic\|cooldown\|active[_ ]ability\|yandex[_ ]sdk\|leaderboard\|pvp\|multiplayer" docs/GDD.md` — все hits в §9.9 или исторических anti-scope блоках. В §9.1–§9.8: **0 hits**. |
+| `cooldownMs` в §9.4 — daily cool-down (M5 scope), не ability cooldown | **PASS** | Contextually distinct. |
+
+**§5 verdict: PASS.**
+
+## Checklist 6 — Consistency с M4 (regression)
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| GDD diff: только additions, никаких deletion в §1-§8 | **PASS** | 2 deletion lines: placeholder comment + boss_id comment → replaced with real content. §1–§8 untouched. |
+| balance diff: только additions §M5, 0 изменений §M1–§M4 | **PASS** | 0 deletions, 130 additions. |
+| 8 mobs schema-compatible с optional fields | **PASS** | All 3 new fields optional. M1-M4 mobs valid without them. |
+| M4 perk/progression/XP curve не изменены | **PASS** | §8, §6.5, balance §M4 untouched. |
+| M3 5 AI behaviors не переименованы | **PASS** | boss reuses same 5 behavior_id. §5.4 cross-ref added. |
+
+**§6 verdict: PASS.**
+
+## Checklist 7 — Recovery-safe + PR hygiene
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| PR base = `m5-integration` (НЕ `main`) | **PASS** | Verified via `gh pr view 41`. |
+| PR body содержит Recovery block | **PASS** | «PR Recovery: Base: m5-integration HEAD 512bb32. Scope: only 3 files.» |
+| PR scope = 3 файла | **PASS** | `git diff --name-only` = exactly GDD + balance + GAME_DESIGNER.md. |
+| PR commits — логические порции | **PASS** | 6 commits (scaffold → §9 → §6.2 → §6.4 → balance §M5 → status). |
+| PR title ≈ gd(M5) amendment | **PASS** | «docs(M5): GD amendment — §9 Bosses + §6.X schema + balance §M5». |
+
+**§7 verdict: PASS.**
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | GDD §9 «Боссы и инстансы» | **PASS** |
+| 2 | GDD §6.X schema extensions | **PASS** |
+| 3 | balance §M5 boss stats | **PASS** |
+| 4 | balance §M5 T3 + gas + daily | **PASS** |
+| 5 | Anti-scope M5 | **PASS** |
+| 6 | Consistency с M4 (regression) | **PASS** |
+| 7 | Recovery-safe + PR hygiene | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+GD M5 amendment (PR #41, HEAD `faa0afc`) полностью соответствует брифу `staff/handoff/M5-GD.md` и чек-листам `staff/handoff/M5-QA-SPEC.md`:
+- 3 босса с 2-фазным AI, переиспользующим существующие §5.4 behaviours.
+- Дейли-инстанс с 24ч cool-down и gas zone damage.
+- 3 T3 рецепта и T3 items с sane upgrade над T2.
+- Backward-compatible расширения схем (Mob +3, Zone/ZoneLevel +4 optional fields).
+- Zero модификаций §1–§8 / §M1–§M4.
+- Чистый anti-scope (grep verified: 0 hits в §9.1–§9.8).
+
+**Готов к merge в `m5-integration`.** После merge Content / Engineer / Artist могут стартовать параллельно.
+
+### Non-blocking notes
+
+1. **§M3 zone table boss_id stale** — warehouse и forest в balance.md §M3 показывают `boss_id: null`, но на M5 получают боссов. §M5 явно добавляет информацию. Рекомендация: GD fix PR обновить §M1/§M3 zone table строки (аналог M4 fix PR #34 для xp_reward). Не blocker — информация в §M5 полная.
+
+2. **Forest boss XP ratio 3× (150/50)** — handoff benchmark «>5×», но progression 150→200→250 по зонам логична. Текущие числа playable. PM может потребовать ≥5× для forest — это tuning, не schema/logic change.
+
+3. **`crossbow`→`pipe_rifle` substitution documented** — §9.6 явно объясняет замену. GD design decision, не cross-spec расхождение.
+
 
