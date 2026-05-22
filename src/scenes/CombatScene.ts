@@ -18,6 +18,7 @@ import {
 } from "../systems/combat";
 import { computePerkModifiers, pickRandomPerks } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
+import { computeGasDamage } from "../systems/gasZone";
 import { gainXP } from "../systems/xp";
 import {
   chooseMobActionV2,
@@ -111,8 +112,24 @@ export class CombatScene extends Phaser.Scene {
 
   private startRound(): void {
     if (this.checkEnd()) return;
+    // M5: apply gas damage at the start of each round after the first.
+    this.applyGasDamage();
+    if (this.checkEnd()) return;
     this.turnQueue = this.computeTurnOrder();
     this.advanceTurn();
+  }
+
+  private applyGasDamage(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) return;
+    const zone = GameState.data.zones[sortie.zone_id];
+    if (!zone) return;
+    const player = GameState.player;
+    const gasDamage = computeGasDamage(zone, sortie.depth, player);
+    if (gasDamage > 0) {
+      player.hp = Math.max(0, player.hp - gasDamage);
+      this.log(`Газ: -${gasDamage} HP`);
+    }
   }
 
   private computeTurnOrder(): TurnOrderEntry[] {
