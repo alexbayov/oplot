@@ -15,21 +15,21 @@
 - **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
 - **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M4 PRs (active milestone — kickoff phase)
+## M4 PRs (done — all merged)
 
-_Last reconciled with GitHub: 2026-05-21 (main HEAD = `0b1de53` Merge PR #30 M3 gate-close; m4-integration создана от этого commit'а)._
+_Last reconciled with GitHub: 2026-05-22 (m4-integration HEAD = `4a04678`)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#31** | PM / M4 kickoff (этот) | `m4-integration ← pm/m4-kickoff` | Open Draft — M4 dashboard + 6 kickoff + 6 handoff + dashboards update; флип → Ready и PM self-merge по делегации Alex'а |
-| TBD | GD M4 amendment | `m4-integration ← m4/gd-amendment` | Pending — GDD §Прогрессия + §6.X Perk schema + balance §M4 (XP-curve + 8 perk numbers) |
-| TBD | QA Spec M4 | `m4-integration ← qa/m4-spec-review` | Pending — verdict APPROVE/CHANGES_REQUESTED по 7 чек-листам |
-| TBD | Content M4 | `m4-integration ← m4/content` | Pending — `content/perks.json` (8 perks) |
-| TBD | Engineer M4 | `m4-integration ← m4/progression` | Pending — xp.ts + perks.ts + ProgressionScene + LevelUpScene + 3 M3 follow-ups (RadioScene rowHeight, BootScene preload, MobRole enum) |
-| TBD | Artist M4 | `m4-integration ← m4/art` | Pending — 8 perk-icons 64×64 + (opt) LevelUpScene decor |
-| TBD | QA Acceptance M4 | `m4-integration ← qa/m4-acceptance` | Pending — локальный octopus-merge 3 role-PR + 3 Gate'а |
-| TBD | PM / finalize M4 | `m4-integration ← pm/m4-finalize` | Pending — gate → M4_DONE, M4-SUMMARY, CHANGELOG, status-sync |
-| TBD | PM gate-close M4 | `main ← m4-integration` | Pending — открывает PM; мерджит PM по продолжению M3-делегации Alex'а |
+| **#31** | PM / M4 kickoff | `m4-integration ← pm/m4-kickoff` | Merged 2026-05-21 PM |
+| **#32** | GD M4 amendment | `m4-integration ← m4/gd-amendment` | Merged 2026-05-21 PM |
+| **#34** | GD M4 fix (xp_reward option a) | `m4-integration ← m4/gd-fix` | Merged 2026-05-21 PM |
+| **#33** | QA Spec M4 | `m4-integration ← qa/m4-spec-review` | Merged 2026-05-21 PM (verdict APPROVE after re-review) |
+| **#35** | Artist M4 | `m4-integration ← m4/art` | Merged 2026-05-22 PM |
+| **#36** | Content M4 | `m4-integration ← m4/content` | Merged 2026-05-22 PM |
+| **#37** | Engineer M4 | `m4-integration ← m4/progression` | Merged 2026-05-22 PM |
+| **#38** | QA Acceptance M4 | `m4-integration ← qa/m4-acceptance` | Merged 2026-05-22 PM (verdict APPROVE) |
+| TBD | PM gate-close M4 | `main ← m4-integration` | Pending — мерджит PM по продолжению M3-делегации Alex'а |
 
 ## Merged M3 PRs (история)
 
@@ -76,7 +76,7 @@ _Last reconciled with GitHub: 2026-05-21 (main HEAD = `0b1de53` Merge PR #30 M3 
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| M4 status (active — kickoff phase) | `staff/status/M4.md` |
+| M4 status (done, gate-close pending) | `staff/status/M4.md` |
 | M3 summary (закрыта) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
 | M2 summary (закрыта) | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
 | M1 summary (закрыта) | `staff/handoff/M1-SUMMARY.md` |
@@ -85,16 +85,16 @@ _Last reconciled with GitHub: 2026-05-21 (main HEAD = `0b1de53` Merge PR #30 M3 
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M4 — active milestone, kickoff phase)
+## Role briefs (M4 — done)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
-| Game Designer | `staff/kickoff/M4-GD.md` | `staff/handoff/M4-GD.md` | `staff/status/GAME_DESIGNER.md` — NOT_STARTED (ждёт запуск PM после merge kickoff PR) |
-| QA Spec | `staff/kickoff/M4-QA-SPEC.md` | `staff/handoff/M4-QA-SPEC.md` | `staff/status/QA.md` — NOT_STARTED (ждёт GD M4 PR Ready) |
-| Content | `staff/kickoff/M4-CONTENT.md` | `staff/handoff/M4-CONTENT.md` | `staff/status/CONTENT.md` — NOT_STARTED (ждёт QA Spec APPROVE) |
-| Engineer | `staff/kickoff/M4-ENG.md` | `staff/handoff/M4-ENG.md` | `staff/status/ENGINEER.md` — NOT_STARTED (ждёт QA Spec APPROVE) |
-| Artist | `staff/kickoff/M4-ARTIST.md` | `staff/handoff/M4-ARTIST.md` | `staff/status/ARTIST.md` — NOT_STARTED (ждёт QA Spec APPROVE) |
-| QA Acceptance | `staff/kickoff/M4-QA-ACCEPT.md` | `staff/handoff/M4-QA-ACCEPT.md` | `staff/status/QA.md` — NOT_STARTED (ждёт 3 role-PR Ready) |
+| Game Designer | `staff/kickoff/M4-GD.md` | `staff/handoff/M4-GD.md` | **DONE** (PR #32 + #34 merged) |
+| QA Spec | `staff/kickoff/M4-QA-SPEC.md` | `staff/handoff/M4-QA-SPEC.md` | **DONE** (PR #33 merged, APPROVE) |
+| Content | `staff/kickoff/M4-CONTENT.md` | `staff/handoff/M4-CONTENT.md` | **DONE** (PR #36 merged) |
+| Engineer | `staff/kickoff/M4-ENG.md` | `staff/handoff/M4-ENG.md` | **DONE** (PR #37 merged) |
+| Artist | `staff/kickoff/M4-ARTIST.md` | `staff/handoff/M4-ARTIST.md` | **DONE** (PR #35 merged) |
+| QA Acceptance | `staff/kickoff/M4-QA-ACCEPT.md` | `staff/handoff/M4-QA-ACCEPT.md` | **DONE** (PR #38 merged, APPROVE) |
 
 ## Role briefs (M3 — closed, история)
 

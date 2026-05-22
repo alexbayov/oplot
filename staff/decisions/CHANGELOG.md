@@ -101,3 +101,21 @@
 - **Merge-делегация:** Alex продолжает M3-делегацию на M4 (PM сам мерджит role-PR в `m4-integration` после QA Acceptance APPROVE + gate-close PR `m4-integration → main`). Если Alex изменит политику — PM прочитает явное указание в чате и адаптирует.
 - Org-scope secret `GITHUB_PAT_ALEXBAYOV` сохранён и используется PM-сессией для merge без ручного PAT-запроса. Git-proxy 403 workaround (GIT_ASKPASS + direct GitHub URL) применён при создании ветки `m4-integration`.
 - Последовательность M4: GD amendment → QA Spec → (Content + Engineer + Artist параллельно) → QA Acceptance (с локальным octopus-merge) → PM finalize → PM gate-close (по делегации).
+
+## 2026-05-22 — M4: Closed (all role PR merged, gate-close pending)
+
+- **M4 «Перки и прогрессия» — DONE.** Все deliverables завершены, QA Acceptance APPROVE (7/7 checklists PASS).
+
+- **GD PR #32** merged (GDD §8 Прогрессия + §6.5 Perk schema + balance.md §M4: XP-curve `round(40*level^1.5)` + 8 perk numbers + mob xp_reward + veteran_conditioning fallback).
+- **GD fix PR #34** merged (option a: updated §M1/§M3 mob xp_reward tables to M4 numbers, TODO for Content).
+- **QA Spec PR #33** merged (APPROVE after re-review — blocker resolved by PR #34).
+- **Content PR #36** merged (`content/perks.json` 8 perks + `content/mobs.json` xp_reward update — scope: only content/).
+- **Engineer PR #37** merged (`src/systems/xp.ts` + `src/systems/perks.ts` + ProgressionScene + LevelUpScene + perk modifier integration in combat/weight/loot/XP + M3 follow-ups: RadioScene rowHeight, BootScene preload, MobRole enum — 128/128 vitest).
+- **Artist PR #35** merged (8 perk icons 64×64 RGBA + `tools/art/gen_m4_assets.py` — 24.2 KB / 50 KB budget).
+- **QA Acceptance PR #38** merged (APPROVE — 7/7 checklists PASS, 0 blockers, 3 non-blocking notes: prompt typo xpRequired(10), computePerkModifiers call frequency, overkill multi-level-up single popup vs queue).
+
+- **M4 final state:** 11 scenes, 128 vitest, 1.5 MB build, ~259 KB assets, 8 perks + veteran_conditioning fallback, XP-curve L1-10, perk modifiers in combat/weight/loot/XP, ProgressionScene + LevelUpScene, 3 M3 NB follow-ups closed.
+
+- **Gate-close PR `m4-integration → main` pending** (PM merge по делегации Alex'а).
+
+- **Lessons learned M4:** GD cross-spec mismatch (xp_reward §M4 vs §M1/§M3) caught by QA Spec → resolved via option (a) fix PR; parallel production works well when QA Spec APPROVE gates; Engineer can fold M3 follow-ups into M4 scope saving a separate session; LevelUpScene overkill popup queue is minor deviation from GDD §8 but acceptable for M4.

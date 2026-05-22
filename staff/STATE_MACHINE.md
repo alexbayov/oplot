@@ -85,7 +85,7 @@ M{N}_PREPARED
 
 ## Текущее состояние
 
-- **Активная веха:** M4 — Перки и прогрессия. Gate: `M4_PREPARED → GD_IN_PROGRESS_PENDING` (PM создал `m4-integration` от `main` HEAD `0b1de53` и открыл Draft kickoff PR `pm/m4-kickoff → m4-integration` с M4 dashboard + 6 kickoff + 6 handoff + обновлением PLAN/CONTEXT/LINKS/STATE_MACHINE/CHANGELOG/PM). После merge kickoff PR (PM self-merge по продолжению M3-делегации Alex'а) — gate `M4_PREPARED → GD_IN_PROGRESS`, PM запускает GD M4 amendment в новой Devin-сессии (`staff/kickoff/M4-GD.md`). Подробно — `staff/status/M4.md`.
+- **Активная веха:** M4 — Перки и прогрессия. Gate: `M4_DONE` (все role PR merged в `m4-integration` HEAD `4a04678`; gate-close PR `m4-integration → main` pending). Подробно — `staff/status/M4.md`.
 
 **Merge-делегация на M4 (continuation M3):** Alex явно делегировал PM gate-close merge в `main` на M3 («гитпат выдам свой если надо — мерж на тебе»). M4 продолжает эту делегацию: PM сам мерджит и role-PR в `m4-integration` после QA Acceptance APPROVE, и gate-close PR `m4-integration → main`. Если Alex изменит политику для M4 — PM прочитает явное указание в чате и адаптирует.
 
