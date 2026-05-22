@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
 import type { ContentData } from "../state/types";
-import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
+import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 
@@ -46,12 +46,13 @@ export class BootScene extends Phaser.Scene {
   private async loadContent(): Promise<void> {
     try {
       // M3: radio.json loaded in parallel; failure or [] is fine (UI shows "Эфир пуст").
-      const [items, mobs, recipes, zones, radioSignals] = await Promise.all([
+      const [items, mobs, recipes, zones, radioSignals, perks] = await Promise.all([
         loadJson<Item[]>("content/items.json"),
         loadJson<Mob[]>("content/mobs.json"),
         loadJson<Recipe[]>("content/recipes.json"),
         loadJson<Zone[]>("content/zones.json"),
         loadJson<RadioSignal[]>("content/radio.json").catch(() => [] as RadioSignal[]),
+        loadJson<Perk[]>("content/perks.json").catch(() => [] as Perk[]),
       ]);
       // Soft-warn instead of hard-fail during parallel Content+Engineer+Artist work
       // on M3 — Content PR is still in flight, so M2 (15/3/5/1) and M3 (29/8/15/3)
@@ -78,6 +79,7 @@ export class BootScene extends Phaser.Scene {
         recipes: indexBy(recipes),
         zones: indexBy(zones),
         radioSignals,
+        perks,
       };
       GameState.reset();
       setContent(data);
