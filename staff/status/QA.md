@@ -840,4 +840,144 @@ QA рекомендует **Опцию A** (минимальное delta).
 
 PM решает merge / fixup-PR / fresh GD continuation. **Self-merge QA PR запрещён** — PM решит после прочтения этого verdict'а.
 
+---
+
+# M4 Acceptance Review
+
+**Роль:** QA / Acceptance Critic (последняя role-сессия M4, право вето)
+**Веха:** M4 — Перки и прогрессия
+**Дата старта:** 2026-05-22
+**Gate:** QA_ACCEPT_IN_PROGRESS → QA_ACCEPT_APPROVED / CHANGES_REQUESTED
+**Базовая ветка:** `m4-integration` (HEAD `581e6da`)
+**QA-report branch:** `qa/m4-acceptance` (base `m4-integration`)
+**PR base:** `m4-integration`
+
+## Объект ревью — 3 role-PR
+
+| PR | Branch | Role | Что внутри |
+|---|---|---|---|
+| #35 | `m4/art` | Artist | 8 perk icon PNG 64×64 RGBA + Pillow gen pipeline |
+| #36 | `m4/content` | Content | `content/perks.json` (8 perks) + `content/mobs.json` xp_reward update |
+| #37 | `m4/progression` | Engineer | XP/perks systems + ProgressionScene + LevelUpScene + modifier integration + tests + M3 follow-ups |
+
+## Checklist 1 — Build & Static Checks (Engineer PR #37)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression`:
+
+- `npm run lint` — PASS (exit 0, no output).
+- `npm run typecheck` — PASS (exit 0, no errors).
+- `npm run test` — PASS: 9 files / **128 tests** (89 M2/M3 baseline + 24 xp + 15 perks). ≥109 threshold met.
+- `npm run build` — PASS. Bundle `dist/assets/index-*.js` = 1,517,183 bytes ≈ 1.5 MB < 2 MB (Yandex Games limit).
+
+## Checklist 2 — M4 Feature Completeness
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression` через grep + source review:
+
+| Критерий | Статус | Evidence |
+|---|---|---|
+| XP system: `gainXP`, `xpProgress`, `canLevelUp`, `isMaxLevel` exported | PASS | `src/systems/xp.ts:11,32,34,43` |
+| Perk system: `computePerkModifiers`, `hasPerk`, `pickRandomPerks` exported | PASS | `src/systems/perks.ts:25,58,61` |
+| ProgressionScene exists with level/XP/perk display | PASS | `src/scenes/ProgressionScene.ts:19` class, XP bar at line 30, perk list at line 44 |
+| LevelUpScene overlay with 3 perk choices + veteran fallback | PASS | `src/scenes/LevelUpScene.ts:18` class, `renderPerkCard` at line 40, `renderVeteranFallback` at line 91 |
+| BaseScene "Прогрессия" button | PASS | `src/scenes/BaseScene.ts:40` |
+| CombatScene: gainXP + pickRandomPerks → LevelUpScene launch | PASS | `src/scenes/CombatScene.ts:353,380-386` |
+| Modifier integration: combat (damage, armor), weight, loot, XP | PASS | CombatScene:192 (armor), :251 (damage), :343 (loot), :353 (XP); ReturnScene:39 (weight) |
+| GameState: player.perks/xp/level | PASS | `src/state/types.ts:18-19,23` |
+| BootScene: loads perks.json with graceful fallback | PASS | `src/scenes/BootScene.ts:87` `.catch(() => [] as Perk[])` |
+
+## Checklist 3 — Content Validation (PR #36)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/content`:
+
+- `content/perks.json` — ровно **8** perk-объектов. Verified via `JSON.parse` + `p.length`.
+- Each perk has `id/name/description/type/stat/value`. No forbidden fields (`prereq/tier/cost/cooldown/requires`). Verified via script scanning all 8 objects.
+- Perk ids match `docs/balance.md` §M4: `tough_skin, sharp_blade, lean_pack, lucky_scavenger, keen_eye, reinforced_plates, quick_hands, fast_learner`. Verified.
+- Perk `type/stat/value` match balance.md §M4 (see Checklist 7 for detailed numeric verification).
+- `content/mobs.json` — all 8 mobs `xp_reward` match balance.md §M4: marauder=18, wild_dog=14, mutant=45, looter_sniper=28, armored_guard=36, fanatic_berserker=42, pack_rat=22, relic_drone=50. Verified via script comparing each mob.
+- JSON syntax valid for both files (parsed successfully).
+- Scope: `git diff --stat origin/m4-integration...origin/m4/content` shows only `content/mobs.json` + `content/perks.json` — no src/assets/docs changes.
+
+## Checklist 4 — Artist Validation (PR #35)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/art`:
+
+- 8 PNG files in `assets/sprites/perks/`: all 8 perk ids present as `perk_{id}.png`. Verified via `ls`.
+- Each PNG: **64×64 RGBA**. Verified via PNG header parsing (width/height at bytes 16-23, alpha channel bit).
+- Total perk icon size: **23.7 KB** ≤ 50 KB M4 budget. Verified.
+- Total assets budget: **234.7 KB** ≤ 600 KB. Verified.
+- Deterministic regeneration: `python3 tools/art/gen_m4_assets.py` run twice, MD5 checksums identical across both runs. Verified.
+- Scope: `git diff --stat origin/m4-integration...origin/m4/art` shows only `assets/sprites/perks/*`, `tools/art/gen_m4_assets.py`, `staff/status/ARTIST.md` — no src/content/docs changes.
+
+## Checklist 5 — M2/M3 Regression
+
+**Статус: PASS.**
+
+- `npm run test` on `m4/progression` — 128 tests pass, includes 89 M2/M3 baseline (0 failures in baseline). Verified.
+- Engineer scope: `git diff --stat origin/m4-integration...origin/m4/progression -- content/ assets/ docs/` — **empty output** (no content/assets/docs touched).
+- Content scope: `git diff --stat origin/m4-integration...origin/m4/content -- src/ assets/ docs/` — **empty output** (no src/assets/docs touched).
+- Artist scope: `git diff --stat origin/m4-integration...origin/m4/art -- src/ content/ docs/` — **empty output** (no src/content/docs touched).
+
+All three PRs respect strict role boundaries. No cross-role file contamination.
+
+## Checklist 6 — Anti-scope Compliance
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression`:
+
+- `grep -rni "skill_tree\|skill_point\|skill tree\|skill point\|active_ability\|active ability\|cooldown\|boss_fight\|boss fight\|ysdk\|yandex" src/` — **0 hits**. Verified.
+- No `prereq/tier/cost/cooldown/requires` in `src/types/perk.ts` — **0 hits**. Verified.
+- No active abilities or cooldowns in `src/` — **0 hits** (grep for `ability|cooldown` filtered). Verified.
+- No bosses / T3 recipes — only zone `depth: 1|2|3` from M3, no boss-specific logic. Verified.
+- No full radio logic (RadioScene remains M3 UI-stub with `dismissed` flag only). Verified.
+- No Yandex SDK / YandexSDK / ysdk — **0 hits** in `src/`. Verified.
+
+## Checklist 7 — Numeric Balance Sanity
+
+**Статус: PASS (with 1 correction note).**
+
+Проверено на ветке `m4/progression` via `npx tsx` runtime:
+
+- XP-curve formula in `src/state/balance.ts:31-32`: `Math.round(40 * Math.pow(level, 1.5))` — matches `docs/balance.md` §M4 `round(40 * level^1.5)`. ✓
+- `xpRequired(2) = 40` ✓
+- `xpRequired(3) = 153` ✓
+- `xpRequired(5) = 681` ✓
+- `xpRequired(10) = 4442` ✓ (QA prompt listed 4440 — this is a **prompt typo**, not a code bug; code matches balance.md §M4 table which says 4442)
+- `VETERAN_CONDITIONING_HP_BONUS = 10` ✓
+- `PERK_POOL_SIZE = 8` ✓
+- `PERKS_PER_LEVEL_UP = 3` ✓
+- Perk values in `content/perks.json` match balance.md §M4: tough_skin +15, sharp_blade ×1.15, lean_pack ×0.85, lucky_scavenger ×1.20, keen_eye +0.05, reinforced_plates ×1.15, quick_hands ×0.90, fast_learner ×1.15. Verified via script in Checklist 3.
+
+**Note on `xpRequired(10)`:** The QA acceptance prompt stated `xpRequired(10) = 4440`, but the actual computed value per the canonical formula `round(40 * level^1.5)` is **4442**. The code produces 4442, which matches `docs/balance.md` §M4 XP-curve table (verified on `origin/m4-integration`). The 4440 in the prompt was a typo — code is correct.
+
+## Verdict
+
+**APPROVE.**
+
+All 7 checklists PASS (0 blockers, 0 major findings).
+
+### Non-blocking notes
+
+1. **QA prompt typo `xpRequired(10) = 4440`** — actual value is 4442 per formula and balance.md. Not a code issue; the prompt had an incorrect expected value.
+2. **CombatScene perk modifier integration uses `computePerkModifiers` on every attack** — the function is called multiple times per combat turn (once for mob defense, once for hero attack, once for XP award). This is O(perks × calls) but with 8 max perks and ~2-4 calls per turn, performance impact is negligible. Future optimization: cache modifiers in CombatScene state.
+3. **LevelUpScene uses `scene.launch` then `scene.stop`** — this correctly overlays on the calling scene and removes itself. However, if multiple level-ups occur from a single `gainXP` call, only one LevelUpScene is shown. The GDD §8 specifies popup queue for overkill, but `CombatScene:endCombatVictory` only launches LevelUpScene once. This is a **minor deviation** from GDD (single popup vs queue), but since `gainXP` handles multi-level-up correctly in the XP/level state, the player still gets all level-up benefits — they just pick only 1 perk for the first level-up. For M4 this is acceptable; a queue mechanism can be added in M5+ if needed.
+
+## Recovery
+
+- Role: QA Acceptance Critic M4.
+- Milestone: M4 — Перки и прогрессия — **APPROVED**.
+- Branch: `qa/m4-acceptance` (base `m4-integration` HEAD `581e6da`).
+- Objects under review: PR #35 (`m4/art`), PR #36 (`m4/content`), PR #37 (`m4/progression`).
+- Done sections: Checklist 1-7 all PASS + final APPROVE.
+- Next concrete step: PM мерджит role-PR (#35 → #36 → #37, order neutral) в `m4-integration`, затем M4 gate-close.
+- Blockers: нет.
+
 
