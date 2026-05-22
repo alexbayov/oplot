@@ -55,8 +55,8 @@
 | **M1** | Технический скелет | Phaser 3 + TS + Vite, билд в `dist/`, грузится в браузере + GDD + style-guide + canonical content + минимальные ассеты | Engineer + GD + Artist + Content | **DONE 2026-05-19** (см. `staff/handoff/M1-SUMMARY.md`) |
 | **M2** | **Играбельный MVP** | См. MVP-Definition. 1 зона, бой, лут, вес, крафт | Engineer + Content + GD | **DONE 2026-05-20** (см. `staff/handoff/M2-SUMMARY.md`) |
 | **M3** | Расширение мира | 3 зоны (Лес, Склад, Город), 8 мобов, 29 предметов, 15 рецептов, радио-заглушка | Content + Engineer + GD + Artist | **DONE 2026-05-21** (см. `staff/handoff/M3-SUMMARY.md`; gate-close PR #30 merged в `main` 2026-05-21) |
-| **M4** | Перки и прогрессия | XP → уровни → перки (8 перков), UI прогрессии (ProgressionScene + LevelUpScene popup) | GD + Engineer + Content + Artist | **DONE 2026-05-22** (см. `staff/handoff/M4-SUMMARY.md`; gate-close pending) |
-| **M5** | Боссы и инстансы | Мини-боссы в зонах, дейли-инстанс, чертежи T3 | GD + Content + Engineer | NOT_STARTED |
+| **M4** | Перки и прогрессия | XP → уровни → перки (8 перков), UI прогрессии (ProgressionScene + LevelUpScene popup) | GD + Engineer + Content + Artist | **DONE 2026-05-22** (см. `staff/handoff/M4-SUMMARY.md`; gate-close PR #39 merged в `main` 2026-05-22 PM по делегации Alex'а) |
+| **M5** | Боссы и инстансы | 3 босса (1/зона, depth 3, 2-фазный бой + phase transition), дейли-инстанс (24h cool-down), газовые зоны (damage-per-turn без `gas_mask`), 3 T3 чертежа, MobRole runtime gating | GD + Content + Engineer + Artist | **IN_PROGRESS 2026-05-22** (kickoff phase: `m5-integration` создана от `main` HEAD `723ed1c`; PM kickoff PR #40 — этот) |
 | **M6** | Радио и доверие | Полноценная система радио: сигналы, решения, засады/награды | GD + Content + Engineer | NOT_STARTED |
 | **M7** | Полировка и баланс | Тюнинг чисел, UI-звуки, анимации, 9 зон, 80+ предметов | QA + все | NOT_STARTED |
 | **M8** | Yandex SDK + мобилка | Реклама, IAP, облачный сейв, mobile-first вёрстка | Engineer + QA | NOT_STARTED |
