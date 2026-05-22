@@ -1147,7 +1147,233 @@ level_up: current_total_xp >= xp_required(current_level + 1)
 >
 > **Anti-scope §9 / M5:** модульное оружие / брони-слоты (M5+ отдельная подсистема), полная радио-логика (M6), Yandex SDK (M8), skill tree / prereq / tier / cost / cooldown (M5+ refactor), PvP, boss-cinematics (M7 polish), дополнительные AI behaviors (M5 boss AI переиспользует M3 §5.4 behaviors + phase swap), дейли-instance reward rotation / weekly events.
 
-<!-- GD M5 amendment: заполняются §9.1–§9.9 ниже -->
+#### 9.1. Описание
+
+Босс — уникальный моб зоны, размещённый на **глубине 3** (depth=3). Каждый босс имеет `Mob.role = "boss"` и `MobType` из существующего enum (§6.2). Босс появляется **всегда** на depth 3 — CombatScene при инициализации боя на depth 3 спавнит босса вместо (или в дополнение к) обычных мобов.
+
+Ключевые свойства босса:
+- **2-фазный бой**: при `boss.hp / boss.hp_max < phase_threshold` происходит **phase transition** — босс меняет `behavior_id` с `phase_1` на `phase_2` (оба из существующих 5 AI-паттернов §5.4). Phase transition — однократный триггер (флаг `phase_transitioned`).
+- **Гарантированный boss-drop**: при смерти босса в LootScene добавляется ровно 1 единица ресурса `boss.boss_drop_id` (chance=1.0, count=1) — помимо обычного `drop_table`.
+- **Повышенный XP-reward**: `xp_reward` босса значительно выше обычных мобов (см. balance §M5.1).
+- **MobRole runtime gating**: CombatScene проверяет `mob.role === "boss"` → инициализирует boss-fight HUD (имя босса, индикатор фазы) + boss-drop guarantee.
+
+На M5 зона `warehouse` получает **depth 3** (до M3 имела только depth 1-2). Зоны `forest` и `city` уже имеют depth 3.
+
+#### 9.2. Boss roster (3 босса)
+
+Каждый босс механически уникален: разные `MobType`, разные пары phase-поведений, разные тактические вызовы. Все behaviour_id взяты из существующих 5 AI-паттернов §5.4 — **никаких новых behaviours не вводится**.
+
+##### 9.2.1. `forest_alpha_mutant` — Альфа-мутант (Лес)
+
+| Поле | Значение |
+|---|---|
+| `id` | `forest_alpha_mutant` |
+| `name_ru` | Альфа-мутант |
+| `type` | `mutant` |
+| `zone` | `forest` |
+| `level` | 5 |
+| `behavior_id` (phase 1) | `berserker_low_hp` |
+| `phase_2_behavior_id` | `pack_bonus_when_paired` |
+| `phase_threshold` | 0.5 |
+| `boss_drop_id` | `mutated_gland` |
+
+**Архетип.** Вожак стаи мутантов Леса. Огромный, мощный, теряющий контроль при ранении. В phase 1 — berserker: при HP<50% damage ×2, base_speed −30 (наследует от M3 `fanatic_berserker`, §5.4.3). В phase 2 — pack_bonus_when_paired: проверяет наличие ≥2 живых `forest_alpha_mutant` → в M5 всегда ровно 1 босс → бонус ×1.0 (не активируется). **Однако** эффект berserker (damage ×2, speed −30) от phase 1 сохраняется, т.к. `_berserk_triggered` флаг уже установлен и `damage_min/max` уже удвоены в runtime. Phase 2 механически = «усиленный berserker без pack-бонуса». Pack_bonus_when_paired — forward-compat: в M5+ боссфайт может включать minion-спавн.
+
+**Phase 2 tactical readout:** босс в phase 2 наносит ×2 damage от базового (berserker persist), но медленнее (speed −30). Игрок должен лечиться и добивать.
+
+##### 9.2.2. `warehouse_drone_prime` — Прайм-дрон (Склад)
+
+| Поле | Значение |
+|---|---|
+| `id` | `warehouse_drone_prime` |
+| `name_ru` | Прайм-дрон |
+| `type` | `mech` |
+| `zone` | `warehouse` |
+| `level` | 5 |
+| `behavior_id` (phase 1) | `armor_piercing_ranged` |
+| `phase_2_behavior_id` | `defensive_cover` |
+| `phase_threshold` | 0.5 |
+| `boss_drop_id` | `prime_circuit` |
+
+**Архетип.** Тяжёлый военный дрон из довоенных арсеналов, хранящийся на Складе. В phase 1 — armor_piercing_ranged: игнорирует `armor.defense` героя (наследует от M3 `relic_drone`, §5.4.5). В phase 2 — defensive_cover: каждый нечётный ход моба занимает укрытие (+50% defense), пропуская атаку (наследует от M3 `armored_guard`, §5.4.2).
+
+**Phase 2 tactical readout:** босс переключается с чистого оффенса на оборону. На укрыточных ходах его пробить сложно (defense +50%), но он не атакует — игрок может лечиться. На атакующих ходах — по-прежнему больно. Укрытие не игнорирует броню (armor_piercing_ranged сменён на defensive_cover), поэтому в phase 2 броня героя снова работает.
+
+##### 9.2.3. `city_guard_captain` — Капитан охраны (Город)
+
+| Поле | Значение |
+|---|---|
+| `id` | `city_guard_captain` |
+| `name_ru` | Капитан охраны |
+| `type` | `human` |
+| `zone` | `city` |
+| `level` | 6 |
+| `behavior_id` (phase 1) | `defensive_cover` |
+| `phase_2_behavior_id` | `ranged_keep_distance` |
+| `phase_threshold` | 0.5 |
+| `boss_drop_id` | `captain_insignia` |
+
+**Архетип.** Последний командир корпоративной охраны, удерживающий периметр Города. Дисциплинированный и тактически гибкий. В phase 1 — defensive_cover: каждый нечётный ход — укрытие, чётный — атака (наследует от M3 `armored_guard`, §5.4.2). В phase 2 — ranged_keep_distance: переключается на ranged-атаку; если у героя melee-оружие — damage ×0.5 (наследует от M3 `looter_sniper`, §5.4.1).
+
+**Phase 2 tactical readout:** босс отказывается от защиты и переходит на дистанционную тактику. Игрок с melee-оружием получает advantage (босс наносит ×0.5 damage), но и сам наносит обычный урон. Игрок с ranged-оружием получает full damage от босса, но бьёт полной мощью. Тактический выбор: в phase 1 босс чередует атаку/укрытие → бить на укрыточных ходах бессмысленно (высокая defense), в phase 2 — ranged duel.
+
+#### 9.3. Flow (2-фазный бой)
+
+```
+Sortie reaches depth 3
+  → SortieScene инициализирует CombatScene
+  → CombatScene спавнит мобов depth 3 + boss (mob.role === "boss")
+  → HUD overlay: «Босс: <boss.name_ru> — Фаза 1»
+  → boss.behavior_id = phase_1_behavior_id
+  → combat loop (standard §2 rules + boss behavior_id)
+    → на каждом ходу boss: применяет текущий behavior_id из §5.4
+    → после каждой атаки по boss:
+      if (boss.hp / boss.hp_max < boss.phase_threshold)
+        AND NOT boss._phase_transitioned:
+        → computePhaseTransition():
+            boss._phase_transitioned = true
+            boss.behavior_id = boss.phase_2_behavior_id
+            HUD update: «<boss.name_ru> — Фаза 2!»
+            // berserker_low_hp special case:
+            // если phase_1_behavior_id == "berserker_low_hp"
+            //   и _berserk_triggered ещё не установлен:
+            //   → trigger berserker effect ПЕРЕД phase swap
+            //   (damage ×2, speed −30), затем swap
+        → continue combat (boss теперь использует phase_2_behavior_id)
+  → boss.hp <= 0:
+    → boss dies
+    → LootScene: guaranteed drop 1× boss.boss_drop_id
+                 + probabilistic drops from boss.drop_table
+    → xp_reward начисляется (повышенный, см. balance §M5.1)
+    → GameState.progress.<zone>_boss_defeated = true
+    → ReturnScene (sortie завершена)
+```
+
+**Implementation hint (Engineer).**
+> `computePhaseTransition()` — ~10 LOC:
+> 1. Проверить `boss._phase_transitioned === false` (флаг на `MobRuntimeState`).
+> 2. Если `phase_1_behavior_id === "berserker_low_hp"` и `!boss._berserk_triggered` → триггернуть berserker effect (damage ×2, speed −30, `_berserk_triggered = true`).
+> 3. Swap: `boss.behavior_id = boss.phase_2_behavior_id`.
+> 4. Set `boss._phase_transitioned = true`.
+> 5. HUD update event.
+>
+> Phase transition происходит **между ходами** — после атаки героя, до следующего хода мобов. Это не прерывает текущий раунд.
+
+#### 9.4. Дейли-инстанс
+
+После первого убийства босса в зоне (`GameState.progress.<zone>_boss_defeated = true`) MapScene показывает кнопку **«Дейли (<zone.name_ru>)»** рядом с обычной кнопкой зоны.
+
+**Flow:**
+```
+MapScene → кнопка «Дейли (Лес)»
+  → canEnterDailyInstance(state, zoneId)?
+    → zone.boss_id !== null (у зоны есть босс)
+    → state.progress.<zoneId>_boss_defeated === true (босс убит хотя бы раз)
+    → cool-down expired (см. ниже)
+  → если да:
+    SortieScene инициализируется СРАЗУ на depth=3 (skip depth 1+2)
+    → CombatScene: bossfight rerun (тот же босс, те же статы)
+    → boss dies → LootScene (guaranteed boss-drop + drop_table) → ReturnScene
+    → state.progress.daily_completed[zoneId] = Date.now() (timestamp ms)
+  → если нет (cool-down активен):
+    кнопка «Дейли» disabled, tooltip «Доступно через: <remaining time>»
+```
+
+**Cool-down:** `daily_reset_hours = 24` для всех зон (см. balance §M5.6). Формула проверки:
+```typescript
+canEnterDailyInstance(state: GameState, zoneId: string): boolean {
+  const lastTimestamp = state.progress.daily_completed?.[zoneId] ?? 0;
+  const cooldownMs = zone.daily_reset_hours * 3600 * 1000;
+  return Date.now() - lastTimestamp >= cooldownMs;
+}
+```
+
+**Дейли triggered до первого kill:** кнопка «Дейли» **не видна** (отсутствует в UI), т.к. `boss_defeated === false` → `canEnterDailyInstance` возвращает false. Показывать disabled-кнопку не нужно — игрок не знает о дейли, пока не убьёт босса первый раз.
+
+**GameState extension:**
+```typescript
+// в GameState.progress:
+daily_completed: Record<string, number>;  // zoneId → timestamp (ms) последнего дейли-kill
+// + существующие <zoneId>_boss_defeated: boolean
+```
+
+#### 9.5. Газовые зоны
+
+Зоны `warehouse` и `city` на глубинах 2 и 3 — **газовые** (`Zone.levels[].is_gas = true` на depth 2 и 3). Зона `forest` — НЕ газовая.
+
+**Механика:** в CombatScene на газовой зоне, если герой **не имеет `gas_mask`** (ни в armor-slot, ни в inventory) — каждый раунд после хода мобов:
+```
+hero.hp -= zone.gas_damage_per_turn
+```
+Урон отображается в HUD: «Газ: -<X> HP/ход».
+
+**С `gas_mask`** в armor-slot ИЛИ в inventory — `gas_damage_per_turn = 0`. Проверка: `hero.equipped_armor?.id === "gas_mask" || hero.inventory.some(i => i.id === "gas_mask")`.
+
+> **M3 lore-stub → M5 mechanical:** `gas_mask` (T2 armor, defense=1, вес 0.5) был lore stub на M3. На M5 он становится механически необходимым предметом для газовых зон. Defense=1 сохраняется (газовая защита — отдельный флаг, не defense-бонус). Content не меняет статы `gas_mask` — только Engineer добавляет gas damage logic.
+
+**Edge-case:** газовый урон может убить героя (hero.hp <= 0 от gas) → поражение, как от обычного боя. Loot loss применяется по §3 правилу 50%.
+
+**Флаги per-depth (а не per-zone):** `Zone.levels[].is_gas` позволяет задать газ только на определённых глубинах. В M5:
+- warehouse: depth 1 — `is_gas: false`, depth 2 — `is_gas: true`, depth 3 — `is_gas: true`
+- city: depth 1 — `is_gas: false`, depth 2 — `is_gas: true`, depth 3 — `is_gas: true`
+- forest: все depths — `is_gas: false` (поле отсутствует → default false)
+
+#### 9.6. T3 craft chain
+
+Boss-drop → T3 recipe → T3 item. Каждый T3 рецепт требует **T2 base item** + **boss-drop из той же зоны** + общие ресурсы. T3 экипировка — лучшая в игре на M5.
+
+**3 T3 рецепта (1/зона):**
+
+| recipe_id | base_item (T2) | boss_drop × qty | other ingredients | output_item (T3) | zone |
+|---|---|---|---|---|---|
+| `recipe_composite_blade` | `crowbar` | `mutated_gland` × 2 | `scrap` × 5 | `composite_blade` | forest |
+| `recipe_prime_shotgun` | `pipe_rifle` | `prime_circuit` × 2 | `scrap` × 6 | `prime_shotgun` | warehouse |
+| `recipe_captain_armor` | `tactical_vest` | `captain_insignia` × 2 | `leather` × 4 | `captain_armor` | city |
+
+> **Уточнение vs handoff preview:** preview-таблица в `staff/handoff/M5-GD.md` указывала `crossbow` как T2 base для `prime_shotgun`. `crossbow` не существует в items (M3 ввёл `pipe_rifle` и `crowbar` как T2 оружия). Канон M5: `prime_shotgun` ← `pipe_rifle` (T2 ranged base).
+
+**T3 craft logic:** как и M1/M2/M3 — мгновенный крафт (`craft_time_s = 0`), на базе (BaseScene → CraftScene). T2 base item **потребляется** при крафте (как ingredient, count=1). Recipe `tier = 3`.
+
+**CraftScene gating:** T3 рецепт отображается в CraftScene только если:
+1. Игрок имеет все ингредиенты (включая boss-drop).
+2. Recipe `unlock_condition = null` на M5 (все T3 рецепты доступны сразу, gated только ингредиентами).
+
+#### 9.7. Edge-cases
+
+- **Multi-level-up при kill boss:** boss даёт повышенный XP (150/200/250). Если это вызывает multi-level-up → LevelUpScene показывает popup'ы последовательно (M4 NB follow-up: Engineer реализует popup queue на M5).
+- **Player умирает в bossfight:** GameState не сохраняет partial-kill. Босс respawn'ится на следующем sortie. `boss_defeated` флаг НЕ устанавливается.
+- **Player выходит из CombatScene без боя (если разрешено):** boss НЕ defeated. Стандартный retreat/flee logic.
+- **Дейли triggered до первого kill:** кнопка «Дейли» не видна в UI (`canEnterDailyInstance` → false по `boss_defeated` флагу). Disabled-кнопка НЕ показывается.
+- **Дейли cool-down активен:** кнопка «Дейли» disabled с tooltip «Доступно через: <HH:MM:SS>».
+- **Босс + regular мобы в одном бою:** на depth 3 могут спавниться regular мобы вместе с боссом (по `enemy_count` зоны). Boss и regular мобы независимы; boss идентифицируется по `role === "boss"`.
+- **Gas kill:** если hero умирает от газового урона → поражение, loot loss 50%. Не отличается от смерти от моба.
+- **Дейли skip depth 1-2:** ресурсы с depth 1-2 НЕ собираются при дейли-инстансе. Игрок получает только boss-drop + drop_table лут.
+
+#### 9.8. Связь с другими системами
+
+- **§5.4 (AI-паттерны):** boss phase 1 и phase 2 используют ровно существующие 5 behavior_id. Phase swap = переключение `mob.behavior_id` в runtime. Никаких новых AI behaviours.
+- **§6.2 (Mob schema):** 3 новых опциональных поля для boss: `phase_threshold`, `phase_2_behavior_id`, `boss_drop_id` (см. §6.X ниже).
+- **§6.4 (Zone schema):** новые опциональные поля: `is_gas`, `gas_damage_per_turn`, `daily_reset_hours`, `levels[].is_gas` (см. §6.X ниже).
+- **§8 (Прогрессия M4):** boss kill даёт `xp_reward` → XP-curve `round(40 * level^1.5)`. LevelUpScene popup queue (M4 NB follow-up).
+- **§2 (Боевая система):** boss fight использует те же формулы урона/инициативы/укрытия. Gas damage — дополнительный источник урона вне combat formula.
+- **§3 (Инвентарь):** boss-drop ресурс добавляется в инвентарь с весом (см. balance §M5.2). T3 items замещают T2 в слотах.
+- **§4 (Крафт):** T3 recipes — расширение CraftScene, tier=3.
+- **balance.md §M5:** все числа — boss stats, T3 stats, gas damage, daily cool-down.
+
+#### 9.9. Anti-scope M5 (явно)
+
+Следующие фичи **НЕ делаются** на M5. QA Spec проверяет grep на наличие упоминаний вне anti-scope блоков:
+
+- **Модульное оружие / брони-слоты (head-slot, accessory, runes)** — M5+ отдельная подсистема (refactor path вне M5).
+- **Полная радио-логика (rewards, ambush, trust scale, faction reputation)** — M6.
+- **Yandex SDK / Cloud Saves / Leaderboard / IAP** — M8.
+- **Skill tree / поинты / prereq / tier / cost / cooldown** — M5+ refactor path.
+- **PvP / мультиплеер** — пост-релиз.
+- **Boss-cinematics / animated phase transition** — M7 polish. Phase transition = текстовый popup + static sprite swap.
+- **Дейли-instance reward rotation / weekly events** — M5 daily = простой 24h cool-down + boss-drop, без вариативности.
+- **Дополнительные AI behaviors** — M5 boss AI переиспользует ТОЛЬКО M3 §5.4 behaviors (`ranged_keep_distance`, `defensive_cover`, `berserker_low_hp`, `pack_bonus_when_paired`, `armor_piercing_ranged`) + phase swap.
+- **Minion spawn / sub-boss в bossfight** — M5 boss fight = 1 boss + regular мобы (по enemy_count). Отдельный minion-spawn mechanic — M5+.
+- **Active abilities / cooldowns** — M5+ refactor path.
 
 ### 10. Радио и доверие (M6) — заглушка структуры (M3)
 
