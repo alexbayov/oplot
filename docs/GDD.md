@@ -1142,7 +1142,12 @@ level_up: current_total_xp >= xp_required(current_level + 1)
 `keen_eye` добавляет `+0.05` к baseline crit chance. Если baseline crit chance в runtime равен 0, это даёт первые 5% crit; если Engineer позже задаст baseline 5–10%, перк станет 10–15% total crit chance без изменения схемы.
 
 ### 9. Боссы и инстансы (M5)
-<!-- GD заполнит на M5: мини-боссы, дейли-инстансы, чертежи T3+ -->
+
+> **Скоуп §9 / M5:** 3 босса (1/зона, depth 3), 2-фазный AI-бой с phase transition, дейли-инстанс (24ч cool-down), газовые зоны (warehouse/city depth 2-3), 3 T3 чертежа (boss-drop → T3 craft chain), MobRole runtime gating.
+>
+> **Anti-scope §9 / M5:** модульное оружие / брони-слоты (M5+ отдельная подсистема), полная радио-логика (M6), Yandex SDK (M8), skill tree / prereq / tier / cost / cooldown (M5+ refactor), PvP, boss-cinematics (M7 polish), дополнительные AI behaviors (M5 boss AI переиспользует M3 §5.4 behaviors + phase swap), дейли-instance reward rotation / weekly events.
+
+<!-- GD M5 amendment: заполняются §9.1–§9.9 ниже -->
 
 ### 10. Радио и доверие (M6) — заглушка структуры (M3)
 
