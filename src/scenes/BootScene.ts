@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
 import type { ContentData } from "../state/types";
-import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
+import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 
@@ -14,7 +14,34 @@ const ITEM_ICON_IDS = [
   "gunpowder",
   "leather",
   "rope",
+  "ammo_rifle",
+  "circuitry",
+  "electronics",
+  "oil",
+  "medical_supplies",
+  "crowbar",
+  "pipe_rifle",
+  "tactical_vest",
+  "helmet",
+  "gas_mask",
+  "large_medkit",
+  "energy_drink",
+  "smoke_bomb",
+  "emp_grenade",
 ];
+
+const MOB_SPRITE_IDS = [
+  "marauder",
+  "wild_dog",
+  "mutant",
+  "looter_sniper",
+  "armored_guard",
+  "fanatic_berserker",
+  "pack_rat",
+  "relic_drone",
+];
+
+const ZONE_BG_IDS = ["forest", "warehouse", "city"];
 
 const indexBy = <T extends { id: string }>(arr: T[]): Record<string, T> => {
   const out: Record<string, T> = {};
@@ -31,9 +58,14 @@ export class BootScene extends Phaser.Scene {
 
   public preload(): void {
     this.load.image("hero", "assets/sprites/hero.png");
-    this.load.image("forest", "assets/backgrounds/forest.png");
+    for (const id of ZONE_BG_IDS) {
+      this.load.image(`bg_${id}`, `assets/backgrounds/${id}.png`);
+    }
     for (const id of ITEM_ICON_IDS) {
       this.load.image(`item_${id}`, `assets/sprites/items/${id}.png`);
+    }
+    for (const id of MOB_SPRITE_IDS) {
+      this.load.image(`mob_${id}`, `assets/sprites/mobs/${id}.png`);
     }
   }
 
@@ -46,12 +78,13 @@ export class BootScene extends Phaser.Scene {
   private async loadContent(): Promise<void> {
     try {
       // M3: radio.json loaded in parallel; failure or [] is fine (UI shows "Эфир пуст").
-      const [items, mobs, recipes, zones, radioSignals] = await Promise.all([
+      const [items, mobs, recipes, zones, radioSignals, perks] = await Promise.all([
         loadJson<Item[]>("content/items.json"),
         loadJson<Mob[]>("content/mobs.json"),
         loadJson<Recipe[]>("content/recipes.json"),
         loadJson<Zone[]>("content/zones.json"),
         loadJson<RadioSignal[]>("content/radio.json").catch(() => [] as RadioSignal[]),
+        loadJson<Perk[]>("content/perks.json").catch(() => [] as Perk[]),
       ]);
       // Soft-warn instead of hard-fail during parallel Content+Engineer+Artist work
       // on M3 — Content PR is still in flight, so M2 (15/3/5/1) and M3 (29/8/15/3)
@@ -78,6 +111,7 @@ export class BootScene extends Phaser.Scene {
         recipes: indexBy(recipes),
         zones: indexBy(zones),
         radioSignals,
+        perks,
       };
       GameState.reset();
       setContent(data);

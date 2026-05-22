@@ -7,6 +7,8 @@ import { CraftScene } from "./scenes/CraftScene";
 import { InventoryScene } from "./scenes/InventoryScene";
 import { LootScene } from "./scenes/LootScene";
 import { MapScene } from "./scenes/MapScene";
+import { LevelUpScene } from "./scenes/LevelUpScene";
+import { ProgressionScene } from "./scenes/ProgressionScene";
 import { RadioScene } from "./scenes/RadioScene";
 import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
@@ -28,6 +30,8 @@ const config: Phaser.Types.Core.GameConfig = {
     InventoryScene,
     CraftScene,
     RadioScene,
+    ProgressionScene,
+    LevelUpScene,
   ],
   scale: {
     mode: Phaser.Scale.FIT,

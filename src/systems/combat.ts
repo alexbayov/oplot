@@ -53,6 +53,7 @@ export const calcDefenseAgainst = (
   armor: ArmorStats | null,
   attackerType: MobType,
   coverActive: boolean,
+  perkArmorEfficiency = 1.0,
 ): number => {
   if (!armor) return 0;
   let base = armor.defense;
@@ -62,14 +63,15 @@ export const calcDefenseAgainst = (
   if (coverActive) {
     base += armor.defense * COVER_DEFENSE_BONUS_PCT;
   }
-  return base;
+  return base * perkArmorEfficiency;
 };
 
 export const calcFinalDamage = (
   weaponRoll: number,
   multiplier: number,
   defense: number,
-): number => Math.max(MIN_DAMAGE_FLOOR, weaponRoll * multiplier - defense);
+  perkDamageMultiplier = 1.0,
+): number => Math.max(MIN_DAMAGE_FLOOR, weaponRoll * multiplier * perkDamageMultiplier - defense);
 
 export interface AttackResult {
   damage_dealt: number;
@@ -83,10 +85,11 @@ export const applyAttack = (
   defenseValue: number,
   defenderHp: number,
   rng: Rng = defaultRng,
+  perkDamageMultiplier = 1.0,
 ): AttackResult => {
   const base = rollWeaponDamage(weapon.damage_min, weapon.damage_max, rng);
   const mul = rollDamageMultiplier(rng);
-  const raw = base * mul - defenseValue;
+  const raw = base * mul * perkDamageMultiplier - defenseValue;
   const damage = Math.max(MIN_DAMAGE_FLOOR, raw);
   return {
     damage_dealt: damage,

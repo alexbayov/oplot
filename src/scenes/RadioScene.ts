@@ -51,7 +51,7 @@ export class RadioScene extends Phaser.Scene {
     }
 
     const startY = 150;
-    const rowHeight = 96;
+    const rowHeight = 120;
     list.forEach((sig, idx) => {
       const yCenter = startY + idx * rowHeight;
       createPanel(this, 180, yCenter, 320, rowHeight - 12);

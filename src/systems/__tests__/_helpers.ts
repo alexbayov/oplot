@@ -91,6 +91,7 @@ export const mob = (id: string, overrides: Partial<Mob> = {}): Mob => ({
   id,
   name_ru: id,
   type: "human",
+  role: "regular",
   zone: "forest",
   level: 1,
   hp: 10,
