@@ -6,6 +6,7 @@ import {
   removeFromStack,
 } from "../state/GameState";
 import { COVER_DEFENSE_BONUS_PCT } from "../state/balance";
+import { PERKS_PER_LEVEL_UP } from "../state/balance";
 import type { InventoryStack } from "../state/types";
 import {
   applyAttack,
@@ -15,7 +16,9 @@ import {
   getMeleeWeaponStats,
   getRangedWeaponStats,
 } from "../systems/combat";
+import { computePerkModifiers, pickRandomPerks } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
+import { gainXP } from "../systems/xp";
 import {
   chooseMobActionV2,
   createMobRuntimeState,
@@ -185,7 +188,8 @@ export class CombatScene extends Phaser.Scene {
       action.ignore_armor_defense || !armorItem ? null : getArmorStats(armorItem);
     const sortie = GameState.currentSortie;
     const cover = sortie?.cover_active ?? false;
-    const defense = calcDefenseAgainst(armorStats, inst.mob.type, cover);
+    const mods = computePerkModifiers(player.perks);
+    const defense = calcDefenseAgainst(armorStats, inst.mob.type, cover, mods.armor_efficiency_multiplier);
     const result = applyAttack(
       {
         damage_min: inst.state.damage_min * action.damage_multiplier,
@@ -243,7 +247,8 @@ export class CombatScene extends Phaser.Scene {
     const targetDefense = coverActive
       ? target.mob.defense * (1 + COVER_DEFENSE_BONUS_PCT)
       : target.mob.defense;
-    const result = applyAttack(weaponStats, targetDefense, target.state.hp);
+    const heroMods = computePerkModifiers(player.perks);
+    const result = applyAttack(weaponStats, targetDefense, target.state.hp, undefined, heroMods.damage_multiplier);
     target.state.hp = result.defender_hp_after;
     if (coverActive) target.state.cover_active = false;
     this.log(
@@ -330,18 +335,29 @@ export class CombatScene extends Phaser.Scene {
       this.scene.start("BaseScene");
       return;
     }
-    // Award XP per defeated (non-fled) mob.
-    let xpGain = 0;
+    const player = GameState.player;
+    const mods = computePerkModifiers(player.perks);
     let mobLoot: InventoryStack[] = [];
     for (const inst of this.mobs) {
       if (inst.state.fled) continue;
-      xpGain += inst.mob.xp_reward;
-      const drops = generateMobLoot(inst.mob);
+      const drops = generateMobLoot(inst.mob, undefined, mods.loot_quantity_multiplier);
       for (const stack of drops) {
         mobLoot = addToStack(mobLoot, stack.item_id, stack.count);
       }
     }
-    GameState.player.xp += xpGain;
+    let totalXpGain = 0;
+    for (const inst of this.mobs) {
+      if (inst.state.fled) continue;
+      totalXpGain += inst.mob.xp_reward;
+    }
+    const xpResult = gainXP(player.xp, player.level, totalXpGain, mods.xp_gain_multiplier);
+    player.xp += xpResult.xp_gained;
+    if (xpResult.levelled_up) {
+      player.level = xpResult.level_after;
+      const modsAfter = computePerkModifiers(player.perks);
+      player.hp_max = 100 + modsAfter.hp_max_additive;
+      player.hp = Math.min(player.hp, player.hp_max);
+    }
     // Drain zone loot proportionally.
     const fightsRemaining = sortie.fights_total - sortie.fights_completed;
     const drainedZone: InventoryStack[] = [];
@@ -359,7 +375,18 @@ export class CombatScene extends Phaser.Scene {
     }
     sortie.pending_loot = combined;
     sortie.fights_completed += 1;
-    this.scene.start("LootScene");
+
+    if (xpResult.levelled_up) {
+      const candidates = pickRandomPerks(
+        GameState.data.perks,
+        player.perks,
+        PERKS_PER_LEVEL_UP,
+      );
+      this.scene.start("LootScene");
+      this.scene.launch("LevelUpScene", { perks: candidates });
+    } else {
+      this.scene.start("LootScene");
+    }
   }
 
   private endCombatDefeat(): void {

@@ -14,7 +14,34 @@ const ITEM_ICON_IDS = [
   "gunpowder",
   "leather",
   "rope",
+  "ammo_rifle",
+  "circuitry",
+  "electronics",
+  "oil",
+  "medical_supplies",
+  "crowbar",
+  "pipe_rifle",
+  "tactical_vest",
+  "helmet",
+  "gas_mask",
+  "large_medkit",
+  "energy_drink",
+  "smoke_bomb",
+  "emp_grenade",
 ];
+
+const MOB_SPRITE_IDS = [
+  "marauder",
+  "wild_dog",
+  "mutant",
+  "looter_sniper",
+  "armored_guard",
+  "fanatic_berserker",
+  "pack_rat",
+  "relic_drone",
+];
+
+const ZONE_BG_IDS = ["forest", "warehouse", "city"];
 
 const indexBy = <T extends { id: string }>(arr: T[]): Record<string, T> => {
   const out: Record<string, T> = {};
@@ -31,9 +58,14 @@ export class BootScene extends Phaser.Scene {
 
   public preload(): void {
     this.load.image("hero", "assets/sprites/hero.png");
-    this.load.image("forest", "assets/backgrounds/forest.png");
+    for (const id of ZONE_BG_IDS) {
+      this.load.image(`bg_${id}`, `assets/backgrounds/${id}.png`);
+    }
     for (const id of ITEM_ICON_IDS) {
       this.load.image(`item_${id}`, `assets/sprites/items/${id}.png`);
+    }
+    for (const id of MOB_SPRITE_IDS) {
+      this.load.image(`mob_${id}`, `assets/sprites/mobs/${id}.png`);
     }
   }
 

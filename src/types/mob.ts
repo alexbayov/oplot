@@ -2,6 +2,8 @@
 // M1 mobs (marauder/wild_dog/mutant) and their checks are unaffected.
 export type MobType = "human" | "animal" | "mutant" | "boss" | "mech";
 
+export type MobRole = "regular" | "boss";
+
 export type MobBehavior = "aggressive" | "defensive" | "passive" | "ambush";
 
 export interface DropEntry {
@@ -15,6 +17,7 @@ export interface Mob {
   id: string;
   name_ru: string;
   type: MobType;
+  role: MobRole;
   zone: string;
   level: number;
   hp: number;

@@ -28,13 +28,14 @@ const addToStacks = (
 
 // drop_table → InventoryStack[]: roll each entry independently against `chance`,
 // then roll count_min..count_max uniformly.
-export const generateMobLoot = (mob: Mob, rng: Rng = defaultRng): InventoryStack[] => {
+export const generateMobLoot = (mob: Mob, rng: Rng = defaultRng, perkLootMultiplier = 1.0): InventoryStack[] => {
   const result: InventoryStack[] = [];
   for (const entry of mob.drop_table) {
     if (rng() >= entry.chance) continue;
     const min = entry.count_min ?? 1;
     const max = entry.count_max ?? min;
-    const count = rollIntInclusive(min, max, rng);
+    const baseCount = rollIntInclusive(min, max, rng);
+    const count = Math.max(1, Math.round(baseCount * perkLootMultiplier));
     if (count <= 0) continue;
     addToStacks(result, entry.item_id, count);
   }

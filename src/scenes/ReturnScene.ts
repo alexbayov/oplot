@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
 import { tickRadioOnReturn } from "../systems/radio";
+import { computePerkModifiers } from "../systems/perks";
 import { computeReturnTime, computeWeight } from "../systems/weight";
 import { applySortieCompletion } from "../systems/zoneUnlock";
 import {
@@ -30,10 +31,12 @@ export class ReturnScene extends Phaser.Scene {
     const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
     const zoneMultiplier = zone?.return_time_multiplier ?? 1.0;
     const curWeight = computeWeight(player.backpack, GameState.data.items);
+    const mods = computePerkModifiers(player.perks);
     const returnTimeS = computeReturnTime(
       curWeight,
       player.max_weight_kg,
       zoneMultiplier,
+      mods.weight_penalty_multiplier,
     );
 
     createPanel(this, 180, 200, 320, 80);
