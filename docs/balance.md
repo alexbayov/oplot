@@ -488,3 +488,133 @@ xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
 | Fallback id | Source | Effect | Notes |
 |---|---|---|---|
 | `veteran_conditioning` | hardcoded `LevelUpScene` fallback | `hp_max +10` | НЕ JSON-перк; НЕ добавлять в `content/perks.json`. Pool size для Content/QA = 8 perks + 1 hardcoded fallback. |
+
+---
+
+## M5 — Боссы и инстансы
+
+> **Скоуп:** 3 босса (1/зона, depth 3, 2-фазный AI), дейли-инстанс (24ч cool-down), газовые зоны (warehouse/city depth 2-3), 3 T3 чертежа (boss-drop → T3 craft), warehouse depth 3.
+>
+> **Anti-scope §M5:** модульное оружие / брони-слоты (M5+ отдельная подсистема), полная радио-логика (M6), Yandex SDK (M8), skill tree / prereq / tier / cost / cooldown (M5+ refactor), PvP, boss-cinematics (M7), дополнительные AI behaviors (переиспользуются M3 §5.4: `ranged_keep_distance`, `defensive_cover`, `berserker_low_hp`, `pack_bonus_when_paired`, `armor_piercing_ranged`), дейли-instance reward rotation / weekly events, minion spawn, active abilities / cooldowns.
+>
+> Спека механик — в [`docs/GDD.md` §9](./GDD.md#9-боссы-и-инстансы-m5) и [`docs/GDD.md` §6.2 / §6.4](./GDD.md#62-mob) (schema extensions).
+>
+> **M1/M2/M3/M4 числа выше НЕ изменяются.**
+
+### M5 — Boss stats (3 босса)
+
+| id | name_ru | type | hp | damage_min | damage_max | defense | base_speed | xp_reward | behavior_id (phase 1) | phase_2_behavior_id | phase_threshold | boss_drop_id | zone | level |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `forest_alpha_mutant` | Альфа-мутант | mutant | 300 | 20 | 30 | 6 | 85 | 150 | `berserker_low_hp` | `pack_bonus_when_paired` | 0.5 | `mutated_gland` | forest | 5 |
+| `warehouse_drone_prime` | Прайм-дрон | mech | 350 | 25 | 35 | 8 | 80 | 200 | `armor_piercing_ranged` | `defensive_cover` | 0.5 | `prime_circuit` | warehouse | 5 |
+| `city_guard_captain` | Капитан охраны | human | 400 | 22 | 32 | 10 | 90 | 250 | `defensive_cover` | `ranged_keep_distance` | 0.5 | `captain_insignia` | city | 6 |
+
+**Boss behaviour effect summary (переиспользуются §5.4 behaviours):**
+
+| boss | phase 1 effect | phase 2 effect |
+|---|---|---|
+| `forest_alpha_mutant` | `berserker_low_hp`: при HP<50% → damage ×2, base_speed −30 (single-shot trigger) | `pack_bonus_when_paired`: проверка ≥2 alive same-id mobs → нет → ×1.0. Berserker damage ×2 persist из phase 1. |
+| `warehouse_drone_prime` | `armor_piercing_ranged`: игнорирует hero armor.defense | `defensive_cover`: каждый нечётный ход — cover (+50% defense), skip attack |
+| `city_guard_captain` | `defensive_cover`: каждый нечётный ход — cover (+50% defense), skip attack | `ranged_keep_distance`: если hero weapon_melee → boss damage ×0.5 |
+
+**Sanity check vs M3 regular mobs:**
+- Boss HP: 300–400 vs M3 max HP 40 (fanatic_berserker) → boss ×7.5–10.0 × regular.
+- Boss damage: 20–35 vs M3 max damage 13 (looter_sniper) → boss ×1.5–2.7 × regular.
+- Boss defense: 6–10 vs M3 max defense 5 (relic_drone) → boss ×1.2–2.0 × regular.
+- Boss XP: 150–250 vs M3 max XP 50 (relic_drone) → boss ×3.0–5.0 × regular.
+
+### M5 — Boss-drop resources (3 ресурса)
+
+> Каждый boss-drop — type=resource, weight_kg=1, tier=2. Используется как ингредиент для T3 recipe (см. §M5.3).
+
+| id | name_ru | type | tier | weight_kg | zone_origin | Назначение |
+|---|---|---|---|---|---|---|
+| `mutated_gland` | Мутировавшая железа | resource | 2 | 1 | forest | `recipe_composite_blade` |
+| `prime_circuit` | Прайм-схема | resource | 2 | 1 | warehouse | `recipe_prime_shotgun` |
+| `captain_insignia` | Знак капитана | resource | 2 | 1 | city | `recipe_captain_armor` |
+
+### M5 — T3 recipes (3 рецепта)
+
+> Каждый T3 recipe: T2 base item (потребляется) + boss-drop × 2 + общие ресурсы. tier=3, craft_time_s=0, unlock_condition=null.
+
+| id | result_id | result_count | ingredients | tier | craft_time_s | unlock_condition |
+|---|---|---|---|---|---|---|
+| `recipe_composite_blade` | `composite_blade` | 1 | `crowbar` x1, `mutated_gland` x2, `scrap` x5 | 3 | 0 | null |
+| `recipe_prime_shotgun` | `prime_shotgun` | 1 | `pipe_rifle` x1, `prime_circuit` x2, `scrap` x6 | 3 | 0 | null |
+| `recipe_captain_armor` | `captain_armor` | 1 | `tactical_vest` x1, `captain_insignia` x2, `leather` x4 | 3 | 0 | null |
+
+> **Покрытие boss-drop ресурсов:**
+> - `mutated_gland` (forest) → `recipe_composite_blade` (1 рецепт)
+> - `prime_circuit` (warehouse) → `recipe_prime_shotgun` (1 рецепт)
+> - `captain_insignia` (city) → `recipe_captain_armor` (1 рецепт)
+>
+> Каждый boss-drop используется ровно в 1 рецепте (1:1 mapping зона→boss→T3).
+
+### M5 — T3 item stats (3 предмета)
+
+#### T3-оружие (2 шт.)
+
+| id | name_ru | type | tier | damage_min | damage_max | attack_speed | weight_kg | noise | zone_origin | ammo_id | ammo_per_shot |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| `composite_blade` | Композитный клинок | weapon_melee | 3 | 24 | 32 | 85 | 3 | low | universal | — | — |
+| `prime_shotgun` | Прайм-дробовик | weapon_ranged | 3 | 27 | 37 | 65 | 4 | high | universal | `ammo_rifle` | 1 |
+
+> **Уникальность `composite_blade` vs `crowbar` (T2):** damage 24-32 vs 7-11 (×3.4), attack_speed 85 vs 90 (slightly slower), weight 3 vs 2 (heavier). Tactical niche — лучший melee в игре, один удар ≈ 25% HP мутанта.
+>
+> **Уникальность `prime_shotgun` vs `pipe_rifle` (T2):** damage 27-37 vs 14-20 (×1.9), attack_speed 65 vs 70 (slower), weight 4 vs 2.5 (heavier), noise high vs high (same). Tactical niche — лучший ranged в игре, медленный но разрушительный.
+
+#### T3-броня (1 шт.)
+
+| id | name_ru | type | tier | defense | vs_melee_bonus | weight_kg | zone_origin |
+|---|---|---|---|---|---|---|---|
+| `captain_armor` | Броня капитана | armor | 3 | 12 | 0 | 5 | universal |
+
+> **Уникальность `captain_armor` vs `tactical_vest` (T2):** defense 12 vs 4 (×3.0), weight 5 vs 3 (heavier). Tactical niche — лучшая броня в игре, значительно снижает урон боссов и regular мобов.
+
+### M5 — Gas zone damage
+
+| zone_id | depth | is_gas | gas_damage_per_turn |
+|---|---|---|---|
+| `forest` | 1, 2, 3 | false | — |
+| `warehouse` | 1 | false | — |
+| `warehouse` | 2, 3 | true | 5 |
+| `city` | 1 | false | — |
+| `city` | 2, 3 | true | 8 |
+
+> Gas damage per turn — целое число HP, вычитается каждый раунд боя после хода мобов (если hero НЕ имеет `gas_mask` в armor-slot или inventory). `gas_mask` полностью отменяет урон (damage → 0).
+>
+> **Sanity check:** warehouse gas 5 HP/turn × 4 rounds (depth 3 fights_per_depth) = 20 HP потеряно на gas alone. City gas 8 HP/turn × 4 rounds = 32 HP. С hero HP=100 (+ perks), gas без защиты — значительный, но не фатальный штраф. С gas_mask → 0.
+
+### M5 — Дейли cool-down
+
+| Параметр | Значение | Комментарий |
+|---|---|---|
+| `daily_reset_hours` | 24 | Для всех 3 зон. Cool-down с момента предыдущего дейли-kill (timestamp ms). |
+
+> Формула: `canEnterDaily = (Date.now() - lastKillTimestamp) >= daily_reset_hours * 3600 * 1000`.
+> Дейли skip depth 1-2, игрок попадает сразу на depth 3 → bossfight → guaranteed boss-drop.
+
+### M5 — Warehouse depth 3 (новая глубина)
+
+> До M3 warehouse имел только depth 1-2. На M5 добавляется depth 3 для boss placement.
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth | is_gas |
+|---|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 | false |
+| 2 | [2, 3] | [3, 5] | 3 | 3 | true |
+| 3 | [2, 3] | [3, 5] | 5 | 3 | true |
+
+> Depth 3 enemy_count [2, 3] — включает `warehouse_drone_prime` (boss) + 1-2 regular мобов из зоны. Boss всегда спавнится на depth 3.
+
+### M5 — Скоуп (что НЕ в balance.md M5)
+
+Эти числа сознательно не заданы на M5; они появятся на своих вехах:
+
+- Модульное оружие / брони-слоты (head-slot, accessory, runes) — **M5+** (см. GDD §11 placeholder).
+- Полная радио-логика (rewards, ambush damage, trust scale, faction reputation) — **M6** (см. GDD §10 placeholder).
+- Yandex SDK / IAP / реклама — **M8** (см. GDD §12 placeholder).
+- Skill tree / поинты / prereq / tier / cost / cooldown — **M5+ refactor path**.
+- Boss-cinematics / animated phase transition — **M7 polish**.
+- Дейли-instance reward rotation / weekly events — M5 daily = 24h cool-down + boss-drop, без вариативности.
+- Minion spawn / sub-boss в bossfight — **M5+**.
+- Active abilities / cooldowns — **M5+ refactor path**.
