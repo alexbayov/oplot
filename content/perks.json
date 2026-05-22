@@ -1,0 +1,66 @@
+[
+  {
+    "id": "tough_skin",
+    "name": "Закалённая кожа",
+    "description": "+15 HP к максимальному здоровью.",
+    "type": "additive",
+    "stat": "hp_max",
+    "value": 15
+  },
+  {
+    "id": "sharp_blade",
+    "name": "Острое лезвие",
+    "description": "+15% к урону в бою (ближний и дальний).",
+    "type": "multiplicative",
+    "stat": "damage",
+    "value": 1.15
+  },
+  {
+    "id": "lean_pack",
+    "name": "Лёгкая сумка",
+    "description": "-15% штраф перевеса к времени возврата.",
+    "type": "multiplicative",
+    "stat": "weight_penalty_multiplier",
+    "value": 0.85
+  },
+  {
+    "id": "lucky_scavenger",
+    "name": "Удачливый сборщик",
+    "description": "+20% к количеству лута с мобов и зон.",
+    "type": "multiplicative",
+    "stat": "loot_quantity_multiplier",
+    "value": 1.20
+  },
+  {
+    "id": "keen_eye",
+    "name": "Острый глаз",
+    "description": "+5% шанс критического удара в бою.",
+    "type": "additive",
+    "stat": "crit_chance",
+    "value": 0.05
+  },
+  {
+    "id": "reinforced_plates",
+    "name": "Усиленные пластины",
+    "description": "+15% к эффективности брони.",
+    "type": "multiplicative",
+    "stat": "armor_efficiency",
+    "value": 1.15
+  },
+  {
+    "id": "quick_hands",
+    "name": "Быстрые руки",
+    "description": "-10% к времени крафта.",
+    "type": "multiplicative",
+    "stat": "crafting_speed_multiplier",
+    "value": 0.90
+  },
+  {
+    "id": "fast_learner",
+    "name": "Быстрая обучаемость",
+    "description": "+15% к получаемому опыту.",
+    "type": "multiplicative",
+    "stat": "xp_gain_multiplier",
+    "value": 1.15
+  }
+]
