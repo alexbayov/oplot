@@ -45,9 +45,11 @@
 
 | id | name_ru | type | hp | damage_min | damage_max | defense | base_speed | xp_reward | behavior | zone | level |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| `marauder` | Мародёр | human | 18 | 5 | 8 | 1 | 90 | 10 | aggressive (`flee` при HP<30%) | forest | 1 |
-| `wild_dog` | Дикий пёс | animal | 20 | 8 | 12 | 0 | 120 | 8 | aggressive | forest | 1 |
-| `mutant` | Мутант | mutant | 60 | 10 | 15 | 3 | 70 | 25 | aggressive | forest | 2 |
+| `marauder` | Мародёр | human | 18 | 5 | 8 | 1 | 90 | 18 | aggressive (`flee` при HP<30%) | forest | 1 |
+| `wild_dog` | Дикий пёс | animal | 20 | 8 | 12 | 0 | 120 | 14 | aggressive | forest | 1 |
+| `mutant` | Мутант | mutant | 60 | 10 | 15 | 3 | 70 | 45 | aggressive | forest | 2 |
+
+> **TODO Content M4:** обновить `content/mobs.json` `xp_reward` для M1 mobs до этих значений (`marauder=18`, `wild_dog=14`, `mutant=45`) в M4 Content PR. Это синхронизация с §M4 XP-curve, не изменение HP/damage/AI.
 
 ---
 
@@ -229,11 +231,13 @@ level_up: cur_xp >= xp_required(level + 1) → level += 1
 
 | id | name_ru | type | hp | damage_min | damage_max | defense | base_speed | xp_reward | behavior | behavior_id | zone | level |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `looter_sniper` | Мародёр-снайпер | human | 22 | 9 | 13 | 1 | 95 | 14 | aggressive | `ranged_keep_distance` | warehouse | 2 |
-| `armored_guard` | Бронированный охранник | human | 35 | 7 | 10 | 4 | 75 | 18 | defensive | `defensive_cover` | warehouse | 2 |
-| `fanatic_berserker` | Фанатик-берсерк | human | 40 | 8 | 12 | 2 | 100 | 22 | aggressive | `berserker_low_hp` | city | 3 |
-| `pack_rat` | Стайная крыса-мутант | mutant | 15 | 6 | 9 | 0 | 110 | 9 | aggressive | `pack_bonus_when_paired` | city | 3 |
-| `relic_drone` | Реликтовый дрон | mech | 28 | 8 | 11 | 5 | 90 | 20 | aggressive | `armor_piercing_ranged` | warehouse,city (bridge) | 3 |
+| `looter_sniper` | Мародёр-снайпер | human | 22 | 9 | 13 | 1 | 95 | 28 | aggressive | `ranged_keep_distance` | warehouse | 2 |
+| `armored_guard` | Бронированный охранник | human | 35 | 7 | 10 | 4 | 75 | 36 | defensive | `defensive_cover` | warehouse | 2 |
+| `fanatic_berserker` | Фанатик-берсерк | human | 40 | 8 | 12 | 2 | 100 | 42 | aggressive | `berserker_low_hp` | city | 3 |
+| `pack_rat` | Стайная крыса-мутант | mutant | 15 | 6 | 9 | 0 | 110 | 22 | aggressive | `pack_bonus_when_paired` | city | 3 |
+| `relic_drone` | Реликтовый дрон | mech | 28 | 8 | 11 | 5 | 90 | 50 | aggressive | `armor_piercing_ranged` | warehouse,city (bridge) | 3 |
+
+> **TODO Content M4:** обновить `content/mobs.json` `xp_reward` для M3 mobs до этих значений (`looter_sniper=28`, `armored_guard=36`, `fanatic_berserker=42`, `pack_rat=22`, `relic_drone=50`) в M4 Content PR. Это синхронизация с §M4 XP-curve, не изменение HP/damage/AI/drop-tables.
 
 **Модификаторы AI (повтор §5.4 для быстрой справки Engineer'у — числа здесь):**
 
@@ -420,3 +424,67 @@ return_time_s = BASE_RETURN_TIME_S
 - Радио: rewards, ambush damage, trust scale, faction reputation — **M6** (см. GDD §10 placeholder).
 - IAP, реклама, Yandex SDK rewards — **M8** (см. GDD §12 placeholder).
 - Газовые зоны (требующие `gas_mask`) — **M5** (`gas_mask` на M3 — lore stub).
+
+---
+
+## M4 — Прогрессия
+
+> **Скоуп:** XP за убийство мобов, XP-curve 1–10, 8 пассивных перков flat pool.
+>
+> **Anti-scope §M4:** skill tree / points / nodes / prereq / tier / cost — M5+ refactor path. Активные ability / cooldowns — M5+. Боссы / T3 — M5. Полная радио — M6. Yandex SDK / persistence — M8.
+>
+> Спека механик — в [`docs/GDD.md` §8](./GDD.md#8-перки-и-прогрессия-m4) и [`docs/GDD.md` §6.5](./GDD.md#65-perk).
+
+### M4 — XP-curve
+
+Формула:
+
+```
+xp_to_next(level) = round(40 * level^1.5)
+xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
+```
+
+| Level | XP required from 0 | XP to next |
+|---|---:|---:|
+| 1 | 0 | 40 |
+| 2 | 40 | 113 |
+| 3 | 153 | 208 |
+| 4 | 361 | 320 |
+| 5 | 681 | 447 |
+| 6 | 1128 | 588 |
+| 7 | 1716 | 741 |
+| 8 | 2457 | 905 |
+| 9 | 3362 | 1080 |
+| 10 | 4442 | — |
+
+### M4 — Mob XP rewards
+
+| id | name_ru | zone | level | xp_reward |
+|---|---|---|---:|---:|
+| `marauder` | Мародёр | forest | 1 | 18 |
+| `wild_dog` | Дикий пёс | forest | 1 | 14 |
+| `mutant` | Мутант | forest | 2 | 45 |
+| `looter_sniper` | Мародёр-снайпер | warehouse | 2 | 28 |
+| `armored_guard` | Бронированный охранник | warehouse | 2 | 36 |
+| `fanatic_berserker` | Фанатик-берсерк | city | 3 | 42 |
+| `pack_rat` | Стайная крыса-мутант | city | 3 | 22 |
+| `relic_drone` | Реликтовый дрон | warehouse, city | 3 | 50 |
+
+### M4 — Perks
+
+| Perk id | Name | type | stat | value |
+|---|---|---|---|---:|
+| `tough_skin` | Закалённая кожа | additive | `hp_max` | 15 |
+| `sharp_blade` | Острое лезвие | multiplicative | `damage` | 1.15 |
+| `lean_pack` | Лёгкая сумка | multiplicative | `weight_penalty_multiplier` | 0.85 |
+| `lucky_scavenger` | Удачливый сборщик | multiplicative | `loot_quantity_multiplier` | 1.20 |
+| `keen_eye` | Острый глаз | additive | `crit_chance` | 0.05 |
+| `reinforced_plates` | Усиленные пластины | multiplicative | `armor_efficiency` | 1.15 |
+| `quick_hands` | Быстрые руки | multiplicative | `crafting_speed_multiplier` | 0.90 |
+| `fast_learner` | Быстрая обучаемость | multiplicative | `xp_gain_multiplier` | 1.15 |
+
+### M4 — Fallback after all perks
+
+| Fallback id | Source | Effect | Notes |
+|---|---|---|---|
+| `veteran_conditioning` | hardcoded `LevelUpScene` fallback | `hp_max +10` | НЕ JSON-перк; НЕ добавлять в `content/perks.json`. Pool size для Content/QA = 8 perks + 1 hardcoded fallback. |

@@ -764,6 +764,56 @@ interface Zone {
 > - `Zone.unlock_condition` теперь принимает богаче строки: `"start"` (forest), `"forest_depth_2_completed"` (warehouse), `"any_warehouse_sortie_completed"` (city). Engineer переводит строки в boolean-флаги в `GameState.progress` (см. §6.4.M3 implementation hint).
 > - `ZoneLevel.depth` сужение `1 | 2 | 3` — для warehouse/city допустимы `1 | 2` или `1 | 2 | 3` соответственно (см. §6.4.M3). Тип расширяется до `1 | 2 | 3`, что уже соответствует существующему union (no change to schema).
 
+#### 6.5. `Perk`
+
+> **Скоуп §6.5 / M4:** только 8 пассивных перков из flat pool. Схема намеренно малая: Content пишет ровно 8 JSON-объектов, Engineer применяет stat modifier.
+>
+> **Anti-scope §6.5 / M4:** нет `prereq`, `tier`, `cost`, `cooldown`, active effects, triggered effects и дерева навыков. Эти поля — M5+ refactor path.
+
+```typescript
+type PerkModifierType = "additive" | "multiplicative" | "percentage";
+
+type PerkStat =
+  | "hp_max"
+  | "damage"
+  | "weight_penalty_multiplier"
+  | "loot_quantity_multiplier"
+  | "crit_chance"
+  | "armor_efficiency"
+  | "crafting_speed_multiplier"
+  | "xp_gain_multiplier";
+
+interface Perk {
+  id: string;                    // snake_case, уникален в perks.json
+  name: string;                  // отображаемое имя
+  description: string;           // кратко объясняет числовой эффект
+  type: PerkModifierType;        // enum: additive | multiplicative | percentage
+  stat: PerkStat;                // ровно один из 8 M4 stat enum выше
+  value: number;                 // > 0
+}
+```
+
+Пример:
+
+```json
+{
+  "id": "tough_skin",
+  "name": "Закалённая кожа",
+  "description": "+15 HP к максимальному здоровью.",
+  "type": "additive",
+  "stat": "hp_max",
+  "value": 15
+}
+```
+
+Валидаторы для Content / QA:
+
+- `id` — snake_case, уникален.
+- `type` — строго enum `[additive, multiplicative, percentage]`.
+- `stat` — строго enum из 8 значений выше; в M4 каждый stat используется ровно одним перком.
+- `value` — `number > 0`.
+- Запрещённые поля для M4: `prereq`, `tier`, `cost`, `cooldown`.
+
 #### 6.4.M3. Новые зоны M3 (Склад + Город)
 
 > **Скоуп:** добавление к §6.4. Зона `forest` и её 3 глубины **НЕ изменяются**. Все числа — в [`balance.md` §M3](./balance.md#m3-расширение-мира).
@@ -1009,7 +1059,87 @@ interface Zone {
 > Заполнено в M3 GD-amendment. Содержимое переехало в **§6.4.M3 «Новые зоны M3»** (Склад + Город, unlock_condition, return_time_multiplier, zone-exclusive resources, depths config). См. также `balance.md` §M3.
 
 ### 8. Перки и прогрессия (M4)
-<!-- GD заполнит на M4: XP-кривая выше 5 уровня, дерево перков, UI прогрессии -->
+
+> **Скоуп M4:** flat pool из 8 пассивных перков, XP за убийство мобов, level-up popup с выбором 1 из 3 случайных невзятых перков.
+>
+> **Anti-scope M4:** skill tree (поинты + ноды + prereq'и), `tier`, `cost` и расширенная экономика перков — это **M5+ refactor path**. Активные ability / cooldowns — M5+. Боссы и T3 — M5. Полная радио-логика — M6. Yandex SDK / persistence / leaderboard — M8. На M4 прогрессия хранится только в session memory.
+
+#### Описание
+
+M4 добавляет лёгкую RPG-прогрессию к уже работающему loop'у: игрок получает XP за победы в бою, повышает уровень и на каждом level-up выбирает 1 пассивный перк из 3 случайных вариантов. Перки — одноразовые: взятый `perk.id` больше не появляется в выборе.
+
+В M4 нет дерева навыков и очков перков. Это сознательно плоская система, чтобы Engineer / Content могли быстро провалидировать базовый pacing: «убиваю мобов → вижу рост уровня → выбираю понятный пассивный бонус».
+
+#### XP-источники
+
+| Источник | M4 rule |
+|---|---|
+| Убийство моба | `xp_gained = mob.xp_reward * xp_gain_multiplier` |
+| Успешный return на базу | 0 XP на M4 |
+| Craft | 0 XP на M4 |
+| Поднятие лута | 0 XP на M4 |
+| Exploration / unlock зоны | 0 XP на M4 |
+
+Единственный источник XP на M4 — kill mob. Return / craft / loot / exploration XP остаются M5+ refactor path, если playtest покажет, что combat-only pacing слишком узкий.
+
+#### XP-curve
+
+Числа — в [`balance.md` §M4](./balance.md#m4--прогрессия).
+
+```
+xp_to_next(level) = round(40 * level^1.5)
+xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
+level_up: current_total_xp >= xp_required(current_level + 1)
+```
+
+`level` стартует с 1. M4 балансируется вокруг уровней 1–10; технический cap для M4 — 10, если Engineer'у нужен верхний guard. После level 10 XP может продолжать копиться в session memory, но новых M4-перков уже не добавляется.
+
+#### Level-up flow
+
+```
+[CombatScene: моб умер]
+    │ add XP: mob.xp_reward * xp_gain_multiplier
+    ▼
+[ProgressionSystem]
+    │ while total_xp >= threshold(next_level):
+    │   level += 1
+    │   enqueue LevelUpReward
+    ▼
+[LevelUpScene overlay]
+    │ берёт первый reward из queue
+    │ показывает 3 случайных perk'а из невзятых
+    ▼
+[игрок выбирает 1]
+    │ GameState.player.perks[] += perk.id
+    │ применяются пассивные stat modifiers
+    ▼
+[если queue не пуста → следующий popup; иначе возврат в исходную сцену]
+```
+
+Правила:
+
+- **Overkill XP carry over.** XP сверх порога не сгорает. Если один kill даёт сразу несколько уровней, `LevelUpScene` показывает popup'ы очередью: один выбор перка на каждый полученный уровень.
+- **Пул выбора:** максимум 3 случайных невзятых перка. Если невзятых осталось 1–2, показываются все оставшиеся без добора дублями.
+- **Все 8 перков взяты:** уровень всё равно повышается и XP сохраняется, но JSON-перк не предлагается. Вместо popup выбора `LevelUpScene` автоматически применяет hardcoded fallback `veteran_conditioning`: `+10 hp_max`. Это **не** запись в `content/perks.json` и **не** девятый перк; Content на M4 пишет ровно 8 перков из `balance.md` §M4, а QA считает pool size = 8 + 1 hardcoded fallback.
+- **Поражение после убийств:** XP за уже убитых мобов сохраняется, как зафиксировано в §1 edge-case.
+- **Повторы перков:** запрещены. На M4 нет stackable perks.
+
+#### Перки M4
+
+Все 8 перков пассивные и применяются сразу после выбора. `percentage` тип зарезервирован в схеме для future-compatible контента, но M4 таблица использует только `additive` и `multiplicative`.
+
+| id | Эффект |
+|---|---|
+| `tough_skin` | + max HP |
+| `sharp_blade` | множитель damage |
+| `lean_pack` | снижает weight penalty multiplier |
+| `lucky_scavenger` | множитель loot quantity |
+| `keen_eye` | additive crit chance |
+| `reinforced_plates` | множитель armor efficiency |
+| `quick_hands` | снижает crafting time multiplier |
+| `fast_learner` | множитель XP gain |
+
+`keen_eye` добавляет `+0.05` к baseline crit chance. Если baseline crit chance в runtime равен 0, это даёт первые 5% crit; если Engineer позже задаст baseline 5–10%, перк станет 10–15% total crit chance без изменения схемы.
 
 ### 9. Боссы и инстансы (M5)
 <!-- GD заполнит на M5: мини-боссы, дейли-инстансы, чертежи T3+ -->

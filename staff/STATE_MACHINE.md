@@ -85,6 +85,10 @@ M{N}_PREPARED
 
 ## Текущее состояние
 
-- **Активная веха:** M3 — Расширение мира. Gate: `M3_DONE_PENDING_GATE_CLOSE` (все 9 M3 PR смержены в `m3-integration`: #20/#21/#22 spec phase + #23/#24 PM align + #25/#26/#27 parallel production + #28 QA Acceptance APPROVE + #29 PM finalize). Осталось: PM открывает gate-close PR `m3-integration → main`, Alex мерджит. Подробно — `staff/status/M3.md` и `staff/handoff/M3-SUMMARY.md`.
+- **Активная веха:** M4 — Перки и прогрессия. Gate: `M4_DONE` (все role PR merged в `m4-integration` HEAD `4a04678`; gate-close PR `m4-integration → main` pending). Подробно — `staff/status/M4.md`.
+
+**Merge-делегация на M4 (continuation M3):** Alex явно делегировал PM gate-close merge в `main` на M3 («гитпат выдам свой если надо — мерж на тебе»). M4 продолжает эту делегацию: PM сам мерджит и role-PR в `m4-integration` после QA Acceptance APPROVE, и gate-close PR `m4-integration → main`. Если Alex изменит политику для M4 — PM прочитает явное указание в чате и адаптирует.
+
+- **Закрытая веха M3:** см. `staff/status/M3.md` и `staff/handoff/M3-SUMMARY.md` (gate-close PR #30 merged 2026-05-21 PM по делегации Alex'а).
 - **Закрытая веха M2:** см. `staff/status/M2.md` и `staff/handoff/M2-SUMMARY.md`.
 - **Закрытая веха M1:** см. `staff/status/M1.md` и `staff/handoff/M1-SUMMARY.md`.

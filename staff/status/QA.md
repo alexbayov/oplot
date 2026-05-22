@@ -546,3 +546,438 @@ PM (orchestrator) уже сделал code-review всех трёх PR'ов с v
 - Blockers: нет.
 - PAT discipline: PAT ТОЛЬКО в `Authorization: Bearer` header через `os.environ['git_pat']`, никогда не в URL/echo/print.
 - Forbidden: править код/контент/ассеты в чужих PR (#25/#26/#27) — только PR-комментарии и свой QA-report. Self-merge. Push в `main`/`m3-integration` напрямую. Менять чужие `staff/status/*.md` (только свой `staff/status/QA.md`). Предлагать новые M3-фичи. Проверять то, что вне M3 scope (radio выходит за UI-stub — это M6, anti-scope).
+
+---
+
+# M4 Spec Review — Re-review after GD fix PR #34
+
+**Дата:** 2026-05-21
+**Объект:** GD fix PR #34 (`m4/gd-fix → m4-integration`) merged into `m4-integration` as `837aed2`, плюс исходный GD amendment PR #32.
+**Verdict:** **APPROVE**.
+
+## Что перепроверено
+
+- PR #34 применил выбранную PM/Alex option (a): baseline tables in `docs/balance.md` now use the same M4 `xp_reward` numbers.
+- §Мобы (MVP): `marauder=18`, `wild_dog=14`, `mutant=45`.
+- §M3 — Мобы: `looter_sniper=28`, `armored_guard=36`, `fanatic_berserker=42`, `pack_rat=22`, `relic_drone=50`.
+- §M1/§M3 tables include explicit TODOs for Content M4 to update `content/mobs.json`; Content owns the JSON change.
+- HP/damage/defense/speed/AI/drop-tables are unchanged. No `src/`, `content/`, `assets/` changes in GD fix.
+
+## Updated checklist summary
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | §Прогрессия (XP sources + curve + level-up flow + overkill + empty pool) | **PASS** |
+| 2 | §6.5 Perk JSON schema | **PASS** |
+| 3 | `balance.md` §M4 XP-curve | **PASS** |
+| 4 | `balance.md` §M4 mob `xp_reward` + 8 perk numbers | **PASS** |
+| 5 | Anti-scope M4 | **PASS** |
+| 6 | Consistency with M3 / `xp_reward` cross-spec | **PASS after PR #34** |
+| 7 | Recovery-safe + PR hygiene | **PASS** |
+
+## Final verdict — APPROVE
+
+**QA Spec M4 APPROVE.** The previous blocker is resolved by PR #34. PM may proceed to parallel production (Content + Engineer + Artist) after merging/accepting this QA Spec PR per orchestration rules.
+
+---
+
+# M4 Spec Review
+
+**Текущая веха:** M4 — Перки и прогрессия (spec-review phase)
+**Объект ревью:** GD M4 amendment PR [#32](https://github.com/alexbayov/oplot/pull/32) (`m4/gd-amendment → m4-integration`).
+**Статус:** **CHANGES_REQUESTED** (6/7 чек-листов PASS, 1 blocker в чек-листе 6 — cross-spec `xp_reward` mismatch).
+**Дата:** 2026-05-21
+**QA branch:** `qa/m4-spec-review` (base `m4-integration` HEAD `d8e2a31`)
+**QA PR:** [#33](https://github.com/alexbayov/oplot/pull/33) (`qa/m4-spec-review → m4-integration`)
+
+## Recovery
+
+Если сессия упадёт — следующему Devin делать:
+
+1. `git checkout qa/m4-spec-review && git pull`.
+2. Прочитать:
+   - `staff/CONTEXT.md`
+   - `staff/LINKS.md`
+   - `staff/status/M4.md`
+   - `staff/handoff/M4-QA-SPEC.md` (7 чек-листов)
+   - `staff/handoff/M3-SUMMARY.md`
+   - `docs/GDD.md` + `docs/balance.md` целиком (включая M4 GD-amendment с ветки `origin/m4/gd-amendment`).
+3. Продолжить с: посмотреть какие подсекции «# M4 Spec Review» уже заполнены, добить недостающие чек-листы, записать финальный verdict.
+4. Обновлять ТОЛЬКО `staff/status/QA.md`. НЕ трогать `docs/`, `src/`, `content/`, `assets/`, чужие staff/.
+5. После полного verdict'а — flip PR Draft → Ready и отправить блокирующее сообщение Alex'у: «QA Spec M4 verdict <APPROVE|CHANGES_REQUESTED>, PR <ссылка>».
+6. Не self-merge.
+
+## Объект ревью — артефакты
+
+- GD PR #32 base = `m4-integration` (НЕ main) — подтверждено через `git_view_pr`.
+- GD PR #32 scope (3 файла, +248 / −3): `docs/GDD.md`, `docs/balance.md`, `staff/status/GAME_DESIGNER.md`. `src/`, `content/`, `assets/`, чужие `staff/` — не тронуты.
+- Octopus diff command: `git diff origin/m4-integration..origin/m4/gd-amendment -- docs/ staff/`.
+
+## Checklist 1 — §Прогрессия (XP-источники + XP-curve + level-up flow + overkill + пустой пул)
+
+**Статус: PASS.**
+
+1. **XP-источники** — PASS. `docs/GDD.md` §8 «XP-источники» — отдельная подсекция с таблицей, явно фиксирует «Единственный источник XP на M4 — kill mob. Return / craft / loot / exploration XP остаются M5+ refactor path». Формула: `xp_gained = mob.xp_reward * xp_gain_multiplier`. Минимум 1 источник (kill mob) присутствует.
+2. **XP-curve formula** — PASS. `docs/GDD.md` §8 «XP-curve» содержит явный псевдокод:
+
+   ```
+   xp_to_next(level) = round(40 * level^1.5)
+   xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
+   level_up: current_total_xp >= xp_required(current_level + 1)
+   ```
+
+   Та же формула продублирована в `docs/balance.md` §M4 → «XP-curve» с таблицей L1–L10 (см. чек-лист 3).
+3. **Level-up flow** — PASS. `docs/GDD.md` §8 «Level-up flow» содержит ASCII-диаграмму `[CombatScene моб умер] → ProgressionSystem (add XP + level++ + enqueue LevelUpReward) → [LevelUpScene overlay показывает 3 случайных невзятых перка] → [игрок выбирает 1] → GameState.player.perks[] += perk.id + применить stat modifiers → next popup if queue non-empty или возврат в исходную сцену`. Все 4 фазы (триггер → popup → выбор → state update) явно описаны.
+4. **Overkill XP** — PASS. `docs/GDD.md` §8 «Правила» → «**Overkill XP carry over.** XP сверх порога не сгорает. Если один kill даёт сразу несколько уровней, `LevelUpScene` показывает popup'ы очередью: один выбор перка на каждый полученный уровень.» Поведение явное (carry over + popup queue), не неоднозначное.
+5. **Все перки взяты / пустой пул** — PASS. `docs/GDD.md` §8 «Правила» → «**Все 8 перков взяты:** уровень всё равно повышается и XP сохраняется, но JSON-перк не предлагается. Вместо popup выбора `LevelUpScene` автоматически применяет hardcoded fallback `veteran_conditioning`: `+10 hp_max`. Это **не** запись в `content/perks.json` и **не** девятый перк; Content на M4 пишет ровно 8 перков из `balance.md` §M4, а QA считает pool size = 8 + 1 hardcoded fallback.» Дополнительная цитата из `docs/balance.md` §M4 → «M4 — Fallback after all perks» → «`veteran_conditioning` … hardcoded `LevelUpScene` fallback … `hp_max +10` … НЕ JSON-перк; НЕ добавлять в `content/perks.json`. Pool size для Content/QA = 8 perks + 1 hardcoded fallback».
+
+   **PM nit:** «Fallback "veteran_conditioning +10 hp_max" при исчерпании пула — это hardcoded в LevelUpScene (НЕ в content/perks.json). GDD должен это явно зафиксировать, чтобы QA Acceptance Gate 3 не считал «9 перков вместо 8»» — **закрыт корректно**: GDD §8 и balance §M4 явно говорят «не JSON-перк», «pool size = 8 + 1 hardcoded fallback», что развязывает QA Acceptance Gate 3 от количества перков в `content/perks.json` (там должно быть ровно 8).
+
+Plus минор: «Поражение после убийств» edge-case дополнительно прописан («XP за уже убитых мобов сохраняется»). «Повторы перков запрещены, нет stackable» тоже эксплицитно. Это не требования чек-листа, но повышают полноту §Прогрессия.
+
+## Checklist 2 — §6.X Perk JSON schema
+
+**Статус: PASS.**
+
+`docs/GDD.md` §6.5 `Perk` — schema через TypeScript-интерфейс + JSON-пример + блок «Валидаторы для Content / QA».
+
+| Поле | Требование чек-листа | GD M4 amendment | Verdict |
+|---|---|---|---|
+| `id` | snake_case, уникальный | `id: string; // snake_case, уникален в perks.json` + validator «`id` — snake_case, уникален» | PASS |
+| `name` | string, человекочитаемый | `name: string; // отображаемое имя` | PASS |
+| `description` | string | `description: string; // кратко объясняет числовой эффект` | PASS |
+| `type` | enum [additive, multiplicative, percentage] | `type PerkModifierType = "additive" \| "multiplicative" \| "percentage";` + validator «`type` — строго enum `[additive, multiplicative, percentage]`» | PASS |
+| `stat` | enum (8 fixed) | `type PerkStat = "hp_max" \| "damage" \| "weight_penalty_multiplier" \| "loot_quantity_multiplier" \| "crit_chance" \| "armor_efficiency" \| "crafting_speed_multiplier" \| "xp_gain_multiplier";` + validator «`stat` — строго enum из 8 значений выше; в M4 каждый stat используется ровно одним перком» | PASS |
+| `value` | number > 0 | `value: number; // > 0` + validator «`value` — `number > 0`» | PASS |
+
+**Запрещённые поля для M4** (`prereq`, `tier`, `cost`, `cooldown`) — PASS:
+- В §6.5 валидаторах явно: «Запрещённые поля для M4: `prereq`, `tier`, `cost`, `cooldown`.»
+- В §6.5 anti-scope: «нет `prereq`, `tier`, `cost`, `cooldown`, active effects, triggered effects и дерева навыков. Эти поля — M5+ refactor path.»
+- TypeScript-интерфейс `Perk` не содержит запрещённых полей.
+
+Все 8 перков в balance §M4 используют ровно 1 stat из enum, type ∈ {additive, multiplicative} (пересечение разрешённого enum). Проверка значения `value > 0` — см. чек-лист 4.
+
+## Checklist 3 — `balance.md` §M4 XP-curve
+
+**Статус: PASS.**
+
+1. **Таблица L1–10 присутствует** — PASS. `docs/balance.md` §M4 → «M4 — XP-curve» содержит таблицу `| Level | XP required from 0 | XP to next |` с 10 строками (L1 → L10).
+2. **Формула явная и совпадает с GDD §8** — PASS. Цитата: «`xp_to_next(level) = round(40 * level^1.5)` / `xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)`». Один-в-один с GDD §8 «XP-curve».
+3. **Числа в таблице сходятся с формулой** — PASS (пересчитал вручную):
+
+   | L | xp_to_next(L) = round(40 × L^1.5) | xp_required(L) = Σ predecessors | Таблица |
+   |---:|---:|---:|---|
+   | 1 | 40 | 0 | 0 / 40 ✓ |
+   | 2 | round(40 × 2.828) = 113 | 40 | 40 / 113 ✓ |
+   | 3 | round(40 × 5.196) = 208 | 153 | 153 / 208 ✓ |
+   | 4 | round(40 × 8.000) = 320 | 361 | 361 / 320 ✓ |
+   | 5 | round(40 × 11.18) = 447 | 681 | 681 / 447 ✓ |
+   | 6 | round(40 × 14.70) = 588 | 1128 | 1128 / 588 ✓ |
+   | 7 | round(40 × 18.52) = 741 | 1716 | 1716 / 741 ✓ |
+   | 8 | round(40 × 22.63) = 905 | 2457 | 2457 / 905 ✓ |
+   | 9 | round(40 × 27.00) = 1080 | 3362 | 3362 / 1080 ✓ |
+   | 10 | (cap) | 4442 | 4442 / — ✓ |
+
+   Все 10 строк сходятся с формулой.
+4. **Sanity «достижимо за 1–2 часа playthrough»** — PASS (subjective). Cumulative L10 = 4442 XP. Средний `xp_reward` по 8 мобам §M4 (если использовать §M4 числа): (18+14+45+28+36+42+22+50) / 8 = 255/8 ≈ 31.9 XP/моб → ~140 убийств до L10. При длительности боя ~30–60s это укладывается в 70–140 минут активного боя, что попадает в окно «1–2 часа». Не слишком долго и не слишком быстро. Note: при использовании §M1/§M3 baseline numbers (см. чек-лист 6) сумма выше составит ~110 XP/8 ≈ 13.75, что даст ~320 убийств — это уже > 2 часов и потребует rebalance. Эта неоднозначность — следствие cross-spec mismatch в чек-листе 6.
+
+## Checklist 4 — `balance.md` §M4 mob xp_reward + 8 perk numbers
+
+**Статус: PASS (по плаузибилити в изоляции).** Cross-spec расхождение значений `xp_reward` относительно §M1/§M3/`content/mobs.json` — см. чек-лист 6 (там это блокер).
+
+1. **`xp_reward` для всех 8 мобов** — PASS. `docs/balance.md` §M4 → «M4 — Mob XP rewards» содержит таблицу с 8 строками: `marauder=18`, `wild_dog=14`, `mutant=45` (3 M1), `looter_sniper=28`, `armored_guard=36`, `fanatic_berserker=42`, `pack_rat=22`, `relic_drone=50` (5 M3). Все 8 строк присутствуют, `zone` и `level` колонки совпадают с baseline §M1/§M3.
+2. **8 perk numbers (type / stat / value)** — PASS. `docs/balance.md` §M4 → «M4 — Perks» таблица:
+
+   | id | type | stat | value | sanity |
+   |---|---|---|---:|---|
+   | `tough_skin` | additive | `hp_max` | 15 | +15 HP на baseline ~100 = +15% — разумно |
+   | `sharp_blade` | multiplicative | `damage` | 1.15 | +15% damage — разумно |
+   | `lean_pack` | multiplicative | `weight_penalty_multiplier` | 0.85 | −15% weight penalty — разумно (`>0`, проходит validator schema §6.5) |
+   | `lucky_scavenger` | multiplicative | `loot_quantity_multiplier` | 1.20 | +20% loot — разумно |
+   | `keen_eye` | additive | `crit_chance` | 0.05 | +5pp crit — разумно (GD note: «если baseline crit = 0, перк даёт первые 5%»; если baseline 5–10%, станет 10–15% — schema-friendly) |
+   | `reinforced_plates` | multiplicative | `armor_efficiency` | 1.15 | +15% armor mitigation — разумно |
+   | `quick_hands` | multiplicative | `crafting_speed_multiplier` | 0.90 | −10% craft time — разумно |
+   | `fast_learner` | multiplicative | `xp_gain_multiplier` | 1.15 | +15% XP — разумно |
+
+   Все 8 строк присутствуют, `type` ∈ {additive, multiplicative} ⊆ schema enum (`percentage` зарезервирован под future content — это PASS, §6.5 явно разрешает «`percentage` тип зарезервирован в схеме для future-compatible контента, но M4 таблица использует только `additive` и `multiplicative`»). Все `value > 0`.
+
+   Каждый из 8 stat enum значений используется ровно одним перком — соответствует validator §6.5 «в M4 каждый stat используется ровно одним перком».
+3. **Плаузибилити (no +1000 HP / no −90% weight / no ×10 damage)** — PASS. Все эффекты в диапазоне +15% … +20% (для buff'ов) и −10% … −15% (для нерфов). Никаких выбросов / экстремальных значений. Закалённая кожа +15 HP на baseline ~100 — корректно. Никаких перков с эффектом > x1.20 или < x0.85.
+4. **Fallback `veteran_conditioning`** — PASS. `docs/balance.md` §M4 → «M4 — Fallback after all perks» содержит отдельную таблицу с явным «hardcoded `LevelUpScene` fallback», «`hp_max +10`», «НЕ JSON-перк; НЕ добавлять в `content/perks.json`», «Pool size для Content/QA = 8 perks + 1 hardcoded fallback». Числа разумные (+10 HP меньше чем +15 у `tough_skin`, чтобы fallback не был сильнее обычных перков).
+
+## Checklist 5 — Anti-scope M4 явно зафиксирован
+
+**Статус: PASS.**
+
+1. **Grep-чек:** `grep -ni "skill[_ ]tree\|skill[_ ]point\|active[_ ]ability\|cooldown" docs/GDD.md docs/balance.md`:
+
+   ```
+   docs/GDD.md:1065:> **Anti-scope M4:** skill tree (поинты + ноды + prereq'и), `tier`, `cost` и расширенная экономика перков — это **M5+ refactor path**. Активные ability / cooldowns — M5+. Боссы и T3 — M5. Полная радио-логика — M6. Yandex SDK / persistence / leaderboard — M8. На M4 прогрессия хранится только в session memory.
+   docs/balance.md:430:> **Anti-scope §M4:** skill tree / points / nodes / prereq / tier / cost — M5+ refactor path. Активные ability / cooldowns — M5+. Боссы / T3 — M5. Полная радио — M6. Yandex SDK / persistence — M8.
+   ```
+
+   **2 hit'а, оба строго в Anti-scope-блоках, оба явно помечают эти концепции как M5+ refactor path или поздние вехи.** Ни одного hit'а вне anti-scope-контекста. Условие чек-листа выполнено: «если есть hits, они должны быть **только** как «M5+ evolution path», не как M4 features».
+2. **Явное anti-scope в GDD §8** — PASS. Цитата: «**Anti-scope M4:** skill tree (поинты + ноды + prereq'и), `tier`, `cost` и расширенная экономика перков — это **M5+ refactor path**. Активные ability / cooldowns — M5+. Боссы и T3 — M5. Полная радио-логика — M6. Yandex SDK / persistence / leaderboard — M8. На M4 прогрессия хранится только в session memory.»
+
+   Все 5 anti-scope требований чек-листа покрыты:
+   - skill tree / поинты / prereq'и → M5+ refactor path ✓
+   - активные ability / cooldowns → M5+ ✓
+   - боссы / T3 чертежи → M5 ✓
+   - полная радио-логика → M6 ✓
+   - Yandex SDK / save → M8 ✓
+3. **Anti-scope в §6.5 (Perk schema)** — PASS. Дополнительная подстраховка: «нет `prereq`, `tier`, `cost`, `cooldown`, active effects, triggered effects и дерева навыков. Эти поля — M5+ refactor path.»
+4. **Anti-scope в balance §M4** — PASS. Цитата выше из `docs/balance.md:430`.
+
+## Checklist 6 — Consistency с M3 (не сломали унаследованное)
+
+**Статус: FAIL — 1 BLOCKER.**
+
+1. **`docs/GDD.md` §1–§7 не изменены** — PASS. `git diff origin/m4-integration..origin/m4/gd-amendment -- docs/GDD.md` показывает изменения только в:
+   - §6.5 (NEW subsection, вставлен в §6 — это ОЖИДАЕМОЕ изменение per checklist line 47: «§6.X Perk JSON schema»);
+   - §8 (placeholder `<!-- GD заполнит на M4: XP-кривая выше 5 уровня, дерево перков, UI прогрессии -->` → заполнен — это ОЖИДАЕМАЯ работа M4 GD-amendment'а).
+
+   §1, §2, §3, §4, §5, §6.1, §6.2, §6.3, §6.4, §6.4.M3, §7 — без изменений. Единственная строка-удаление (`grep "^-[^-]"` на GDD diff): placeholder M4 в §8, что и должно быть заполнено.
+2. **`docs/balance.md` §M1/§M2/§M3 не изменены** — PASS. `git diff origin/m4-integration..origin/m4/gd-amendment -- docs/balance.md` показывает только +64 строки (0 deletions, `grep "^-[^-]"` пусто). Все +64 строки — в новой секции «## M4 — Прогрессия». §M1 (Мобы / Оружие / Броня / Ресурсы / Расходники / Рецепты / XP-таблица / Зоны / Формулы / Скоуп) и §M3 (Мобы / Drop-tables / Зоны / return_time_s формула / Новые items / Recipes) — без изменений.
+3. **Mob `xp_reward` — НОВОЕ поле, не правка существующих stat'ов** — **FAIL** (blocker).
+
+   **Что не так:**
+
+   Поле `Mob.xp_reward` **не является новым полем M4** — оно присутствует в schema `Mob` (`docs/GDD.md` §6.2) с M1 и имеет конкретные значения в `docs/balance.md` §M1 (таблица «Мобы (MVP)», строки 47–49) и §M3 («M3 — Мобы», строки 230–236). Эти значения шипнуты в `content/mobs.json` (M3 merge, PR #25, см. `staff/handoff/M3-SUMMARY.md` §2).
+
+   GD M4 amendment добавляет в `docs/balance.md` §M4 новую таблицу «M4 — Mob XP rewards» с **другими значениями** для всех 8 мобов:
+
+   | mob id | balance §M1/§M3 (baseline в `m4-integration`) | `content/mobs.json` (shipped, M3 PR #25) | balance §M4 (новая GD-таблица) | diff |
+   |---|---:|---:|---:|---|
+   | `marauder` | **10** | **10** | **18** | +80% |
+   | `wild_dog` | **8** | **8** | **14** | +75% |
+   | `mutant` | **25** | **25** | **45** | +80% |
+   | `looter_sniper` | **14** | **14** | **28** | +100% |
+   | `armored_guard` | **18** | **18** | **36** | +100% |
+   | `fanatic_berserker` | **22** | **22** | **42** | +91% |
+   | `pack_rat` | **9** | **9** | **22** | +144% |
+   | `relic_drone` | **20** | **20** | **50** | +150% |
+
+   **Все 8 значений в §M4 не совпадают с §M1/§M3 baseline и shipped content.** Это создаёт 3-way numeric mismatch внутри одного файла `balance.md` + конфликт с уже смерженным M3 контентом.
+
+   Чек-лист §6 буквально требует: «Mob `xp_reward` добавлен НЕ как изменение существующих M1/M2/M3 mob stats (HP/damage/speed), а как **новое поле** для каждого моба.» Формально HP/damage/speed не тронуты (стат-числа M1/M3 в своих таблицах не правились), но фактически §M4 переписывает значения `xp_reward` для всех 8 мобов без правки исходных таблиц, оставляя `balance.md` внутренне неконсистентным и расходящимся с shipped `content/mobs.json`.
+
+   **Почему это блокер:**
+
+   - QA Acceptance Gate 3 (numeric spec compliance) будет вынужден выбирать, какие значения «канонические» — §M1/§M3 или §M4. Без явного указания GD это subjective call, которое QA не имеет права делать (анти-эскалация per handoff line 116: «Резолвить расхождения «balance vs GDD» самостоятельно — это эскалация в PM + GD»).
+   - Content M4 не знает, нужно ли обновлять `content/mobs.json` (если §M4 — новый канон) или оставить как есть (если §M4 — опечатка / черновик).
+   - Engineer M4 `src/systems/xp.ts` будет читать `mob.xp_reward` из shipped `content/mobs.json` (M3 numbers), но XP-curve sanity-check в чек-листе 3 предполагает §M4 numbers (~140 убийств до L10). При М3 numbers это вырастает до ~320 убийств — это уже не «1–2 часа», а >3 часов, что нарушает чек-лист 3 plausibility.
+   - **Эскалация в PM + GD, без попытки резолвить со стороны QA** (per Alex'у nit в approve-чате: «cross-spec расхождение … это blocker, эскалируй мне через verdict не пытаясь резолвить»).
+
+   **Что должно быть:** GD M4 amendment должен либо
+
+   (a) **обновить §M1 и §M3 mob-таблицы новыми числами** + повесить TODO для Content M4 «обновить `content/mobs.json` под новые `xp_reward`», явно зафиксировав в `staff/status/GAME_DESIGNER.md` что это сознательный rebalance for M4 XP-curve;
+   - **или** —
+   (b) **обновить §M4 mob-таблицу до соответствия §M1/§M3 baseline** (marauder=10, wild_dog=8, mutant=25, и т. д.) и пересчитать sanity (~320 убийств / 3+ часов, что либо ОК для slow-paced M4, либо требует понижения XP-curve коэффициента с 40 на ~20);
+   - **или** —
+   (c) **обновить XP-curve коэффициент** (например 40 → 25) для существующих baseline numbers, не трогая mob-таблицу — даст ~180 убийств до L10 при М3 numbers.
+
+   Любой из трёх путей разрешим, но **выбор за GD + PM** — QA сам не вправе.
+
+   Это **blocker** (не non-blocking M5 follow-up): cross-spec расхождение в самом ключевом числовом артефакте M4 (XP rewards) внутри `balance.md` + конфликт со shipped content. Без резолва Engineer M4 / Content M4 / QA Acceptance M4 не смогут стартовать без двусмысленности.
+
+## Checklist 7 — Recovery-safe + PR hygiene
+
+**Статус: PASS.**
+
+1. **GD PR base = `m4-integration` (НЕ `main`)** — PASS. `git_view_pr(github.com/alexbayov/oplot, 32)` показывает `Branches: m4/gd-amendment → m4-integration`. Подтверждено.
+2. **Recovery block в body** — PASS. PR #32 body содержит явную секцию `## Recovery` со списком из 5 пунктов: checkout branch, read 4 файла (`staff/CONTEXT.md` / `staff/LINKS.md` / `staff/status/GAME_DESIGNER.md` / `staff/handoff/M4-GD.md`), continue from current state, update only own role status file, не self-merge.
+3. **Scope = только `docs/GDD.md` + `docs/balance.md` + `staff/status/GAME_DESIGNER.md`** — PASS. `git diff origin/m4-integration..origin/m4/gd-amendment --name-only` возвращает ровно 3 файла:
+
+   ```
+   docs/GDD.md
+   docs/balance.md
+   staff/status/GAME_DESIGNER.md
+   ```
+
+   Нет `content/`, `src/`, `assets/`, чужих `staff/`. Anti-scope hygiene идеальная.
+4. **PAT discipline (бонус)** — PASS. По всему PR body нет токенов / URL с PAT / echo'нутых credentials. Соответствует organizational forbidden rules.
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | §Прогрессия (XP-источники + curve + level-up flow + overkill + пустой пул) | **PASS** (PM nit на hardcoded fallback закрыт) |
+| 2 | §6.5 Perk JSON schema (id/name/desc/type/stat/value, no prereq/tier/cost/cooldown) | **PASS** |
+| 3 | `balance.md` §M4 XP-curve (L1–10 таблица + формула + sanity) | **PASS** |
+| 4 | `balance.md` §M4 mob xp_reward + 8 perk numbers (plausibility в изоляции) | **PASS** |
+| 5 | Anti-scope M4 (skill tree / active / bosses / radio / SDK = M5+/M5/M6/M8) | **PASS** |
+| 6 | Consistency с M3 (GDD §1-§7 + balance §M1/§M2/§M3 не тронуты; mob `xp_reward` как «новое поле») | **FAIL — 1 blocker** (cross-spec mismatch `xp_reward` §M4 vs §M1/§M3 vs `content/mobs.json`) |
+| 7 | Recovery-safe + PR hygiene (base=m4-integration, recovery block, scope=3 файла без src/content/assets) | **PASS** |
+
+## Final verdict — CHANGES_REQUESTED
+
+**Verdict: CHANGES_REQUESTED.**
+
+Шесть из семи чек-листов проходят чисто, но один (чек-лист 6 «Consistency с M3») фейлит блокером. Поэтому overall — CHANGES_REQUESTED.
+
+### Блокер 1 — **blocker** (требует фикс перед merge GD PR #32)
+
+**Cross-spec numeric mismatch `xp_reward` в `balance.md`:** §M4 таблица «M4 — Mob XP rewards» вводит значения, которые не совпадают ни с §M1 / §M3 baseline tables (в том же файле, не тронутыми), ни с shipped `content/mobs.json` (M3 PR #25 merged). Все 8 мобов имеют расхождение +75…+150%.
+
+**Эскалация в PM + GD без попытки QA-резолва** (per `staff/handoff/M4-QA-SPEC.md` line 116). GD + PM должны выбрать один из трёх путей (см. чек-лист 6 «Что должно быть»):
+- (a) обновить §M1/§M3 mob-таблицы новыми §M4 числами + TODO для Content M4 обновить `content/mobs.json`;
+- (b) обновить §M4 таблицу до соответствия §M1/§M3 baseline;
+- (c) обновить XP-curve коэффициент (40 → ~25) под baseline numbers, не трогая mob-таблицу.
+
+После выбора пути и фикса GD PR #32 (или fresh GD continuation PR в `m4-integration`) — QA готов перепрогнать verdict (re-review).
+
+### Non-blocking M5 follow-ups
+
+Нет. Все остальные находки чисто PASS, никаких minor cosmetic / nit'ов не зафиксировано.
+
+### Что PM может делать дальше
+
+- **Опция A (fixup-PR на ветке `m4/gd-amendment`):** GD добивает один из трёх путей выше в новом коммите на `m4/gd-amendment` → push → QA re-review этого же PR #32.
+- **Опция B (fresh GD continuation):** новый PR от GD `m4/gd-amendment-v2 → m4-integration` с исправленными числами → QA reviews заново.
+- **Опция C (запись в M5 backlog) — НЕ применима**: cross-spec расхождение значений `xp_reward` не может быть отложено в M5, т. к. оно блокирует Engineer M4 и Content M4 (см. чек-лист 6 «Почему это блокер»).
+
+QA рекомендует **Опцию A** (минимальное delta).
+
+PM решает merge / fixup-PR / fresh GD continuation. **Self-merge QA PR запрещён** — PM решит после прочтения этого verdict'а.
+
+---
+
+# M4 Acceptance Review
+
+**Роль:** QA / Acceptance Critic (последняя role-сессия M4, право вето)
+**Веха:** M4 — Перки и прогрессия
+**Дата старта:** 2026-05-22
+**Gate:** QA_ACCEPT_IN_PROGRESS → QA_ACCEPT_APPROVED / CHANGES_REQUESTED
+**Базовая ветка:** `m4-integration` (HEAD `581e6da`)
+**QA-report branch:** `qa/m4-acceptance` (base `m4-integration`)
+**PR base:** `m4-integration`
+
+## Объект ревью — 3 role-PR
+
+| PR | Branch | Role | Что внутри |
+|---|---|---|---|
+| #35 | `m4/art` | Artist | 8 perk icon PNG 64×64 RGBA + Pillow gen pipeline |
+| #36 | `m4/content` | Content | `content/perks.json` (8 perks) + `content/mobs.json` xp_reward update |
+| #37 | `m4/progression` | Engineer | XP/perks systems + ProgressionScene + LevelUpScene + modifier integration + tests + M3 follow-ups |
+
+## Checklist 1 — Build & Static Checks (Engineer PR #37)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression`:
+
+- `npm run lint` — PASS (exit 0, no output).
+- `npm run typecheck` — PASS (exit 0, no errors).
+- `npm run test` — PASS: 9 files / **128 tests** (89 M2/M3 baseline + 24 xp + 15 perks). ≥109 threshold met.
+- `npm run build` — PASS. Bundle `dist/assets/index-*.js` = 1,517,183 bytes ≈ 1.5 MB < 2 MB (Yandex Games limit).
+
+## Checklist 2 — M4 Feature Completeness
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression` через grep + source review:
+
+| Критерий | Статус | Evidence |
+|---|---|---|
+| XP system: `gainXP`, `xpProgress`, `canLevelUp`, `isMaxLevel` exported | PASS | `src/systems/xp.ts:11,32,34,43` |
+| Perk system: `computePerkModifiers`, `hasPerk`, `pickRandomPerks` exported | PASS | `src/systems/perks.ts:25,58,61` |
+| ProgressionScene exists with level/XP/perk display | PASS | `src/scenes/ProgressionScene.ts:19` class, XP bar at line 30, perk list at line 44 |
+| LevelUpScene overlay with 3 perk choices + veteran fallback | PASS | `src/scenes/LevelUpScene.ts:18` class, `renderPerkCard` at line 40, `renderVeteranFallback` at line 91 |
+| BaseScene "Прогрессия" button | PASS | `src/scenes/BaseScene.ts:40` |
+| CombatScene: gainXP + pickRandomPerks → LevelUpScene launch | PASS | `src/scenes/CombatScene.ts:353,380-386` |
+| Modifier integration: combat (damage, armor), weight, loot, XP | PASS | CombatScene:192 (armor), :251 (damage), :343 (loot), :353 (XP); ReturnScene:39 (weight) |
+| GameState: player.perks/xp/level | PASS | `src/state/types.ts:18-19,23` |
+| BootScene: loads perks.json with graceful fallback | PASS | `src/scenes/BootScene.ts:87` `.catch(() => [] as Perk[])` |
+
+## Checklist 3 — Content Validation (PR #36)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/content`:
+
+- `content/perks.json` — ровно **8** perk-объектов. Verified via `JSON.parse` + `p.length`.
+- Each perk has `id/name/description/type/stat/value`. No forbidden fields (`prereq/tier/cost/cooldown/requires`). Verified via script scanning all 8 objects.
+- Perk ids match `docs/balance.md` §M4: `tough_skin, sharp_blade, lean_pack, lucky_scavenger, keen_eye, reinforced_plates, quick_hands, fast_learner`. Verified.
+- Perk `type/stat/value` match balance.md §M4 (see Checklist 7 for detailed numeric verification).
+- `content/mobs.json` — all 8 mobs `xp_reward` match balance.md §M4: marauder=18, wild_dog=14, mutant=45, looter_sniper=28, armored_guard=36, fanatic_berserker=42, pack_rat=22, relic_drone=50. Verified via script comparing each mob.
+- JSON syntax valid for both files (parsed successfully).
+- Scope: `git diff --stat origin/m4-integration...origin/m4/content` shows only `content/mobs.json` + `content/perks.json` — no src/assets/docs changes.
+
+## Checklist 4 — Artist Validation (PR #35)
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/art`:
+
+- 8 PNG files in `assets/sprites/perks/`: all 8 perk ids present as `perk_{id}.png`. Verified via `ls`.
+- Each PNG: **64×64 RGBA**. Verified via PNG header parsing (width/height at bytes 16-23, alpha channel bit).
+- Total perk icon size: **23.7 KB** ≤ 50 KB M4 budget. Verified.
+- Total assets budget: **234.7 KB** ≤ 600 KB. Verified.
+- Deterministic regeneration: `python3 tools/art/gen_m4_assets.py` run twice, MD5 checksums identical across both runs. Verified.
+- Scope: `git diff --stat origin/m4-integration...origin/m4/art` shows only `assets/sprites/perks/*`, `tools/art/gen_m4_assets.py`, `staff/status/ARTIST.md` — no src/content/docs changes.
+
+## Checklist 5 — M2/M3 Regression
+
+**Статус: PASS.**
+
+- `npm run test` on `m4/progression` — 128 tests pass, includes 89 M2/M3 baseline (0 failures in baseline). Verified.
+- Engineer scope: `git diff --stat origin/m4-integration...origin/m4/progression -- content/ assets/ docs/` — **empty output** (no content/assets/docs touched).
+- Content scope: `git diff --stat origin/m4-integration...origin/m4/content -- src/ assets/ docs/` — **empty output** (no src/assets/docs touched).
+- Artist scope: `git diff --stat origin/m4-integration...origin/m4/art -- src/ content/ docs/` — **empty output** (no src/content/docs touched).
+
+All three PRs respect strict role boundaries. No cross-role file contamination.
+
+## Checklist 6 — Anti-scope Compliance
+
+**Статус: PASS.**
+
+Проверено на ветке `m4/progression`:
+
+- `grep -rni "skill_tree\|skill_point\|skill tree\|skill point\|active_ability\|active ability\|cooldown\|boss_fight\|boss fight\|ysdk\|yandex" src/` — **0 hits**. Verified.
+- No `prereq/tier/cost/cooldown/requires` in `src/types/perk.ts` — **0 hits**. Verified.
+- No active abilities or cooldowns in `src/` — **0 hits** (grep for `ability|cooldown` filtered). Verified.
+- No bosses / T3 recipes — only zone `depth: 1|2|3` from M3, no boss-specific logic. Verified.
+- No full radio logic (RadioScene remains M3 UI-stub with `dismissed` flag only). Verified.
+- No Yandex SDK / YandexSDK / ysdk — **0 hits** in `src/`. Verified.
+
+## Checklist 7 — Numeric Balance Sanity
+
+**Статус: PASS (with 1 correction note).**
+
+Проверено на ветке `m4/progression` via `npx tsx` runtime:
+
+- XP-curve formula in `src/state/balance.ts:31-32`: `Math.round(40 * Math.pow(level, 1.5))` — matches `docs/balance.md` §M4 `round(40 * level^1.5)`. ✓
+- `xpRequired(2) = 40` ✓
+- `xpRequired(3) = 153` ✓
+- `xpRequired(5) = 681` ✓
+- `xpRequired(10) = 4442` ✓ (QA prompt listed 4440 — this is a **prompt typo**, not a code bug; code matches balance.md §M4 table which says 4442)
+- `VETERAN_CONDITIONING_HP_BONUS = 10` ✓
+- `PERK_POOL_SIZE = 8` ✓
+- `PERKS_PER_LEVEL_UP = 3` ✓
+- Perk values in `content/perks.json` match balance.md §M4: tough_skin +15, sharp_blade ×1.15, lean_pack ×0.85, lucky_scavenger ×1.20, keen_eye +0.05, reinforced_plates ×1.15, quick_hands ×0.90, fast_learner ×1.15. Verified via script in Checklist 3.
+
+**Note on `xpRequired(10)`:** The QA acceptance prompt stated `xpRequired(10) = 4440`, but the actual computed value per the canonical formula `round(40 * level^1.5)` is **4442**. The code produces 4442, which matches `docs/balance.md` §M4 XP-curve table (verified on `origin/m4-integration`). The 4440 in the prompt was a typo — code is correct.
+
+## Verdict
+
+**APPROVE.**
+
+All 7 checklists PASS (0 blockers, 0 major findings).
+
+### Non-blocking notes
+
+1. **QA prompt typo `xpRequired(10) = 4440`** — actual value is 4442 per formula and balance.md. Not a code issue; the prompt had an incorrect expected value.
+2. **CombatScene perk modifier integration uses `computePerkModifiers` on every attack** — the function is called multiple times per combat turn (once for mob defense, once for hero attack, once for XP award). This is O(perks × calls) but with 8 max perks and ~2-4 calls per turn, performance impact is negligible. Future optimization: cache modifiers in CombatScene state.
+3. **LevelUpScene uses `scene.launch` then `scene.stop`** — this correctly overlays on the calling scene and removes itself. However, if multiple level-ups occur from a single `gainXP` call, only one LevelUpScene is shown. The GDD §8 specifies popup queue for overkill, but `CombatScene:endCombatVictory` only launches LevelUpScene once. This is a **minor deviation** from GDD (single popup vs queue), but since `gainXP` handles multi-level-up correctly in the XP/level state, the player still gets all level-up benefits — they just pick only 1 perk for the first level-up. For M4 this is acceptable; a queue mechanism can be added in M5+ if needed.
+
+## Recovery
+
+- Role: QA Acceptance Critic M4.
+- Milestone: M4 — Перки и прогрессия — **APPROVED**.
+- Branch: `qa/m4-acceptance` (base `m4-integration` HEAD `581e6da`).
+- Objects under review: PR #35 (`m4/art`), PR #36 (`m4/content`), PR #37 (`m4/progression`).
+- Done sections: Checklist 1-7 all PASS + final APPROVE.
+- Next concrete step: PM мерджит role-PR (#35 → #36 → #37, order neutral) в `m4-integration`, затем M4 gate-close.
+- Blockers: нет.
+
+

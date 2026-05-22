@@ -15,7 +15,8 @@
 | Что | Файл |
 |---|---|
 | Процесс и роли | `staff/TEAM.md`, `staff/PROCESS.md`, `staff/ORCHESTRATION.md` |
-| Текущий gate (M3 — done pending gate-close) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
+| Текущий gate (M4 — done, gate-close pending) | `staff/status/M4.md` |
+| Завершённая веха M3 | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
 | Завершённая веха M2 | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
 | Завершённая веха M1 | `staff/status/M1.md`, `staff/handoff/M1-SUMMARY.md` |
 | State machine | `staff/STATE_MACHINE.md` |
@@ -33,15 +34,19 @@
 - QA всегда отдельная сессия от той роли, которую проверяет.
 - PR не self-merge. Мерджит PM после нужного gate.
 
-## Текущий snapshot (M3 — done pending gate-close)
+## Текущий snapshot (M4 — done, gate-close pending)
 
-_Last reconciled with GitHub: 2026-05-21 (m3-integration HEAD = `aaf2ae5` Merge PR #28: qa(M3 acceptance) — APPROVE)._
+_Last reconciled with GitHub: 2026-05-22 (m4-integration HEAD = `4a04678` — all M4 PR merged)._
 
-- **Веха M3 — Расширение мира (фактически закрыта в `m3-integration`, ждёт gate-close):** все 9 M3 PR смержены — spec phase #20/#21/#22 (kickoff + GDD amendment §5.4/§6.2/§6.4.M3/§10.M3 + balance §M3 + QA Spec APPROVE) + PM align #23/#24 + parallel production #25/#26/#27 (Content +5 mobs/+14 items/+10 recipes/+2 zones/+3 radio signals; Engineer multi-zone + 5 mob AI + RadioScene stub + 89/89 vitest; Artist 5 sprites + 14 icons + 2 backgrounds + radio_icon, 129.8 KB) + QA Acceptance #28 APPROVE на octopus-merge 3 role-PR + PM finalize #29 (этот PR). **Следующий шаг — gate-close PR `m3-integration → main`, мерджит Alex**.
-- **Активная ветка:** `m3-integration` (до gate-close). После gate-close — `main` с обновлённым M3 и приготовление к M4.
-- Скоуп/роли/DoD — `staff/status/M3.md`. Фактическое summary — `staff/handoff/M3-SUMMARY.md`. Текущий gate — `M3_DONE_PENDING_GATE_CLOSE`.
+- **Веха M4 — Перки и прогрессия: DONE.** Все 4 role PR merged в `m4-integration` (#32 GD + #34 GD fix + #33 QA Spec + #35 Artist + #36 Content + #37 Engineer + #38 QA Acceptance). 128/128 vitest, build clean, QA APPROVE.
+- **Активная ветка:** `m4-integration` (gate-close PR `m4-integration → main` pending).
+- **Следующие шаги (PM):** merge gate-close PR `m4-integration → main` → M4 closed → M5 kickoff (Боссы и инстансы).
+- **Текущий gate:** `M4_DONE` (gate-close pending).
+- Скоуп/DoD — `staff/status/M4.md`. Anti-scope: skill tree (M5+), активные ability (M5+), боссы (M5), полная радио-логика (M6), Yandex SDK (M8).
 
 ## Закрытые вехи
 
+- **M4 — Перки и прогрессия:** закрыта 2026-05-22 gate-close pending (`m4-integration → main`). Полный summary — `staff/handoff/M4-SUMMARY.md`.
+- **M3 — Расширение мира:** закрыта 2026-05-21 gate-close PR #30 (`m3-integration → main`). Полный summary — `staff/handoff/M3-SUMMARY.md`.
 - **M2 — Играбельный MVP:** закрыта 2026-05-20 gate-close PR #19 (`m2-integration → main`). Полный summary — `staff/handoff/M2-SUMMARY.md`.
 - **M1 — Технический скелет:** закрыта 2026-05-19 gate-close PR #12 (`m1-integration → main`). Полный summary — `staff/handoff/M1-SUMMARY.md`.

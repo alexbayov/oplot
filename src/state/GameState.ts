@@ -25,6 +25,7 @@ const createDefaultPlayer = (): PlayerState => ({
   max_weight_kg: HERO_MAX_WEIGHT_KG,
   equipped_weapon_id: HERO_START_WEAPON_ID,
   equipped_armor_id: HERO_START_ARMOR_ID,
+  perks: [],
   backpack: [],
 });
 
@@ -34,6 +35,7 @@ const createEmptyContent = (): ContentData => ({
   recipes: {},
   zones: {},
   radioSignals: [],
+  perks: [],
 });
 
 const createDefaultProgress = (): GameProgress => ({

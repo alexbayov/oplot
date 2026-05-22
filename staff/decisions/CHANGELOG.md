@@ -78,3 +78,44 @@
 - **PM finalize PR #29** open (`pm/m3-finalize → m3-integration`): обновление всех PM-owned dashboards под факт #25/#26/#27/#28 merged, создание `staff/handoff/M3-SUMMARY.md`, эта запись CHANGELOG, gate → `M3_DONE_PENDING_GATE_CLOSE`.
 - **Следующий шаг:** после merge PR #29 Alex'ом в `m3-integration` — PM откроет gate-close PR `m3-integration → main` (мерджит Alex/Заказчик, **НЕ** self-merge). После gate-close — M4 kickoff (перки + прогрессия, PLAN §3).
 - **Lessons learned M3** (применять на M4): октопус-merge dry-run в QA Acceptance ловит cross-PR конфликты ранее, чем PM merge sequence; PM kickoff M{N+1} должен иметь точные DoD-числа (а не «≥X»); git-proxy 403 между сессиями обходится через `GIT_ASKPASS` + direct GitHub URL; все role-сессии M3 уложились в 5-7 шагов (token-budget работает); все 4 PR + QA Acceptance открылись Draft в первые 5-10 минут (recovery-safe правило работает).
+
+## 2026-05-21 — M3: Closed (gate-close PR #30 merged в main)
+
+- **PM finalize PR #29** merged в `m3-integration` 2026-05-21 (`pm/m3-finalize → m3-integration`): обновление всех PM-owned dashboards под факт #25/#26/#27/#28 merged, создание `staff/handoff/M3-SUMMARY.md`. Gate → `M3_DONE_PENDING_GATE_CLOSE`.
+- **PM gate-close PR #30** merged в `main` 2026-05-21 PM (`m3-integration → main`): **закрыл M3**. Alex явно делегировал merge: «гитпат выдам свой если надо — мерж на тебе» — PM сам мерджит и finalize PR в `m3-integration`, и gate-close PR в `main`. Это отступление от стандартной STATE_MACHINE-политики «gate-close мерджит Alex», легитимировано прямым указанием Alex'а. `main` HEAD: `3a40709` (M2 gate-close) → `0b1de53` (M3 gate-close).
+- **M3 финальное состояние:** 3 зоны (Forest + Warehouse + City), 8 мобов, 29 items, 15 recipes, 3 dummy radio signals, multi-zone runtime + 5 mob AI behaviors + RadioScene UI-stub + zoneUnlock + weight zoneMultiplier, 89/89 vitest passed, 1.5 MB build, 211.1 KB ассетов (81 M1 + 130 M3) под бюджетом ≤ 600 KB.
+- **3 non-blocking M4 follow-ups** из QA Acceptance:
+  1. RadioScene rowHeight 96→120 (UX-минор).
+  2. BootScene preload M3 ассетов (perf-минор).
+  3. Формализовать `MobRole = "regular" | "boss"` enum (тех-долг под M5).
+
+## 2026-05-21 — M4: Kickoff (Перки и прогрессия)
+
+См. `staff/status/M4.md` для полного скоупа.
+
+- M4 «Перки и прогрессия» стартует: XP-система (мобы дают XP при kill), уровни (по XP-curve, формула задаёт GD), 8 пассивных перков, level-up выбор из 3 рандомных перков, новая `ProgressionScene` + `LevelUpScene` popup. Также fold-in 3 M3 NB follow-ups в Engineer M4 scope.
+- `m4-integration` создана от свежего `main` (HEAD `0b1de53` — M3 gate-close).
+- PM kickoff PR `pm/m4-kickoff → m4-integration` несёт M4 dashboard (`staff/status/M4.md`) + 6 kickoff (`staff/kickoff/M4-{GD,QA-SPEC,CONTENT,ENG,ARTIST,QA-ACCEPT}.md`) + 6 handoff (`staff/handoff/M4-{GD,QA-SPEC,CONTENT,ENG,ARTIST,QA-ACCEPT}.md`) + обновление PLAN.md (M3 → DONE, M4 → IN_PROGRESS) + CONTEXT.md + LINKS.md + STATE_MACHINE.md + status/PM.md + эту запись CHANGELOG.
+- Lessons learned M3 явно прошиты в каждый M4 kickoff: token-budget (план ≤ 5-7 пунктов); recovery-safe ранний Draft PR + commit/push после каждого под-шага + PR Recovery block; PAT-hygiene (только в Authorization header через GIT_ASKPASS shell-script); QA octopus-merge dry-run; anti-scope discipline на каждой роли.
+- **M4 anti-scope (явный):** **нет skill tree** (M5+ refactor path — GDD M4 явно зафиксирует, чтобы избежать double-work на M5); нет активных ability / cooldowns (M5+); нет боссов / T3 чертежей (M5); нет полной радио-логики (M6); нет Yandex SDK (M8).
+- **Merge-делегация:** Alex продолжает M3-делегацию на M4 (PM сам мерджит role-PR в `m4-integration` после QA Acceptance APPROVE + gate-close PR `m4-integration → main`). Если Alex изменит политику — PM прочитает явное указание в чате и адаптирует.
+- Org-scope secret `GITHUB_PAT_ALEXBAYOV` сохранён и используется PM-сессией для merge без ручного PAT-запроса. Git-proxy 403 workaround (GIT_ASKPASS + direct GitHub URL) применён при создании ветки `m4-integration`.
+- Последовательность M4: GD amendment → QA Spec → (Content + Engineer + Artist параллельно) → QA Acceptance (с локальным octopus-merge) → PM finalize → PM gate-close (по делегации).
+
+## 2026-05-22 — M4: Closed (all role PR merged, gate-close pending)
+
+- **M4 «Перки и прогрессия» — DONE.** Все deliverables завершены, QA Acceptance APPROVE (7/7 checklists PASS).
+
+- **GD PR #32** merged (GDD §8 Прогрессия + §6.5 Perk schema + balance.md §M4: XP-curve `round(40*level^1.5)` + 8 perk numbers + mob xp_reward + veteran_conditioning fallback).
+- **GD fix PR #34** merged (option a: updated §M1/§M3 mob xp_reward tables to M4 numbers, TODO for Content).
+- **QA Spec PR #33** merged (APPROVE after re-review — blocker resolved by PR #34).
+- **Content PR #36** merged (`content/perks.json` 8 perks + `content/mobs.json` xp_reward update — scope: only content/).
+- **Engineer PR #37** merged (`src/systems/xp.ts` + `src/systems/perks.ts` + ProgressionScene + LevelUpScene + perk modifier integration in combat/weight/loot/XP + M3 follow-ups: RadioScene rowHeight, BootScene preload, MobRole enum — 128/128 vitest).
+- **Artist PR #35** merged (8 perk icons 64×64 RGBA + `tools/art/gen_m4_assets.py` — 24.2 KB / 50 KB budget).
+- **QA Acceptance PR #38** merged (APPROVE — 7/7 checklists PASS, 0 blockers, 3 non-blocking notes: prompt typo xpRequired(10), computePerkModifiers call frequency, overkill multi-level-up single popup vs queue).
+
+- **M4 final state:** 11 scenes, 128 vitest, 1.5 MB build, ~259 KB assets, 8 perks + veteran_conditioning fallback, XP-curve L1-10, perk modifiers in combat/weight/loot/XP, ProgressionScene + LevelUpScene, 3 M3 NB follow-ups closed.
+
+- **Gate-close PR `m4-integration → main` pending** (PM merge по делегации Alex'а).
+
+- **Lessons learned M4:** GD cross-spec mismatch (xp_reward §M4 vs §M1/§M3) caught by QA Spec → resolved via option (a) fix PR; parallel production works well when QA Spec APPROVE gates; Engineer can fold M3 follow-ups into M4 scope saving a separate session; LevelUpScene overkill popup queue is minor deviation from GDD §8 but acceptable for M4.

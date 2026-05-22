@@ -3,7 +3,7 @@
 
 // Global constants (balance.md §Общие константы)
 export const HERO_MAX_WEIGHT_KG = 30;
-export const MAX_LEVEL = 5;
+export const MAX_LEVEL = 10;
 export const BASE_RETURN_TIME_S = 30;
 export const WEIGHT_PENALTY_FACTOR = 1.0;
 export const LOOT_LOSS_ON_DEFEAT = 0.5;
@@ -23,10 +23,13 @@ export const HERO_START_WEAPON_ID = "knife";
 export const HERO_START_ARMOR_ID = "cloth_jacket";
 export const HERO_START_BANDAGES = 2;
 
-// XP table (balance.md §XP-таблица).
-// xp_to_next(level) = 25 * level^2 - 25 * level + 50.
-export const xpToNext = (level: number): number =>
+// XP table — M4 formula: xp_to_next(level) = round(40 * level^1.5).
+// M1/M2 formula preserved as xpToNextM1 for reference only.
+export const xpToNextM1 = (level: number): number =>
   25 * level * level - 25 * level + 50;
+
+export const xpToNext = (level: number): number =>
+  Math.round(40 * Math.pow(level, 1.5));
 
 export const xpRequired = (level: number): number => {
   let total = 0;
@@ -35,6 +38,11 @@ export const xpRequired = (level: number): number => {
   }
   return total;
 };
+
+// M4 perk pool size (8 JSON perks + 1 hardcoded veteran_conditioning fallback).
+export const PERK_POOL_SIZE = 8;
+export const PERKS_PER_LEVEL_UP = 3;
+export const VETERAN_CONDITIONING_HP_BONUS = 10;
 
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;

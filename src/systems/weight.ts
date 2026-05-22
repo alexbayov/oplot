@@ -30,12 +30,13 @@ export const computeReturnTime = (
   curWeight: number,
   maxWeight: number,
   zoneMultiplier = 1.0,
+  perkWeightPenaltyMultiplier = 1.0,
 ): number => {
   if (maxWeight <= 0) return BASE_RETURN_TIME_S * zoneMultiplier;
   return (
     BASE_RETURN_TIME_S *
     zoneMultiplier *
-    (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR)
+    (1 + (curWeight / maxWeight) * WEIGHT_PENALTY_FACTOR * perkWeightPenaltyMultiplier)
   );
 };
 
