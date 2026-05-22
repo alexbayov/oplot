@@ -755,6 +755,9 @@ interface ZoneLevel {
   resources: string[];           // id ресурсов из items.json
   resource_count: [number, number]; // [min, max] суммарно за глубину
   min_player_level: number;      // требуется для входа на глубину
+  is_gas?: boolean;              // M5+: флаг газовой глубины. Optional, default false.
+                                 //   Если true → на этой глубине gas damage per turn (§9.5).
+                                 //   M1-M4 zones: поле отсутствует → no gas damage → backward-compat.
 }
 
 interface Zone {
@@ -764,13 +767,24 @@ interface Zone {
   description_ru: string;
   resources: string[];           // все ресурсы, доступные в зоне (агрегат)
   mobs: string[];                // все мобы зоны (агрегат)
-  boss_id: string | null;        // в MVP всегда null
+  boss_id: string | null;        // в MVP всегда null; M5: id босса зоны (см. §9.2)
   unique_resources: string[];    // ресурсы, добываемые ТОЛЬКО в этой зоне
   levels: ZoneLevel[];           // 3 объекта для MVP-зоны "forest"
   unlock_condition: string;      // "start" для forest в MVP; M3 расширяет (см. §6.4.M3)
   return_time_multiplier?: number; // M3+: множитель к BASE_RETURN_TIME_S (см. §6.4.M3).
                                    //   Optional, default 1.0. Engineer читает `zone.return_time_multiplier ?? 1.0`.
                                    //   `forest` поле НЕ задаёт → default=1.0 → M1/M2 поведение математически no-op.
+  is_gas?: boolean;              // M5+: флаг газовой зоны (агрегат). Optional, default false.
+                                   //   Если true → зона содержит газовые глубины (детали per-depth в levels[].is_gas).
+                                   //   Engineer может использовать zone.is_gas для быстрой проверки
+                                   //   «зона вообще имеет газ?». Фактический gas damage — per-depth.
+                                   //   M1-M4 zones: поле отсутствует → no gas → backward-compat.
+  gas_damage_per_turn?: number;  // M5+: HP урона от газа за ход (целое > 0). Required если is_gas=true.
+                                   //   Применяется если hero НЕ имеет gas_mask (§9.5).
+                                   //   M1-M4 zones: поле отсутствует → no gas damage → backward-compat.
+  daily_reset_hours?: number;    // M5+: cool-down дейли-инстанса в часах. Required если boss_id !== null.
+                                   //   M5 value: 24 для всех 3 зон (см. §9.4, balance §M5.6).
+                                   //   M1-M4 zones: поле отсутствует → no daily → backward-compat.
 }
 ```
 
@@ -780,6 +794,13 @@ interface Zone {
 > - `Zone.return_time_multiplier?: number` — optional, default 1.0. Engineer применяет в расширенной формуле `return_time_s = BASE_RETURN_TIME_S * (zone.return_time_multiplier ?? 1.0) * (1 + (cur_weight / max_weight) * WEIGHT_PENALTY_FACTOR)`. `forest` поле НЕ задаёт → M1/M2 числа `balance.md` не меняются.
 > - `Zone.unlock_condition` теперь принимает богаче строки: `"start"` (forest), `"forest_depth_2_completed"` (warehouse), `"any_warehouse_sortie_completed"` (city). Engineer переводит строки в boolean-флаги в `GameState.progress` (см. §6.4.M3 implementation hint).
 > - `ZoneLevel.depth` сужение `1 | 2 | 3` — для warehouse/city допустимы `1 | 2` или `1 | 2 | 3` соответственно (см. §6.4.M3). Тип расширяется до `1 | 2 | 3`, что уже соответствует существующему union (no change to schema).
+>
+> **M5 schema extensions (см. §9):**
+> - `ZoneLevel.is_gas?: boolean` — optional, default false. Флаг газовой глубины. M1-M4: отсутствует → no gas → backward-compat.
+> - `Zone.is_gas?: boolean` — optional, default false. Агрегатный флаг «зона содержит газ». Per-depth — в `levels[].is_gas`. M1-M4: отсутствует → no gas → backward-compat.
+> - `Zone.gas_damage_per_turn?: number` — optional, required если `is_gas=true`. HP урона от газа за ход. M1-M4: отсутствует → no gas damage → backward-compat.
+> - `Zone.daily_reset_hours?: number` — optional, required если `boss_id !== null`. Cool-down дейли-инстанса в часах. M5 value: 24. M1-M4: отсутствует → no daily → backward-compat.
+> - `Zone.boss_id` — существующее поле `string | null`. На M5 заполняется id босса зоны (вместо null). Forest/warehouse/city все получают boss_id.
 
 #### 6.5. `Perk`
 
