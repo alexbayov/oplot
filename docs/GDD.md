@@ -575,6 +575,7 @@ final_damage = max(1, mob_damage_roll * roll - hero_total_armor)
 - **§6.4.M3 Новые зоны:** конкретные комбинации мобов в `enemies[]` per depth задаёт зона.
 - **§7 Радио (M3 stub):** не связано — радио на M3 не имеет combat-эффектов.
 - **`balance.md` §M3:** все числа (HP, damage, defense, base_speed, xp) — там. Этот раздел описывает **только поведение**, не значения.
+- **§9 Боссы M5:** 3 босса M5 используют те же 5 behavior_id из §5.4.6 в phase 1 и phase 2. Phase swap переключает `mob.behavior_id` runtime (§9.3). Никаких новых AI behaviours на M5 не вводится.
 
 ---
 
@@ -697,6 +698,17 @@ interface Mob {
                                  //   Допустимые значения M3: "ranged_keep_distance" | "defensive_cover"
                                  //     | "berserker_low_hp" | "pack_bonus_when_paired" | "armor_piercing_ranged".
                                  //   M4+ — расширяется по мере добавления новых паттернов.
+                                 //   M5: boss behaviour_id = phase 1 behavior (см. §9.2).
+                                 //     После phase transition → runtime swap на phase_2_behavior_id.
+  phase_threshold?: number;      // M5+: fraction (0..1). Required для role:"boss". При boss.hp / hp_max
+                                 //   < phase_threshold → phase transition (§9.3). Optional для regular
+                                 //   mobs (не используется). Default: отсутствует → no phase transition.
+  phase_2_behavior_id?: string;  // M5+: ID behaviour из §5.4 для phase 2. Required для role:"boss".
+                                 //   Допустимые значения: те же 5 behavior_id из §5.4.6.
+                                 //   После phase transition → boss.behavior_id = phase_2_behavior_id.
+  boss_drop_id?: string | null;  // M5+: id ресурса в items.json, гарантированно выпадающего при
+                                 //   смерти босса (chance=1.0, count=1). Required для role:"boss".
+                                 //   Для regular mobs — absent/null (no guaranteed drop).
   description_ru: string;
   flavor_ru: string;
   drop_table: DropEntry[];
@@ -708,6 +720,11 @@ interface Mob {
 > **M3 schema extensions (см. §5.4):**
 > - `MobType` enum получил значение `"mech"` (forward-compat: M1 mobs не затрагиваются).
 > - `Mob.behavior_id?: string` — опциональное поле для уникального AI-паттерна. Для M1 mobs **не задаётся** (Engineer fallback на existing M2 hard-checks по `id`). Для M3 mobs (5 шт.) — обязательное (один из 5 enum-string значений §5.4.6).
+>
+> **M5 schema extensions (см. §9):**
+> - `Mob.phase_threshold?: number` — optional, required для `role:"boss"`. Fraction (0.5 на M5). Trigger phase transition (§9.3). M1-M4 mobs: поле отсутствует → no phase transition → backward-compat.
+> - `Mob.phase_2_behavior_id?: string` — optional, required для `role:"boss"`. Один из 5 behaviour_id §5.4.6. M1-M4 mobs: поле отсутствует → no phase swap → backward-compat.
+> - `Mob.boss_drop_id?: string | null` — optional, required для `role:"boss"`. ID ресурса для guaranteed drop. M1-M4 mobs: поле отсутствует → no guaranteed drop → backward-compat.
 
 #### 6.3. `Recipe`
 
