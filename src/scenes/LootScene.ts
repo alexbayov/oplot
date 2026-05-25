@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
 import type { InventoryStack } from "../state/types";
+import { runTween } from "../systems/tweens";
 import { canAddItem, computeWeight } from "../systems/weight";
 import {
   createButton,
@@ -94,6 +95,9 @@ export class LootScene extends Phaser.Scene {
   private takeAllBtn?: Phaser.GameObjects.Container;
 
   private takeAll(): void {
+    if (this.lootListText) {
+      runTween(this, "tween_loot_bounce", this.lootListText);
+    }
     const sortie = GameState.currentSortie;
     if (!sortie) return;
     const player = GameState.player;

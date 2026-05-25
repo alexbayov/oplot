@@ -1,5 +1,6 @@
 import Phaser from "phaser";
-import { GameState, addToStack } from "../state/GameState";
+import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameState";
+import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
@@ -33,15 +34,55 @@ export class BaseScene extends Phaser.Scene {
       `Склад: ${stashStacks} стаков · ${stashWeight.toFixed(1)} кг`,
     );
 
-    createButton(this, 380, "В вылазку", () => this.scene.start("MapScene"));
-    createButton(this, 436, "Мастерская", () => this.scene.start("CraftScene"));
-    createButton(this, 492, "Инвентарь", () => this.scene.start("InventoryScene"));
-    createButton(this, 548, "Радио", () => this.scene.start("RadioScene"));
-    createButton(this, 604, "Прогрессия", () => this.scene.start("ProgressionScene"));
+    const buttons = [
+      createButton(this, 380, "В вылазку", () => this.scene.start("MapScene")),
+      createButton(this, 436, "Мастерская", () => this.scene.start("CraftScene")),
+      createButton(this, 492, "Инвентарь", () => this.scene.start("InventoryScene")),
+      createButton(this, 548, "Радио", () => this.scene.start("RadioScene")),
+      createButton(this, 604, "Прогрессия", () => this.scene.start("ProgressionScene")),
+    ];
+
+    for (const btn of buttons) {
+      btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
+        runTween(this, "tween_menu_hover", btn);
+      });
+    }
+
+    this.addSettingsControls();
 
     if (import.meta.env.DEV) {
       this.setupDevCheats();
     }
+  }
+
+  private addSettingsControls(): void {
+    const muteLabel = this.add
+      .text(300, 20, `SFX ${GameState.settings.sfxMuted ? "OFF" : "ON"}`, {
+        color: "#F5F1E8",
+        fontFamily: "Arial, sans-serif",
+        fontSize: "12px",
+      })
+      .setOrigin(0.5);
+    muteLabel.setInteractive({ useHandCursor: true });
+    muteLabel.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
+      setSfxMute(!GameState.settings.sfxMuted);
+      this.scene.restart();
+    });
+
+    const volLabel = this.add
+      .text(300, 40, `Vol ${Math.round(GameState.settings.sfxVolume * 100)}%`, {
+        color: "#C8C0B0",
+        fontFamily: "Arial, sans-serif",
+        fontSize: "12px",
+      })
+      .setOrigin(0.5);
+    volLabel.setInteractive({ useHandCursor: true });
+    volLabel.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
+      let next = GameState.settings.sfxVolume - 0.25;
+      if (next < 0) next = 1;
+      setSfxVolume(next);
+      this.scene.restart();
+    });
   }
 
   private setupDevCheats(): void {
