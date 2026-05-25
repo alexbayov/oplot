@@ -1553,3 +1553,151 @@ M6 role-PR (#52 Content, #53 Engineer, #54 Artist) полностью соотв
 - Verdict: APPROVE
 - Fix applied: `f1ab9fa` ambush zone_id from signal.zone_id
 - Next: PM merge sequence (Content → Engineer+fix → Artist) → gate-close m6-integration → main
+
+---
+
+# M7 Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M7 — Полировка, баланс и расширение контента
+**Объект ревью:** GD M7 amendment PR #59 (`m7/gd-amendment` → `m7-integration`), HEAD `52af23d` (merged)
+**QA-report ветка:** `qa/m7-spec-review` (base `m7-integration`)
+**Дата:** 2026-05-25
+
+## Объект ревью — артефакты
+
+| Артефакт | Источник | Что смотрел |
+|---|---|---|
+| GD PR | #59 (`m7/gd-amendment` → `m7-integration`), merged | весь diff, 623 строки (+623/-9) |
+| GDD §11.M7 | `docs/GDD.md` | 7 подсекций (scope, 9 zones, 80 items, 42 recipes, 10 SFX, 16 tweens, smoke, anti-scope) |
+| balance §M7 | `docs/balance.md` | 7 подсекций (tuning, 9-zone table, 45 new items, 24 recipes, SFX, tweens, build contract, counts) |
+
+## Метрика diff'а
+
+| Файл | + строк | − строк | Тип изменений |
+|---|---|---|---|
+| `docs/GDD.md` | 253 | 3 | Новая §11.M7 (7 подсекций), renumber §11→§12, §12→§13 |
+| `docs/balance.md` | 307 | 6 | Новая §M7 (7 подсекций), cross-ref updates |
+| `staff/status/GAME_DESIGNER.md` | 63 | 0 | M7 status block |
+| **Всего** | **623** | **9** | Чисто аддитивное расширение; M1–M6 числа не затронуты |
+
+## Checklist 1 — Scope / Count Contract
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Точные числа в Count Contract | **PASS** | GDD §11.M7.1 + balance §M7.7: zones 3→9 (+6), items 35→80 (+45), recipes 18→42 (+24), SFX 0→10 (+10), tweens 0→16 (+16), tests 164→176 (+12). Везде exact integers, нет `≥`, `~`, `80+`. |
+| 6 новых зон перечислены | **PASS** | `suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant` — все 6 присутствуют в GDD §11.M7.2 и balance §M7.2. |
+| 3 существующие зоны не структурно изменены | **PASS** | GDD §11.M7.2: «3 существующие зоны (`forest`, `warehouse`, `city`) — не изменяются структурно, допускается только числовой тюнинг в `balance.md` §M7.1». |
+
+**§1 verdict: PASS.**
+
+## Checklist 2 — Balance Tuning M2–M6
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Hero baseline tuning | **PASS** | balance §M7.1.1: MAX_WEIGHT_KG проверка на соответствие 9 зонам. Микро-сдвиги задокументированы как возможные, не блокирующие. |
+| Mob stat fine-tune | **PASS** | balance §M7.1.2: таблица before/after для 8 regular + 3 boss мобов. Все значения в пределах M1–M6 baseline. |
+| Weapon/Armor gap T1→T2→T3 | **PASS** | balance §M7.1.3: проверка damage/defense прогрессии. Gaps логичны. |
+| Return/Drop multipliers | **PASS** | balance §M7.2: 9-zone master table с return_mult и drop_mult для каждой зоны. Forest=1.0/1.0 (baseline). Power_plant=1.8/1.2 (highest risk). |
+| Perk sanity check | **PASS** | balance §M7.1.5: 8 перков M4 + T3 gear M5 не ломают XP-curve L1-10. |
+
+**§2 verdict: PASS.**
+
+## Checklist 3 — Content Readiness (45 items / 24 recipes / 6 zones)
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| 45 новых предметов | **PASS** | balance §M7.3 item delta table: ровно 45 строк. 12 T1 resources + 33 T2 gear/consumables. 0 T3, 0 T4. |
+| Tier policy: ≤5 T3, no T4 | **PASS** | 0 T3 среди новых, 0 T4. В рамках ≤5 T3 лимита. |
+| 24 новых рецепта | **PASS** | balance §M7.3 recipe delta table: ровно 24 строки. |
+| Каждый новый рецепт использует ≥1 new-zone resource | **PASS** | Проверено скриптом: все 24 рецепта содержат хотя бы 1 из 12 new-zone resources (`suburban_scrap`, `garden_seed`, `school_book`, `broken_tablet`, `machine_part`, `industrial_cable`, `hospital_supply`, `sterile_wrap`, `metro_token`, `rail_shard`, `reactor_ash`, `copper_coil`). |
+| Coverage matrix | **PASS** | balance §M7.3 coverage matrix: 12 ресурсов → рецепты. Все новые ресурсы покрыты. |
+| 6 новых зон с depth config | **PASS** | balance §M7.2: depth tables для `suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant`. Все с 3 depth levels. |
+| Unlock chain логичен | **PASS** | GDD §11.M7.2: `suburbs` → `school` → `warehouse`/`factory` → `hospital` → `city` → `metro` → `power_plant`. Progressive risk (1→5). |
+
+**§3 verdict: PASS.**
+
+## Checklist 4 — SFX Policy (10 UI SFX)
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Ровно 10 SFX trigger IDs | **PASS** | GDD §11.M7.4 + balance §M7.4: `sfx_hit`, `sfx_heal`, `sfx_craft`, `sfx_loot`, `sfx_radio`, `sfx_menu_click`, `sfx_level_up`, `sfx_boss_phase`, `sfx_blocked`, `sfx_confirm` = 10 шт. |
+| Все ≤1 секунды | **PASS** | balance §M7.4 max_duration_ms: max=1000ms (sfx_level_up, sfx_boss_phase). Все ≤1000ms. |
+| No music/voice/ambience | **PASS** | GDD §11.M7.4: «только короткие UI SFX (≤1 с), без музыки, голосов или ambience». Явный anti-scope. |
+| Settings: mute + volume slider | **PASS** | GDD §11.M7.4: mute toggle + volume 0.0–1.0 + session memory (no cloud). |
+
+**§4 verdict: PASS.**
+
+## Checklist 5 — Animation Policy (16 Visual Tweens)
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Ровно 16 tween event IDs | **PASS** | GDD §11.M7.5 + balance §M7.5: `tween_damage_flash`, `tween_hit_shake`, `tween_heal_pulse`, `tween_loot_bounce`, `tween_craft_spin`, `tween_menu_hover`, `tween_level_up_glow`, `tween_boss_phase_red`, `tween_return_walk`, `tween_xp_bar_fill`, `tween_radio_static`, `tween_gas_warning`, `tween_sortie_enter`, `tween_defeat_fade`, `tween_perk_card_deal`, `tween_item_tooltip` = 16 шт. |
+| Visual-only, no gameplay logic in callbacks | **PASS** | GDD §11.M7.5: «Принцип: только визуальные Phaser tweens, никакой игровой логики в callbacks. Все изменения состояния применяются до старта tween». |
+| Easing и duration указаны для каждого | **PASS** | balance §M7.5: каждая из 16 строк имеет duration_ms, easing, effect. |
+
+**§5 verdict: PASS.**
+
+## Checklist 6 — Smoke Regression (40+ пунктов)
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| 40+ пунктов по M2→M7 | **PASS** | GDD §11.M7.6: 42 пронумерованных пункта (M2: 1-3, M3: 4-10, M4: 11-20, M5: 21-26, M6: 27-34, M7: 35-42). |
+| Покрытие всех вех M2–M7 | **PASS** | Все 6 вех представлены. M7-специфичные пункты: SFX mute/volume, SFX triggers, tween visual-only, 9-zone unlock chain. |
+
+**§6 verdict: PASS.**
+
+## Checklist 7 — Anti-scope / Recovery / PR Hygiene
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| No new mobs/bosses | **PASS** | GDD §11.M7.1/§11.M7.7: «mob pool заморожен: 8 regular + 3 boss». balance §M7.2: все mob_pool только из существующих 11 мобов. |
+| No T4 | **PASS** | Явный anti-scope: «потолок T3». Новые предметы: 0 T3, 0 T4. |
+| No music/voice/ambience | **PASS** | Явный anti-scope: «только 10 коротких UI SFX». |
+| No SDK/cloud/ads/IAP | **PASS** | Явный anti-scope в GDD + balance. SFX settings: «без cloud save / Yandex SDK». |
+| No UI redesign | **PASS** | «только SFX и tween polish поверх существующих сцен». |
+| No skill tree / abilities / cooldowns / modular slots / faction reputation | **PASS** | Все 5 пунктов явно в anti-scope §11.M7.7. |
+| PR scope clean | **PASS** | Только `docs/GDD.md`, `docs/balance.md`, `staff/status/GAME_DESIGNER.md`. Никаких `src/`, `content/`, `assets/`. |
+| Recovery block present | **PASS** | PR #59 body содержит Recovery block с base, branch, scope, continue-from, forbidden. |
+| PR base = `m7-integration` | **PASS** | `gh pr view 59` → base: m7-integration. |
+
+**§7 verdict: PASS.**
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | Scope / Count Contract (9/80/42/10/16/176 exact) | **PASS** |
+| 2 | Balance Tuning M2–M6 (hero, mobs, weapon/armor, return/drop, perks) | **PASS** |
+| 3 | Content Readiness (45 items, 24 recipes, 6 zones, ≥1 new-zone resource per recipe) | **PASS** |
+| 4 | SFX Policy (10 short UI SFX ≤1s, no music/voice) | **PASS** |
+| 5 | Animation Policy (16 visual tweens, no gameplay logic in callbacks) | **PASS** |
+| 6 | Smoke Regression (42 пунктов M2→M7) | **PASS** |
+| 7 | Anti-scope / Recovery / PR Hygiene | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+GD M7 amendment (PR #59, merged into `m7-integration` HEAD `52af23d`) полностью соответствует брифу `staff/handoff/M7-GD.md` и PM guardrails:
+- Exact counts: 9 zones / 80 items / 42 recipes / 10 SFX / 16 tweens / 176 tests.
+- 6 new zones (`suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant`) с progressive unlock chain and depth configs.
+- 45 new items (12 T1 resources + 33 T2 gear/consumables), 0 T3, 0 T4.
+- 24 new recipes, каждый с ≥1 new-zone resource (verified by script).
+- 10 UI SFX ≤1s, no music/voice/ambience; mute+volume settings.
+- 16 visual-only Phaser tweens, no gameplay logic in callbacks.
+- 42-point smoke regression outline covering M2→M7.
+- Clean anti-scope: zero new mobs/bosses, no T4, no SDK, no skill tree, no modular slots, no faction reputation.
+- Scope clean: only GDD.md, balance.md, GAME_DESIGNER.md modified.
+
+**Готов к merge `qa/m7-spec-review → m7-integration` и запуску Content / Engineer / Artist параллельно.**
+
+## Recovery
+
+- Role: QA Spec Reviewer M7
+- Base: `m7-integration` HEAD `52af23d`
+- Branch: `qa/m7-spec-review`
+- Object: GD M7 amendment PR #59
+- Done: all 7 checklists reviewed, script verification of 24 recipes
+- Verdict: APPROVE
+- Next: PM merge QA PR → kickoff Content + Engineer + Artist
