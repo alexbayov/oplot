@@ -982,6 +982,153 @@ All 7 checklists PASS (0 blockers, 0 major findings).
 
 ---
 
+# M8a Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M8a — Platform & Persistence (GD §13a amendment)
+**Объект ревью:** GD M8a amendment, PR #67 (`m8a/gd-amendment → m8a-integration`), merged into `m8a-integration`
+**QA-report ветка:** `qa/m8a-spec-review` (base `m8a-integration`)
+**Дата:** 2026-05-26
+**Статус:** DONE — **APPROVE**
+
+## Объект ревью — артефакты
+
+| Артефакт | Источник | Что смотрел |
+|---|---|---|
+| GDD §13a (Platform/Persistence/Mobile) | `docs/GDD.md` §13a.1–§13a.6 | все 6 подсекций |
+| balance §M8a | `docs/balance.md` §M8a | throttle/quota/constants table |
+| `staff/status/M8a.md` | scope/anti-scope/DoD | reference для чек-листа 6 |
+| `staff/handoff/M7-SUMMARY.md` | M7 counts frozen | reference для чек-листа 7 |
+
+## Checklist 1 — SDK lifecycle spec is implementable
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Script tag specified | PASS | `<script src="https://yandex.ru/games/sdk/v2">` в index.html (§13a.1) |
+| Init with singleton | PASS | `YaGames.init()` → Promise\<SDKInstance\>, singleton в `src/systems/platform.ts` |
+| Ready signal after Boot preload | PASS | `sdk.features.LoadingAPI?.ready()` после BootScene preload |
+| **4 failure modes covered:** | | |
+| — No network / adblock / local dev | PASS | `YaGames` undefined → игра без SDK, `console.warn` только |
+| — `YaGames.init()` reject | PASS | Аналогично: игра без SDK-фич |
+| — `LoadingAPI` not supported | PASS | Optional chaining `?.ready()`, noop |
+| — `getPlayer()` reject | PASS | Cloud save недоступен; локальная сессия продолжается |
+| No `throw`/`console.error` mandated | PASS | Явно: «никаких throw, никакого catch → reload». Игра идентична M7 |
+
+**§13a.1 verdict: PASS.**
+
+## Checklist 2 — Cloud save schema complete
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| All GameState fields enumerated | PASS | `level`, `xp`, `perks`, `inventory`, `baseStash`, `radio_trust`, `resolvedSignals`, `settings` (mute/volume), `saved_at` — явно, без «etc». |
+| Snapshot size vs 200 KB quota | PASS | `YANDEX_PLAYER_DATA_QUOTA_BYTES = 204800`, `EXPECTED_SNAPSHOT_SIZE_BYTES ~2048` (×100 запас) |
+| Conflict policy single rule | PASS | Boot: `remote.saved_at > local.saved_at → use remote`. Save: last-writer-wins, no merge. |
+| Throttle interval | PASS | `MIN_CLOUD_SAVE_INTERVAL_S = 10` сек |
+| **7 critical triggers:** | PASS | post-sortie-return, post-craft, post-level-up, settings-change, perk-choice-commit, **visibilitychange='hidden'** (без throttle), **beforeunload** (без throttle) |
+| Fail-soft | PASS | Локальная in-memory сессия идентична M7; один `console.warn` |
+
+**§13a.2 verdict: PASS.**
+
+## Checklist 3 — Locale RU lock unambiguous
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `t(key)` API defined | PASS | `t(key: string): string` — возвращает RU-строку из registry |
+| `i18n.lang` ignored | PASS | «читается на старте, но игнорируется на M8a (всегда RU)» |
+| EN forward hook documented | PASS | «любая строка из нового кода проходит через t(). В будущем — замена registry» |
+| Scope: только новый M8a-код | PASS | «ОБЯЗАТЕЛЬНО только для нового M8a-кода. Массовый рефакторинг M2-M7 отложен в BACKLOG» |
+
+**§13a.3 verdict: PASS.**
+
+## Checklist 4 — Mobile-first viewport spec complete
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Exact viewport meta | PASS | `width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover` |
+| Safe-area surfaces | PASS | `.game-container` + HUD-overlay, `env(safe-area-inset-*)` для всех 4 сторон |
+| iOS audio unlock on gesture | PASS | Первый `touchstart`/`pointerdown` на canvas → create/resume AudioContext |
+| Portrait-only | PASS | `sdk.screen.orientation?.lock("portrait")` или manifest; «нет landscape-поддержки» |
+| Double-tap suppress on canvas | PASS | `preventDefault` только на `canvas`, не на `body` |
+
+**§13a.4 verdict: PASS.**
+
+## Checklist 5 — Settings persistence migration clear
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| M7 fields mapped to cloud-save | PASS | `settings` поле в snapshot: `{ "mute": boolean, "volume": number }` |
+| Defaults for first-time players | PASS | `SETTINGS_DEFAULT_MUTE = false`, `SETTINGS_DEFAULT_VOLUME = 1.0` в balance.md |
+| Migration flow described | PASS | boot → load remote → if settings exist apply, else defaults → SettingsScene триггерит throttled save |
+
+**§13a.5 verdict: PASS.**
+
+## Checklist 6 — Anti-scope §13a explicit and matches staff/status/M8a.md
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| 10 anti-scope items in §13a.6 | PASS | ads (M8b), IAP (M8b), leaderboards/achievements (BACKLOG), telemetry, новые языки, новые контент/механики, music/voice/ambience, UI redesign, third-party libs — все 10 совпадают с M8a.md |
+| §13b placeholder reserved | PASS | §13b marked «M8b — отложено» с placeholder-комментарием |
+
+**§13a.6 verdict: PASS.**
+
+## Checklist 7 — M2–M7 regression carry-over
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| No contradiction with shipped behavior | PASS | §13a preamble: «Контент заморожен на M7». Никаких изменений существующих механик. |
+| Audio works without SDK | PASS | §13a.1: «игра запускается идентично M7», fail-soft идентичен M7 audio pattern |
+| All M7 counts frozen | PASS | 9 zones / 80 items / 42 recipes / 11 mobs / 3 boss / 8 perks / 6 radio / 10 SFX / 16 tweens — ни одно не тронуто |
+
+**§13a regression verdict: PASS.**
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | SDK lifecycle spec is implementable (4 failure modes) | **PASS** |
+| 2 | Cloud save schema complete (GameState fields, quota, conflict, throttle, 7 triggers) | **PASS** |
+| 3 | Locale RU lock unambiguous (`t(key)`, ignored `i18n.lang`, EN hook) | **PASS** |
+| 4 | Mobile-first viewport spec complete (meta, safe-area, audio unlock, portrait, double-tap) | **PASS** |
+| 5 | Settings persistence migration clear (mute/volume → cloud-save, defaults) | **PASS** |
+| 6 | Anti-scope §13a explicit and matches M8a.md (10 items) | **PASS** |
+| 7 | M2–M7 regression carry-over (no contradiction, audio fail-soft, counts frozen) | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+GD M8a amendment (PR #67, merged into `m8a-integration`) полностью соответствует брифу `staff/handoff/M8a-QA-SPEC.md` и чек-листам:
+
+- SDK lifecycle: 4 failure modes явно документированы, fail-soft идентичен M7, никаких `throw`.
+- Cloud save: полная schema с 9 полями GameState, conflict policy «remote newer wins / last-writer-wins», throttle 10s, 7 critical triggers (включая flush-on-unload).
+- Locale RU lock: `t(key)` API, `i18n.lang` ignored, EN forward hook, scope только новый код.
+- Mobile-first viewport: точный meta тег, safe-area для game-container + HUD, iOS audio unlock, portrait-only, double-tap suppression на canvas.
+- Settings migration: mute/volume → cloud-save, defaults false/1.0.
+- Anti-scope: 10 пунктов, все совпадают с M8a.md.
+- Regression: M2-M7 поведение не затронуто, counts frozen.
+
+**Готов к передаче Engineer M8a.** Никаких blocker'ов.
+
+### Non-blocking notes
+
+1. **No `balance.md` sanity check example** — unlike M3/M4/M5, §M8a has only 5 constants (throttle, quota, size, defaults). This is adequate for a config-only section. The `EXPECTED_SNAPSHOT_SIZE_BYTES = ~2048` is an estimate; Engineer should verify actual JSON serialization size during implementation.
+
+2. **Visibilitychange/beforeunload flush** — §13a.2 correctly identifies these as bypass-throttle triggers. Engineer must ensure `player.setData(snapshot, true)` is synchronous enough for `beforeunload` context (or use `sendBeacon`-style approach). Non-blocking for spec but important for implementation.
+
+3. **Anti-scope note numbering** — §13a.6 correctly replaces the original `§13a.0` (anti-scope was re-numbered from §13a.0 → §13a.6 per Alex's anti-scope nit fix). Confirmed.
+
+## Recovery
+
+- Role: QA Spec Reviewer M8a.
+- Milestone: M8a Spec Review (GD §13a amendment).
+- Branch: `qa/m8a-spec-review` (base `m8a-integration`).
+- Object under review: GD M8a amendment merged into `m8a-integration` (PR #67).
+- Done sections: branch / 7-checklist verdict / non-blocking notes / final APPROVE.
+- Next concrete step: переключить QA-report PR в Ready, опубликовать verdict на PR #67, заблокировать Alex итогом.
+- Blockers: нет.
+
+---
+
 # M5 Spec Review
 
 **Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
@@ -1971,28 +2118,4 @@ Fail-soft: local in-memory session identical to M7 when SDK unavailable.
 - All M7 counts preserved: 9 zones, 80 items, 42 recipes, 11 mobs, 3 bosses, 8 perks, 6 radio signals, 10 SFX, 16 tweens, 176/176 vitest, 1.49 MB JS, 524 KB assets.
 - Anti-scope explicitly freezes all content and gameplay.
 
-## Non-blocking notes
 
-- **§13a.2 perk-choice-commit and post-level-up are logically distinct triggers** but may fire in the same frame. This is fine — throttle prevents duplicate writes.
-- **balance.md §M8a** correctly references `docs/GDD.md §13a` for mechanics spec, while GDD references balance for numbers — proper separation of concerns.
-- **flush-on-unload bypass throttle** is correctly specified: `visibilitychange='hidden'` and `beforeunload` are the only two triggers that skip throttle guard.
-
-## Blockers
-
-None.
-
-## Final verdict
-
-**APPROVE.**
-
-GD M8a amendment (`docs/GDD.md` §13a + `docs/balance.md` §M8a) is complete, implementable, unambiguous, and consistent with `staff/status/M8a.md` scope/anti-scope. All 7 checklists pass. Engineer may proceed with `m8a/platform` implementation.
-
-## Recovery
-
-- Role: QA Spec Reviewer M8a
-- Milestone: M8a Spec Review (GD amendment)
-- Branch: `qa/m8a-spec-review` (base `m8a-integration`)
-- Object under review: GD M8a amendment merged into `m8a-integration` (PR #67)
-- Done sections: branch created, verdict written, Draft PR open.
-- Next concrete step: switch PR to Ready if no further review cycle needed; block Alex with outcome.
-- Blockers: none.
