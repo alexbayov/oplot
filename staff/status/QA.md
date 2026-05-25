@@ -1863,3 +1863,136 @@ M7 role-PR (#61 Engineer, #62 Content, #63 Artist) полностью соотв
 - Gate 0/1/2/3: all PASS
 - Verdict: APPROVE
 - Next: PM merge sequence (Content → Engineer → Artist) → gate-close `m7-integration → main`
+
+---
+
+# M8a Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M8a — Платформа и персистентность
+**Объект ревью:** GD M8a amendment (`docs/GDD.md` §13a + `docs/balance.md` §M8a), merged in `m8a-integration`
+**QA-report ветка:** `qa/m8a-spec-review` (base `m8a-integration`)
+**Дата:** 2026-05-26
+
+## Объект ревью — артефакты
+
+| Артефакт | Источник | Статус |
+|---|---|---|
+| GDD §13a (Platform/Persistence/Mobile) | `docs/GDD.md` lines 1931-2124 | Reviewed |
+| balance §M8a (throttle/quota/defaults) | `docs/balance.md` lines 993-1007 | Reviewed |
+| `staff/status/M8a.md` | Scope/anti-scope/DoD reference | Verified |
+
+## Checklist results
+
+| # | Checklist | Verdict |
+|---|---|---|
+| 1 | SDK lifecycle spec is implementable (4 failure modes covered, no throw) | **PASS** |
+| 2 | Cloud save schema complete (all GameState fields, quota vs snapshot, conflict policy, throttle=10s, 7 critical triggers) | **PASS** |
+| 3 | Locale RU lock unambiguous (`t(key)` API, `i18n.lang` ignored, EN forward hook, M8a-only scope) | **PASS** |
+| 4 | Mobile-first viewport spec complete (viewport meta, safe-area, iOS audio unlock, portrait-only, double-tap canvas-only) | **PASS** |
+| 5 | Settings persistence migration clear (mute/volume → cloud-save, defaults false/1.0) | **PASS** |
+| 6 | Anti-scope §13a explicit and matches `staff/status/M8a.md` (10 items, §13a.6) | **PASS** |
+| 7 | M2–M7 regression carry-over (no contradiction, audio works without SDK, all M7 counts frozen) | **PASS** |
+
+## Detail per checklist
+
+### 1. SDK lifecycle — PASS
+
+§13a.1 specifies:
+- Script tag `https://yandex.ru/games/sdk/v2` in `index.html`.
+- `YaGames.init()` → singleton in `src/systems/platform.ts`.
+- `sdk.features.LoadingAPI?.ready()` after Boot preload.
+- **4 failure modes** explicitly covered:
+  - `YaGames` undefined (no network, adblock, local dev) → `console.warn` once, game runs without SDK, no `console.error`.
+  - `YaGames.init()` reject → same as above.
+  - `LoadingAPI` unsupported → optional chaining, silent noop.
+  - `getPlayer()` reject → cloud save unavailable, local session continues.
+- No `throw` / `console.error` mandated on any failure path (line 1966).
+- Identical M7 behaviour on failure.
+
+### 2. Cloud save schema — PASS
+
+§13a.2 enumerates all GameState fields:
+- `level`, `xp`, `perks`, `inventory`, `baseStash`, `radio_trust`, `resolvedSignals`, `settings`, `saved_at`.
+
+Snapshot budget: `EXPECTED_SNAPSHOT_SIZE_BYTES ≈ 2048` vs quota `YANDEX_PLAYER_DATA_QUOTA_BYTES = 204800` (~200 KB) — margin >×20.
+
+Conflict policy single rule:
+- Boot: remote `saved_at > local saved_at` → remote wins, else keep local.
+- Save: last-writer-wins, no field-level merge.
+
+Throttle: `MIN_CLOUD_SAVE_INTERVAL_S = 10` seconds (balance.md). Early calls silently dropped.
+
+**7 critical triggers** enumerated: post-sortie-return, post-craft, post-level-up, settings-change, perk-choice-commit, `visibilitychange='hidden'` (immediate, no throttle), `beforeunload` (immediate, no throttle).
+
+Fail-soft: local in-memory session identical to M7 when SDK unavailable.
+
+### 3. Locale RU lock — PASS
+
+- `t(key: string): string` exported from `src/systems/locale.ts`.
+- `sdk.environment.i18n.lang` read but **explicitly ignored** — always RU on M8a.
+- EN forward hook documented as BACKLOG (future lang switch via registry swap).
+- Scope: `t()` required for **new M8a code only**; existing M2-M7 scenes remain RU literals. No mass-refactor in M8a.
+
+### 4. Mobile-first viewport — PASS
+
+- Viewport meta exact: `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">`.
+- Safe-area CSS: `env(safe-area-inset-*)` on `.game-container` + HUD overlay.
+- iOS audio unlock: first `touchstart`/`pointerdown` on canvas → create/resume `AudioContext`.
+- Portrait-only: Yandex SDK `sdk.screen.orientation?.lock("portrait")` or `manifest.json`.
+- Double-tap zoom suppression: `preventDefault` on `canvas` only, not `body`.
+
+### 5. Settings persistence — PASS
+
+- M7 settings (`mute`, `volume`) map to `settings` field in cloud-save snapshot.
+- Defaults: `mute = false`, `volume = 1.0` (balance.md §M8a).
+- Settings change in SettingsScene triggers throttled `cloudSave()`.
+- Migration flow documented (boot → load remote → apply or use defaults).
+
+### 6. Anti-scope §13a — PASS
+
+§13a.6 lists **10 items**, identical to `staff/status/M8a.md` Anti-scope:
+1. NO ads (M8b)
+2. NO IAP (M8b)
+3. NO leaderboards / achievements (BACKLOG)
+4. NO telemetry / analytics / backend
+5. NO new languages (RU only)
+6. NO new mobs/bosses/zones/items/recipes/perks/radio/SFX/tweens
+7. NO new combat/craft/radio/progression mechanics
+8. NO music/voice/ambience
+9. NO UI redesign (viewport polish only)
+10. NO third-party libs except YaGames SDK (external script tag)
+
+§13b placeholder reserved for M8b monetization.
+
+### 7. M2-M7 regression — PASS
+
+- No spec change contradicts shipped behaviour: SDK fail-soft is explicit, audio works identically when SDK absent, gameplay unchanged.
+- All M7 counts preserved: 9 zones, 80 items, 42 recipes, 11 mobs, 3 bosses, 8 perks, 6 radio signals, 10 SFX, 16 tweens, 176/176 vitest, 1.49 MB JS, 524 KB assets.
+- Anti-scope explicitly freezes all content and gameplay.
+
+## Non-blocking notes
+
+- **§13a.2 perk-choice-commit and post-level-up are logically distinct triggers** but may fire in the same frame. This is fine — throttle prevents duplicate writes.
+- **balance.md §M8a** correctly references `docs/GDD.md §13a` for mechanics spec, while GDD references balance for numbers — proper separation of concerns.
+- **flush-on-unload bypass throttle** is correctly specified: `visibilitychange='hidden'` and `beforeunload` are the only two triggers that skip throttle guard.
+
+## Blockers
+
+None.
+
+## Final verdict
+
+**APPROVE.**
+
+GD M8a amendment (`docs/GDD.md` §13a + `docs/balance.md` §M8a) is complete, implementable, unambiguous, and consistent with `staff/status/M8a.md` scope/anti-scope. All 7 checklists pass. Engineer may proceed with `m8a/platform` implementation.
+
+## Recovery
+
+- Role: QA Spec Reviewer M8a
+- Milestone: M8a Spec Review (GD amendment)
+- Branch: `qa/m8a-spec-review` (base `m8a-integration`)
+- Object under review: GD M8a amendment merged into `m8a-integration` (PR #67)
+- Done sections: branch created, verdict written, Draft PR open.
+- Next concrete step: switch PR to Ready if no further review cycle needed; block Alex with outcome.
+- Blockers: none.
