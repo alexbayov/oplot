@@ -1928,5 +1928,201 @@ M7 scope: балансный тюнинг M2–M6, контент-экспанс
 ### 12. Модульное оружие и броня (M5+)
 <!-- GD заполнит на M5+: модули, слоты, уникальные статы из компонентов -->
 
-### 13. Монетизация (M8)
-<!-- GD заполнит на M8: реклама, IAP, Yandex SDK интеграция -->
+### 13. Платформа, персистентность и мобильный (M8a) / Монетизация (M8b — отложено)
+
+#### §13a — Платформа Yandex Games, persistence, mobile-first (M8a)
+
+> **Скоуп M8a:** Platform/Persistence/Mobile. Контент (зоны/мобы/айтемы/рецепты/перки/радио/SFX/твины) заморожен на M7. Никаких новых игровых механик. Спека — только этот раздел. Числа — в [`balance.md` §M8a](./balance.md#m8a-платформа-и-персистентность).
+
+---
+
+##### 13a.1 — SDK lifecycle
+
+**Загрузка скрипта:**
+
+```html
+<script src="https://yandex.ru/games/sdk/v2"></script>
+```
+
+Скрипт добавляется в `index.html` перед bundle-скриптом. Глобальная переменная `YaGames` становится доступна после загрузки.
+
+**Инициализация:**
+
+```
+1. YaGames.init() → Promise<SDKInstance>
+2. SDK-экземпляр хранится как singleton в src/systems/platform.ts
+3. sdk.features.LoadingAPI?.ready() вызывается ПОСЛЕ того, как BootScene завершила preload всех ассетов
+```
+
+**Fail-soft contract (4 режима отказа):**
+
+| Условие | Поведение | console |
+|---|---|---|
+| `YaGames` не определён (нет сети, adblock, локальный dev без iframe) | Игра запускается без SDK-фич. Все вызовы `sdk.*` обёрнуты в guard, возвращают undefined/null/noop. | Нет `console.error`. Один `console.warn` при старте. |
+| `YaGames.init()` reject (SDK загружен, но инит не прошёл) | Аналогично: игра без SDK-фич. | Один `console.warn`. |
+| SDK загружен, но `LoadingAPI` не поддерживается | `LoadingAPI?.ready()` — optional chaining, noop если undefined. | Тишина. |
+| SDK загружен, инит успешен, но `getPlayer()` reject | Cloud save недоступен; игра продолжается с локальной сессией. | Один `console.warn`. |
+
+Во всех случаях игра **запускается идентично M7** — никаких `throw`, никакого `catch → reload`. Пользователь не видит ошибок SDK.
+
+---
+
+##### 13a.2 — Cloud save schema
+
+**Snapshot-поля (сериализация всего GameState):**
+
+```
+{
+  "level": number,
+  "xp": number,
+  "perks": string[],                        // id выбранных перков
+  "inventory": [{ "id": string, "count": number }],
+  "baseStash": [{ "id": string, "count": number }],
+  "radio_trust": number,                    // -5 .. +5
+  "resolvedSignals": string[],              // id сигналов, которые игрок уже разрешил
+  "settings": { "mute": boolean, "volume": number },  // из M7
+  "saved_at": string                        // ISO8601, UTC
+}
+```
+
+**Storage API:**
+
+```typescript
+const player = await sdk.getPlayer();
+// save (flush = true — принудительная запись)
+await player.setData(snapshot, true);
+// load
+const data = await player.getData(["level", "xp", "perks", "inventory",
+  "baseStash", "radio_trust", "resolvedSignals", "settings", "saved_at"]);
+```
+
+**Conflict policy:**
+
+- **На boot-load (старт сессии):** загружаем remote snapshot; сравниваем `remote.saved_at` с `local.saved_at` (in-memory сохранение предыдущей сессии). Если `remote.saved_at > local.saved_at` → используем remote (remote newer wins). Иначе — keep local.
+- **На каждый save:** last-writer-wins. Текущий snapshot целиком перезаписывает remote. Никакой merge-логики (no diff, no field-level merge, no reconciliation). Это сознательное упрощение: в single-device сценарии конфликтов не возникает; cross-device offline — последний закоммитивший побеждает. QA не ожидает merge UI.
+
+**Throttle:**
+
+Минимальный интервал между cloud-save вызовами: `MIN_CLOUD_SAVE_INTERVAL_S` секунд (см. [`balance.md` §M8a](./balance.md#m8a-платформа-и-персистентность)). Если save вызывается раньше — вызов тихо дропается (no-op, без ошибки).
+
+**Critical save triggers (приоритетные, форсируют запись с учётом throttle):**
+
+| Trigger | Описание |
+|---|---|
+| post-sortie-return | Возврат из вылазки (любой исход) |
+| post-craft | Завершение крафта в CraftScene |
+| post-level-up | Подтверждение выбора перка в LevelUpScene |
+| settings-change | Изменение mute/volume в SettingsScene |
+| perk-choice-commit | Выбор перка после level-up |
+| **visibilitychange='hidden'** | Браузер сворачивается/вкладка уходит в фон (сразу, **без throttle**) |
+| **beforeunload** | Пользователь закрывает вкладку (сразу, **без throttle**) |
+
+Duck-typing: `visibilitychange` и `beforeunload` вызывают `player.setData(snapshot, true)` **немедленно**, пропуская throttle guard. Это единственные два триггера, которые bypass throttle. Mobile-пользователь, закрывающий вкладку после крафта, не должен потерять данные.
+
+**Quota note:**
+
+Yandex player data quota ≈ `YANDEX_PLAYER_DATA_QUOTA_BYTES` (см. [`balance.md` §M8a](./balance.md#m8a-платформа-и-персистентность)). Ожидаемый размер snapshot: `EXPECTED_SNAPSHOT_SIZE_BYTES` (см. там же). Schema intentionally minimal: нет истории, нет логов, нет дублирующих полей. Запас под quota > ×20.
+
+**Fail-soft:**
+
+Если `getPlayer()` или `setData/getData` недоступны (SDK нет, player reject, quota exceeded), игра продолжается с **локальной in-memory сессией**, идентичной M7. Все изменения `GameState` работают как обычно. UI не показывает ошибок облака — save просто не происходит. Один `console.warn` при старте, если SDK не инициализирован.
+
+---
+
+##### 13a.3 — Locale RU lock
+
+- `<html lang="ru">` уже установлен в `index.html`.
+- `src/systems/locale.ts` экспортирует `t(key: string): string` — возвращает RU-строку из единого registry-объекта.
+- `sdk.environment.i18n.lang` читается на старте, но **игнорируется** на M8a (всегда RU).
+- **Scope применения `t()`:** ОБЯЗАТЕЛЬНО только для нового M8a-кода (например: toast «Ошибка сохранения», новые UI-строки в SettingsScene при миграции). Существующие M2–M7 UI-строки остаются RU-литералами. Массовый рефакторинг существующих сцен на `t()` отложен в BACKLOG (пост-MVP) — это отдельная задача, не входящая в M8a scope.
+- **Forward hook:** любая строка, показываемая пользователю из нового кода, проходит через `t()`. В будущем подключение EN — замена registry и, опционально, масс-миграция старых строк.
+
+---
+
+##### 13a.4 — Mobile-first viewport polish
+
+**Viewport meta:**
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+```
+
+**Safe-area CSS:**
+
+```css
+.game-container {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+```
+
+Safe-area применяется к корневому контейнеру игры / HUD-overlay, чтобы контент не обрезался notch-устройствами (iPhone 14+, Pixel 7+).
+
+**iOS audio autoplay unlock:**
+
+```
+Первый touchstart / pointerdown на canvas (любой tap):
+  → если AudioContext не создан → создать
+  → если AudioContext suspended → resume()
+  → после unlock — SFX воспроизводятся нормально
+```
+
+Никакой попытки autoplay до первого gesture. Создание AudioContext синхронизируется с первым взаимодействием.
+
+**Portrait orientation lock:**
+
+- Через Yandex SDK: `sdk.screen.orientation?.lock("portrait")`.
+- Или через manifest.json: `"orientation": "portrait"`.
+- На M8a **нет landscape-поддержки**. Игра всегда portrait-only.
+
+**Double-tap zoom suppression:**
+
+```typescript
+canvas.addEventListener("touchstart", (e) => {
+  if (e.target === canvas) e.preventDefault();
+}, { passive: false });
+```
+
+`preventDefault` только на самом canvas (не на body), чтобы не блокировать скролл нативных элементов (если есть).
+
+---
+
+##### 13a.5 — Settings persistence migration
+
+На M7 `Settings` (mute + volume) существовали только в in-memory (runtime state). На M8a они мигрируют в cloud-save schema (поле `settings` внутри snapshot).
+
+**Migration flow:**
+
+```
+1. boot: загружаем remote snapshot
+2. если settings есть в snapshot → применяем remote значения
+3. если нет (первый запуск, нет cloud) → defaults:
+     mute = false
+     volume = 1.0
+4. изменения в SettingsScene → throttled cloudSave()
+```
+
+Начальные defaults зашиты как константы в `balance.md` §M8a.
+
+---
+
+##### 13a.0 — Anti-scope M8a (явный)
+
+Следующие категории НЕ входят в §13a и запрещены к реализации на M8a:
+
+- **NO ads** (rewarded / interstitial) — отложено в M8b §13b.
+- **NO IAP** (catalog / purchase / restore) — отложено в M8b §13b.
+- **NO leaderboards / achievements** — пост-релиз (BACKLOG).
+- **NO telemetry / analytics / backend**.
+- **NO новых языков** — только RU. `t()` для нового кода, масс-миграция в BACKLOG.
+- **NO новых mobs / bosses / zones / items / recipes / perks / radio signals / SFX / tweens** — контент заморожен на M7.
+- **NO новых combat / craft / radio / progression механик** — геймплей заморожен на M7.
+- **NO music / voice / ambience** — аудио заморожено на 10 SFX M7.
+- **NO UI redesign** — только safe-area / viewport / zoom suppression поверх существующих сцен.
+- **NO third-party libs** кроме `YaGames` SDK (внешний script tag, не npm-зависимость).
+
+#### §13b — Монетизация (M8b — отложено)
+
+<!-- GD заполнит на M8b: реклама (rewarded + interstitial), IAP (catalog + purchase + restore), Yandex partner console SKU. Требует решения Заказчика по ads policy и IAP-каталогу. -->
