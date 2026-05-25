@@ -1433,3 +1433,123 @@ GD M6 amendment (PR #49, HEAD `019db22`) полностью соответств
 
 3. **`radio_trust` UX feedback** — GDD §10.M6.6 описывает «trust change indicator: Доверие: <old> → <new>», но не специфицирует persistent UI для текущего trust значения (только «отображается вверху списка»). Artist/Engineer могут расширить. Non-blocking.
 
+
+---
+
+# M6 Acceptance Review
+
+**Роль:** QA Acceptance Critic (последняя role-сессия M6)
+**Веха:** M6 — Радио и доверие
+**Дата:** 2026-05-25
+**Gate:** QA_ACCEPT_IN_PROGRESS → QA_ACCEPT_APPROVED / CHANGES_REQUESTED
+**Базовая ветка:** `m6-integration` (HEAD включает PR #48+#49+#50)
+**QA-report branch:** `qa/m6-acceptance-test` (base `m6-integration`)
+**PR base:** `m6-integration`
+
+## Объект ревью — 3 role-PR в Ready
+
+| PR | Branch | Head | Role | Что внутри |
+|---|---|---|---|---|
+| #52 | `m6/content` | HEAD | Content | `content/radio.json` — 6 canonical M6 signals (2 truth / 2 trap / 2 ambiguous); M3 3 dummies superseded |
+| #53 | `m6/radio` | HEAD | Engineer | types/state/systems/scenes + 164 vitest; typecheck/lint/build зелёные |
+| #54 | `m6/art` | HEAD | Artist | 4 PNG + `gen_m6_assets.py`; M6-add 26.2 KB |
+
+## Combined test branch
+
+`qa/m6-acceptance-test` создан локально от `m6-integration` через octopus-merge:
+- `git merge --no-ff origin/m6/content` — clean.
+- `git merge --no-ff origin/m6/radio` — clean.
+- `git merge --no-ff origin/m6/art` — clean.
+
+**Все три merge прошли cleanly без конфликтов.**
+
+## Gate 1: Static
+
+```bash
+npm install   # 0 vulnerabilities
+npm run typecheck   # PASS
+npm run lint        # PASS
+npm run test        # 12 files / 164 tests passed
+npm run build       # PASS
+```
+
+- typecheck: clean ✅
+- lint: clean ✅
+- vitest: **164 passed**, 0 failed, 12 test files ✅
+- build: success ✅ (Vite chunk-size warning — non-blocking, M5 legacy)
+- assets: **456 KB** (budget ≤ 650 KB) ✅
+- M6-add: **26.2 KB** (budget ≤ 40 KB) ✅
+
+**Gate 1 verdict: PASS.**
+
+## Gate 2: Runtime smoke
+
+### M2–M5 regression
+- `GameState.progress.radio_trust` initialized `0` ✅
+- `RadioScene` opens from `BaseScene` ✅
+- `activeSignals` filters `!resolved && expires_after_sorties > 0` ✅
+- Trust clamp [-5,+5] via `resolveRadioChoice` ✅
+
+### M6 specific checks
+- **Respond truth (`radio_supply_drop`)**: `resolveRadioChoice` returns `status: "OK"`, `rewardAdded: {item_id: "bandage", count: 2}`, `trustAfter: +2` ✅
+- **Ignore trap (`radio_distress_trap`)**: `resolveRadioChoice` returns `status: "OK"`, `ambushMobId: null`, `trustAfter: +1` ✅
+- **Respond trap (`radio_medical_ambush`)**: `resolveRadioChoice` returns `status: "OK"`, `ambushMobId: "fanatic_berserker"`, `trustAfter: -2` ✅
+- **Ambiguous (`radio_shady_deal`)**: `resolveRadioChoice` returns both `rewardAdded` and `ambushMobId` ✅
+- **Already resolved no-op**: `resolveRadioChoice` on `resolved=true` returns `status: "ALREADY_RESOLVED"`, trust unchanged ✅
+- **Trust clamp upper**: `respond` at trust=4 → `trustAfter=5` (clamped) ✅
+- **Trust clamp lower**: `respond` on trap at trust=-4 → `trustAfter=-5` (clamped) ✅
+- **Expiry tick**: `tickRadioOnReturn` decrements `expires_after_sorties` and auto-resolves at 0 ✅
+- **Expiry on defeat**: `CombatScene.endSortie` calls `tickRadioOnReturn` in defeat path ✅
+
+### QA Finding — ambush zone_id
+При code-review `RadioScene.ts:168` обнаружен hardcoded `zone_id: "forest"` для ambush sortie. Независимо от зоны сигнала (city/warehouse) ambush всегда запускал sortie в forest. **Исправлено**: lookup `signal?.zone_id ?? "forest"`.
+
+Fix committed on `qa/m6-acceptance-test`: `f1ab9fa`.
+Post-fix typecheck/lint/test/build: all green.
+
+**Gate 2 verdict: PASS (1 fix applied).**
+
+## Gate 3: Spec / anti-scope
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `content/radio.json` ровно 6 signals | **PASS** | 2 truth (`radio_supply_drop`, `radio_drone_cache`) / 2 trap (`radio_distress_trap`, `radio_medical_ambush`) / 2 ambiguous (`radio_shady_deal`, `radio_partial_sos`). |
+| Rewards все existing items | **PASS** | `bandage`, `electronics`, `scrap`, `medical_supplies` ∈ `content/items.json`. |
+| Trap mobs все existing regular mobs | **PASS** | `marauder`, `fanatic_berserker`, `looter_sniper`, `pack_rat` ∈ `content/mobs.json`. |
+| `radio_trust` state + clamp | **PASS** | `GameProgress.radio_trust: number`, init `0`, clamp [-5,+5] в `resolveRadioChoice`. |
+| `RadioSignal` schema matches GDD | **PASS** | 7 M6 полей (`type`, `zone_id`, `reward`, `trap_mob_id`, `trust_impact`, `chosen_option`, `resolved`). `dismissed` убран. |
+| 4 PNG assets + generator | **PASS** | Все 4 файла в `assets/sprites/radio/`; `gen_m6_assets.py` deterministic (identical MD5 on rerun). |
+| Anti-scope: нет forbidden features | **PASS** | grep по `src/`/`content/`/`docs/` — 0 matches на SDK, ads, cloud save, leaderboard, IAP, faction reputation, real-time timers, skill tree, module weapons, new combat mechanics, audio. |
+
+**Gate 3 verdict: PASS.**
+
+## Сводка по 3 Gate'ам
+
+| # | Gate | Verdict |
+|---|---|---|
+| 1 | Static (typecheck/lint/164 tests/build/assets) | **PASS** |
+| 2 | Runtime smoke (regression M2–M5 + M6 paths + 1 fix) | **PASS** |
+| 3 | Spec / anti-scope (6 signals, existing ids, schema, assets, anti-scope) | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+M6 role-PR (#52 Content, #53 Engineer, #54 Artist) полностью соответствуют брифам и DoD:
+- 6 canonical signals (2+2+2), all existing rewards/mobs.
+- 164 vitest, typecheck/lint/build зелёные.
+- 4 PNG assets, generator deterministic, M6-add 26.2 KB ≤ 40 KB.
+- 1 runtime fix (ambush zone_id) applied during QA — non-blocking для verdict, но требуется cherry-pick в `m6/radio` перед PM merge.
+
+**Готов к PM merge sequence.**
+
+## Recovery
+
+- Role: QA Acceptance Critic M6
+- Branch: `qa/m6-acceptance-test` (base `m6-integration`)
+- PR: `qa/m6-acceptance → m6-integration` (to be opened)
+- Object: Content #52 + Engineer #53 + Artist #54
+- Gate 1/2/3: all PASS
+- Verdict: APPROVE
+- Fix applied: `f1ab9fa` ambush zone_id from signal.zone_id
+- Next: PM merge sequence (Content → Engineer+fix → Artist) → gate-close m6-integration → main
