@@ -1701,3 +1701,165 @@ GD M7 amendment (PR #59, merged into `m7-integration` HEAD `52af23d`) полно
 - Done: all 7 checklists reviewed, script verification of 24 recipes
 - Verdict: APPROVE
 - Next: PM merge QA PR → kickoff Content + Engineer + Artist
+
+---
+
+# M7 Acceptance Review
+
+**Роль:** QA Acceptance Critic (последняя role-сессия M7)
+**Веха:** M7 — Полировка, баланс и расширение контента
+**Дата:** 2026-05-25
+**Gate:** QA_ACCEPT_IN_PROGRESS → QA_ACCEPT_APPROVED / CHANGES_REQUESTED
+**Базовая ветка:** `m7-integration` HEAD `74540f4`
+**QA-report branch:** `qa/m7-acceptance-test` (base `m7-integration`)
+**PR base:** `m7-integration`
+
+## Объект ревью — 3 role-PR в Ready
+
+| PR | Branch | Head | Role | Что внутри |
+|---|---|---|---|---|
+| #62 | `m7/content` | HEAD | Content | zones=9, items=80, recipes=42, `content/sfx.json`=10 entries |
+| #61 | `m7/polish` | HEAD | Engineer | audio.ts, tweens.ts, settings, dataValidation, 12 tests (176/176) |
+| #63 | `m7/audio` | HEAD | Artist | 10 WAV SFX files (53.8 KB), `tools/audio/gen_m7_sfx.py` deterministic |
+
+## Gate 0: Octopus-merge
+
+```bash
+git merge --no-ff origin/m7/content origin/m7/polish origin/m7/audio
+```
+
+**Result:** Merge made by 'octopus' strategy. **37 files changed, 3388 insertions(+), 285 deletions(−).**
+
+- Conflicts: **0** (clean merge).
+- New files: 10 WAV assets, `content/sfx.json`, `src/systems/audio.ts`, `src/systems/tweens.ts`, `src/systems/dataValidation.ts`, 4 test files, `tools/audio/gen_m7_sfx.py`.
+- Modified: `content/zones.json` (+6 zones), `content/items.json` (+45 items), `content/recipes.json` (+24 recipes), `src/scenes/*.ts` (tween/audio integration), `src/state/GameState.ts` (settings), `staff/status/*.md`.
+
+**Gate 0 verdict: PASS.**
+
+## Gate 1: Static
+
+```bash
+npm install       # 0 vulnerabilities
+npm run typecheck # PASS
+npm run lint      # PASS
+npm run test      # 16 files / 176 tests passed
+npm run build     # PASS
+```
+
+| Metric | Target | Actual | Status |
+|---|---|---|---|
+| typecheck | 0 errors | 0 | ✅ |
+| lint | 0 errors | 0 | ✅ |
+| vitest | 176/176 | 176/176 | ✅ |
+| build JS | ≤ 2 MB | 1.49 MB | ✅ |
+| M7 audio add | ≤ 80 KB | 72 KB | ✅ |
+| project assets | ≤ 730 KB | 524 KB | ✅ |
+
+**Gate 1 verdict: PASS.**
+
+## Gate 2: Runtime Smoke (code-review / integration check)
+
+### M2 — Core Loop
+- `BaseScene` → `MapScene` → `SortieScene` → `CombatScene` → `LootScene` → `ReturnScene` → `CraftScene` path preserved. No structural changes to core navigation.
+
+### M3 — Multi-zone
+- `content/zones.json` expanded from 3 → 9 zones. Existing `forest`/`warehouse`/`city` untouched (`boss_id` preserved, 3 levels each).
+- New zones: `suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant` — all with `boss_id=null`.
+- Unlock chain progressive: `start` → `any_forest_sortie` → `suburbs_sortie` → `forest_depth_2` → `warehouse_boss` → `factory_sortie` → `any_warehouse_sortie` → `city_boss` → `metro_sortie`. Logical tier progression (risk 1→5).
+
+### M4 — XP/Level/Perks
+- `LevelUpScene` tween hooks (`tween_level_up_glow`, `tween_xp_bar_fill`, `tween_perk_card_deal`) added. No changes to XP formula or perk logic.
+
+### M5 — Bosses/Daily/Gas/T3
+- Boss scenes (`CombatScene` boss phase red tint tween `tween_boss_phase_red`) — visual enhancement, no gameplay logic in callback.
+- Daily instance cooldown, gas damage overlay (`tween_gas_warning`) — preserved.
+- T3 craft chain unchanged.
+
+### M6 — Radio
+- `RadioScene` tween `tween_radio_static` — visual-only, no state change in callback.
+- `radio_trust` state untouched. Ambush routing preserved.
+
+### M7 — Polish
+- **Audio system (`src/systems/audio.ts`):**
+  - `loadSfxRegistry` loads `content/sfx.json`.
+  - `playSfx` checks `sfxMuted` → early return; applies `sfxVolume` multiplier (0.0–1.0, clamped).
+  - `preloadSfx` called in `BootScene` (optional, fail-soft if registry missing).
+  - Fail-soft: missing registry → silent return; missing asset → silent return; muted → silent return.
+- **Settings UI (`BaseScene.ts`):**
+  - Mute toggle text `"SFX ON/OFF"` at (300, 20).
+  - Volume label `"Vol X%"` at (300, 40), click cycles 0→25→50→75→100→0.
+  - Minimal integration, no UI redesign.
+- **Tweens (`src/systems/tweens.ts`):**
+  - 16 event IDs all present in registry.
+  - All tweens applied as visual feedback only; state changes happen BEFORE tween start.
+  - Integrated across 9 scenes: CombatScene (6), LootScene, CraftScene, LevelUpScene, RadioScene, ReturnScene, SortieScene, BaseScene, InventoryScene.
+- **Data validation (`src/systems/dataValidation.ts`):**
+  - `validateRecipeRefs` checks all recipe ingredients resolve to existing items.
+  - All 42 recipes pass (verified by script).
+- **Content validation:**
+  - No `fights_per_depth` field in any zone (PM guardrail followed).
+  - All 45 new items have `description_ru` and `flavor_ru`.
+  - All recipe refs resolve.
+
+**Gate 2 verdict: PASS.**
+
+## Gate 3: Spec / Anti-scope
+
+### Exact counts
+
+| Entity | Target | Actual | Status |
+|---|---|---|---|
+| zones | 9 | 9 | ✅ |
+| items | 80 | 80 | ✅ |
+| recipes | 42 | 42 | ✅ |
+| SFX registry | 10 | 10 | ✅ |
+| SFX files | 10 | 10 | ✅ |
+| tween events | 16 | 16 | ✅ |
+| vitest | 176 | 176 | ✅ |
+
+### Anti-scope grep
+
+| Критерий | Результат | Статус |
+|---|---|---|
+| Новые мобы/боссы | 3 босса только в existing zones (forest/warehouse/city); 0 новых | ✅ |
+| T4 предметы | 0 T4 среди 80 items | ✅ |
+| Музыка/голос/амбиес | 0 файлов `.mp3`/`.ogg`/`*music*` | ✅ |
+| Yandex SDK/cloud/ads | 0 matches в `src/` | ✅ |
+| Skill tree/modular/faction | 0 matches (4 `cooldown` = M5 daily instance) | ✅ |
+| UI redesign | Settings — минимальные label-клики в BaseScene | ✅ |
+
+**Gate 3 verdict: PASS.**
+
+## Сводка по 3+1 Gate'ам
+
+| # | Gate | Verdict |
+|---|---|---|
+| 0 | Octopus-merge (conflicts) | **PASS** (0 conflicts) |
+| 1 | Static (typecheck/lint/176 tests/build/assets) | **PASS** |
+| 2 | Runtime smoke (M2–M7 integration) | **PASS** |
+| 3 | Spec / anti-scope (counts + grep) | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+M7 role-PR (#61 Engineer, #62 Content, #63 Artist) полностью соответствуют брифам, DoD и PM guardrails:
+- 9 zones (3 existing + 6 new), 80 items (35+45), 42 recipes (18+24), 10 SFX registry + 10 files.
+- 176/176 vitest, typecheck/lint/build green.
+- Audio system fail-soft, mute/volume settings, 16 visual-only tweens.
+- M7 audio add 72 KB ≤ 80 KB, project assets 524 KB ≤ 730 KB.
+- Anti-scope clean: zero new mobs/bosses, zero T4, zero music/voice, zero SDK.
+- No `fights_per_depth` in zones.json (PM guardrail respected).
+- All 42 recipe refs resolve; all 45 new items have description_ru + flavor_ru.
+
+**Готов к PM merge sequence.**
+
+## Recovery
+
+- Role: QA Acceptance Critic M7
+- Branch: `qa/m7-acceptance-test` (base `m7-integration`)
+- PR: `qa/m7-acceptance → m7-integration` (to be opened)
+- Object: Content #62 + Engineer #61 + Artist #63
+- Gate 0/1/2/3: all PASS
+- Verdict: APPROVE
+- Next: PM merge sequence (Content → Engineer → Artist) → gate-close `m7-integration → main`
