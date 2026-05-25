@@ -1,9 +1,88 @@
 # Status: Artist
 
-**Текущая веха:** M6 — Радио и доверие
-**Статус:** DONE_PENDING_PM_REVIEW (4 M6 assets generated, M6 ARTIST DoD met)
-**Ветка:** `m6/art` (base = `m6-integration`)
+**Текущая веха:** M7 — Полировка и баланс (Audio SFX)
+**Статус:** READY_FOR_REVIEW (10 M7 SFX generated, M7 ARTIST DoD met)
+**Ветка:** `m7/audio` (base = `m7-integration`)
 **Последнее обновление:** 2026-05-25
+
+## Recovery block (для будущих сессий)
+
+- **Роль:** Artist / Sound Asset Designer, M7
+- **Базовая ветка:** `m7-integration`
+- **Рабочая ветка:** `m7/audio`
+- **PR target:** `m7-integration` (НЕ `main`)
+- **Generator:** детерминистичный stdlib-only (`wave`, `struct`, `math`, `random`). Запуск из repo root: `python3 tools/audio/gen_m7_sfx.py`. Регенерирует все M7 SFX идентично.
+- **Recovery cadence:** после каждого step push + апдейт PR Recovery block + этого файла.
+
+## Что сделано (M7)
+
+### `tools/audio/gen_m7_sfx.py` — детерминистичный stdlib-only SFX-генератор
+
+Использует только Python stdlib (`wave`, `struct`, `math`, `random`). `random.seed(42)` в начале.
+8-bit unsigned PCM mono WAV. Низкие sample rates (11025 / 8000 Hz) для компактности.
+
+### 10 UI SFX mono 8-bit WAV
+
+| Файл | Размер | Rate | Длительность | Описание |
+|---|---|---|---|---|
+| `ui_click.wav` | 3.3 KB | 11025 Hz | ~0.3 s | Square wave burst |
+| `ui_blocked.wav` | 4.4 KB | 11025 Hz | ~0.4 s | Low freq saw + noise |
+| `combat_hit.wav` | 2.8 KB | 11025 Hz | ~0.25 s | Noise burst + decay |
+| `combat_heal.wav` | 3.3 KB | 11025 Hz | ~0.3 s | Sine sweep up |
+| `loot_pickup.wav` | 5.4 KB | 11025 Hz | ~0.5 s | Short sine + decay |
+| `craft_success.wav` | 7.6 KB | 11025 Hz | ~0.7 s | Two-tone sine |
+| `radio_signal.wav` | 7.1 KB | 8000 Hz | ~0.9 s | White noise + sine tone |
+| `level_up.wav` | 7.9 KB | 8000 Hz | ~1.0 s | Sine arpeggio |
+| `boss_phase.wav` | 7.9 KB | 8000 Hz | ~1.0 s | Low drone + sweep |
+| `confirm_success.wav` | 4.4 KB | 11025 Hz | ~0.4 s | Short bright sine |
+
+### Бюджет M7
+
+| Категория | Факт | Бюджет |
+|---|---|---|
+| 10 SFX файлов | 53.8 KB | ≤ 80 KB |
+| **Итого M7 add** | **53.8 KB** | **≤ 80 KB (67.3% used)** |
+| **Project total assets** | **~524 KB** | **≤ 730 KB (71.8% used)** |
+
+### Команда
+
+```bash
+python3 tools/audio/gen_m7_sfx.py
+```
+
+Детерминизм проверен: повторный запуск даёт идентичные MD5.
+
+### Соответствие балансу
+
+Все 10 `trigger_id` из `docs/balance.md` §M7.4 покрыты:
+- `sfx_menu_click` → `ui_click.wav`
+- `sfx_blocked` → `ui_blocked.wav`
+- `sfx_hit` → `combat_hit.wav`
+- `sfx_heal` → `combat_heal.wav`
+- `sfx_loot` → `loot_pickup.wav`
+- `sfx_craft` → `craft_success.wav`
+- `sfx_radio` → `radio_signal.wav`
+- `sfx_level_up` → `level_up.wav`
+- `sfx_boss_phase` → `boss_phase.wav`
+- `sfx_confirm` → `confirm_success.wav`
+
+## Anti-scope M7
+
+- НЕ трогаю M1–M6 ассеты.
+- НЕ трогаю `src/`, `content/`, `docs/`, чужие `staff/status/*.md`.
+- НЕ использую numpy/scipy/pydub/ML/GAN/online генераторы.
+- НЕ добавляю музыку/голос/длинные ambient звуки.
+- НЕ self-merge, НЕ push в `main`/`m7-integration` напрямую.
+
+## Блокеры
+
+- Нет.
+
+## PR
+
+- `m7/audio → m7-integration` — готов к PM review
+
+---
 
 ## Recovery block (для будущих сессий)
 
