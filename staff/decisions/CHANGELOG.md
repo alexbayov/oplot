@@ -188,3 +188,16 @@
   - **DoD-precision сработала**: 6 signals exact / 164 vitest / 4 PNG / 26.2 KB M6-add / 456 KB project — все targets matched без deviation.
   - **4-параллельный launch**: Content + Engineer + Artist + QA Acceptance preview могут запуститься одновременно после QA Spec APPROVE; QA Acceptance дожидается role-PR'ов Ready перед octopus-merge dry-run.
   - **Status-sync PR pattern**: PM может опубликовать промежуточный `pm/m{N}-status-sync` PR (M6 PR #51) для синхронизации dashboards под факт GitHub без блокировки production. Self-merge по делегации Alex'а.
+
+## 2026-05-25 — M7: Kickoff (Variant B / Full PLAN §3)
+
+См. `staff/status/M7.md` для полного scope/anti-scope/DoD.
+
+- M6 gate-close PR #57 merged в `main`; M7 стартует от `main` HEAD `859a652`.
+- Создана integration branch `m7-integration`; все M7 role-PR таргетятся только в неё.
+- Approved scope Variant B: balance tuning M2–M6, 10 UI SFX, 16 Phaser tweens, smoke regression M2–M6, 6 new zones (9 total), 45 new items (80 total), 24 new recipes (42 total), per-zone balance.
+- Anti-scope M7: no new mobs/bosses/T4/radio/perks/Yandex SDK/music/voice/third-party UI libs/UI redesign.
+- DoD precision: `content/sfx.json` 10 entries, exactly 10 SFX files, exactly 16 tweens, exactly 176 vitest target, build ≤2 MB, M7 audio add ≤80 KB, project total ≤730 KB.
+- PM prepared M7 dashboard + 6 kickoff + 6 handoff files (GD / QA Spec / Content / Engineer / Artist / QA Acceptance).
+- Sequence: PM kickoff → GD amendment → QA Spec → parallel Content/Engineer/Artist → QA Acceptance 3-Gate → PM merge → PM finalize → gate-close.
+- Lessons carried from M6: recovery-safe early Draft PR, token-budget ≤5–7 role actions, PAT hygiene, exact DoD counts, local octopus-merge, QA fix cherry-pick into role branch, QA Acceptance PR last.
