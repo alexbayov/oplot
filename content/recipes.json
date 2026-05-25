@@ -4,9 +4,18 @@
     "result_id": "makeshift_pistol",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "scrap", "count": 5 },
-      { "item_id": "wood", "count": 2 },
-      { "item_id": "gunpowder", "count": 3 }
+      {
+        "item_id": "scrap",
+        "count": 5
+      },
+      {
+        "item_id": "wood",
+        "count": 2
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 3
+      }
     ],
     "tier": 1,
     "unlock_condition": null,
@@ -17,9 +26,18 @@
     "result_id": "leather_vest",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "leather", "count": 3 },
-      { "item_id": "cloth", "count": 2 },
-      { "item_id": "rope", "count": 1 }
+      {
+        "item_id": "leather",
+        "count": 3
+      },
+      {
+        "item_id": "cloth",
+        "count": 2
+      },
+      {
+        "item_id": "rope",
+        "count": 1
+      }
     ],
     "tier": 1,
     "unlock_condition": null,
@@ -30,7 +48,10 @@
     "result_id": "bandage",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "cloth", "count": 3 }
+      {
+        "item_id": "cloth",
+        "count": 3
+      }
     ],
     "tier": 1,
     "unlock_condition": null,
@@ -41,8 +62,14 @@
     "result_id": "medkit",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "bandage", "count": 2 },
-      { "item_id": "cloth", "count": 2 }
+      {
+        "item_id": "bandage",
+        "count": 2
+      },
+      {
+        "item_id": "cloth",
+        "count": 2
+      }
     ],
     "tier": 1,
     "unlock_condition": null,
@@ -53,8 +80,14 @@
     "result_id": "ammo_pistol",
     "result_count": 5,
     "ingredients": [
-      { "item_id": "gunpowder", "count": 2 },
-      { "item_id": "scrap", "count": 1 }
+      {
+        "item_id": "gunpowder",
+        "count": 2
+      },
+      {
+        "item_id": "scrap",
+        "count": 1
+      }
     ],
     "tier": 1,
     "unlock_condition": null,
@@ -65,10 +98,22 @@
     "result_id": "pipe_rifle",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "scrap", "count": 5 },
-      { "item_id": "wood", "count": 3 },
-      { "item_id": "gunpowder", "count": 2 },
-      { "item_id": "oil", "count": 1 }
+      {
+        "item_id": "scrap",
+        "count": 5
+      },
+      {
+        "item_id": "wood",
+        "count": 3
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 2
+      },
+      {
+        "item_id": "oil",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -79,8 +124,14 @@
     "result_id": "crowbar",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "scrap", "count": 4 },
-      { "item_id": "oil", "count": 1 }
+      {
+        "item_id": "scrap",
+        "count": 4
+      },
+      {
+        "item_id": "oil",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -91,9 +142,18 @@
     "result_id": "tactical_vest",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "leather", "count": 3 },
-      { "item_id": "cloth", "count": 3 },
-      { "item_id": "electronics", "count": 1 }
+      {
+        "item_id": "leather",
+        "count": 3
+      },
+      {
+        "item_id": "cloth",
+        "count": 3
+      },
+      {
+        "item_id": "electronics",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -104,9 +164,18 @@
     "result_id": "helmet",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "scrap", "count": 3 },
-      { "item_id": "leather", "count": 2 },
-      { "item_id": "cloth", "count": 1 }
+      {
+        "item_id": "scrap",
+        "count": 3
+      },
+      {
+        "item_id": "leather",
+        "count": 2
+      },
+      {
+        "item_id": "cloth",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -117,8 +186,14 @@
     "result_id": "large_medkit",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "medkit", "count": 2 },
-      { "item_id": "medical_supplies", "count": 1 }
+      {
+        "item_id": "medkit",
+        "count": 2
+      },
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -129,8 +204,14 @@
     "result_id": "energy_drink",
     "result_count": 2,
     "ingredients": [
-      { "item_id": "water", "count": 2 },
-      { "item_id": "medical_supplies", "count": 1 }
+      {
+        "item_id": "water",
+        "count": 2
+      },
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -141,9 +222,18 @@
     "result_id": "gas_mask",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "cloth", "count": 3 },
-      { "item_id": "circuitry", "count": 1 },
-      { "item_id": "rope", "count": 1 }
+      {
+        "item_id": "cloth",
+        "count": 3
+      },
+      {
+        "item_id": "circuitry",
+        "count": 1
+      },
+      {
+        "item_id": "rope",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -154,9 +244,18 @@
     "result_id": "emp_grenade",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "gunpowder", "count": 2 },
-      { "item_id": "electronics", "count": 2 },
-      { "item_id": "circuitry", "count": 1 }
+      {
+        "item_id": "gunpowder",
+        "count": 2
+      },
+      {
+        "item_id": "electronics",
+        "count": 2
+      },
+      {
+        "item_id": "circuitry",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -167,9 +266,18 @@
     "result_id": "smoke_bomb",
     "result_count": 2,
     "ingredients": [
-      { "item_id": "cloth", "count": 2 },
-      { "item_id": "gunpowder", "count": 1 },
-      { "item_id": "oil", "count": 1 }
+      {
+        "item_id": "cloth",
+        "count": 2
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -180,8 +288,14 @@
     "result_id": "ammo_rifle",
     "result_count": 5,
     "ingredients": [
-      { "item_id": "gunpowder", "count": 3 },
-      { "item_id": "scrap", "count": 1 }
+      {
+        "item_id": "gunpowder",
+        "count": 3
+      },
+      {
+        "item_id": "scrap",
+        "count": 1
+      }
     ],
     "tier": 2,
     "unlock_condition": null,
@@ -192,9 +306,18 @@
     "result_id": "composite_blade",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "crowbar", "count": 1 },
-      { "item_id": "mutated_gland", "count": 2 },
-      { "item_id": "scrap", "count": 5 }
+      {
+        "item_id": "crowbar",
+        "count": 1
+      },
+      {
+        "item_id": "mutated_gland",
+        "count": 2
+      },
+      {
+        "item_id": "scrap",
+        "count": 5
+      }
     ],
     "tier": 3,
     "unlock_condition": null,
@@ -205,9 +328,18 @@
     "result_id": "prime_shotgun",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "pipe_rifle", "count": 1 },
-      { "item_id": "prime_circuit", "count": 2 },
-      { "item_id": "scrap", "count": 6 }
+      {
+        "item_id": "pipe_rifle",
+        "count": 1
+      },
+      {
+        "item_id": "prime_circuit",
+        "count": 2
+      },
+      {
+        "item_id": "scrap",
+        "count": 6
+      }
     ],
     "tier": 3,
     "unlock_condition": null,
@@ -218,11 +350,512 @@
     "result_id": "captain_armor",
     "result_count": 1,
     "ingredients": [
-      { "item_id": "tactical_vest", "count": 1 },
-      { "item_id": "captain_insignia", "count": 2 },
-      { "item_id": "leather", "count": 4 }
+      {
+        "item_id": "tactical_vest",
+        "count": 1
+      },
+      {
+        "item_id": "captain_insignia",
+        "count": 2
+      },
+      {
+        "item_id": "leather",
+        "count": 4
+      }
     ],
     "tier": 3,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_shiv",
+    "result_id": "shiv",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "suburban_scrap",
+        "count": 2
+      },
+      {
+        "item_id": "rope",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_machete",
+    "result_id": "machete",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wood",
+        "count": 3
+      },
+      {
+        "item_id": "suburban_scrap",
+        "count": 2
+      },
+      {
+        "item_id": "oil",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_sledgehammer",
+    "result_id": "sledgehammer",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 6
+      },
+      {
+        "item_id": "wood",
+        "count": 2
+      },
+      {
+        "item_id": "machine_part",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_crossbow",
+    "result_id": "crossbow",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "wood",
+        "count": 3
+      },
+      {
+        "item_id": "industrial_cable",
+        "count": 2
+      },
+      {
+        "item_id": "rope",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_hunting_rifle",
+    "result_id": "hunting_rifle",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 5
+      },
+      {
+        "item_id": "machine_part",
+        "count": 1
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 2
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_riot_shield",
+    "result_id": "riot_shield",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 4
+      },
+      {
+        "item_id": "leather",
+        "count": 2
+      },
+      {
+        "item_id": "machine_part",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_scout_mask",
+    "result_id": "scout_mask",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cloth",
+        "count": 2
+      },
+      {
+        "item_id": "school_book",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_padded_coat",
+    "result_id": "padded_coat",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cloth",
+        "count": 4
+      },
+      {
+        "item_id": "leather",
+        "count": 2
+      },
+      {
+        "item_id": "garden_seed",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_ballistic_vest",
+    "result_id": "ballistic_vest",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 5
+      },
+      {
+        "item_id": "industrial_cable",
+        "count": 2
+      },
+      {
+        "item_id": "electronics",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_medical_gown",
+    "result_id": "medical_gown",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cloth",
+        "count": 3
+      },
+      {
+        "item_id": "sterile_wrap",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_insulated_vest",
+    "result_id": "insulated_vest",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 3
+      },
+      {
+        "item_id": "copper_coil",
+        "count": 2
+      },
+      {
+        "item_id": "cloth",
+        "count": 2
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_metal_helm",
+    "result_id": "metal_helm",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 2
+      },
+      {
+        "item_id": "copper_coil",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_heal_salve",
+    "result_id": "heal_salve",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cloth",
+        "count": 2
+      },
+      {
+        "item_id": "garden_seed",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_stimpack",
+    "result_id": "stimpack",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      },
+      {
+        "item_id": "bandage",
+        "count": 1
+      },
+      {
+        "item_id": "hospital_supply",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_adrenaline_shot",
+    "result_id": "adrenaline_shot",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      },
+      {
+        "item_id": "sterile_wrap",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_tear_gas",
+    "result_id": "tear_gas",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "gunpowder",
+        "count": 2
+      },
+      {
+        "item_id": "industrial_cable",
+        "count": 1
+      },
+      {
+        "item_id": "oil",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_ammo_bolt",
+    "result_id": "ammo_bolt",
+    "result_count": 5,
+    "ingredients": [
+      {
+        "item_id": "scrap",
+        "count": 1
+      },
+      {
+        "item_id": "rail_shard",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_ammo_flare",
+    "result_id": "ammo_flare",
+    "result_count": 5,
+    "ingredients": [
+      {
+        "item_id": "gunpowder",
+        "count": 1
+      },
+      {
+        "item_id": "scrap",
+        "count": 1
+      },
+      {
+        "item_id": "school_book",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_electrolyte",
+    "result_id": "electrolyte",
+    "result_count": 2,
+    "ingredients": [
+      {
+        "item_id": "water",
+        "count": 2
+      },
+      {
+        "item_id": "hospital_supply",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_speed_drug",
+    "result_id": "speed_drug",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      },
+      {
+        "item_id": "reactor_ash",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_decoy_flare",
+    "result_id": "decoy_flare",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "gunpowder",
+        "count": 1
+      },
+      {
+        "item_id": "metro_token",
+        "count": 1
+      },
+      {
+        "item_id": "scrap",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_pulse_grenade",
+    "result_id": "pulse_grenade",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "electronics",
+        "count": 1
+      },
+      {
+        "item_id": "machine_part",
+        "count": 1
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_smoke_grenade",
+    "result_id": "smoke_grenade",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "cloth",
+        "count": 2
+      },
+      {
+        "item_id": "rail_shard",
+        "count": 1
+      },
+      {
+        "item_id": "gunpowder",
+        "count": 1
+      }
+    ],
+    "tier": 2,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_energy_gel",
+    "result_id": "energy_gel",
+    "result_count": 1,
+    "ingredients": [
+      {
+        "item_id": "water",
+        "count": 1
+      },
+      {
+        "item_id": "broken_tablet",
+        "count": 1
+      },
+      {
+        "item_id": "medical_supplies",
+        "count": 1
+      }
+    ],
+    "tier": 2,
     "unlock_condition": null,
     "craft_time_s": 0
   }
