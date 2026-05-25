@@ -883,7 +883,7 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 | id | result_id | result_count | ingredients | tier | unlock_condition |
 |---|---|---|---|---|---|
 | `recipe_shiv` | `shiv` | 1 | `suburban_scrap` x2, `rope` x1 | 2 | null |
-| `recipe_machete` | `machete` | 1 | `wood` x3, `scrap` x2, `oil` x1 | 2 | null |
+| `recipe_machete` | `machete` | 1 | `wood` x3, `suburban_scrap` x2, `oil` x1 | 2 | null |
 | `recipe_sledgehammer` | `sledgehammer` | 1 | `scrap` x6, `wood` x2, `machine_part` x1 | 2 | null |
 | `recipe_crossbow` | `crossbow` | 1 | `wood` x3, `industrial_cable` x2, `rope` x1 | 2 | null |
 | `recipe_hunting_rifle` | `hunting_rifle` | 1 | `scrap` x5, `machine_part` x1, `gunpowder` x2 | 2 | null |
@@ -893,12 +893,12 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 | `recipe_ballistic_vest` | `ballistic_vest` | 1 | `scrap` x5, `industrial_cable` x2, `electronics` x1 | 2 | null |
 | `recipe_medical_gown` | `medical_gown` | 1 | `cloth` x3, `sterile_wrap` x1 | 2 | null |
 | `recipe_insulated_vest` | `insulated_vest` | 1 | `scrap` x3, `copper_coil` x2, `cloth` x2 | 2 | null |
-| `recipe_metal_helm` | `metal_helm` | 1 | `scrap` x2, `leather` x1 | 2 | null |
+| `recipe_metal_helm` | `metal_helm` | 1 | `scrap` x2, `copper_coil` x1 | 2 | null |
 | `recipe_heal_salve` | `heal_salve` | 1 | `cloth` x2, `garden_seed` x1 | 2 | null |
 | `recipe_stimpack` | `stimpack` | 1 | `medical_supplies` x1, `bandage` x1, `hospital_supply` x1 | 2 | null |
 | `recipe_adrenaline_shot` | `adrenaline_shot` | 1 | `medical_supplies` x1, `sterile_wrap` x1 | 2 | null |
 | `recipe_tear_gas` | `tear_gas` | 1 | `gunpowder` x2, `industrial_cable` x1, `oil` x1 | 2 | null |
-| `recipe_ammo_bolt` | `ammo_bolt` | 5 | `scrap` x1, `wood` x1 | 2 | null |
+| `recipe_ammo_bolt` | `ammo_bolt` | 5 | `scrap` x1, `rail_shard` x1 | 2 | null |
 | `recipe_ammo_flare` | `ammo_flare` | 5 | `gunpowder` x1, `scrap` x1, `school_book` x1 | 2 | null |
 | `recipe_electrolyte` | `electrolyte` | 2 | `water` x2, `hospital_supply` x1 | 2 | null |
 | `recipe_speed_drug` | `speed_drug` | 1 | `medical_supplies` x1, `reactor_ash` x1 | 2 | null |
@@ -911,7 +911,7 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 
 | Ресурс | Рецепты использующие ресурс |
 |---|---|
-| `suburban_scrap` | `recipe_shiv` |
+| `suburban_scrap` | `recipe_shiv`, `recipe_machete` |
 | `garden_seed` | `recipe_padded_coat`, `recipe_heal_salve` |
 | `school_book` | `recipe_scout_mask`, `recipe_ammo_flare` |
 | `broken_tablet` | `recipe_energy_gel` |
@@ -920,9 +920,9 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 | `hospital_supply` | `recipe_stimpack`, `recipe_electrolyte` |
 | `sterile_wrap` | `recipe_adrenaline_shot`, `recipe_medical_gown` |
 | `metro_token` | `recipe_decoy_flare` |
-| `rail_shard` | `recipe_smoke_grenade` |
+| `rail_shard` | `recipe_smoke_grenade`, `recipe_ammo_bolt` |
 | `reactor_ash` | `recipe_speed_drug` |
-| `copper_coil` | `recipe_insulated_vest` |
+| `copper_coil` | `recipe_insulated_vest`, `recipe_metal_helm` |
 
 ---
 
