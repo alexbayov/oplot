@@ -20,6 +20,7 @@ import { computePerkModifiers, pickRandomPerks } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
 import { computeGasDamage } from "../systems/gasZone";
 import { gainXP } from "../systems/xp";
+import { tickRadioOnReturn } from "../systems/radio";
 import {
   chooseMobActionV2,
   type MobRuntimeState,
@@ -460,6 +461,10 @@ export class CombatScene extends Phaser.Scene {
     }
     this.mergeBackpackToStash();
     player.hp = player.hp_max;
+    GameState.progress.radio_trust = tickRadioOnReturn(
+      GameState.data.radioSignals,
+      GameState.progress.radio_trust,
+    );
     GameState.currentSortie = null;
     this.scene.start("BaseScene");
   }

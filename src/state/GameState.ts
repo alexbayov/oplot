@@ -42,6 +42,7 @@ const createDefaultProgress = (): GameProgress => ({
   forest_depth_2_completed: false,
   any_warehouse_sortie_completed: false,
   daily_completed: {},
+  radio_trust: 0,
 });
 
 const state: GameStateShape = {

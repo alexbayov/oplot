@@ -1,33 +1,103 @@
-import type { RadioSignal } from "../types";
+import type { InventoryStack } from "../state/types";
+import type { RadioSignal, RadioSignalOptionId } from "../types";
 
-// Active signals shown in RadioScene list: not dismissed and still has time-budget.
+export type ResolveStatus =
+  | "OK"
+  | "ALREADY_RESOLVED"
+  | "REWARD_SKIPPED"
+  | "AMBUSH_SKIPPED";
+
+export interface RadioResolveResult {
+  status: ResolveStatus;
+  trustBefore: number;
+  trustAfter: number;
+  rewardAdded: InventoryStack | null;
+  ambushMobId: string | null;
+}
+
+const TRUST_MIN = -5;
+const TRUST_MAX = 5;
+
+const clampTrust = (value: number): number =>
+  Math.max(TRUST_MIN, Math.min(TRUST_MAX, value));
+
 export const activeSignals = (signals: RadioSignal[]): RadioSignal[] =>
-  signals.filter((s) => !s.dismissed && s.expires_after_sorties > 0);
+  signals.filter((s) => !s.resolved && s.expires_after_sorties > 0);
 
-// GDD §10.M3.3: on every successful return, decrement expires_after_sorties on each
-// non-dismissed signal and auto-dismiss when the counter reaches 0. Mutates signals.
-// No rewards, no ambush, no trust — anti-scope M6.
-export const tickRadioOnReturn = (signals: RadioSignal[]): void => {
+export const tickRadioOnReturn = (
+  signals: RadioSignal[],
+  trust: number,
+): number => {
   for (const sig of signals) {
-    if (sig.dismissed) continue;
+    if (sig.resolved) continue;
     if (sig.expires_after_sorties <= 0) {
-      sig.dismissed = true;
+      sig.resolved = true;
+      sig.chosen_option = null;
+      trust = clampTrust(trust + sig.trust_impact.ignore);
       continue;
     }
     sig.expires_after_sorties -= 1;
     if (sig.expires_after_sorties <= 0) {
-      sig.dismissed = true;
+      sig.resolved = true;
+      sig.chosen_option = null;
+      trust = clampTrust(trust + sig.trust_impact.ignore);
     }
   }
+  return trust;
 };
 
-// GDD §10.M3.2: clicking either option flips dismissed to true. Both options behave
-// identically on M3 — the semantic choice is narrative only (M6 will branch outcomes).
-export const dismissSignal = (signals: RadioSignal[], id: string): void => {
-  for (const sig of signals) {
-    if (sig.id === id) {
-      sig.dismissed = true;
-      return;
+export const resolveRadioChoice = (
+  signals: RadioSignal[],
+  signalId: string,
+  option: RadioSignalOptionId,
+  trust: number,
+  _baseStash: InventoryStack[],
+  validItemIds: Set<string>,
+  validMobIds: Set<string>,
+): RadioResolveResult => {
+  const sig = signals.find((s) => s.id === signalId);
+  if (!sig || sig.resolved) {
+    return {
+      status: "ALREADY_RESOLVED",
+      trustBefore: trust,
+      trustAfter: trust,
+      rewardAdded: null,
+      ambushMobId: null,
+    };
+  }
+
+  const trustBefore = trust;
+  const impact =
+    option === "respond" ? sig.trust_impact.respond : sig.trust_impact.ignore;
+  const trustAfter = clampTrust(trustBefore + impact);
+
+  sig.chosen_option = option;
+  sig.resolved = true;
+
+  let rewardAdded: InventoryStack | null = null;
+  let ambushMobId: string | null = null;
+  let status: ResolveStatus = "OK";
+
+  if (option === "respond") {
+    if (sig.reward !== null) {
+      if (validItemIds.has(sig.reward.item_id)) {
+        rewardAdded = { item_id: sig.reward.item_id, count: sig.reward.count };
+      } else {
+        status = "REWARD_SKIPPED";
+      }
+    }
+
+    if (sig.trap_mob_id !== null) {
+      if (validMobIds.has(sig.trap_mob_id)) {
+        ambushMobId = sig.trap_mob_id;
+      } else {
+        status =
+          status === "REWARD_SKIPPED"
+            ? "REWARD_SKIPPED"
+            : "AMBUSH_SKIPPED";
+      }
     }
   }
+
+  return { status, trustBefore, trustAfter, rewardAdded, ambushMobId };
 };

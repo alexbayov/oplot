@@ -85,8 +85,10 @@ export class ReturnScene extends Phaser.Scene {
         markDailyCompleted(GameState.progress, zone.id, Date.now());
       }
     }
-    // M3 radio tick — anti-scope: state only, no rewards/ambush.
-    tickRadioOnReturn(GameState.data.radioSignals);
+    GameState.progress.radio_trust = tickRadioOnReturn(
+      GameState.data.radioSignals,
+      GameState.progress.radio_trust,
+    );
     // Merge backpack into stash (logic moved from LootScene.endSortie).
     let stash = GameState.baseStash;
     for (const stack of player.backpack) {
