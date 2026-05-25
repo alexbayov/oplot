@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   chooseMobActionV2,
+  computePhaseTransition,
   createMobRuntimeState,
 } from "../mobAI";
 import { MARAUDER_FLEE_HP_RATIO } from "../../state/balance";
@@ -272,5 +273,61 @@ describe("unknown behavior_id — soft fallback", () => {
       heroEquippedWeapon: null,
     });
     expect(action).toMatchObject({ kind: "attack", damage_multiplier: 1, ignore_armor_defense: false });
+  });
+});
+
+describe("Boss AI 2-phase flow (M5 GDD §9)", () => {
+  const bossMob = mob("warehouse_boss", {
+    role: "boss",
+    type: "boss",
+    hp: 100,
+    phase_threshold: 0.5,
+    behavior_id: "ranged_keep_distance",
+    phase_2_behavior_id: "berserker_low_hp",
+  });
+
+  test("boss starts at phase 1", () => {
+    const s = createMobRuntimeState(bossMob);
+    expect(s.phase).toBe(1);
+    expect(s.phase_transition_done).toBe(false);
+  });
+
+  test("boss transitions to phase 2 when hp/hp_max < threshold", () => {
+    const s = createMobRuntimeState(bossMob);
+    s.hp = 40;
+    const result = computePhaseTransition(bossMob, s);
+    expect(result.newPhase).toBe(2);
+    expect(result.newBehaviorId).toBe("berserker_low_hp");
+  });
+
+  test("boss does not transition a second time (idempotent)", () => {
+    const s = createMobRuntimeState(bossMob);
+    s.hp = 40;
+    chooseMobActionV2({ mob: bossMob, state: s, allies: [], heroEquippedWeapon: null });
+    expect(s.phase).toBe(2);
+    expect(s.phase_transition_done).toBe(true);
+    s.hp = 10;
+    const result = computePhaseTransition(bossMob, s);
+    expect(result.newPhase).toBe(2);
+    expect(result.newBehaviorId).toBeNull();
+  });
+
+  test("phase 2 uses phase_2_behavior_id for action selection", () => {
+    const s = createMobRuntimeState(bossMob);
+    s.hp = 40;
+    const action = chooseMobActionV2({ mob: bossMob, state: s, allies: [], heroEquippedWeapon: null });
+    expect(action.kind).toBe("attack");
+    expect(s.phase).toBe(2);
+    expect(s.berserk_triggered).toBe(true);
+  });
+
+  test("regular mob phase stays 1, no transition", () => {
+    const regular = mob("marauder", { role: "regular", hp: 20 });
+    const s = createMobRuntimeState(regular);
+    s.hp = 1;
+    const result = computePhaseTransition(regular, s);
+    expect(result.newPhase).toBe(1);
+    expect(result.newBehaviorId).toBeNull();
+    expect(s.phase).toBe(1);
   });
 });

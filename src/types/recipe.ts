@@ -13,4 +13,6 @@ export interface Recipe {
   tier: ItemTier;
   unlock_condition: string | null;
   craft_time_s: number;
+  // M5 GDD §9: T3 recipes require a boss-drop ingredient as gate.
+  boss_drop_ingredient?: string;
 }

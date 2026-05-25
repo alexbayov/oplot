@@ -18,12 +18,13 @@ import {
 } from "../systems/combat";
 import { computePerkModifiers, pickRandomPerks } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
+import { computeGasDamage } from "../systems/gasZone";
 import { gainXP } from "../systems/xp";
 import {
   chooseMobActionV2,
-  createMobRuntimeState,
   type MobRuntimeState,
 } from "../systems/mobAI";
+import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { applyLootLoss, computeWeight } from "../systems/weight";
 import type { ConsumableItem, Mob } from "../types";
 import {
@@ -36,6 +37,8 @@ import {
 interface MobInstance {
   mob: Mob;
   state: MobRuntimeState;
+  isBoss: boolean;
+  _phase2PopupShown?: boolean;
 }
 
 type CombatState = "awaiting_hero" | "resolving_mobs" | "ended";
@@ -60,6 +63,7 @@ export class CombatScene extends Phaser.Scene {
   private heroPanel?: Phaser.GameObjects.Text;
   private enemyPanel?: Phaser.GameObjects.Text;
   private buttonsContainer: Phaser.GameObjects.Container[] = [];
+  private phaseLabel?: Phaser.GameObjects.Text;
 
   public constructor() {
     super("CombatScene");
@@ -77,10 +81,32 @@ export class CombatScene extends Phaser.Scene {
     this.mobs = enemyIds
       .map((id) => GameState.data.mobs[id])
       .filter((m): m is Mob => Boolean(m))
-      .map((mob) => ({ mob, state: createMobRuntimeState(mob) }));
+      .map((mob) => {
+        const init = initBossFight(mob);
+        return { mob, state: init.runtimeState, isBoss: init.isBoss };
+      });
     sortie.cover_active = false;
 
     createTitle(this, "Бой");
+    // M5: boss HUD overlay.
+    const bossInst = this.mobs.find((m) => m.isBoss);
+    if (bossInst) {
+      this.add
+        .text(180, 30, `Босс: ${bossInst.mob.name_ru}`, {
+          color: "#FF4444",
+          fontFamily: "Arial, sans-serif",
+          fontSize: "18px",
+          fontStyle: "bold",
+        })
+        .setOrigin(0.5);
+      this.phaseLabel = this.add
+        .text(180, 54, `Фаза ${bossInst.state.phase}`, {
+          color: "#FFAA44",
+          fontFamily: "Arial, sans-serif",
+          fontSize: "14px",
+        })
+        .setOrigin(0.5);
+    }
     createPanel(this, 180, 170, 320, 130);
     this.heroPanel = createSubtitle(this, 150, "");
     this.enemyPanel = createSubtitle(this, 200, "");
@@ -111,8 +137,24 @@ export class CombatScene extends Phaser.Scene {
 
   private startRound(): void {
     if (this.checkEnd()) return;
+    // M5: apply gas damage at the start of each round after the first.
+    this.applyGasDamage();
+    if (this.checkEnd()) return;
     this.turnQueue = this.computeTurnOrder();
     this.advanceTurn();
+  }
+
+  private applyGasDamage(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) return;
+    const zone = GameState.data.zones[sortie.zone_id];
+    if (!zone) return;
+    const player = GameState.player;
+    const gasDamage = computeGasDamage(zone, sortie.depth, player);
+    if (gasDamage > 0) {
+      player.hp = Math.max(0, player.hp - gasDamage);
+      this.log(`Газ: -${gasDamage} HP`);
+    }
   }
 
   private computeTurnOrder(): TurnOrderEntry[] {
@@ -166,6 +208,11 @@ export class CombatScene extends Phaser.Scene {
       allies: this.mobs.map((m) => ({ mob: m.mob, state: m.state })),
       heroEquippedWeapon: heroWeapon,
     });
+    // M5: phase transition popup.
+    if (inst.isBoss && inst.state.phase_transition_done && inst.state.phase === 2 && !inst._phase2PopupShown) {
+      this.log(`${inst.mob.name_ru} переходит в фазу 2!`);
+      inst._phase2PopupShown = true;
+    }
     if (action.kind === "flee") {
       inst.state.fled = true;
       this.log(`${inst.mob.name_ru} убегает.`);
@@ -344,6 +391,13 @@ export class CombatScene extends Phaser.Scene {
       for (const stack of drops) {
         mobLoot = addToStack(mobLoot, stack.item_id, stack.count);
       }
+      // M5: boss guaranteed drops.
+      if (inst.isBoss) {
+        const guaranteed = getBossGuaranteedDrops(inst.mob);
+        for (const stack of guaranteed) {
+          mobLoot = addToStack(mobLoot, stack.item_id, stack.count);
+        }
+      }
     }
     let totalXpGain = 0;
     for (const inst of this.mobs) {
@@ -383,7 +437,11 @@ export class CombatScene extends Phaser.Scene {
         PERKS_PER_LEVEL_UP,
       );
       this.scene.start("LootScene");
-      this.scene.launch("LevelUpScene", { perks: candidates });
+      this.scene.launch("LevelUpScene", {
+        perks: candidates,
+        levelBefore: xpResult.level_before,
+        levelAfter: xpResult.level_after,
+      });
     } else {
       this.scene.start("LootScene");
     }
@@ -438,6 +496,10 @@ export class CombatScene extends Phaser.Scene {
     }
     if (this.logText) {
       this.logText.setText(this.logLines.slice(-3).join("\n"));
+    }
+    const bossInst = this.mobs.find((m) => m.isBoss);
+    if (bossInst && this.phaseLabel) {
+      this.phaseLabel.setText(`Фаза ${bossInst.state.phase}`);
     }
   }
 

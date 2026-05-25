@@ -5,6 +5,8 @@ export interface ZoneLevel {
   resources: string[];
   resource_count: [number, number];
   min_player_level: number;
+  // M5 GDD §9: gas zone flag. If true, gas damage applies per turn unless player has gas_mask.
+  is_gas?: boolean;
 }
 
 export interface Zone {
@@ -17,9 +19,10 @@ export interface Zone {
   boss_id: string | null;
   unique_resources: string[];
   levels: ZoneLevel[];
-  // GDD §6.4 / §6.4.M3: "start" | "forest_depth_2_completed" | "any_warehouse_sortie_completed".
   unlock_condition: string;
-  // GDD §6.4.M3 / balance.md §M3: optional multiplier applied to BASE_RETURN_TIME_S.
-  // Default 1.0 (forest omits the field → M1/M2 formula is unchanged).
   return_time_multiplier?: number;
+  // M5 GDD §9: daily instance cooldown in hours (default 24).
+  daily_reset_hours?: number;
+  // M5 GDD §9: gas damage per turn when inside a gas level without gas_mask.
+  gas_damage_per_turn?: number;
 }

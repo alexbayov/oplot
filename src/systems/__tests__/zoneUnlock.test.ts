@@ -10,6 +10,7 @@ import type { Zone } from "../../types";
 const emptyProgress = (): GameProgress => ({
   forest_depth_2_completed: false,
   any_warehouse_sortie_completed: false,
+  daily_completed: {},
 });
 
 const zone = (id: string): Zone => ({

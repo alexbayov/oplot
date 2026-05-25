@@ -45,4 +45,13 @@ export const canLevelUp = (currentXp: number, currentLevel: number): boolean => 
   return currentXp >= xpRequired(currentLevel + 1);
 };
 
+// M5: compute how many level-up popups are needed for overkill XP.
+export const computeOverkillPopups = (
+  levelBefore: number,
+  levelAfter: number,
+): number => {
+  if (levelAfter <= levelBefore) return 0;
+  return levelAfter - levelBefore;
+};
+
 export { xpToNext, xpRequired, MAX_LEVEL };

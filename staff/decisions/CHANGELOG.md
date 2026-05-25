@@ -119,3 +119,39 @@
 - **Gate-close PR `m4-integration → main` pending** (PM merge по делегации Alex'а).
 
 - **Lessons learned M4:** GD cross-spec mismatch (xp_reward §M4 vs §M1/§M3) caught by QA Spec → resolved via option (a) fix PR; parallel production works well when QA Spec APPROVE gates; Engineer can fold M3 follow-ups into M4 scope saving a separate session; LevelUpScene overkill popup queue is minor deviation from GDD §8 but acceptable for M4.
+
+## 2026-05-22 — M4: Closed (gate-close PR #39 merged в main)
+
+- **PM gate-close PR #39** merged в `main` 2026-05-22 PM (`m4-integration → main`): **закрыл M4**. По продолжению M3-делегации Alex'а: PM сам мерджит gate-close PR в `main` (не Alex). `main` HEAD: `0b1de53` (M3 gate-close) → `723ed1c` (M4 gate-close).
+- **M4 финальное состояние:** 11 scenes (Boot, Base, Map, Sortie, Combat, Loot, Return, Inventory, Craft, Radio, **Progression**, **LevelUp**), 128/128 vitest passed (49 M2 + 40 M3 + 24 xp + 15 perks), 1.5 MB build, ~259 KB ассетов (81 M1 + 130 M3 + 24.2 M4 + M3 preload additions) под бюджетом ≤ 600 KB, 8 mobs с `xp_reward`, 8 perks JSON + 1 hardcoded `veteran_conditioning` fallback, XP-curve L1-10 `round(40*level^1.5)` MAX_LEVEL=10, perk modifiers integrated в combat / weight / loot / XP, 3 M3 NB follow-ups closed (RadioScene rowHeight 96→120, BootScene M3 preload, MobRole enum).
+- **Полный summary** — `staff/handoff/M4-SUMMARY.md`.
+- **3 non-blocking M5 follow-ups** из QA Acceptance M4:
+  1. LevelUpScene overkill multi-level-up — текущий single popup, GDD §8 specifies queue. Минорное отклонение, M5 Engineer закроет.
+  2. `computePerkModifiers` per-attack calls — не кэшировано в CombatScene state. Negligible perf impact at scale 8 perks; M5+ optimize if needed.
+  3. Perk icons not rendered в LevelUpScene — на диске лежат, но scene использует text-only cards. M5 UI polish.
+
+## 2026-05-22 — M5: Kickoff (Боссы и инстансы)
+
+См. `staff/status/M5.md` для полного скоупа.
+
+- M5 «Боссы и инстансы» kickoff: PM открыл интеграционную ветку `m5-integration` от `main` HEAD `723ed1c` (после merge gate-close PR #39 M4) и Draft PR #40 `pm/m5-kickoff → m5-integration` (этот PR) — M5 dashboard + 6 kickoff (`staff/kickoff/M5-*.md`) + 6 handoff (`staff/handoff/M5-*.md`) + обновление PLAN / CONTEXT / LINKS / STATE_MACHINE.
+- **M5 scope:** 3 босса (1/зона, depth=3, 2-фазный бой с phase transition на HP<50%), 3 boss-drop ресурса, 3 T3 чертежа (1/зона), дейли-инстанс (24h cool-down, `GameState.progress.daily_completed`), газовые зоны (warehouse/city depth=2..3 — damage-per-turn без `gas_mask`), MobRole runtime gating (`Mob.role: "boss"` запускает boss-fight init в CombatScene), LevelUpScene overkill popup queue (M4 NB follow-up).
+- **M5 anti-scope (явный, прошит в каждый kickoff):** модульное оружие (M5+ отдельная подсистема), полная радио-логика (M6), Yandex SDK / Cloud Saves / Leaderboard / IAP (M8), skill tree / поинты / prereq / tier / cost / cooldown (M5+ refactor path), PvP / мультиплеер, boss-cinematics / animated phase transition (M7 polish), дейли-instance reward rotation (M5 daily = простой 24h cool-down без вариативности), дополнительные AI behaviors (переиспользуются M3-5 + phase swap).
+- **Merge-делегация:** Alex продолжает M3+M4-делегацию на M5 (PM сам мерджит role-PR в `m5-integration` после QA Acceptance APPROVE + gate-close PR `m5-integration → main`). Если Alex изменит политику — PM прочитает явное указание в чате и адаптирует.
+- **Последовательность M5:** GD amendment → QA Spec → (если CHANGES_REQUESTED) GD fix PR → QA Spec re-review → (Content + Engineer + Artist параллельно) → QA Acceptance (с локальным octopus-merge) → PM finalize → PM gate-close (по делегации).
+- **Прошитые в каждый kickoff уроки M2+M3+M4:**
+  - Token-budget: план role-сессии ≤ 5-7 действий (нарушение → разбивать на continuation).
+  - Recovery-safe: ранний Draft PR (5-10 мин) + commit/push после каждого подшага + PR Recovery block.
+  - Cross-spec расхождение (например, балансовое число vs GDD schema) → эскалация в PM, **не auto-resolve** (M4 урок: xp_reward §M4 vs §M1/§M3 → QA Spec поймал, PM резолвил через option (a) fix PR).
+  - DoD-precision: точные числа, не «≥X» (M3 урок: items=29 не «≥30», QA Spec поймал mismatch с DoD).
+  - QA Acceptance: октопус-merge всех 3 role-PR ДО review, чтобы ловить cross-PR конфликты до PM merge sequence.
+  - Anti-scope discipline на каждой роли (явный grep-чек у QA Spec + QA Acceptance).
+  - GD fix может быть отдельным PR если QA Spec CHANGES_REQUESTED (M4 паттерн: PR #34 fix для блокера из PR #33).
+
+## 2026-05-25 — M5: Closed (gate-close `m5-integration → main`)
+
+- **QA Acceptance PR #46** дал **APPROVE**: Gate 1/2/3 PASS, vitest=148 in QA report, build=1.48 MB, assets=412 KB.
+- **PM sequential merge в `m5-integration`:** #43 Artist → #44 Content → #45 Engineer. Engineer-authoritative conflict resolution retained the richer Artist/Content tests/type comments where they were supersets and accepted Engineer runtime deliverables.
+- **M5 финальное состояние:** 3 босса (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`), 3 boss-drop ресурса, 3 T3 items, 3 T3 recipes, 3 zones with boss/daily metadata, warehouse/city gas levels, boss AI phase transition, daily instance cooldown, gas damage, T3 craft gating, MobRole runtime, LevelUpScene overkill popup queue.
+- **Финальная PM verification:** `npm run typecheck`, `npm run lint`, `npm run test` (**152/152 PASS**), `npm run build` (1.48 MB JS), `du -sk assets` = **412 KB**.
+- **Полный summary** — `staff/handoff/M5-SUMMARY.md`.

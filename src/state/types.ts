@@ -10,6 +10,8 @@ export interface InventoryStack {
 export interface GameProgress {
   forest_depth_2_completed: boolean;
   any_warehouse_sortie_completed: boolean;
+  // M5 GDD §9: daily instance cooldown per zone. Key = zoneId, value = timestamp ms.
+  daily_completed: Record<string, number>;
 }
 
 export interface PlayerState {

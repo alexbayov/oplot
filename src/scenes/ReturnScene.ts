@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
+import { markDailyCompleted } from "../systems/dailyInstance";
 import { tickRadioOnReturn } from "../systems/radio";
 import { computePerkModifiers } from "../systems/perks";
 import { computeReturnTime, computeWeight } from "../systems/weight";
@@ -79,6 +80,10 @@ export class ReturnScene extends Phaser.Scene {
         sortie.depth,
         true,
       );
+      // M5: mark daily instance cooldown after successful return from boss zone.
+      if (zone.boss_id) {
+        markDailyCompleted(GameState.progress, zone.id, Date.now());
+      }
     }
     // M3 radio tick — anti-scope: state only, no rewards/ambush.
     tickRadioOnReturn(GameState.data.radioSignals);

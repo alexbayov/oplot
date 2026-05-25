@@ -115,5 +115,6 @@ export const recipe = (overrides: Partial<Recipe>): Recipe => ({
   tier: 1,
   unlock_condition: null,
   craft_time_s: 0,
+  boss_drop_ingredient: undefined,
   ...overrides,
 });

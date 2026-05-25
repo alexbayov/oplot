@@ -10,26 +10,40 @@
 
 ## Integration branch
 
-- **M4 integration baseline (active):** `m4-integration` (создана от `main` 2026-05-21, HEAD `0b1de53` — Merge PR #30 M3 gate-close). M4 role-PR таргетятся в `m4-integration`. PM мерджит role-PR в `m4-integration` после QA Acceptance APPROVE. Gate-close PR `m4-integration → main` мерджит PM по продолжению M3-делегации Alex'а.
+- **M5 integration baseline (active):** `m5-integration` (создана от `main` 2026-05-22, HEAD `723ed1c` — Merge PR #39 M4 gate-close). M5 role-PR таргетятся в `m5-integration`. PM мерджит role-PR в `m5-integration` после QA Acceptance APPROVE. Gate-close PR `m5-integration → main` мерджит PM по продолжению M3+M4-делегации Alex'а.
+- **M4 integration baseline** `m4-integration` закрыта gate-close PR #39 (`m4-integration → main`, merged 2026-05-22 PM по делегации Alex'а).
 - **M3 integration baseline** `m3-integration` закрыта gate-close PR #30 (`m3-integration → main`, merged 2026-05-21 PM по делегации Alex'а).
 - **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
 - **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M4 PRs (done — all merged)
+## M5 PRs (in-progress — kickoff phase)
 
-_Last reconciled with GitHub: 2026-05-22 (m4-integration HEAD = `4a04678`)._
+_Last reconciled with GitHub: 2026-05-22 (m5-integration HEAD = `723ed1c` — just-created от `main`)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#31** | PM / M4 kickoff | `m4-integration ← pm/m4-kickoff` | Merged 2026-05-21 PM |
-| **#32** | GD M4 amendment | `m4-integration ← m4/gd-amendment` | Merged 2026-05-21 PM |
-| **#34** | GD M4 fix (xp_reward option a) | `m4-integration ← m4/gd-fix` | Merged 2026-05-21 PM |
-| **#33** | QA Spec M4 | `m4-integration ← qa/m4-spec-review` | Merged 2026-05-21 PM (verdict APPROVE after re-review) |
-| **#35** | Artist M4 | `m4-integration ← m4/art` | Merged 2026-05-22 PM |
-| **#36** | Content M4 | `m4-integration ← m4/content` | Merged 2026-05-22 PM |
-| **#37** | Engineer M4 | `m4-integration ← m4/progression` | Merged 2026-05-22 PM |
-| **#38** | QA Acceptance M4 | `m4-integration ← qa/m4-acceptance` | Merged 2026-05-22 PM (verdict APPROVE) |
-| TBD | PM gate-close M4 | `main ← m4-integration` | Pending — мерджит PM по продолжению M3-делегации Alex'а |
+| **#40** | PM / M5 kickoff | `m5-integration ← pm/m5-kickoff` | Draft — dashboards + 6 kickoff + 6 handoff (этот PR) |
+| TBD | GD M5 amendment | `m5-integration ← m5/gd-amendment` | Pending (запуск после merge #40) |
+| TBD | QA Spec M5 | `m5-integration ← qa/m5-spec-review` | Pending (после GD M5 PR Ready) |
+| TBD | Content M5 | `m5-integration ← m5/content` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Engineer M5 | `m5-integration ← m5/world` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Artist M5 | `m5-integration ← m5/art` | Pending (parallel после QA Spec APPROVE) |
+| TBD | QA Acceptance M5 | `m5-integration ← qa/m5-acceptance` | Pending (после 3 role-PR Ready) |
+| TBD | PM gate-close M5 | `main ← m5-integration` | Pending — мерджит PM по продолжению M3+M4-делегации Alex'а |
+
+## Merged M4 PRs (история)
+
+| PR | Role | Base | Status |
+|---|---|---|---|
+| #31 | PM / M4 kickoff | `m4-integration ← pm/m4-kickoff` | Merged 2026-05-21 PM |
+| #32 | GD M4 amendment | `m4-integration ← m4/gd-amendment` | Merged 2026-05-21 PM |
+| #34 | GD M4 fix (xp_reward option a) | `m4-integration ← m4/gd-fix` | Merged 2026-05-21 PM |
+| #33 | QA Spec M4 | `m4-integration ← qa/m4-spec-review` | Merged 2026-05-21 PM (verdict APPROVE after re-review) |
+| #35 | Artist M4 | `m4-integration ← m4/art` | Merged 2026-05-22 PM |
+| #36 | Content M4 | `m4-integration ← m4/content` | Merged 2026-05-22 PM |
+| #37 | Engineer M4 | `m4-integration ← m4/progression` | Merged 2026-05-22 PM |
+| #38 | QA Acceptance M4 | `m4-integration ← qa/m4-acceptance` | Merged 2026-05-22 PM (verdict APPROVE) |
+| #39 | PM gate-close M4 | `main ← m4-integration` | Merged 2026-05-22 PM по делегации Alex'а — закрыл M4 |
 
 ## Merged M3 PRs (история)
 
@@ -76,7 +90,8 @@ _Last reconciled with GitHub: 2026-05-22 (m4-integration HEAD = `4a04678`)._
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| M4 status (done, gate-close pending) | `staff/status/M4.md` |
+| M5 status (active — kickoff phase) | `staff/status/M5.md` |
+| M4 summary (закрыта) | `staff/status/M4.md`, `staff/handoff/M4-SUMMARY.md` |
 | M3 summary (закрыта) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
 | M2 summary (закрыта) | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
 | M1 summary (закрыта) | `staff/handoff/M1-SUMMARY.md` |
@@ -85,7 +100,18 @@ _Last reconciled with GitHub: 2026-05-22 (m4-integration HEAD = `4a04678`)._
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M4 — done)
+## Role briefs (M5 — active, kickoff phase)
+
+| Role | Kickoff | Handoff | Status |
+|---|---|---|---|
+| Game Designer | `staff/kickoff/M5-GD.md` | `staff/handoff/M5-GD.md` | **PENDING** (запуск после merge #40) |
+| QA Spec | `staff/kickoff/M5-QA-SPEC.md` | `staff/handoff/M5-QA-SPEC.md` | **PENDING** (после GD M5 PR Ready) |
+| Content | `staff/kickoff/M5-CONTENT.md` | `staff/handoff/M5-CONTENT.md` | **PENDING** (после QA Spec APPROVE) |
+| Engineer | `staff/kickoff/M5-ENG.md` | `staff/handoff/M5-ENG.md` | **PENDING** (после QA Spec APPROVE) |
+| Artist | `staff/kickoff/M5-ARTIST.md` | `staff/handoff/M5-ARTIST.md` | **PENDING** (после QA Spec APPROVE) |
+| QA Acceptance | `staff/kickoff/M5-QA-ACCEPT.md` | `staff/handoff/M5-QA-ACCEPT.md` | **PENDING** (после 3 role-PR Ready) |
+
+## Role briefs (M4 — closed, история)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
