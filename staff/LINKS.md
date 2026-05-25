@@ -23,7 +23,7 @@ _Last reconciled with GitHub: 2026-05-25 (`m6-integration` HEAD = `0af8ad4`, Dra
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#48** | PM / M6 kickoff | `m6-integration ← pm/m6-kickoff` | Draft — dashboard scaffold; prompts + dashboards update in progress |
+| **#48** | PM / M6 kickoff | `m6-integration ← pm/m6-kickoff` | Ready — dashboard + 6 kickoff + 6 handoff + dashboards update |
 | TBD | GD M6 amendment | `m6-integration ← m6/gd-amendment` | Pending (запуск после merge #48) |
 | TBD | QA Spec M6 | `m6-integration ← qa/m6-spec-review` | Pending (после GD M6 PR Ready) |
 | TBD | Content M6 | `m6-integration ← m6/content` | Pending (parallel после QA Spec APPROVE) |

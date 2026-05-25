@@ -39,10 +39,10 @@
 
 _Last reconciled with GitHub: 2026-05-25 (`main` HEAD `0af8ad4` after M5 gate-close PR #47; `m6-integration` created from that HEAD; PM kickoff Draft PR #48 open)._
 
-- **Веха M6 — Радио и доверие:** PM kickoff in progress. Draft PR #48 `pm/m6-kickoff → m6-integration` содержит M6 dashboard scaffold; дальше PM дописывает 6 kickoff + 6 handoff + dashboards update.
+- **Веха M6 — Радио и доверие:** PM kickoff PR #48 `pm/m6-kickoff → m6-integration` готов: M6 dashboard + 6 kickoff + 6 handoff + dashboards update.
 - **Активная ветка:** `m6-integration` (long-lived до M6 gate-close).
-- **Следующие шаги (PM):** завершить PR #48 → self-merge в `m6-integration` → передать Alex'у GD M6 prompt для отдельной Devin-сессии.
-- **Текущий gate:** `M6_PREPARED → PM_KICKOFF_IN_PROGRESS`.
+- **Следующие шаги (PM):** self-merge PR #48 в `m6-integration` → передать Alex'у GD M6 prompt для отдельной Devin-сессии.
+- **Текущий gate:** `PM_KICKOFF_READY → GD_PROMPT_DELIVERY`.
 - Скоуп/роли/DoD — `staff/status/M6.md`. Anti-scope явный: Yandex SDK/Cloud Saves/Leaderboard/IAP (M8), новые зоны/мобы/боссы/T4, модульное оружие, skill tree/active abilities, faction-specific reputation, real-time timers, новые combat mechanics, voice/audio.
 
 ## Закрытые вехи

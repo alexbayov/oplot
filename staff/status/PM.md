@@ -1,9 +1,9 @@
 # Status: PM
 
 **Текущая веха:** M6 — Радио и доверие (PM kickoff)
-**Статус:** M5 закрыта в `main` (gate-close PR #47, HEAD `0af8ad4`). PM создал `m6-integration`, открыл Draft PR #48 `pm/m6-kickoff → m6-integration`, дописывает M6 dashboard + 6 kickoff + 6 handoff + shared dashboards.
-**Последнее обновление:** 2026-05-25 (M6 kickoff Draft PR #48)
-**Текущий gate:** `M6_PREPARED → PM_KICKOFF_IN_PROGRESS`
+**Статус:** M5 закрыта в `main` (gate-close PR #47, HEAD `0af8ad4`). PM создал `m6-integration`, открыл PR #48 `pm/m6-kickoff → m6-integration`, подготовил M6 dashboard + 6 kickoff + 6 handoff + shared dashboards. Проверки зелёные: typecheck, lint, test 152/152, build 1.52 MB.
+**Последнее обновление:** 2026-05-25 (M6 kickoff PR #48 Ready)
+**Текущий gate:** `PM_KICKOFF_READY → GD_PROMPT_DELIVERY`
 
 ## История
 
@@ -15,9 +15,9 @@
 - **M5 — Боссы и инстансы:** DONE 2026-05-25. Gate-close PR #47 merged PM по делегации Alex'а в `main`. Полный summary — `staff/handoff/M5-SUMMARY.md`. Итоги: 152/152 vitest, 1.48 MB build, 412 KB assets.
 - **M6 — Радио и доверие (PM kickoff):**
   - `m6-integration` создана от `main` HEAD `0af8ad4`.
-  - Draft PR #48 `pm/m6-kickoff → m6-integration` открыт recovery-safe.
-  - **Текущий gate:** `M6_PREPARED → PM_KICKOFF_IN_PROGRESS`.
-  - Следующий шаг: закончить dashboard/prompts, прогнать проверки, self-merge kickoff, передать Alex'у GD M6 prompt.
+  - PR #48 `pm/m6-kickoff → m6-integration` открыт recovery-safe и готов к self-merge.
+  - **Текущий gate:** `PM_KICKOFF_READY → GD_PROMPT_DELIVERY`.
+  - Следующий шаг: self-merge kickoff, передать Alex'у GD M6 prompt.
 
 ## Что делает PM на M4 (план)
 

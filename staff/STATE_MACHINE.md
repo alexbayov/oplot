@@ -85,7 +85,7 @@ M{N}_PREPARED
 
 ## Текущее состояние
 
-- **Активная веха:** M6 — Радио и доверие. Gate: `M6_PREPARED → PM_KICKOFF_IN_PROGRESS` (PM создал `m6-integration` от `main` HEAD `0af8ad4` и открыл Draft PR #48 `pm/m6-kickoff → m6-integration`). Подробно — `staff/status/M6.md`.
+- **Активная веха:** M6 — Радио и доверие. Gate: `PM_KICKOFF_READY → GD_PROMPT_DELIVERY` (PM создал `m6-integration` от `main` HEAD `0af8ad4`, подготовил PR #48 `pm/m6-kickoff → m6-integration`: dashboard + 6 kickoff + 6 handoff + shared dashboards; checks green). Подробно — `staff/status/M6.md`.
 
 **Merge-делегация на M6 (continuation M3+M4+M5):** Alex явно делегировал PM gate-close merge в `main` на M3 («гитпат выдам свой если надо — мерж на тебе»); M4 и M5 продолжили эту делегацию (gate-close PR #39 и #47 merged PM). M6 продолжает её же: PM сам мерджит role-PR в `m6-integration` после QA Acceptance APPROVE и gate-close PR `m6-integration → main`. Если Alex изменит политику для M6 — PM прочитает явное указание в чате и адаптирует.
 
