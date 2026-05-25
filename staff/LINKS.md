@@ -10,27 +10,43 @@
 
 ## Integration branch
 
-- **M6 integration baseline (active):** `m6-integration` (создана от `main` 2026-05-25, HEAD `0af8ad4` — Merge PR #47 M5 gate-close). M6 role-PR таргетятся в `m6-integration`. PM мерджит role-PR в `m6-integration` после QA Acceptance APPROVE. Gate-close PR `m6-integration → main` мерджит PM по продолжению M3+M4+M5-делегации Alex'а.
+- **M7 integration baseline (active):** `m7-integration` (создана от `main` 2026-05-25, HEAD `859a652` — Merge PR #57 M6 gate-close). M7 role-PR таргетятся в `m7-integration`. PM мерджит role-PR в `m7-integration` после QA Acceptance APPROVE. Gate-close PR `m7-integration → main` мерджит PM по продолжению M3+M4+M5+M6-делегации Alex'а.
+- **M6 integration baseline** `m6-integration` закрыта gate-close PR #57 (`m6-integration → main`, merged 2026-05-25 PM по делегации Alex'а).
 - **M5 integration baseline** `m5-integration` закрыта gate-close PR #47 (`m5-integration → main`, merged 2026-05-25 PM по делегации Alex'а).
 - **M4 integration baseline** `m4-integration` закрыта gate-close PR #39 (`m4-integration → main`, merged 2026-05-22 PM по делегации Alex'а).
 - **M3 integration baseline** `m3-integration` закрыта gate-close PR #30 (`m3-integration → main`, merged 2026-05-21 PM по делегации Alex'а).
 - **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
 - **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M6 PRs (in-progress — kickoff phase)
+## M7 PRs (in-progress — kickoff phase)
 
-_Last reconciled with GitHub: 2026-05-25 (`m6-integration` HEAD = `0af8ad4`, Draft PR #48 open)._
+_Last reconciled with GitHub: 2026-05-25 (`m7-integration` HEAD = `859a652`, branch `pm/m7-kickoff`)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#48** | PM / M6 kickoff | `m6-integration ← pm/m6-kickoff` | Ready — dashboard + 6 kickoff + 6 handoff + dashboards update |
-| TBD | GD M6 amendment | `m6-integration ← m6/gd-amendment` | Pending (запуск после merge #48) |
-| TBD | QA Spec M6 | `m6-integration ← qa/m6-spec-review` | Pending (после GD M6 PR Ready) |
-| TBD | Content M6 | `m6-integration ← m6/content` | Pending (parallel после QA Spec APPROVE) |
-| TBD | Engineer M6 | `m6-integration ← m6/radio` | Pending (parallel после QA Spec APPROVE) |
-| TBD | Artist M6 | `m6-integration ← m6/art` | Pending (parallel после QA Spec APPROVE) |
-| TBD | QA Acceptance M6 | `m6-integration ← qa/m6-acceptance` | Pending (после 3 role-PR Ready) |
-| TBD | PM gate-close M6 | `main ← m6-integration` | Pending — мерджит PM по продолжению M3+M4+M5-делегации Alex'а |
+| TBD | PM / M7 kickoff | `m7-integration ← pm/m7-kickoff` | In progress — dashboard + 6 kickoff + 6 handoff + dashboards update |
+| TBD | GD M7 amendment | `m7-integration ← m7/gd-amendment` | Pending (запуск после merge kickoff) |
+| TBD | QA Spec M7 | `m7-integration ← qa/m7-spec-review` | Pending (после GD M7 PR Ready) |
+| TBD | Content M7 | `m7-integration ← m7/content` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Engineer M7 | `m7-integration ← m7/polish` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Artist M7 | `m7-integration ← m7/audio` | Pending (parallel после QA Spec APPROVE) |
+| TBD | QA Acceptance M7 | `m7-integration ← qa/m7-acceptance` | Pending (после 3 role-PR Ready) |
+| TBD | PM gate-close M7 | `main ← m7-integration` | Pending — мерджит PM по продолжению M3+M4+M5+M6-делегации Alex'а |
+
+## Merged M6 PRs (история)
+
+| PR | Role | Base | Status |
+|---|---|---|---|
+| #48 | PM / M6 kickoff | `m6-integration ← pm/m6-kickoff` | Merged 2026-05-25 PM |
+| #49 | GD M6 amendment | `m6-integration ← m6/gd-amendment` | Merged 2026-05-25 PM |
+| #50 | QA Spec M6 | `m6-integration ← qa/m6-spec-review` | Merged 2026-05-25 PM (verdict APPROVE) |
+| #51 | PM / status-sync M6 | `m6-integration ← pm/m6-status-sync` | Merged 2026-05-25 PM |
+| #52 | Content M6 | `m6-integration ← m6/content` | Merged 2026-05-25 PM |
+| #53 | Engineer M6 | `m6-integration ← m6/radio` | Merged 2026-05-25 PM + QA fix cherry-pick |
+| #54 | Artist M6 | `m6-integration ← m6/art` | Merged 2026-05-25 PM |
+| #55 | QA Acceptance M6 | `m6-integration ← qa/m6-acceptance-test` | Merged 2026-05-25 PM (verdict APPROVE) |
+| #56 | PM finalize M6 | `m6-integration ← pm/m6-finalize` | Merged 2026-05-25 PM |
+| #57 | PM gate-close M6 | `main ← m6-integration` | Merged 2026-05-25 PM — закрыл M6 |
 
 ## Merged M5 PRs (история)
 
@@ -104,7 +120,9 @@ _Last reconciled with GitHub: 2026-05-25 (`m6-integration` HEAD = `0af8ad4`, Dra
 | Need | Read |
 |---|---|
 | 2-minute context | `staff/CONTEXT.md` |
-| M5 status (active — kickoff phase) | `staff/status/M5.md` |
+| M7 status (active — kickoff phase) | `staff/status/M7.md` |
+| M6 summary (закрыта) | `staff/status/M6.md`, `staff/handoff/M6-SUMMARY.md` |
+| M5 summary (закрыта) | `staff/status/M5.md`, `staff/handoff/M5-SUMMARY.md` |
 | M4 summary (закрыта) | `staff/status/M4.md`, `staff/handoff/M4-SUMMARY.md` |
 | M3 summary (закрыта) | `staff/status/M3.md`, `staff/handoff/M3-SUMMARY.md` |
 | M2 summary (закрыта) | `staff/status/M2.md`, `staff/handoff/M2-SUMMARY.md` |
@@ -114,16 +132,38 @@ _Last reconciled with GitHub: 2026-05-25 (`m6-integration` HEAD = `0af8ad4`, Dra
 | State machine | `staff/STATE_MACHINE.md` |
 | Commands | `staff/COMMANDS.md` |
 
-## Role briefs (M5 — active, kickoff phase)
+## Role briefs (M7 — active, kickoff phase)
 
 | Role | Kickoff | Handoff | Status |
 |---|---|---|---|
-| Game Designer | `staff/kickoff/M5-GD.md` | `staff/handoff/M5-GD.md` | **PENDING** (запуск после merge #40) |
-| QA Spec | `staff/kickoff/M5-QA-SPEC.md` | `staff/handoff/M5-QA-SPEC.md` | **PENDING** (после GD M5 PR Ready) |
-| Content | `staff/kickoff/M5-CONTENT.md` | `staff/handoff/M5-CONTENT.md` | **PENDING** (после QA Spec APPROVE) |
-| Engineer | `staff/kickoff/M5-ENG.md` | `staff/handoff/M5-ENG.md` | **PENDING** (после QA Spec APPROVE) |
-| Artist | `staff/kickoff/M5-ARTIST.md` | `staff/handoff/M5-ARTIST.md` | **PENDING** (после QA Spec APPROVE) |
-| QA Acceptance | `staff/kickoff/M5-QA-ACCEPT.md` | `staff/handoff/M5-QA-ACCEPT.md` | **PENDING** (после 3 role-PR Ready) |
+| Game Designer | `staff/kickoff/M7-GD.md` | `staff/handoff/M7-GD.md` | **PENDING** (запуск после merge kickoff) |
+| QA Spec | `staff/kickoff/M7-QA-SPEC.md` | `staff/handoff/M7-QA-SPEC.md` | **PENDING** (после GD M7 PR Ready) |
+| Content | `staff/kickoff/M7-CONTENT.md` | `staff/handoff/M7-CONTENT.md` | **PENDING** (после QA Spec APPROVE) |
+| Engineer | `staff/kickoff/M7-ENG.md` | `staff/handoff/M7-ENG.md` | **PENDING** (после QA Spec APPROVE) |
+| Artist | `staff/kickoff/M7-ARTIST.md` | `staff/handoff/M7-ARTIST.md` | **PENDING** (после QA Spec APPROVE) |
+| QA Acceptance | `staff/kickoff/M7-QA-ACCEPT.md` | `staff/handoff/M7-QA-ACCEPT.md` | **PENDING** (после 3 role-PR Ready) |
+
+## Role briefs (M6 — closed, история)
+
+| Role | Kickoff | Handoff | Status |
+|---|---|---|---|
+| Game Designer | `staff/kickoff/M6-GD.md` | `staff/handoff/M6-GD.md` | **DONE** (PR #49 merged) |
+| QA Spec | `staff/kickoff/M6-QA-SPEC.md` | `staff/handoff/M6-QA-SPEC.md` | **DONE** (PR #50 APPROVE) |
+| Content | `staff/kickoff/M6-CONTENT.md` | `staff/handoff/M6-CONTENT.md` | **DONE** (PR #52 merged) |
+| Engineer | `staff/kickoff/M6-ENG.md` | `staff/handoff/M6-ENG.md` | **DONE** (PR #53 merged) |
+| Artist | `staff/kickoff/M6-ARTIST.md` | `staff/handoff/M6-ARTIST.md` | **DONE** (PR #54 merged) |
+| QA Acceptance | `staff/kickoff/M6-QA-ACCEPT.md` | `staff/handoff/M6-QA-ACCEPT.md` | **DONE** (PR #55 APPROVE) |
+
+## Role briefs (M5 — closed, история)
+
+| Role | Kickoff | Handoff | Status |
+|---|---|---|---|
+| Game Designer | `staff/kickoff/M5-GD.md` | `staff/handoff/M5-GD.md` | **DONE** (PR #41 merged) |
+| QA Spec | `staff/kickoff/M5-QA-SPEC.md` | `staff/handoff/M5-QA-SPEC.md` | **DONE** (PR #42 APPROVE) |
+| Content | `staff/kickoff/M5-CONTENT.md` | `staff/handoff/M5-CONTENT.md` | **DONE** (PR #44 merged) |
+| Engineer | `staff/kickoff/M5-ENG.md` | `staff/handoff/M5-ENG.md` | **DONE** (PR #45 merged) |
+| Artist | `staff/kickoff/M5-ARTIST.md` | `staff/handoff/M5-ARTIST.md` | **DONE** (PR #43 merged) |
+| QA Acceptance | `staff/kickoff/M5-QA-ACCEPT.md` | `staff/handoff/M5-QA-ACCEPT.md` | **DONE** (PR #46 evidence / M6 stale cleanup) |
 
 ## Role briefs (M4 — closed, история)
 

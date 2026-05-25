@@ -8,7 +8,7 @@
 
 Одиночка выживает в заброшенном городе после техногенной катастрофы. Core loop: вылазки за ресурсами → пошаговый бой → лут с системой веса → крафт экипировки → развитие базы (Оплот).
 
-> **Long-term vision (вне скоупа M1–M2):** модульная экипировка, перки, мульти-зоны, радио и доверие, мини-боссы. На M1–M2 крафт ограничен 5 рецептами и нерасширяемой экипировкой (см. §4 и §7.2). Подробности — в заглушках §11+ внизу документа.
+> **Long-term vision (вне скоупа M1–M2):** модульная экипировка, перки, мульти-зоны, радио и доверие, мини-боссы. На M1–M2 крафт ограничен 5 рецептами и нерасширяемой экипировкой (см. §4 и §7.2). Подробности — в заглушках §12+ внизу документа.
 
 ## Платформа и ограничения
 
@@ -1678,8 +1678,255 @@ for (const sig of GameState.data.radioSignals) {
 - **Новые combat mechanics** — ambush использует существующий CombatScene.
 - **Voice/audio/sound** — M7 polish.
 
-### 11. Модульное оружие и броня (M5+)
+### 11. Полировка, баланс и расширение контента (M7)
+
+#### 11.M7.1. Scope, Anti-scope и Count Contract
+
+M7 scope: балансный тюнинг M2–M6, контент-экспансия (6 зон, 45 предметов, 24 рецепта), аудио/анимационная полировка (10 UI SFX + 16 visual tweens), smoke regression 40+ пунктов.
+
+**Count Contract**
+
+| Entity | M6 Count | M7 Target | Delta |
+|---|---|---|---|
+| zones | 3 | 9 | +6 |
+| items | 35 | 80 | +45 |
+| recipes | 18 | 42 | +24 |
+| SFX | 0 | 10 | +10 |
+| tweens | 0 | 16 | +16 |
+| tests | 164 | 176 | +12 |
+
+**Anti-scope §11.M7** (явные отказы, grep-блок QA):
+- Никаких новых мобов или боссов (mob pool заморожен: 8 regular + 3 boss).
+- Никаких T4-предметов, оружия, брони или расходников.
+- Никаких музыкальных треков, голосовых линий или ambient-лупов.
+- Никакой интеграции Yandex SDK, cloud saves, leaderboards, IAP или рекламы.
+- Никакого редизайна UI или новых сцен (только polish tweens / SFX).
+- Никаких skill tree, perk points, активных способностей или cooldown-систем.
+- Никакого расширения слотов модульного оружия / брони за рамки существующей схемы.
+- Никакой faction reputation системы помимо глобальной `radio_trust` из M6.
+
+#### 11.M7.2. 9-Zone Model (3 existing + 6 new)
+
+**Key constraint:** mob pool = существующие 8 regular мобов (`marauder`, `wild_dog`, `mutant`, `looter_sniper`, `armored_guard`, `fanatic_berserker`, `pack_rat`, `relic_drone`) + 3 босса (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`). Zero новых мобов.
+
+**3 существующие зоны** (`forest`, `warehouse`, `city`) — не изменяются структурно, допускается только числовой тюнинг в `balance.md` §M7.1.
+
+**Tier progression:** T1 (`forest`, `suburbs`, `school`) → T2 (`warehouse`, `factory`, `hospital`) → T3 (`city`, `metro`, `power_plant`).
+
+**6 новых зон**
+
+| id | name_ru | unlock_condition | description_ru | risk_rating | mob_pool | unique_resources | return_time_multiplier | drop_multiplier |
+|---|---|---|---|---|---|---|---|---|
+| `suburbs` | Спальные районы | `any_forest_sortie_completed` | «Заброшенные частные дома и гаражи. Мародёры обыскали доски, но в сараях ещё можно найти припасы.» | 1 | `marauder`, `wild_dog`, `pack_rat` | `suburban_scrap`, `garden_seed` | 1.0 | 0.9 |
+| `school` | Школа | `suburbs_sortie_completed` | «Разрушенное здание школы. В кабинетах — старые учебники и битая электроника. Здесь водятся крысы и бродяги.» | 2 | `marauder`, `looter_sniper`, `pack_rat` | `school_book`, `broken_tablet` | 1.1 | 1.0 |
+| `factory` | Завод | `warehouse_boss_defeated` | «Заброшенный сборочный цех. Машинное масло, ржавые станки и кабели — золото для мастерской.» | 3 | `mutant`, `armored_guard`, `relic_drone` | `machine_part`, `industrial_cable` | 1.3 | 1.1 |
+| `hospital` | Больница | `factory_sortie_completed` | «Полуразрушенная районная больница. Медикаменты и стерильные бинты ценятся выше золота.» | 3 | `mutant`, `fanatic_berserker`, `pack_rat` | `hospital_supply`, `sterile_wrap` | 1.3 | 1.0 |
+| `metro` | Метро | `city_boss_defeated` | «Тёмные туннели заброшенного метро. Здесь водятся мутанты и дроны-патрули.» | 4 | `looter_sniper`, `armored_guard`, `fanatic_berserker`, `relic_drone` | `metro_token`, `rail_shard` | 1.6 | 1.1 |
+| `power_plant` | Электростанция | `metro_sortie_completed` | «Остов энергетического комплекса. Радиация низкая, но мутанты и механизмы не дают покоя.» | 5 | `mutant`, `armored_guard`, `fanatic_berserker`, `relic_drone` | `reactor_ash`, `copper_coil` | 1.8 | 1.2 |
+
+> Боссы (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`) остаются прикреплёнными к зонам `forest`, `warehouse`, `city` (depth 3 и дейли-инстансы). Новые зоны не получают боссов.
+
+**Depth config для 6 новых зон**
+
+`suburbs`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 1 | 2 |
+| 2 | [2, 3] | [3, 5] | 2 | 3 |
+| 3 | [2, 4] | [4, 6] | 3 | 4 |
+
+`school`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 1 | 2 |
+| 2 | [2, 3] | [3, 5] | 2 | 3 |
+| 3 | [2, 4] | [4, 6] | 3 | 4 |
+
+`factory`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 |
+| 2 | [2, 3] | [3, 5] | 3 | 3 |
+| 3 | [2, 4] | [4, 6] | 4 | 4 |
+
+`hospital`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 |
+| 2 | [2, 3] | [3, 5] | 3 | 3 |
+| 3 | [2, 4] | [4, 6] | 4 | 4 |
+
+`metro`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [2, 3] | [2, 4] | 3 | 2 |
+| 2 | [2, 4] | [3, 5] | 4 | 3 |
+| 3 | [3, 5] | [4, 7] | 5 | 4 |
+
+`power_plant`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [2, 3] | [2, 4] | 4 | 2 |
+| 2 | [2, 4] | [3, 5] | 5 | 3 |
+| 3 | [3, 5] | [4, 7] | 6 | 4 |
+
+#### 11.M7.3. 80-Item Taxonomy & 42-Recipe Policy
+
+**Общий состав:** 35 существующих (M1–M6) + 45 новых = 80 предметов.
+
+**Tier policy:**
+- T1 — только новые ресурсы из 6 зон (12 шт.).
+- T2 — основная масса нового gear: оружие, броня, расходники (33 шт.).
+- T3 — ≤5 новых T3; на M7 добавлено 0 новых T3 (всего T3 остаётся 3 из M5).
+- **NO T4** — жёсткий потолок.
+
+**Категории новых предметов (45)**
+
+| Категория | Кол-во | Примеры (id) |
+|---|---|---|
+| T1 resource (новые зонные) | 12 | `suburban_scrap`, `garden_seed`, `school_book`, `broken_tablet`, `machine_part`, `industrial_cable`, `hospital_supply`, `sterile_wrap`, `metro_token`, `rail_shard`, `reactor_ash`, `copper_coil` |
+| T2 weapon_melee (craftable) | 3 | `shiv`, `machete`, `sledgehammer` |
+| T2 weapon_ranged (craftable) | 2 | `crossbow`, `hunting_rifle` |
+| T2 weapon_melee/ranged (loot-only) | 4 | `spear`, `flare_pistol`, `cleaver`, `sawed_off` |
+| T2 armor (craftable) | 7 | `riot_shield`, `scout_mask`, `padded_coat`, `ballistic_vest`, `medical_gown`, `insulated_vest`, `metal_helm` |
+| T2 armor (loot-only) | 2 | `reinforced_gloves`, `tactical_pants` |
+| T2 consumable (craftable) | 12 | `heal_salve`, `stimpack`, `adrenaline_shot`, `tear_gas`, `ammo_bolt`, `ammo_flare`, `electrolyte`, `speed_drug`, `decoy_flare`, `pulse_grenade`, `smoke_grenade`, `energy_gel` |
+| T2 consumable (loot-only) | 3 | `ration_bar`, `healing_patch`, `makeshift_grenade` |
+| **Итого новых** | **45** | — |
+
+**Uniqueness:** каждый новый предмет проходит ≥2 из 4 критериев `content-brief.md` (механическая уникальность, зоноспецифичность, нарративная функция, тактическая ниша). Полная таблица 45 новых предметов — в [`balance.md` §M7.3](./balance.md#m7--полировка-баланс-и-расширение-контента).
+
+**Recipe policy:** 18 существующих (M1–M6) + 24 новых = 42 рецепта. Каждый новый рецепт использует **минимум 1 ресурс из новых зон**. Полный реестр 24 новых рецептов — в `balance.md` §M7.3.
+
+**Пример покрытия новых ресурсов рецептами:**
+- `suburban_scrap` → `recipe_shiv`
+- `garden_seed` → `recipe_padded_coat`, `recipe_heal_salve`
+- `school_book` → `recipe_scout_mask`, `recipe_ammo_flare`
+- `broken_tablet` → `recipe_energy_gel`
+- `machine_part` → `recipe_sledgehammer`, `recipe_riot_shield`, `recipe_hunting_rifle`, `recipe_pulse_grenade`
+- `industrial_cable` → `recipe_crossbow`, `recipe_ballistic_vest`, `recipe_tear_gas`
+- `hospital_supply` → `recipe_stimpack`, `recipe_electrolyte`
+- `sterile_wrap` → `recipe_adrenaline_shot`, `recipe_medical_gown`
+- `metro_token` → `recipe_decoy_flare`
+- `rail_shard` → `recipe_smoke_grenade`
+- `reactor_ash` → `recipe_speed_drug`
+- `copper_coil` → `recipe_insulated_vest`
+
+#### 11.M7.4. Audio Policy (10 UI SFX)
+
+**Scope:** только короткие UI SFX (≤1 с), без музыки, голосов или ambience.
+
+**Settings:**
+- Mute toggle — отключает все SFX.
+- Volume slider — диапазон 0.0–1.0, применяется к gain в реальном времени.
+- Настройки хранятся в session memory (без cloud save / Yandex SDK).
+
+**Registry (10 trigger IDs)**
+
+| trigger_id | Scene | Event | Max duration |
+|---|---|---|---|
+| `sfx_hit` | CombatScene | Нанесение / получение урона | ≤1 с |
+| `sfx_heal` | CombatScene / InventoryScene | Использование heal-расходника | ≤1 с |
+| `sfx_craft` | CraftScene | Успешный крафт рецепта | ≤1 с |
+| `sfx_loot` | LootScene | Подбор предмета в лут | ≤1 с |
+| `sfx_radio` | RadioScene | Открытие сигнала | ≤1 с |
+| `sfx_menu_click` | Any UI | Нажатие кнопки | ≤0.5 с |
+| `sfx_level_up` | LevelUpScene | Получение уровня | ≤1 с |
+| `sfx_boss_phase` | CombatScene | Переход босса во 2-ю фазу | ≤1 с |
+| `sfx_blocked` | CombatScene | Атака заблокирована укрытием | ≤0.5 с |
+| `sfx_confirm` | Any UI | Подтверждение позитивного действия | ≤0.5 с |
+
+#### 11.M7.5. Animation Policy (16 Visual Tweens)
+
+**Принцип:** только визуальные Phaser tweens, **никакой игровой логики в callbacks**. Все изменения состояния (HP, инвентарь, уровень) применяются до старта tween; tween лишь отображает результат.
+
+**Registry (16 event IDs)**
+
+| event_id | scene_target | trigger | duration_ms | easing | effect |
+|---|---|---|---|---|---|
+| `tween_damage_flash` | CombatScene | Герой получает урон | 200 | Linear | Красный оверлей alpha 0→0.3→0 |
+| `tween_hit_shake` | CombatScene | Любой юнит получает урон | 150 | Elastic.Out | Camera offset ±2 px |
+| `tween_heal_pulse` | CombatScene | Применён heal | 400 | Sine.Out | Масштаб цели 1→1.2→1 |
+| `tween_loot_bounce` | LootScene | Предмет подобран | 300 | Back.Out | Иконка y -10 px bounce |
+| `tween_craft_spin` | CraftScene | Успешный крафт | 500 | Cubic.InOut | Иконка рецепта rotate 360° |
+| `tween_menu_hover` | BaseScene | Hover кнопки | 150 | Sine.Out | Масштаб 1→1.05 |
+| `tween_level_up_glow` | LevelUpScene | Level up | 600 | Sine.InOut | Золотое свечение alpha 0→1→0 |
+| `tween_boss_phase_red` | CombatScene | Boss phase swap | 400 | Quintic.Out | Красный tint босса flash |
+| `tween_return_walk` | ReturnScene | Старт возврата | 1000 | Linear | Спрайт героя x +20 px |
+| `tween_xp_bar_fill` | LevelUpScene | Добавлен XP | 300 | Cubic.Out | Ширина бара до target% |
+| `tween_radio_static` | RadioScene | Открытие списка сигналов | 250 | Linear | Static alpha flicker 0.2→0.8 |
+| `tween_gas_warning` | CombatScene | Gas damage tick | 200 | Linear | Жёлтая рамка alpha 0→0.5→0 |
+| `tween_sortie_enter` | SortieScene | Выбрана глубина | 400 | Sine.Out | Оверлей alpha 1→0 |
+| `tween_defeat_fade` | CombatScene | Герой погиб | 500 | Quadratic.Out | Экран fade to black |
+| `tween_perk_card_deal` | LevelUpScene | Показана perk-карта | 300 | Back.Out | Карта slide y +50→0 |
+| `tween_item_tooltip` | InventoryScene | Hover предмета | 150 | Linear | Tooltip alpha 0→1 |
+
+#### 11.M7.6. Smoke Regression Outline
+
+40+ пунктов, сгруппированных по вехам.
+
+**M2 — Core Loop**
+1. Базовый цикл: Base → Sortie → Combat → Loot → Return → Craft проходит end-to-end.
+2. Перегруз: при `cur_weight > max_weight` кнопка «Возврат» заблокирована.
+3. Поражение: 50% веса лута выброшено, экипировка сохранена, XP за убитых мобов остаётся.
+
+**M3 — AI и зоны**
+4. `ranged_keep_distance`: `looter_sniper` наносит ×0.5 урона, если герой в melee.
+5. `defensive_cover`: `armored_guard` пропускает нечётные ходы, cover активен на следующую атаку.
+6. `berserker_low_hp`: `fanatic_berserker` удваивает урон и теряет 30 speed один раз при HP<50%.
+7. `pack_bonus_when_paired`: `pack_rat` наносит ×1.5 урона, если живых `pack_rat` ≥2.
+8. `armor_piercing_ranged`: `relic_drone` игнорирует `armor.defense` героя.
+9. Зона `warehouse`: `return_time_multiplier = 1.2` корректно применяется.
+10. Зона `city`: `return_time_multiplier = 1.5` корректно применяется.
+
+**M4 — Прогрессия**
+11. XP-curve L1–10 точно воспроизводит `round(40 * level^1.5)`.
+12–19. Каждый из 8 перков (`tough_skin`, `sharp_blade`, `lean_pack`, `lucky_scavenger`, `keen_eye`, `reinforced_plates`, `quick_hands`, `fast_learner`) даёт заявленный stat modifier.
+20. `LevelUpScene` показывает 3 случайных перка; после исчерпания пула применяется fallback `veteran_conditioning` (+10 hp_max).
+
+**M5 — Боссы и инстансы**
+21. `forest_alpha_mutant`: фаза 1 `berserker_low_hp`, фаза 2 `pack_bonus_when_paired`.
+22. `warehouse_drone_prime`: фаза 1 `armor_piercing_ranged`, фаза 2 `defensive_cover`.
+23. `city_guard_captain`: фаза 1 `defensive_cover`, фаза 2 `ranged_keep_distance`.
+24. Дейли-инстанс: 24ч cool-down, пропуск depth 1–2, гарантированный boss-drop.
+25. Газовые зоны: `warehouse`/`city` depth 2–3 наносят gas damage за ход без `gas_mask`.
+26. T3-крафт: `composite_blade`, `prime_shotgun`, `captain_armor` требуют boss-drop + T2 base.
+
+**M6 — Радио и доверие**
+27. `radio_trust` клэмпится в диапазоне [−5, +5].
+28–33. Каждый из 6 канонических сигналов (`radio_supply_drop`, `radio_drone_cache`, `radio_distress_trap`, `radio_medical_ambush`, `radio_shady_deal`, `radio_partial_sos`) применяет правильный trust impact и исход (reward / ambush / both).
+34. Ambush запускает CombatScene с `trap_mob_id` и возвращает в RadioScene после боя.
+
+**M7 — Полировка и контент**
+35. Mute toggle отключает все 10 UI SFX.
+36. Volume slider 0.0–1.0 масштабирует gain в реальном времени.
+37. `sfx_hit` триггерится на каждом событии урона.
+38. `sfx_level_up` триггерится на каждом повышении уровня.
+39. `sfx_boss_phase` триггерится на phase transition.
+40. Все 16 tweens — чисто визуальные; удаление callback не ломает игровую логику.
+41. Цепочка разблокировки 9 зон: заблокированные зоны показывают серую кнопку с подсказкой.
+42. `suburbs` открывается после первой успешной вылазки в Лес; `power_plant` — последняя зона.
+
+#### 11.M7.7. Anti-scope §11.M7
+
+Повторение и расширение anti-scope из §11.M7.1 для QA grep:
+- **NO new mobs / bosses** — mob pool заморожен.
+- **NO T4** — потолок T3.
+- **NO music / voice / ambience** — только 10 коротких UI SFX.
+- **NO SDK / cloud / ads / IAP** — аудио хранится локально.
+- **NO UI redesign** — только SFX и tween polish поверх существующих сцен.
+- **NO skill tree / active abilities / cooldowns / modular slots / faction reputation**.
+
+---
+
+### 12. Модульное оружие и броня (M5+)
 <!-- GD заполнит на M5+: модули, слоты, уникальные статы из компонентов -->
 
-### 12. Монетизация (M8)
+### 13. Монетизация (M8)
 <!-- GD заполнит на M8: реклама, IAP, Yandex SDK интеграция -->
