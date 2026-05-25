@@ -611,10 +611,80 @@ xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
 Эти числа сознательно не заданы на M5; они появятся на своих вехах:
 
 - Модульное оружие / брони-слоты (head-slot, accessory, runes) — **M5+** (см. GDD §11 placeholder).
-- Полная радио-логика (rewards, ambush damage, trust scale, faction reputation) — **M6** (см. GDD §10 placeholder).
+- Полная радио-логика (rewards, ambush damage, trust scale, faction reputation) — **M6** (см. GDD §10.M6).
 - Yandex SDK / IAP / реклама — **M8** (см. GDD §12 placeholder).
 - Skill tree / поинты / prereq / tier / cost / cooldown — **M5+ refactor path**.
 - Boss-cinematics / animated phase transition — **M7 polish**.
 - Дейли-instance reward rotation / weekly events — M5 daily = 24h cool-down + boss-drop, без вариативности.
 - Minion spawn / sub-boss в bossfight — **M5+**.
 - Active abilities / cooldowns — **M5+ refactor path**.
+
+---
+
+## M6 — Радио и доверие
+
+### M6.1 — Шкала доверия
+
+| Параметр | Значение |
+|---|---|
+| `GameState.progress.radio_trust` | integer, init = `0` |
+| Clamp range | `[−5, +5]` |
+| Clamp formula | `Math.max(-5, Math.min(5, radio_trust + impact))` |
+| Impact timing | Ровно 1 раз при выборе опции (`respond` или `ignore`) |
+| Expired without choice | Auto-resolve с `chosen_option = null`, impact = `trust_impact.ignore` |
+
+### M6.2 — Trust impact matrix по типу сигнала
+
+| Signal type | `respond` trust | `ignore` trust |
+|---|---:|---:|
+| `truth` | +2 | −1 |
+| `trap` | −2 | +1 |
+| `ambiguous` | per-signal (см. §M6.3) | per-signal (см. §M6.3) |
+
+> **Note:** truth и trap имеют фиксированные trust impacts. Ambiguous — **exact per-signal row** в §M6.3 ниже (нет единого «mixed» значения).
+
+### M6.3 — 6 сигнальных архетипов (exact rows)
+
+| # | id suggestion | type | zone_id | from | subject | reward | trap_mob_id | expires_after_sorties | trust: respond | trust: ignore |
+|---|---|---|---|---|---|---|---|---:|---:|---:|
+| 1 | `radio_supply_drop` | truth | forest | caravan | Караван: сброс припасов | `{item_id: "bandage", count: 2}` | null | 4 | +2 | −1 |
+| 2 | `radio_drone_cache` | truth | warehouse | relic_drone | Дрон: координаты схрона | `{item_id: "electronics", count: 2}` | null | 5 | +2 | −1 |
+| 3 | `radio_distress_trap` | trap | forest | unknown | SOS: раненые у просеки | null | `marauder` | 3 | −2 | +1 |
+| 4 | `radio_medical_ambush` | trap | city | survivor_group_a | Медикаменты в старом госпитале | null | `fanatic_berserker` | 4 | −2 | +1 |
+| 5 | `radio_shady_deal` | ambiguous | warehouse | unknown | Подозрительный груз в контейнере | `{item_id: "scrap", count: 3}` | `looter_sniper` | 4 | +1 | −1 |
+| 6 | `radio_partial_sos` | ambiguous | city | survivor_group_a | Частичный SOS: обрывки информации | `{item_id: "medical_supplies", count: 1}` | `pack_rat` | 3 | +1 | 0 |
+
+> **Ambiguous trust values exact per row:** `radio_shady_deal` respond=+1, ignore=−1; `radio_partial_sos` respond=+1, ignore=0. Никаких «mixed» формулировок — каждая строка имеет конкретные целые числа.
+
+### M6.4 — Sanity checks
+
+| Check | Result |
+|---|---|
+| All `reward.item_id` ∈ items.json | ✓ bandage, electronics, scrap, medical_supplies — M1/M3 existing items |
+| All `trap_mob_id` ∈ mobs.json, role≠boss | ✓ marauder, fanatic_berserker, looter_sniper, pack_rat — regular mobs |
+| Reward counts sane (≤3) | ✓ max count = 3 (scrap) |
+| Ambush mobs zone-consistent | ✓ marauder∈forest, fanatic_berserker∈city, looter_sniper∈warehouse, pack_rat∈city |
+| `expires_after_sorties` range 3-5 | ✓ min=3, max=5 |
+| Trust impact ∈ {−2, −1, 0, +1, +2} | ✓ |
+| 6 signals: 2 truth + 2 trap + 2 ambiguous | ✓ |
+| No T4 / new items / new mobs / boss mobs | ✓ |
+| M3 dummy migration | Content M6 replaces 3 dummies with 6 canonical signals |
+
+### M6.5 — Ambush detail
+
+Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
+- Бой через существующий CombatScene (no new mechanics).
+- Mob stats = из `content/mobs.json` (regular mob values).
+- После боя: loot от mob + возврат в RadioScene/BaseScene.
+- Ambush не создаёт sortie context — Engineer реализует как single-encounter state.
+
+### M6.6 — Скоуп (что НЕ в balance.md M6)
+
+- Yandex SDK / Cloud Saves / Leaderboard / IAP / rewarded ads — **M8**.
+- Новые зоны / мобы / боссы / T4 gear — **не M6**.
+- Модульное оружие / брони-слоты / runes — **M5+**.
+- Skill tree / active abilities / cooldowns — **не M6**.
+- Faction-specific reputation — **M7+** (M6 global trust only).
+- Real-time/background timers — **не M6** (sortie-based expiry only).
+- Новые combat mechanics — **не M6** (ambush uses existing CombatScene).
+- Voice/audio/sound — **M7 polish**.

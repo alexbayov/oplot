@@ -1513,6 +1513,171 @@ interface RadioSignal {
 - **§6 JSON-схемы:** см. §10.M3.1.
 - **M6 эволюция:** этот stub будет расширен амендментом M6 GD: добавятся поля content-brief (`type`, `zone`, `reward`, `trap_mob_id`, `trust_impact`), полная UI-логика последствий, шкала доверия в `GameState.trust`.
 
+#### 10.M6. Радио и доверие — полная логика (M6)
+
+> **Скоуп M6:** радио-выборы теперь имеют последствия. Сигналы делятся на 3 типа (`truth` / `trap` / `ambiguous`); `respond` и `ignore` дают разные исходы (награда / засада / влияние на доверие). Добавляется глобальная шкала `radio_trust` в диапазоне `[−5, +5]`. M3 UI-stub §10.M3 сохраняется как историческая подсекция — её функциональность полностью заменяется §10.M6.
+
+##### 10.M6.1. Сигнальные типы и исходы
+
+| Тип сигнала | `respond` исход | `ignore` исход |
+|---|---|---|
+| `truth` | Награда (reward → baseStash) + trust impact | Нет награды/засады, trust impact |
+| `trap` | Засада (ambush → CombatScene) + trust impact | Нет засады, trust impact |
+| `ambiguous` | Награда (reward → baseStash) **ЗАСИМ** засада (ambush) + trust impact | Нет награды/засады, trust impact |
+
+> **Порядок для `ambiguous` respond:** награда применяется **первой** (item добавляется в baseStash), затем запускается засада. Игрок **не теряет** полученную награду при засаде — награда уже в stash, а не в backpack.
+
+> **Fail-safe для Content-ошибок:** если `reward.item_id` отсутствует в `content/items.json` или `trap_mob_id` отсутствует в `content/mobs.json`, Engineer **пропускает** соответствующий outcome (не награду и не засаду) и возвращает typed status `REWARD_SKIPPED` / `AMBUSH_SKIPPED` в результате resolve. QA Acceptance **блокирует** PR Content, если такие статусы появляются при валидных данных. `console.log` **не используется** — только typed return value.
+
+##### 10.M6.2. JSON-схема `RadioSignal` (M6 extension)
+
+```typescript
+type RadioSignalType = "truth" | "trap" | "ambiguous";
+type RadioSignalOptionId = "respond" | "ignore";
+
+interface RadioReward {
+  item_id: string;           // ∈ content/items.json id (M1–M5 items only)
+  count: number;             // > 0
+}
+
+interface RadioTrustImpact {
+  respond: number;           // integer, typically −2..+2
+  ignore: number;            // integer, typically −1..+1
+}
+
+interface RadioSignal {
+  id: string;                // snake_case, формат "radio_<theme>"
+  from: string;              // отправитель: "caravan" | "unknown" | "survivor_group_a" | ... (свободная строка)
+  subject: string;           // краткий заголовок (1 строка для списка)
+  body_ru: string;           // 2-4 предложения текста сигнала
+  type: RadioSignalType;     // M6: тип сигнала (заменяет M3 отсутствие поля)
+  zone_id: "forest" | "warehouse" | "city";  // M6: зона, к которой привязан сигнал
+  options: RadioSignalOption[];  // ровно 2: [{id: "respond", label_ru: "Откликнуться"}, {id: "ignore", label_ru: "Игнорировать"}]
+  reward: RadioReward | null;    // M6: null для trap сигналов без награды
+  trap_mob_id: string | null;    // M6: id regular mob ∈ content/mobs.json (не boss); null для truth сигналов
+  trust_impact: RadioTrustImpact; // M6: {respond, ignore} — exact integer per signal
+  expires_after_sorties: number; // > 0; уменьшается после каждой завершённой вылазки
+  chosen_option: RadioSignalOptionId | null; // M6: "respond" | "ignore" | null (до выбора)
+  resolved: boolean;              // M6: true = последствия применены или сигнал истёк
+}
+```
+
+> **Миграция M3 → M6:** поле `dismissed` заменяется на `resolved`. Семантика: `resolved = true` означает «сигнал обработан (выбрана опция ИЛИ истёк без выбора), последствия применены». Content M6 должен: (1) удалить 3 M3 dummy-сигнала из `content/radio.json`; (2) заполнить ровно 6 канонических M6 сигналов с полными полями схемы. Engineer M6 должен: удалить поле `dismissed` из runtime type, заменить на `resolved` + `chosen_option`. M3 dummy-сигналы **не сохраняются** как активные JSON-строки — они superseded.
+
+##### 10.M6.3. Шкала доверия (trust flow)
+
+- `GameState.progress.radio_trust: number` — целое, init = `0`, clamp `[−5, +5]`.
+- Trust impact применяется **ровно один раз** при выборе опции (`respond` или `ignore`).
+- Формула: `radio_trust = clamp(radio_trust + trust_impact.<chosen_option>, −5, +5)`.
+- Если signal уже `resolved = true`, повторный вызов resolve — **no-op** (ни trust, ни reward, ни ambush не применяются повторно).
+- **Истёкший без выбора:** сигнал с `expires_after_sorties === 0` и `resolved === false` автоматически получает `resolved = true`, `chosen_option = null`. Trust impact = `ignore` значение из `trust_impact.ignore` данного сигнала. Это моделирует «тихое игнорирование».
+
+##### 10.M6.4. Награды (reward rules)
+
+- Rewards добавляются **только** в `GameState.baseStash`, не в `player.backpack`.
+- `reward.item_id` ∈ `content/items.json` (M1–M5 items only — никаких новых item types на M6).
+- `reward.count` — малые числа: 1-3 для resources, 1 для consumables (см. balance §M6 exact table).
+- Если `reward = null`, награда не выдаётся (trap-сигналы без награды).
+- Если `reward.item_id` не найден в items.json, outcome возвращает `REWARD_SKIPPED` и награда **не выдаётся**.
+
+##### 10.M6.5. Засады (ambush rules)
+
+- `trap_mob_id` ∈ `content/mobs.json` с `role !== "boss"` (regular mob only).
+- Ambush запускает бой с указанным mob через существующий CombatScene (без новых combat mechanics).
+- Implementation: Engineer создаёт sortie-like encounter state; CombatScene обрабатывает как обычный бой. После боя игрок возвращается в RadioScene (или BaseScene по усмотрению Engineer).
+- Если `trap_mob_id = null`, засада не запускается (truth-сигналы).
+- Если `trap_mob_id` не найден в mobs.json, outcome возвращает `AMBUSH_SKIPPED` и засада **не запускается**.
+
+##### 10.M6.6. UI-flow (M6 extension)
+
+```
+[BaseScene]
+    │ кнопка «Радио»
+    ▼
+[RadioScene: список активных сигналов]
+    │ active = signals.filter(s => !s.resolved && s.expires_after_sorties > 0)
+    │ для каждого сигнала: subject + from + type badge (truth/trap/ambiguous unknown to player)
+    │ + zone label + «Истекает через X вылазок»
+    │ + текущий radio_trust отображается вверху списка
+    │ если active пуст → «Эфир пуст», кнопка «Назад»
+    ▼ клик по карточке
+[RadioScene: детали сигнала]
+    │ body_ru
+    │ zone label
+    │ «Истекает через X вылазок»
+    │ две кнопки: «Откликнуться» и «Игнорировать»
+    ▼ клик по опции
+[RadioScene: исход выбора]
+    │ chosen_option = "respond" | "ignore"
+    │ resolved = true
+    │ trust applied → radio_trust обновлён
+    │ outcome summary (1-2 строки):
+    │   truth respond: «Получено: <reward>»
+    │   trap respond: «Засада! <mob_name> атакует!» → CombatScene
+    │   ambiguous respond: «Получено: <reward> … Засада! <mob_name> атакует!» → CombatScene
+    │   any ignore: «Сигнал проигнорирован.»
+    │ trust change indicator: «Доверие: <old> → <new>»
+    ▼ после боя (если ambush) или сразу
+[RadioScene: список обновлённых сигналов]
+    ▼ кнопка «Назад»
+[BaseScene]
+```
+
+> **Player не видит тип сигнала заранее.** Type badge в списке — это **UI-решение Engineer'а**, но на M6 рекомендуется **не показывать** type игроку (это убивает смысл выбора). Игрок должен судить по тексту (`from`, `subject`, `body_ru`) — это осмысленный выбор по content-brief правилу «не очевидно правильный вариант».
+
+##### 10.M6.7. Таймер `expires_after_sorties` (M6 extension)
+
+- Счётчик уменьшается в `ReturnScene.onComplete()` (как M3) — **и при успешном возврате, и при поражении** (M3 уменьшал только при успехе; M6 расширяет).
+- При `expires_after_sorties === 0` и `resolved === false`: auto-resolve с `chosen_option = null`, trust impact = `trust_impact.ignore` (тихое игнорирование).
+- Implementation hint (~8 LOC):
+
+```typescript
+for (const sig of GameState.data.radioSignals) {
+  if (!sig.resolved && sig.expires_after_sorties > 0) {
+    sig.expires_after_sorties -= 1;
+    if (sig.expires_after_sorties === 0) {
+      sig.resolved = true;
+      sig.chosen_option = null;
+      applyTrustImpact(sig, "ignore");  // quiet ignore
+    }
+  }
+}
+```
+
+##### 10.M6.8. Edge cases
+
+| Edge case | Правило |
+|---|---|
+| Signal expires while visible in RadioScene | На следующем открытии RadioScene сигнал отсутствует в active list. Если игрок нажал «Откликнуться» на уже истёкший сигнал (race condition): no-op, показать «Сигнал уже истёк». |
+| Player clicks same option twice / scene restarts | `resolved = true` → no-op. Idempotent. |
+| Trust at clamp boundary (−5 или +5) | `clamp(radio_trust + impact, −5, +5)` — overflow/underflow отбрасывается. |
+| Reward item missing from content | Outcome возвращает `REWARD_SKIPPED`. Награда не выдаётся. QA Content PR blocker. |
+| Ambush mob missing from content | Outcome возвращает `AMBUSH_SKIPPED`. Засада не запускается. QA Content PR blocker. |
+| Ignore trap signal | Нет засады. Trust impact по `trust_impact.ignore`. Trap «не срабатывает» — это корректное поведение (игрок избежал ловушки). |
+| Respond to ambiguous (both reward and ambush) | Сначала reward → baseStash, затем ambush. Reward **не теряется**. |
+| M3 dummy signals migration | 3 M3 dummy-сигнала superseded — Content M6 удаляет их из `content/radio.json` и заполняет 6 канонических M6 сигналов. Engineer удаляет `dismissed` field, заменяет на `resolved` + `chosen_option`. |
+
+##### 10.M6.9. Связь §10.M6 с другими системами
+
+- **§1 Core Loop:** RadioScene вызывается с BaseScene; `expires_after_sorties` декрементится в ReturnScene (теперь и при defeat).
+- **§2 Combat:** Ambush использует существующий CombatScene; никаких новых combat mechanics.
+- **§4 Craft / §8 Progression:** Rewards не дают XP и не требуют крафта — direct item в stash.
+- **§9 M5 Bosses/Daily/Gas:** Radio не влияет на boss fight / daily instance / gas zones. Независимые системы.
+- **§5.4 / §6.4.M3:** Trap mobs — существующие regular mobs из §5.4; зон привязка через `zone_id`.
+- **§6 JSON-схемы:** Schema extension в §10.M6.2 (RadioSignal); `GameState.progress` добавляет `radio_trust: number` (Engineer).
+- **§10.M3:** Superseded — §10.M3 сохраняется как историческая подсекция. §10.M6 полностью заменяет runtime поведение.
+
+##### 10.M6.10. Anti-scope §10.M6 (что НЕ делает Engineer/Content/Artist на M6)
+
+- **Yandex SDK / Cloud Saves / Leaderboard / IAP / rewarded ads** — M8.
+- **Новые зоны / новые мобы / новые боссы / T4 gear** — M6 работает на M5 world (11 mobs, 35 items, 3 zones).
+- **Модульное оружие / брони-слоты / runes** — M5+ отдельная подсистема.
+- **Skill tree / active abilities / cooldown abilities** — не M6.
+- **Faction-specific reputation** — M7+. M6 = одна глобальная шкала `radio_trust`.
+- **Real-time/background timers** — expiry остаётся sortie-based.
+- **Новые combat mechanics** — ambush использует существующий CombatScene.
+- **Voice/audio/sound** — M7 polish.
+
 ### 11. Модульное оружие и броня (M5+)
 <!-- GD заполнит на M5+: модули, слоты, уникальные статы из компонентов -->
 
