@@ -2,7 +2,7 @@
 
 Ты — **Game Designer** на вехе M6 проекта «Оплот» (survival RPG для Яндекс.Игр).
 
-Репо: https://github.com/alexbayov/oplot  
+Репо: https://github.com/alexbayov/oplot
 Твой брифинг: `staff/handoff/M6-GD.md`
 
 Это **amendment-сессия**: GDD §1–§9 уже написаны под M1–M5 — их **НЕ трогай**. Ты расширяешь §10 «Радио и доверие» из M3 UI-stub до M6 full logic, добавляешь schema extensions для `RadioSignal` / radio state, и секцию §M6 в `balance.md`.

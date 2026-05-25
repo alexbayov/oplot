@@ -2,7 +2,7 @@
 
 Ты — **Artist** на вехе M6 проекта «Оплот».
 
-Репо: https://github.com/alexbayov/oplot  
+Репо: https://github.com/alexbayov/oplot
 Твой брифинг: `staff/handoff/M6-ARTIST.md`
 
 ## Когда стартуешь

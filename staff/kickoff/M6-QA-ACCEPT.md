@@ -2,7 +2,7 @@
 
 Ты — **QA Engineer** на этапе **acceptance review** вехи M6 проекта «Оплот».
 
-Репо: https://github.com/alexbayov/oplot  
+Репо: https://github.com/alexbayov/oplot
 Твой брифинг: `staff/handoff/M6-QA-ACCEPT.md`
 
 ## Когда стартуешь
