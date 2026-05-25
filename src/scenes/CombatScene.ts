@@ -26,6 +26,7 @@ import {
   type MobRuntimeState,
 } from "../systems/mobAI";
 import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
+import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
 import type { ConsumableItem, Mob } from "../types";
 import {
@@ -155,6 +156,9 @@ export class CombatScene extends Phaser.Scene {
     if (gasDamage > 0) {
       player.hp = Math.max(0, player.hp - gasDamage);
       this.log(`Газ: -${gasDamage} HP`);
+      const overlay = this.add.rectangle(180, 320, 360, 640, 0xffff00, 0).setAlpha(0);
+      const tween = runTween(this, "tween_gas_warning", overlay);
+      tween?.once("complete", () => overlay.destroy());
     }
   }
 
@@ -213,6 +217,9 @@ export class CombatScene extends Phaser.Scene {
     if (inst.isBoss && inst.state.phase_transition_done && inst.state.phase === 2 && !inst._phase2PopupShown) {
       this.log(`${inst.mob.name_ru} переходит в фазу 2!`);
       inst._phase2PopupShown = true;
+      const overlay = this.add.rectangle(180, 40, 360, 40, 0xff0000, 0).setAlpha(0).setDepth(50);
+      const tween = runTween(this, "tween_boss_phase_red", overlay);
+      tween?.once("complete", () => overlay.destroy());
     }
     if (action.kind === "flee") {
       inst.state.fled = true;
@@ -250,6 +257,8 @@ export class CombatScene extends Phaser.Scene {
     this.log(
       `${inst.mob.name_ru} бьёт на ${result.damage_dealt.toFixed(1)} (HP: ${player.hp.toFixed(0)})`,
     );
+    runTween(this, "tween_hit_shake", this.cameras.main);
+    this.flashDamage();
     this.updateDisplay();
     this.time.delayedCall(250, () => this.advanceTurn());
   }
@@ -302,6 +311,7 @@ export class CombatScene extends Phaser.Scene {
     this.log(
       `Герой бьёт ${target.mob.name_ru} на ${result.damage_dealt.toFixed(1)} (HP: ${target.state.hp.toFixed(0)})`,
     );
+    runTween(this, "tween_hit_shake", this.cameras.main);
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
@@ -340,6 +350,9 @@ export class CombatScene extends Phaser.Scene {
     const delta = healed - player.hp;
     player.hp = healed;
     this.log(`Использован ${pick.item.name_ru}: +${delta} HP.`);
+    if (this.heroPanel) {
+      runTween(this, "tween_heal_pulse", this.heroPanel);
+    }
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
@@ -450,7 +463,12 @@ export class CombatScene extends Phaser.Scene {
 
   private endCombatDefeat(): void {
     this.state = "ended";
-    this.endSortie("defeat");
+    const overlay = this.add.rectangle(180, 320, 360, 640, 0x000000, 0).setAlpha(0).setDepth(200);
+    runTween(this, "tween_defeat_fade", overlay);
+    this.time.delayedCall(500, () => {
+      overlay.destroy();
+      this.endSortie("defeat");
+    });
   }
 
   private endSortie(reason: "retreat" | "defeat"): void {
@@ -513,5 +531,11 @@ export class CombatScene extends Phaser.Scene {
     if (this.logText) {
       this.logText.setText(this.logLines.slice(-3).join("\n"));
     }
+  }
+
+  private flashDamage(): void {
+    const overlay = this.add.rectangle(180, 320, 360, 640, 0xff0000, 0).setAlpha(0);
+    const tween = runTween(this, "tween_damage_flash", overlay);
+    tween?.once("complete", () => overlay.destroy());
   }
 }

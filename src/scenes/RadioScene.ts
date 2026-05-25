@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { activeSignals, resolveRadioChoice } from "../systems/radio";
+import { runTween } from "../systems/tweens";
 import type { RadioSignalOptionId } from "../types";
 import {
   createButton,
@@ -39,6 +40,9 @@ export class RadioScene extends Phaser.Scene {
 
   private renderList(): void {
     createTitle(this, "Радио");
+    const staticOverlay = this.add.rectangle(180, 320, 360, 640, 0xaaaaaa, 0).setAlpha(0).setDepth(-1);
+    runTween(this, "tween_radio_static", staticOverlay);
+
     const trust = GameState.progress.radio_trust;
     this.add
       .text(180, 50, `Доверие: ${trust}`, {

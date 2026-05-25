@@ -2,7 +2,8 @@ import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { VETERAN_CONDITIONING_HP_BONUS } from "../state/balance";
 import { computePerkModifiers } from "../systems/perks";
-import { computeOverkillPopups } from "../systems/xp";
+import { runTween } from "../systems/tweens";
+import { computeOverkillPopups, xpProgress } from "../systems/xp";
 import type { Perk } from "../types";
 import { createPanel, createTitle } from "./sceneUi";
 
@@ -37,6 +38,17 @@ export class LevelUpScene extends Phaser.Scene {
     const { player } = GameState;
     createTitle(this, `Новый уровень! Уровень ${player.level}`);
 
+    const glow = this.add.rectangle(180, 64, 300, 48, 0xffd700, 0).setAlpha(0).setDepth(-1);
+    runTween(this, "tween_level_up_glow", glow);
+
+    const barWidth = 280;
+    const barX = 180 - barWidth / 2;
+    const barY = 110;
+    this.add.rectangle(180, barY, barWidth, 12, 0x2a2a2a).setStrokeStyle(1, 0x5f5a50);
+    const barFill = this.add.rectangle(barX, barY, 0, 12, 0x6f8a4d).setOrigin(0, 0.5);
+    const targetWidth = barWidth * xpProgress(player.xp, player.level);
+    runTween(this, "tween_xp_bar_fill", barFill, targetWidth);
+
     if (this.candidatePerks.length === 0) {
       this.renderVeteranFallback();
       return;
@@ -50,6 +62,7 @@ export class LevelUpScene extends Phaser.Scene {
 
   private renderPerkCard(perk: Perk, y: number): void {
     const bg = this.add.rectangle(180, y, CARD_WIDTH, CARD_HEIGHT, CARD_FILL).setStrokeStyle(2, CARD_STROKE);
+    runTween(this, "tween_perk_card_deal", bg);
     this.add.text(40, y - 32, perk.name, {
       color: TEXT_COLOR,
       fontFamily: "Arial, sans-serif",

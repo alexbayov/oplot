@@ -3,6 +3,7 @@ import { GameState, addToStack } from "../state/GameState";
 import { markDailyCompleted } from "../systems/dailyInstance";
 import { tickRadioOnReturn } from "../systems/radio";
 import { computePerkModifiers } from "../systems/perks";
+import { runTween } from "../systems/tweens";
 import { computeReturnTime, computeWeight } from "../systems/weight";
 import { applySortieCompletion } from "../systems/zoneUnlock";
 import {
@@ -44,6 +45,9 @@ export class ReturnScene extends Phaser.Scene {
     createSubtitle(this, 180, `Вес ${curWeight.toFixed(1)}/${player.max_weight_kg} кг`);
     const zoneLabel = zone ? ` · ${zone.name_ru}` : "";
     createSubtitle(this, 220, `Время возврата: ${returnTimeS.toFixed(0)}с${zoneLabel}`);
+
+    const hero = this.add.rectangle(50, 400, 20, 20, 0x6f8a4d);
+    runTween(this, "tween_return_walk", hero);
 
     // Progress bar: filled rect grows from 0 → barWidth over returnTimeS seconds.
     const barWidth = 280;
