@@ -1,38 +1,110 @@
 [
   {
-    "id": "radio_001_caravan",
+    "id": "radio_supply_drop",
     "from": "caravan",
-    "subject": "Караван у северного периметра",
-    "body_ru": "Это передача с северной просеки. Караван из пяти человек, идём на юг, нужна сверка координат и сухой проход. Если кто слышит — выйдите на 121.5 в течение трёх вылазок. Дальше нас уже не будет на этой частоте.",
+    "subject": "Караван: сброс припасов",
+    "body_ru": "Северная просека, говорим. У нас лишний груз — два бинта, можем сбросить у старого перекрёстка. Координаты передадим, если выйдете на связь. Мы будем в районе ещё четыре вылазки, потом снимаемся.",
+    "type": "truth",
+    "zone_id": "forest",
     "options": [
       { "id": "respond", "label_ru": "Откликнуться" },
       { "id": "ignore", "label_ru": "Игнорировать" }
     ],
+    "reward": { "item_id": "bandage", "count": 2 },
+    "trap_mob_id": null,
+    "trust_impact": { "respond": 2, "ignore": -1 },
     "expires_after_sorties": 4,
-    "dismissed": false
+    "chosen_option": null,
+    "resolved": false
   },
   {
-    "id": "radio_002_sos",
-    "from": "unknown",
-    "subject": "SOS на 121.5",
-    "body_ru": "...повторяю, SOS, нас здесь трое, один ранен... приёмник садится... если кто-то слышит, мы у... [помехи] ...сигнал прерывистый, выходим в эфир каждые тридцать минут.",
+    "id": "radio_drone_cache",
+    "from": "relic_drone",
+    "subject": "Дрон: координаты схрона",
+    "body_ru": "Автоматический сигнал. Бортовой кэш содержит координаты склада электроники в восточном крыле. Данные целые, подтверждено два контейнера. Передача ограничена — до истечения пяти вылазок.",
+    "type": "truth",
+    "zone_id": "warehouse",
     "options": [
       { "id": "respond", "label_ru": "Откликнуться" },
       { "id": "ignore", "label_ru": "Игнорировать" }
     ],
-    "expires_after_sorties": 3,
-    "dismissed": false
-  },
-  {
-    "id": "radio_003_weather_chat",
-    "from": "survivor_group_a",
-    "subject": "Прогноз погоды от Сони",
-    "body_ru": "Соня, ты в эфире? Это Кир. Опять у нас гроза с северо-запада, к утру накроет промзону. Если завтра идёшь на маршрут — лучше через час позже выходи, переждёшь первую волну. Конец связи.",
-    "options": [
-      { "id": "respond", "label_ru": "Откликнуться" },
-      { "id": "ignore", "label_ru": "Игнорировать" }
-    ],
+    "reward": { "item_id": "electronics", "count": 2 },
+    "trap_mob_id": null,
+    "trust_impact": { "respond": 2, "ignore": -1 },
     "expires_after_sorties": 5,
-    "dismissed": false
+    "chosen_option": null,
+    "resolved": false
+  },
+  {
+    "id": "radio_distress_trap",
+    "from": "unknown",
+    "subject": "SOS: раненые у просеки",
+    "body_ru": "Помогите... нас трое, один не может идти... мы у северной просеки, координаты... [помехи] ...если кто слышит, выходите на 121.5, мы продержимся три вылазки... пожалуйста...",
+    "type": "trap",
+    "zone_id": "forest",
+    "options": [
+      { "id": "respond", "label_ru": "Откликнуться" },
+      { "id": "ignore", "label_ru": "Игнорировать" }
+    ],
+    "reward": null,
+    "trap_mob_id": "marauder",
+    "trust_impact": { "respond": -2, "ignore": 1 },
+    "expires_after_sorties": 3,
+    "chosen_option": null,
+    "resolved": false
+  },
+  {
+    "id": "radio_medical_ambush",
+    "from": "survivor_group_a",
+    "subject": "Медикаменты в старом госпитале",
+    "body_ru": "Это Соня. Мы нашли медикаменты в старом госпитале — можно поделиться, если поможете с транспортировкой. Нас четверо, ждём на месте. Выходите на связь в течение четырёх вылазок, потом уходим.",
+    "type": "trap",
+    "zone_id": "city",
+    "options": [
+      { "id": "respond", "label_ru": "Откликнуться" },
+      { "id": "ignore", "label_ru": "Игнорировать" }
+    ],
+    "reward": null,
+    "trap_mob_id": "fanatic_berserker",
+    "trust_impact": { "respond": -2, "ignore": 1 },
+    "expires_after_sorties": 4,
+    "chosen_option": null,
+    "resolved": false
+  },
+  {
+    "id": "radio_shady_deal",
+    "from": "unknown",
+    "subject": "Подозрительный груз в контейнере",
+    "body_ru": "Неизвестный голос. Есть контейнер за третьим ангаром — внутри металлолом, но подход охраняется. Сами не полезем, но можем передать код замка. Действуйте быстро, пока хозяева не вернулись. Четыре вылазки — потом код меняется.",
+    "type": "ambiguous",
+    "zone_id": "warehouse",
+    "options": [
+      { "id": "respond", "label_ru": "Откликнуться" },
+      { "id": "ignore", "label_ru": "Игнорировать" }
+    ],
+    "reward": { "item_id": "scrap", "count": 3 },
+    "trap_mob_id": "looter_sniper",
+    "trust_impact": { "respond": 1, "ignore": -1 },
+    "expires_after_sorties": 4,
+    "chosen_option": null,
+    "resolved": false
+  },
+  {
+    "id": "radio_partial_sos",
+    "from": "survivor_group_a",
+    "subject": "Частичный SOS: обрывки информации",
+    "body_ru": "Кир на связи. Перехватили обрывки — кто-то передавал координаты медсклада в районе старого парка. Сигнал прерывистый, может быть и правда, может — приманка. У нас нет людей чтобы проверить. Если рискнёте — три вылазки до тишины.",
+    "type": "ambiguous",
+    "zone_id": "city",
+    "options": [
+      { "id": "respond", "label_ru": "Откликнуться" },
+      { "id": "ignore", "label_ru": "Игнорировать" }
+    ],
+    "reward": { "item_id": "medical_supplies", "count": 1 },
+    "trap_mob_id": "pack_rat",
+    "trust_impact": { "respond": 1, "ignore": 0 },
+    "expires_after_sorties": 3,
+    "chosen_option": null,
+    "resolved": false
   }
 ]

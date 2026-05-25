@@ -1,9 +1,9 @@
 # Status: PM
 
-**Текущая веха:** M5 — Боссы и инстансы (PM merge phase)
-**Статус:** QA Acceptance M5 завершена: PR #46 `qa/m5-acceptance → m5-integration` verdict **APPROVE**. Gate 1/2/3 PASS, vitest=148, build=1.48 MB, assets=412 KB. PM выполняет sequential merge role-PR #43 → #44 → #45 в `m5-integration`, затем gate-close `m5-integration → main`.
-**Последнее обновление:** 2026-05-25 (M5 QA Acceptance APPROVE)
-**Текущий gate:** `QA_ACCEPTANCE_APPROVED → PM_MERGE_IN_PROGRESS`
+**Текущая веха:** M6 — Радио и доверие (DONE, gate-close pending)
+**Статус:** Все M6 role-PR смержены в `m6-integration` (HEAD `e32d622` после PR #55 мерджа). QA Acceptance APPROVE. PM finalize PR `pm/m6-finalize → m6-integration` подготовлен (этот status отражает его содержание). Следующий PM-шаг: self-merge finalize PR → открыть gate-close PR `m6-integration → main` → self-merge по продолжению M3+M4+M5 делегации Alex'а.
+**Последнее обновление:** 2026-05-25 (M6 PM finalize — M6-SUMMARY + CHANGELOG + dashboards)
+**Текущий gate:** `M6_DONE_PENDING_GATE_CLOSE`
 
 ## История
 
@@ -12,28 +12,23 @@
 - **M2 — Играбельный MVP:** DONE 2026-05-20. Gate-close PR #19 merged Alex'ом в `main`. Полный summary — `staff/handoff/M2-SUMMARY.md`. Core loop полный, 4 системы, 9 сцен, 49 unit-тестов, build 1.5 MB.
 - **M3 — Расширение мира:** DONE 2026-05-21. Gate-close PR #30 merged PM по делегации Alex'а в `main`. Полный summary — `staff/handoff/M3-SUMMARY.md`. 3 зоны, 8 мобов, 29 items, 15 recipes, 89/89 vitest.
 - **M4 — Перки и прогрессия:** DONE 2026-05-22. Gate-close PR #39 merged в `main`. 128/128 vitest, 1.5 MB build, 8 perks + XP progression. Полный summary — `staff/handoff/M4-SUMMARY.md`.
-- **M5 — Боссы и инстансы (PM merge phase):**
-  - PM kickoff PR #40, GD PR #41 и QA Spec PR #42 merged в `m5-integration`.
-  - Role PRs Ready: #43 Artist, #44 Content, #45 Engineer.
-  - QA Acceptance PR #46 verdict **APPROVE**: Gate 1/2/3 PASS, vitest=148, build=1.48 MB, assets=412 KB.
-  - **Текущий gate:** `QA_ACCEPTANCE_APPROVED → PM_MERGE_IN_PROGRESS`.
-  - Следующий шаг: PM sequential merge #43 → #44 → #45 в `m5-integration`, затем gate-close `m5-integration → main`.
+- **M5 — Боссы и инстансы:** DONE 2026-05-25. Gate-close PR #47 merged PM по делегации Alex'а в `main`. Полный summary — `staff/handoff/M5-SUMMARY.md`. Итоги: 152/152 vitest, 1.48 MB build, 412 KB assets.
+- **M6 — Радио и доверие:** DONE 2026-05-25 (gate-close pending). Полный summary — `staff/handoff/M6-SUMMARY.md`. Итоги: 6 radio signals (2 truth + 2 trap + 2 ambiguous), `RadioSignal` schema extensions, `radio_trust` `[-5,+5]`, Phaser-free `src/systems/radio.ts`, RadioScene M6 + ambush интеграция в CombatScene, **164/164 vitest** (152 M5 + 12 M6), 4 PNG ассета **26.2 KB / 40 KB** M6-budget, project total **456 KB / 650 KB**, build clean. QA Acceptance APPROVE с 1 fix'ом (`f1ab9fa` cherry-pick'нут в Engineer's PR как `c2ccab8`). `m6-integration` HEAD `e32d622` post-#55.
 
-## Что делает PM на M4 (план)
+## Что делает PM на M6 (фактическое исполнение — все шаги done кроме gate-close)
 
-См. `staff/status/M4.md` для полного scope/anti-scope/DoD. Кратко orchestration sequence:
+См. `staff/status/M6.md` для полного scope/anti-scope/DoD. Orchestration sequence:
 
-1. **PM kickoff (этот PR #31)** — M4 dashboard + 6 kickoff + 6 handoff + dashboards update. Self-merge в `m4-integration` (по делегации Alex'а).
-2. **GD M4 amendment** — PM возвращает Alex'у role-session prompt; GD пишет GDD §Прогрессия + §6.X Perk schema + balance.md §M4 (XP-curve + 8 perk numbers). PR: `m4/gd-amendment → m4-integration`.
-3. **QA Spec M4** — PM запускает после GD PR Ready. QA verdict APPROVE / CHANGES_REQUESTED. PR: `qa/m4-spec-review → m4-integration`.
-4. **Parallel production** — PM запускает Content + Engineer + Artist параллельно после QA Spec APPROVE.
-   - Content PR: `m4/content → m4-integration` (`content/perks.json` 8 perks).
-   - Engineer PR: `m4/progression → m4-integration` (xp.ts + perks.ts + ProgressionScene + LevelUpScene + 3 M3 follow-ups).
-   - Artist PR: `m4/art → m4-integration` (8 perk-icons 64×64).
-5. **QA Acceptance M4** — PM запускает после 3 role-PR Ready. QA локальный octopus-merge + 3 Gate'а. PR: `qa/m4-acceptance → m4-integration`.
-6. **PM merge sequence** — после QA APPROVE PM мерджит 3 role-PR + QA PR в `m4-integration`.
-7. **PM finalize** — `pm/m4-finalize → m4-integration` (M4-SUMMARY + CHANGELOG + dashboards). Self-merge.
-8. **PM gate-close** — `m4-integration → main`. Self-merge (по продолжению M3-делегации).
+1. **[DONE]** PM kickoff PR #48 → merged в `m6-integration` (HEAD `d5779c6`).
+2. **[DONE]** GD M6 amendment PR #49 → merged (`b17ac0c`).
+3. **[DONE]** QA Spec M6 PR #50 verdict APPROVE → merged (`8935f39`).
+4. **[N/A]** GD fix loop — не понадобился (QA Spec APPROVE на первой итерации).
+5. **[DONE]** PM status-sync PR #51 → self-merged (`ee203f1`).
+6. **[DONE]** Parallel production: Content PR #52 / Engineer PR #53 / Artist PR #54 реализованы 3 параллельными Devin-сессиями; QA Acceptance preview поднялась параллельно (4-launch).
+7. **[DONE]** QA Acceptance PR #55 → 3-Gate APPROVE; 1 runtime fix `f1ab9fa` (ambush `zone_id` из `signal.zone_id` вместо hardcoded `"forest"`).
+8. **[DONE]** PM merge sequence — cherry-pick `f1ab9fa` → push as `c2ccab8` на `origin/m6/radio` → merge #52 (`da79c5f`) → merge #53 (`d34e488`) → merge #54 (`9bd75d5`) → merge #55 (`e32d622`).
+9. **[IN PROGRESS]** PM finalize PR `pm/m6-finalize → m6-integration` (этот) — `staff/handoff/M6-SUMMARY.md` (new), CHANGELOG M6-closed entry, M6.md gate → `M6_DONE_PENDING_GATE_CLOSE`, PM.md M6 → DONE history. Self-merge по делегации.
+10. **[NEXT]** PM gate-close PR `m6-integration → main`. Self-merge по продолжению M3+M4+M5 делегации Alex'а. Закрывает M6.
 
 ## Lessons learned M2+M3 (применять на M4)
 
@@ -50,30 +45,29 @@
 
 ## Блокеры
 
-- Нет. QA Acceptance M5 APPROVE; PM merge sequence разрешён.
+- Нет. QA Acceptance M6 APPROVE (PR #55 merged в `m6-integration`); PM finalize PR готов к self-merge по делегации Alex'а.
 
 ## PR (активные / плановые)
 
-- **#43** `m5/art → m5-integration`: Artist M5 — Ready, pending PM merge.
-- **#44** `m5/content → m5-integration`: Content M5 — Ready, pending PM merge.
-- **#45** `m5/world → m5-integration`: Engineer M5 — Ready, pending PM merge.
-- **#46** `qa/m5-acceptance → m5-integration`: QA Acceptance M5 — APPROVE report, pending/available as evidence.
-- **Next:** gate-close PR `m5-integration → main`.
+- **PM finalize** (этот) `pm/m6-finalize → m6-integration`: `staff/handoff/M6-SUMMARY.md` + CHANGELOG M6-closed entry + M6.md gate update + PM.md history. Self-merge по делегации.
+- **TBD gate-close** `m6-integration → main`: после merge'а finalize PR. Self-merge.
 
 ## История PR (закрытые / смерженные)
 
+- **M6 (closed in `m6-integration`, gate-close pending):** #48 PM kickoff, #49 GD amendment, #50 QA Spec APPROVE, #51 PM status-sync, #52 Content, #53 Engineer (+QA fix `c2ccab8`), #54 Artist, #55 QA Acceptance APPROVE. Stale: #46 closed without merge.
+- **M5 (closed):** #40 PM kickoff, #41 GD amendment, #42 QA Spec APPROVE, #43 Artist, #44 Content, #45 Engineer, #46 QA Acceptance APPROVE (closed without merge in M6 stale-cleanup), #47 gate-close (PM по делегации Alex'а).
+- **M4 (closed):** #31 PM kickoff, #32 GD amendment, #33 QA Spec CHANGES_REQUESTED, #34 GD fix, #35 QA Spec APPROVE, #36 Content, #37 Engineer, #38 Artist, далее QA Acceptance + finalize + #39 gate-close.
 - **M3 (closed):** #20 PM kickoff, #21 GD amendment, #22 QA Spec APPROVE, #23 PM status-sync, #24 PM DoD-align items=29, #25 Content, #26 Engineer, #27 Artist, #28 QA Acceptance APPROVE, #29 PM finalize, #30 PM gate-close M3 (PM по делегации Alex'а).
 - **M2 (closed):** #14 → main, #15/#16/#17/#18 → m2-integration, #19 (gate-close) → main.
 - **M1 (closed):** #6/#7/#11/#13 → m1-integration, #8/#9/#10/#12 → main.
 
 ## Что делать новой PM-сессии (recovery)
 
-1. Прочитай `staff/status/PM.md` (этот файл), `staff/status/M5.md`, `staff/handoff/M4-SUMMARY.md`, `staff/STATE_MACHINE.md`, `staff/PLAN.md`.
-2. Проверь статус M5 на GitHub (факт сильнее dashboard'ов):
-   - PR #46 `qa/m5-acceptance → m5-integration`: verdict **APPROVE**.
-   - Role PRs #43 → #44 → #45 Ready.
-   - Выполнить PM merge sequence #43 → #44 → #45 в `m5-integration`.
-   - Создать/смёржить gate-close PR `m5-integration → main` по делегации Alex'а.
+1. Прочитай `staff/status/PM.md` (этот файл), `staff/status/M6.md`, `staff/handoff/M6-SUMMARY.md`, `staff/STATE_MACHINE.md`, `staff/PLAN.md`.
+2. Проверь статус M6 на GitHub (факт сильнее dashboard'ов):
+   - PR #48/#49/#50/#51/#52/#53/#54/#55: все **merged** в `m6-integration` (HEAD `e32d622` post-#55).
+   - PM finalize PR `pm/m6-finalize → m6-integration`: если Ready → self-merge по делегации. Если merged → open gate-close PR `m6-integration → main` и self-merge.
+   - После gate-close → M7 kickoff (PLAN §3 next milestone).
 3. **Лессоны M2+M3** (PRESERVED, важны для M4): план role-сессии ≤ 5-7 действий, recovery-safe ранний Draft PR + commit/push after each substep + PR Recovery block, PAT-hygiene (Authorization header / GIT_ASKPASS, не в URL), anti-scope discipline, DoD-precision (точные числа, не «≥X»), octopus-merge в QA Acceptance, merge delegation (PM мерджит по явному указанию Alex'а), skill-tree evolution (M5+ refactor).
 4. **Git-proxy 403 workaround:**
    ```bash

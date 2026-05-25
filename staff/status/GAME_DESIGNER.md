@@ -1,8 +1,64 @@
 # Status: Game Designer
 
-**Текущая веха:** M5 (amendment)
-**Статус:** DONE_PENDING_PM_REVIEW
-**Последнее обновление:** 2026-05-22 (M5 GD-amendment)
+**Текущая веха:** M6 (amendment)
+**Статус:** IN_PROGRESS
+**Последнее обновление:** 2026-05-25 (M6 GD-amendment)
+
+---
+
+## M6 GD-amendment (ветка `m6/gd-amendment`, PR TBD → `m6-integration`)
+
+**Базируется на M6-integration** (PM kickoff PR #48 merged, HEAD `d5779c6`).
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §10.M6 «Радио и доверие — полная логика» | **+** §10.M6.1 Signal types + outcomes (truth/trap/ambiguous respond/ignore rules, ambiguous reward-then-ambush order, fail-safe typed status); §10.M6.2 RadioSignal schema (M6 extension: type, zone_id, reward, trap_mob_id, trust_impact, chosen_option, resolved; M3→M6 migration: dismissed→resolved, 3 dummies superseded); §10.M6.3 Trust flow (radio_trust init=0, clamp [-5,+5], apply once, expired=ignore impact); §10.M6.4 Reward rules (baseStash only, M1–M5 items, REWARD_SKIPPED fail-safe); §10.M6.5 Ambush rules (regular mob only, existing CombatScene, AMBUSH_SKIPPED fail-safe); §10.M6.6 UI-flow M6 (active list, trust display, outcome summary, no type badge to player); §10.M6.7 expires_after_sorties M6 extension (decrement on defeat too, auto-resolve expired with ignore trust); §10.M6.8 Edge cases (8 cases); §10.M6.9 Cross-refs; §10.M6.10 Anti-scope M6 (8 items) |
+| `docs/balance.md` | §M6 «Радио и доверие» | **+** §M6.1 Trust range/clamp; §M6.2 Trust impact matrix (truth respond +2 / ignore -1, trap respond -2 / ignore +1, ambiguous per-signal); §M6.3 6 signal archetypes exact rows (2 truth + 2 trap + 2 ambiguous, reward items ∈ M1–M5, trap mobs ∈ regular mobs, per-signal trust exact integers); §M6.4 Sanity checks; §M6.5 Ambush detail; §M6.6 Anti-scope |
+| `staff/status/GAME_DESIGNER.md` | — | этот M6 status block |
+
+### Числа M6
+
+- Trust: init=0, clamp=[−5, +5], formula `clamp(trust + impact, −5, +5)`.
+- Truth trust: respond +2, ignore −1.
+- Trap trust: respond −2, ignore +1.
+- Ambiguous trust (per signal): `radio_shady_deal` respond +1 / ignore −1; `radio_partial_sos` respond +1 / ignore 0.
+- 6 signals: `radio_supply_drop` (truth/forest/bandage×2), `radio_drone_cache` (truth/warehouse/electronics×2), `radio_distress_trap` (trap/forest/marauder), `radio_medical_ambush` (trap/city/fanatic_berserker), `radio_shady_deal` (ambiguous/warehouse/scrap×3/looter_sniper), `radio_partial_sos` (ambiguous/city/medical_supplies×1/pack_rat).
+- Reward counts: 1-3 (max scrap×3).
+- Expiry: 3-5 sorties.
+- M3 dummy migration: 3 dummies superseded → Content fills exactly 6 M6 signals.
+
+### Коммиты на ветке `m6/gd-amendment`
+
+1. `845f208` — `docs(M6): GDD §10.M6 — radio/trust full logic + schema + outcomes + edge cases + anti-scope`
+2. `2446395` — `docs(M6): balance §M6 — trust matrix + 6 signal archetypes + ambush + anti-scope`
+3. (этот commit) — `chore(M6): update GAME_DESIGNER status`
+
+### Что НЕ сделано (намеренно вне скоупа M6 GD-amendment)
+
+- **`src/`:** не трогал. Engineer реализует radio outcomes / trust / ambush после QA Spec APPROVE.
+- **`content/radio.json`:** не трогал. Content M6 заменит 3 dummy-сигнала на 6 канонических M6 сигналов.
+- **`assets/`:** не трогал. Artist создаст radio UI assets.
+- **GDD §1–§9:** не переписывал; только добавил §10.M6 + cross-refs.
+- **M1–M5 числа в `balance.md`:** не менял; только добавил §M6.
+- **Чужие staff-файлы:** не трогал.
+- **Anti-scope:** Yandex SDK / new zones/mobs/T4 / modular equipment / skill tree / faction reputation / real-time timers / new combat / voice — не добавлял.
+
+### Блокеры
+
+- Нет.
+
+### PM nit'ы учтены
+
+1. Ambiguous trust — exact per-signal row numbers в §M6.3 (не «mixed» формулировки). ✓
+2. M3 dummy migration — финальный radio.json = ровно 6 M6 signals; 3 dummies superseded в GDD, не в JSON. ✓
+3. Engineer fail-safe — typed result status (`REWARD_SKIPPED` / `AMBUSH_SKIPPED`), не console.log. ✓
+
+### Следующая роль после моего merge
+
+- **QA Spec M6** review'ит GDD §10.M6, balance §M6 на соответствие M6 scope / anti-scope.
+- После QA Spec APPROVE + PM merge `m6/gd-amendment → m6-integration` → стартуют Content + Engineer + Artist параллельно.
 
 ---
 

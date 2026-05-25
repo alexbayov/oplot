@@ -21,6 +21,7 @@ const makeProgress = (dailyCompleted: Record<string, number> = {}): GameProgress
   forest_depth_2_completed: true,
   any_warehouse_sortie_completed: true,
   daily_completed: { ...dailyCompleted },
+  radio_trust: 0,
 });
 
 describe("canEnterDailyInstance", () => {
