@@ -987,3 +987,21 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 | SFX | 0 | 10 | +10 | ✓ |
 | tweens | 0 | 16 | +16 | ✓ |
 | tests | 164 | 176 | +12 | ✓ |
+
+---
+
+## M8a — Платформа и персистентность
+
+> **Скоуп:** throttle/quota константы для cloud-save подсистемы M8a. Все константы связаны с Yandex Games SDK лимитами и fail-soft политикой.
+>
+> Спека механик — в [`docs/GDD.md` §13a](./GDD.md#13a--платформа-yandex-games-persistence-mobile-first-m8a).
+
+| Параметр | Значение | Комментарий |
+|---|---|---|
+| `MIN_CLOUD_SAVE_INTERVAL_S` | 10 | Минимальный интервал между cloud-save вызовами (сек). Throttle guard. |
+| `YANDEX_PLAYER_DATA_QUOTA_BYTES` | 204800 | ≈200 KB, документированный лимит Yandex player data. |
+| `EXPECTED_SNAPSHOT_SIZE_BYTES` | ~2048 | ≈2 KB на один snapshot (GameState). Оценка; запас quota > ×20. |
+| `SETTINGS_DEFAULT_MUTE` | false | Default значения при отсутствии remote snapshot. |
+| `SETTINGS_DEFAULT_VOLUME` | 1.0 | Default значения при отсутствии remote snapshot. |
+
+**Sanity check:** `EXPECTED_SNAPSHOT_SIZE_BYTES` ~2 KB при quota ~200 KB → запас ×100 даже с метаданными SDK. Schema safe.
