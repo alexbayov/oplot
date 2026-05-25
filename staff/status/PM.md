@@ -1,9 +1,9 @@
 # Status: PM
 
-**Текущая веха:** M5 — Боссы и инстансы (PM merge phase)
-**Статус:** QA Acceptance M5 завершена: PR #46 `qa/m5-acceptance → m5-integration` verdict **APPROVE**. Gate 1/2/3 PASS, vitest=148, build=1.48 MB, assets=412 KB. PM выполняет sequential merge role-PR #43 → #44 → #45 в `m5-integration`, затем gate-close `m5-integration → main`.
-**Последнее обновление:** 2026-05-25 (M5 QA Acceptance APPROVE)
-**Текущий gate:** `QA_ACCEPTANCE_APPROVED → PM_MERGE_IN_PROGRESS`
+**Текущая веха:** M6 — Радио и доверие (PM kickoff)
+**Статус:** M5 закрыта в `main` (gate-close PR #47, HEAD `0af8ad4`). PM создал `m6-integration`, открыл Draft PR #48 `pm/m6-kickoff → m6-integration`, дописывает M6 dashboard + 6 kickoff + 6 handoff + shared dashboards.
+**Последнее обновление:** 2026-05-25 (M6 kickoff Draft PR #48)
+**Текущий gate:** `M6_PREPARED → PM_KICKOFF_IN_PROGRESS`
 
 ## История
 
@@ -12,12 +12,12 @@
 - **M2 — Играбельный MVP:** DONE 2026-05-20. Gate-close PR #19 merged Alex'ом в `main`. Полный summary — `staff/handoff/M2-SUMMARY.md`. Core loop полный, 4 системы, 9 сцен, 49 unit-тестов, build 1.5 MB.
 - **M3 — Расширение мира:** DONE 2026-05-21. Gate-close PR #30 merged PM по делегации Alex'а в `main`. Полный summary — `staff/handoff/M3-SUMMARY.md`. 3 зоны, 8 мобов, 29 items, 15 recipes, 89/89 vitest.
 - **M4 — Перки и прогрессия:** DONE 2026-05-22. Gate-close PR #39 merged в `main`. 128/128 vitest, 1.5 MB build, 8 perks + XP progression. Полный summary — `staff/handoff/M4-SUMMARY.md`.
-- **M5 — Боссы и инстансы (PM merge phase):**
-  - PM kickoff PR #40, GD PR #41 и QA Spec PR #42 merged в `m5-integration`.
-  - Role PRs Ready: #43 Artist, #44 Content, #45 Engineer.
-  - QA Acceptance PR #46 verdict **APPROVE**: Gate 1/2/3 PASS, vitest=148, build=1.48 MB, assets=412 KB.
-  - **Текущий gate:** `QA_ACCEPTANCE_APPROVED → PM_MERGE_IN_PROGRESS`.
-  - Следующий шаг: PM sequential merge #43 → #44 → #45 в `m5-integration`, затем gate-close `m5-integration → main`.
+- **M5 — Боссы и инстансы:** DONE 2026-05-25. Gate-close PR #47 merged PM по делегации Alex'а в `main`. Полный summary — `staff/handoff/M5-SUMMARY.md`. Итоги: 152/152 vitest, 1.48 MB build, 412 KB assets.
+- **M6 — Радио и доверие (PM kickoff):**
+  - `m6-integration` создана от `main` HEAD `0af8ad4`.
+  - Draft PR #48 `pm/m6-kickoff → m6-integration` открыт recovery-safe.
+  - **Текущий gate:** `M6_PREPARED → PM_KICKOFF_IN_PROGRESS`.
+  - Следующий шаг: закончить dashboard/prompts, прогнать проверки, self-merge kickoff, передать Alex'у GD M6 prompt.
 
 ## Что делает PM на M4 (план)
 

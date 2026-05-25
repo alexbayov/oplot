@@ -155,3 +155,14 @@
 - **M5 финальное состояние:** 3 босса (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`), 3 boss-drop ресурса, 3 T3 items, 3 T3 recipes, 3 zones with boss/daily metadata, warehouse/city gas levels, boss AI phase transition, daily instance cooldown, gas damage, T3 craft gating, MobRole runtime, LevelUpScene overkill popup queue.
 - **Финальная PM verification:** `npm run typecheck`, `npm run lint`, `npm run test` (**152/152 PASS**), `npm run build` (1.48 MB JS), `du -sk assets` = **412 KB**.
 - **Полный summary** — `staff/handoff/M5-SUMMARY.md`.
+
+## 2026-05-25 — M6: Kickoff (Радио и доверие)
+
+См. `staff/status/M6.md` для полного скоупа.
+
+- M6 «Радио и доверие» kickoff: PM открыл интеграционную ветку `m6-integration` от `main` HEAD `0af8ad4` (после merge gate-close PR #47 M5) и Draft PR #48 `pm/m6-kickoff → m6-integration` — M6 dashboard + 6 kickoff (`staff/kickoff/M6-*.md`) + 6 handoff (`staff/handoff/M6-*.md`) + обновление PLAN / CONTEXT / LINKS / STATE_MACHINE.
+- **M6 scope:** полноценная radio-logic поверх M3 UI-stub: 6 сигналов (2 truth / 2 trap / 2 ambiguous), `RadioSignal` schema extensions (`type`, `zone_id`, `reward`, `trap_mob_id`, `trust_impact`, `chosen_option`, `resolved`), `GameState.progress.radio_trust` range `-5..+5`, rewards into `baseStash`, ambush via existing mobs/combat path, sortie-based expiry.
+- **M6 anti-scope (явный, прошит в каждый kickoff):** Yandex SDK / Cloud Saves / Leaderboard / IAP / rewarded ads (M8), новые зоны/обычные мобы/боссы/T4, модульное оружие, skill tree/active abilities, faction-specific reputation, real-time/background timers, новые combat mechanics, voice/audio/sound design.
+- **Merge-делегация:** Alex продолжает M3+M4+M5-делегацию на M6 (PM сам мерджит role-PR в `m6-integration` после QA Acceptance APPROVE + gate-close PR `m6-integration → main`). Если Alex изменит политику — PM прочитает явное указание в чате и адаптирует.
+- **Последовательность M6:** GD amendment → QA Spec → (если CHANGES_REQUESTED) GD fix PR → QA Spec re-review → (Content + Engineer + Artist параллельно) → QA Acceptance (с локальным octopus-merge) → PM finalize → PM gate-close.
+- **DoD-precision:** Content exact count = 6 M6 radio signals; Engineer target = 164 vitest (152 M5 baseline + 12 M6); Artist target = 4 PNG assets, M6-add ≤ 40 KB, project total ≤ 650 KB.
