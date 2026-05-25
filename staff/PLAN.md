@@ -57,7 +57,7 @@
 | **M3** | Расширение мира | 3 зоны (Лес, Склад, Город), 8 мобов, 29 предметов, 15 рецептов, радио-заглушка | Content + Engineer + GD + Artist | **DONE 2026-05-21** (см. `staff/handoff/M3-SUMMARY.md`; gate-close PR #30 merged в `main` 2026-05-21) |
 | **M4** | Перки и прогрессия | XP → уровни → перки (8 перков), UI прогрессии (ProgressionScene + LevelUpScene popup) | GD + Engineer + Content + Artist | **DONE 2026-05-22** (см. `staff/handoff/M4-SUMMARY.md`; gate-close PR #39 merged в `main` 2026-05-22 PM по делегации Alex'а) |
 | **M5** | Боссы и инстансы | 3 босса (1/зона, depth 3, 2-фазный бой + phase transition), дейли-инстанс (24h cool-down), газовые зоны (damage-per-turn без `gas_mask`), 3 T3 чертежа, MobRole runtime gating | GD + Content + Engineer + Artist | **DONE 2026-05-25** (см. `staff/handoff/M5-SUMMARY.md`; gate-close PR `m5-integration → main` merged PM по делегации Alex'а) |
-| **M6** | Радио и доверие | Полноценная система радио: сигналы, решения, засады/награды | GD + Content + Engineer | NOT_STARTED |
+| **M6** | Радио и доверие | Полноценная система радио: 6 сигналов (2 truth / 2 trap / 2 ambiguous), решения, засады/награды, шкала `radio_trust` -5..+5 | GD + Content + Engineer + Artist | **PM_KICKOFF 2026-05-25** (`m6-integration` от `main` HEAD `0af8ad4`, Draft PR #48) |
 | **M7** | Полировка и баланс | Тюнинг чисел, UI-звуки, анимации, 9 зон, 80+ предметов | QA + все | NOT_STARTED |
 | **M8** | Yandex SDK + мобилка | Реклама, IAP, облачный сейв, mobile-first вёрстка | Engineer + QA | NOT_STARTED |
 | **M9** | Сабмит на Яндекс | Все QA-чек-листы пройдены, билд отправлен на модерацию | QA + все | NOT_STARTED |

@@ -10,26 +10,40 @@
 
 ## Integration branch
 
-- **M5 integration baseline (active):** `m5-integration` (создана от `main` 2026-05-22, HEAD `723ed1c` — Merge PR #39 M4 gate-close). M5 role-PR таргетятся в `m5-integration`. PM мерджит role-PR в `m5-integration` после QA Acceptance APPROVE. Gate-close PR `m5-integration → main` мерджит PM по продолжению M3+M4-делегации Alex'а.
+- **M6 integration baseline (active):** `m6-integration` (создана от `main` 2026-05-25, HEAD `0af8ad4` — Merge PR #47 M5 gate-close). M6 role-PR таргетятся в `m6-integration`. PM мерджит role-PR в `m6-integration` после QA Acceptance APPROVE. Gate-close PR `m6-integration → main` мерджит PM по продолжению M3+M4+M5-делегации Alex'а.
+- **M5 integration baseline** `m5-integration` закрыта gate-close PR #47 (`m5-integration → main`, merged 2026-05-25 PM по делегации Alex'а).
 - **M4 integration baseline** `m4-integration` закрыта gate-close PR #39 (`m4-integration → main`, merged 2026-05-22 PM по делегации Alex'а).
 - **M3 integration baseline** `m3-integration` закрыта gate-close PR #30 (`m3-integration → main`, merged 2026-05-21 PM по делегации Alex'а).
 - **M2 integration baseline** `m2-integration` закрыта gate-close PR #19 (`m2-integration → main`, merged 2026-05-20 Alex'ом).
 - **M1 integration baseline** `m1-integration` закрыта gate-close PR #12 (`m1-integration → main`, merged 2026-05-19).
 
-## M5 PRs (in-progress — kickoff phase)
+## M6 PRs (in-progress — kickoff phase)
 
-_Last reconciled with GitHub: 2026-05-22 (m5-integration HEAD = `723ed1c` — just-created от `main`)._
+_Last reconciled with GitHub: 2026-05-25 (`m6-integration` HEAD = `0af8ad4`, Draft PR #48 open)._
 
 | PR | Role | Base | Status |
 |---|---|---|---|
-| **#40** | PM / M5 kickoff | `m5-integration ← pm/m5-kickoff` | Draft — dashboards + 6 kickoff + 6 handoff (этот PR) |
-| TBD | GD M5 amendment | `m5-integration ← m5/gd-amendment` | Pending (запуск после merge #40) |
-| TBD | QA Spec M5 | `m5-integration ← qa/m5-spec-review` | Pending (после GD M5 PR Ready) |
-| TBD | Content M5 | `m5-integration ← m5/content` | Pending (parallel после QA Spec APPROVE) |
-| TBD | Engineer M5 | `m5-integration ← m5/world` | Pending (parallel после QA Spec APPROVE) |
-| TBD | Artist M5 | `m5-integration ← m5/art` | Pending (parallel после QA Spec APPROVE) |
-| TBD | QA Acceptance M5 | `m5-integration ← qa/m5-acceptance` | Pending (после 3 role-PR Ready) |
-| TBD | PM gate-close M5 | `main ← m5-integration` | Pending — мерджит PM по продолжению M3+M4-делегации Alex'а |
+| **#48** | PM / M6 kickoff | `m6-integration ← pm/m6-kickoff` | Ready — dashboard + 6 kickoff + 6 handoff + dashboards update |
+| TBD | GD M6 amendment | `m6-integration ← m6/gd-amendment` | Pending (запуск после merge #48) |
+| TBD | QA Spec M6 | `m6-integration ← qa/m6-spec-review` | Pending (после GD M6 PR Ready) |
+| TBD | Content M6 | `m6-integration ← m6/content` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Engineer M6 | `m6-integration ← m6/radio` | Pending (parallel после QA Spec APPROVE) |
+| TBD | Artist M6 | `m6-integration ← m6/art` | Pending (parallel после QA Spec APPROVE) |
+| TBD | QA Acceptance M6 | `m6-integration ← qa/m6-acceptance` | Pending (после 3 role-PR Ready) |
+| TBD | PM gate-close M6 | `main ← m6-integration` | Pending — мерджит PM по продолжению M3+M4+M5-делегации Alex'а |
+
+## Merged M5 PRs (история)
+
+| PR | Role | Base | Status |
+|---|---|---|---|
+| #40 | PM / M5 kickoff | `m5-integration ← pm/m5-kickoff` | Merged 2026-05-22 PM |
+| #41 | GD M5 amendment | `m5-integration ← m5/gd-amendment` | Merged 2026-05-22 PM |
+| #42 | QA Spec M5 | `m5-integration ← qa/m5-spec-review` | Merged 2026-05-22 PM (verdict APPROVE) |
+| #43 | Artist M5 | `m5-integration ← m5/art` | PM sequential merge 2026-05-25 |
+| #44 | Content M5 | `m5-integration ← m5/content` | PM sequential merge 2026-05-25 |
+| #45 | Engineer M5 | `m5-integration ← m5/world` | PM sequential merge 2026-05-25 |
+| #46 | QA Acceptance M5 | `m5-integration ← qa/m5-acceptance` | APPROVE evidence cherry-picked into integration |
+| #47 | PM gate-close M5 | `main ← m5-integration` | Merged 2026-05-25 PM по делегации Alex'а — закрыл M5 |
 
 ## Merged M4 PRs (история)
 
