@@ -163,9 +163,10 @@ export class RadioScene extends Phaser.Scene {
       const mob = GameState.data.mobs[result.ambushMobId];
       const name = mob?.name_ru ?? result.ambushMobId;
       createSubtitle(this, 240, `Засада! ${name} атакует!`);
+      const signal = GameState.data.radioSignals.find((s) => s.id === signalId);
       this.time.delayedCall(1200, () => {
         GameState.currentSortie = {
-          zone_id: "forest",
+          zone_id: signal?.zone_id ?? "forest",
           depth: 1,
           fights_total: 1,
           fights_completed: 0,
