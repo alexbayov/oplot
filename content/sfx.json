@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ui_click",
+    "path": "assets/audio/ui_click.wav",
+    "trigger": "ui_button_pressed",
+    "volume": 0.4,
+    "description_ru": "Щелчок кнопки интерфейса"
+  },
+  {
+    "id": "ui_blocked",
+    "path": "assets/audio/ui_blocked.wav",
+    "trigger": "ui_action_blocked",
+    "volume": 0.6,
+    "description_ru": "Звук блокировки недоступного действия"
+  },
+  {
+    "id": "combat_hit",
+    "path": "assets/audio/combat_hit.wav",
+    "trigger": "combat_damage_dealt_or_taken",
+    "volume": 0.8,
+    "description_ru": "Удар в бою"
+  },
+  {
+    "id": "combat_heal",
+    "path": "assets/audio/combat_heal.wav",
+    "trigger": "combat_or_inventory_heal_used",
+    "volume": 0.7,
+    "description_ru": "Применение лечения"
+  },
+  {
+    "id": "loot_pickup",
+    "path": "assets/audio/loot_pickup.wav",
+    "trigger": "loot_item_picked_up",
+    "volume": 0.7,
+    "description_ru": "Подбор предмета"
+  },
+  {
+    "id": "craft_success",
+    "path": "assets/audio/craft_success.wav",
+    "trigger": "craft_scene_success",
+    "volume": 0.6,
+    "description_ru": "Успешный крафт"
+  },
+  {
+    "id": "radio_signal",
+    "path": "assets/audio/radio_signal.wav",
+    "trigger": "radio_signal_opened",
+    "volume": 0.5,
+    "description_ru": "Открытие радиосигнала"
+  },
+  {
+    "id": "level_up",
+    "path": "assets/audio/level_up.wav",
+    "trigger": "level_up_gained",
+    "volume": 0.9,
+    "description_ru": "Повышение уровня"
+  },
+  {
+    "id": "boss_phase",
+    "path": "assets/audio/boss_phase.wav",
+    "trigger": "boss_phase_transition",
+    "volume": 0.9,
+    "description_ru": "Смена фазы босса"
+  },
+  {
+    "id": "confirm_success",
+    "path": "assets/audio/confirm_success.wav",
+    "trigger": "ui_positive_confirm",
+    "volume": 0.5,
+    "description_ru": "Подтверждение успешного действия"
+  }
+]

@@ -4,35 +4,100 @@
     "name_ru": "Лес",
     "level": 1,
     "description_ru": "Густой лес на окраине города. Относительно безопасен, но мародёры уже добрались сюда.",
-    "resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
-    "mobs": ["marauder", "wild_dog", "mutant"],
+    "resources": [
+      "wood",
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "rope"
+    ],
+    "mobs": [
+      "marauder",
+      "wild_dog",
+      "mutant"
+    ],
     "boss_id": "forest_alpha_mutant",
-    "unique_resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
+    "unique_resources": [
+      "wood",
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "rope"
+    ],
     "unlock_condition": "start",
     "daily_reset_hours": 24,
     "levels": [
       {
         "depth": 1,
-        "enemies": ["marauder", "wild_dog"],
-        "enemy_count": [1, 2],
-        "resources": ["wood", "cloth", "food", "rope"],
-        "resource_count": [2, 4],
+        "enemies": [
+          "marauder",
+          "wild_dog"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "wood",
+          "cloth",
+          "food",
+          "rope"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
         "min_player_level": 1
       },
       {
         "depth": 2,
-        "enemies": ["marauder", "wild_dog", "mutant"],
-        "enemy_count": [2, 3],
-        "resources": ["wood", "leather", "water", "scrap"],
-        "resource_count": [3, 5],
+        "enemies": [
+          "marauder",
+          "wild_dog",
+          "mutant"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "wood",
+          "leather",
+          "water",
+          "scrap"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
         "min_player_level": 3
       },
       {
         "depth": 3,
-        "enemies": ["mutant", "marauder"],
-        "enemy_count": [2, 4],
-        "resources": ["wood", "leather", "gunpowder", "scrap"],
-        "resource_count": [4, 6],
+        "enemies": [
+          "mutant",
+          "marauder"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "wood",
+          "leather",
+          "gunpowder",
+          "scrap"
+        ],
+        "resource_count": [
+          4,
+          6
+        ],
         "min_player_level": 5
       }
     ]
@@ -42,10 +107,26 @@
     "name_ru": "Склад",
     "level": 2,
     "description_ru": "Заброшенный логистический терминал на промзоне. Стеллажи до потолка, ржавая техника, разбросанная упаковка. Мародёры обустроились здесь как у себя дома; чуют любого пришлого.",
-    "resources": ["wood", "scrap", "cloth", "electronics", "oil", "gunpowder", "leather"],
-    "mobs": ["marauder", "looter_sniper", "armored_guard", "relic_drone"],
+    "resources": [
+      "wood",
+      "scrap",
+      "cloth",
+      "electronics",
+      "oil",
+      "gunpowder",
+      "leather"
+    ],
+    "mobs": [
+      "marauder",
+      "looter_sniper",
+      "armored_guard",
+      "relic_drone"
+    ],
     "boss_id": "warehouse_drone_prime",
-    "unique_resources": ["electronics", "oil"],
+    "unique_resources": [
+      "electronics",
+      "oil"
+    ],
     "unlock_condition": "forest_depth_2_completed",
     "return_time_multiplier": 1.2,
     "is_gas": true,
@@ -54,27 +135,72 @@
     "levels": [
       {
         "depth": 1,
-        "enemies": ["marauder", "looter_sniper"],
-        "enemy_count": [1, 2],
-        "resources": ["scrap", "cloth", "electronics", "oil"],
-        "resource_count": [2, 4],
+        "enemies": [
+          "marauder",
+          "looter_sniper"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "electronics",
+          "oil"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
         "min_player_level": 2
       },
       {
         "depth": 2,
-        "enemies": ["looter_sniper", "armored_guard", "relic_drone"],
-        "enemy_count": [2, 3],
-        "resources": ["scrap", "electronics", "oil", "gunpowder", "leather"],
-        "resource_count": [3, 5],
+        "enemies": [
+          "looter_sniper",
+          "armored_guard",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "electronics",
+          "oil",
+          "gunpowder",
+          "leather"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
         "min_player_level": 3,
         "is_gas": true
       },
       {
         "depth": 3,
-        "enemies": ["looter_sniper", "armored_guard", "relic_drone"],
-        "enemy_count": [2, 3],
-        "resources": ["scrap", "electronics", "oil", "gunpowder"],
-        "resource_count": [3, 5],
+        "enemies": [
+          "looter_sniper",
+          "armored_guard",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "electronics",
+          "oil",
+          "gunpowder"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
         "min_player_level": 5,
         "is_gas": true
       }
@@ -85,10 +211,27 @@
     "name_ru": "Город",
     "level": 3,
     "description_ru": "Руины делового квартала. Пустые витрины, проваленные перекрытия, выжженные офисы. Здесь живут культы и стаи мутантов; нормальные люди давно ушли.",
-    "resources": ["scrap", "cloth", "food", "water", "medical_supplies", "circuitry", "gunpowder", "leather"],
-    "mobs": ["mutant", "fanatic_berserker", "pack_rat", "relic_drone"],
+    "resources": [
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "medical_supplies",
+      "circuitry",
+      "gunpowder",
+      "leather"
+    ],
+    "mobs": [
+      "mutant",
+      "fanatic_berserker",
+      "pack_rat",
+      "relic_drone"
+    ],
     "boss_id": "city_guard_captain",
-    "unique_resources": ["medical_supplies", "circuitry"],
+    "unique_resources": [
+      "medical_supplies",
+      "circuitry"
+    ],
     "unlock_condition": "any_warehouse_sortie_completed",
     "return_time_multiplier": 1.5,
     "is_gas": true,
@@ -97,29 +240,672 @@
     "levels": [
       {
         "depth": 1,
-        "enemies": ["mutant", "pack_rat"],
-        "enemy_count": [2, 3],
-        "resources": ["scrap", "cloth", "food", "medical_supplies"],
-        "resource_count": [2, 4],
+        "enemies": [
+          "mutant",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "food",
+          "medical_supplies"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
         "min_player_level": 3
       },
       {
         "depth": 2,
-        "enemies": ["pack_rat", "fanatic_berserker", "relic_drone"],
-        "enemy_count": [2, 4],
-        "resources": ["medical_supplies", "circuitry", "gunpowder"],
-        "resource_count": [3, 5],
+        "enemies": [
+          "pack_rat",
+          "fanatic_berserker",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "medical_supplies",
+          "circuitry",
+          "gunpowder"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
         "min_player_level": 4,
         "is_gas": true
       },
       {
         "depth": 3,
-        "enemies": ["fanatic_berserker", "relic_drone", "mutant"],
-        "enemy_count": [3, 5],
-        "resources": ["medical_supplies", "circuitry", "leather", "water"],
-        "resource_count": [4, 7],
+        "enemies": [
+          "fanatic_berserker",
+          "relic_drone",
+          "mutant"
+        ],
+        "enemy_count": [
+          3,
+          5
+        ],
+        "resources": [
+          "medical_supplies",
+          "circuitry",
+          "leather",
+          "water"
+        ],
+        "resource_count": [
+          4,
+          7
+        ],
         "min_player_level": 5,
         "is_gas": true
+      }
+    ]
+  },
+  {
+    "id": "suburbs",
+    "name_ru": "Пригород",
+    "level": 1,
+    "description_ru": "Жилые кварталы на окраине. Дома разграблены, дворы заросли, но иногда в сараях находят пригодное.",
+    "resources": [
+      "wood",
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "rope",
+      "suburban_scrap",
+      "garden_seed"
+    ],
+    "mobs": [
+      "marauder",
+      "wild_dog",
+      "pack_rat"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "suburban_scrap",
+      "garden_seed"
+    ],
+    "unlock_condition": "any_forest_sortie_completed",
+    "return_time_multiplier": 1.0,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "marauder",
+          "wild_dog"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "wood",
+          "cloth",
+          "food",
+          "rope"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 1
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "marauder",
+          "wild_dog",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "wood",
+          "leather",
+          "water",
+          "scrap",
+          "suburban_scrap"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 2
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "wild_dog",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "scrap",
+          "garden_seed"
+        ],
+        "resource_count": [
+          4,
+          6
+        ],
+        "min_player_level": 3
+      }
+    ]
+  },
+  {
+    "id": "school",
+    "name_ru": "Школа",
+    "level": 2,
+    "description_ru": "Заброшенная школа с разбитыми партами и остатками учебников. Здесь водятся мародёры и крысы.",
+    "resources": [
+      "wood",
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "rope",
+      "school_book",
+      "broken_tablet"
+    ],
+    "mobs": [
+      "marauder",
+      "looter_sniper",
+      "pack_rat"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "school_book",
+      "broken_tablet"
+    ],
+    "unlock_condition": "suburbs_sortie_completed",
+    "return_time_multiplier": 1.1,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "marauder",
+          "looter_sniper"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "wood",
+          "cloth",
+          "food",
+          "rope"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 1
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "marauder",
+          "looter_sniper",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "wood",
+          "leather",
+          "water",
+          "scrap",
+          "school_book"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 2
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "looter_sniper",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "scrap",
+          "broken_tablet"
+        ],
+        "resource_count": [
+          4,
+          6
+        ],
+        "min_player_level": 3
+      }
+    ]
+  },
+  {
+    "id": "factory",
+    "name_ru": "Завод",
+    "level": 3,
+    "description_ru": "Полуразрушенный заводской корпус с ржавыми станками и обрывами кабелей. Мутанты и дроны охраняют остатки техники.",
+    "resources": [
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "machine_part",
+      "industrial_cable"
+    ],
+    "mobs": [
+      "mutant",
+      "armored_guard",
+      "relic_drone"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "machine_part",
+      "industrial_cable"
+    ],
+    "unlock_condition": "warehouse_boss_defeated",
+    "return_time_multiplier": 1.3,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "mutant",
+          "armored_guard"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "food",
+          "industrial_cable"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 2
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "mutant",
+          "armored_guard",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "gunpowder",
+          "leather",
+          "machine_part",
+          "water"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 3
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "armored_guard",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "machine_part",
+          "industrial_cable"
+        ],
+        "resource_count": [
+          4,
+          6
+        ],
+        "min_player_level": 4
+      }
+    ]
+  },
+  {
+    "id": "hospital",
+    "name_ru": "Госпиталь",
+    "level": 3,
+    "description_ru": "Заброшенный госпиталь с разбитыми ампулами и остатками медикаментов. Крысы и берсерки устроили здесь логово.",
+    "resources": [
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "hospital_supply",
+      "sterile_wrap"
+    ],
+    "mobs": [
+      "mutant",
+      "fanatic_berserker",
+      "pack_rat"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "hospital_supply",
+      "sterile_wrap"
+    ],
+    "unlock_condition": "factory_sortie_completed",
+    "return_time_multiplier": 1.3,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "mutant",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          1,
+          2
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "food",
+          "hospital_supply"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 2
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "mutant",
+          "fanatic_berserker",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "water",
+          "leather",
+          "hospital_supply",
+          "sterile_wrap"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 3
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "fanatic_berserker",
+          "pack_rat"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "water",
+          "sterile_wrap"
+        ],
+        "resource_count": [
+          4,
+          6
+        ],
+        "min_player_level": 4
+      }
+    ]
+  },
+  {
+    "id": "metro",
+    "name_ru": "Метро",
+    "level": 4,
+    "description_ru": "Затопленные тоннели и заброшенные станции. Здесь водятся охранники и снайперы, а в глубине — реликтовые дроны.",
+    "resources": [
+      "scrap",
+      "cloth",
+      "food",
+      "water",
+      "gunpowder",
+      "leather",
+      "metro_token",
+      "rail_shard"
+    ],
+    "mobs": [
+      "looter_sniper",
+      "armored_guard",
+      "fanatic_berserker",
+      "relic_drone"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "metro_token",
+      "rail_shard"
+    ],
+    "unlock_condition": "city_boss_defeated",
+    "return_time_multiplier": 1.6,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "looter_sniper",
+          "armored_guard"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "food",
+          "metro_token"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 3
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "looter_sniper",
+          "armored_guard",
+          "fanatic_berserker"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "scrap",
+          "water",
+          "leather",
+          "metro_token",
+          "rail_shard"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 4
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "armored_guard",
+          "fanatic_berserker",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          3,
+          5
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "water",
+          "rail_shard"
+        ],
+        "resource_count": [
+          4,
+          7
+        ],
+        "min_player_level": 5
+      }
+    ]
+  },
+  {
+    "id": "power_plant",
+    "name_ru": "Электростанция",
+    "level": 5,
+    "description_ru": "Разрушенная ТЭЦ с радиоактивными остатками и расплавленными проводками. Самое опасное место в округе.",
+    "resources": [
+      "scrap",
+      "cloth",
+      "gunpowder",
+      "leather",
+      "reactor_ash",
+      "copper_coil"
+    ],
+    "mobs": [
+      "mutant",
+      "armored_guard",
+      "fanatic_berserker",
+      "relic_drone"
+    ],
+    "boss_id": null,
+    "unique_resources": [
+      "reactor_ash",
+      "copper_coil"
+    ],
+    "unlock_condition": "metro_sortie_completed",
+    "return_time_multiplier": 1.8,
+    "daily_reset_hours": 24,
+    "levels": [
+      {
+        "depth": 1,
+        "enemies": [
+          "mutant",
+          "armored_guard"
+        ],
+        "enemy_count": [
+          2,
+          3
+        ],
+        "resources": [
+          "scrap",
+          "cloth",
+          "gunpowder",
+          "copper_coil"
+        ],
+        "resource_count": [
+          2,
+          4
+        ],
+        "min_player_level": 4
+      },
+      {
+        "depth": 2,
+        "enemies": [
+          "mutant",
+          "armored_guard",
+          "fanatic_berserker"
+        ],
+        "enemy_count": [
+          2,
+          4
+        ],
+        "resources": [
+          "scrap",
+          "leather",
+          "gunpowder",
+          "reactor_ash",
+          "copper_coil"
+        ],
+        "resource_count": [
+          3,
+          5
+        ],
+        "min_player_level": 5
+      },
+      {
+        "depth": 3,
+        "enemies": [
+          "armored_guard",
+          "fanatic_berserker",
+          "relic_drone"
+        ],
+        "enemy_count": [
+          3,
+          5
+        ],
+        "resources": [
+          "gunpowder",
+          "leather",
+          "reactor_ash",
+          "copper_coil"
+        ],
+        "resource_count": [
+          4,
+          7
+        ],
+        "min_player_level": 6
       }
     ]
   }
