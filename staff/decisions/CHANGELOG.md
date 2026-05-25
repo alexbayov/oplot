@@ -201,3 +201,43 @@
 - PM prepared M7 dashboard + 6 kickoff + 6 handoff files (GD / QA Spec / Content / Engineer / Artist / QA Acceptance).
 - Sequence: PM kickoff → GD amendment → QA Spec → parallel Content/Engineer/Artist → QA Acceptance 3-Gate → PM merge → PM finalize → gate-close.
 - Lessons carried from M6: recovery-safe early Draft PR, token-budget ≤5–7 role actions, PAT hygiene, exact DoD counts, local octopus-merge, QA fix cherry-pick into role branch, QA Acceptance PR last.
+
+## 2026-05-25 — M7: Closed (gate-close `m7-integration → main` merged)
+
+См. полный summary в `staff/handoff/M7-SUMMARY.md`.
+
+- **GD M7 amendment PR #59** merged в `m7-integration`: GDD §M7 polish + balance tuning M2–M6 + new 6 zones (Suburbs / City / Hospital / Industrial / Sewers / Power Plant) + 24 new recipes + 45 new items; anti-scope §M7 explicit (no new mobs/bosses/T4/SDK/music/UI redesign).
+- **QA Spec M7 PR #60** merged в `m7-integration`: verdict APPROVE по всем 7 чек-листам (M7 spec, balance, anti-scope, M2–M6 regression carry-over).
+- **Content M7 PR #62** merged: `content/items.json` 35 → 80, `content/recipes.json` 18 → 42, `content/zones.json` 3 → 9 (boss_id=null для 6 новых, fights_per_depth убран), `content/sfx.json` создан с 10 SFX entries. 45 новых items имеют `description_ru` + `flavor_ru`; все 42 recipe refs resolve.
+- **Engineer M7 PR #61** merged: audio system (`src/systems/audio.ts`) с fail-soft (missing registry / asset / muted → silent return), volume clamp 0.0–1.0, SettingsScene (mute toggle + volume slider 0.0–1.0 минимальный UI), 16 Phaser tween events visual-only через 9 сцен, state-free tween wiring. Vitest 164 → **176/176 PASS** (+12 M7).
+- **Artist M7 PR #63** merged: 10 WAV-файлов в `assets/audio/sfx/` (deterministic generator stdlib-only wave+math+random в `tools/audio/gen_m7_sfx.py`), M7-add **72 KB / 80 KB** budget, project total **524 KB / 730 KB** budget.
+- **QA Acceptance M7 PR #64** merged: verdict **APPROVE**. 4-Gate approach с локальным octopus-merge всех 3 role-PR. Gate 0 (octopus-merge) PASS — 0 conflicts, 37 files, +3388 / −285. Gate 1 (static) PASS — typecheck/lint/vitest 176/build, JS 1.49 MB, M7 audio 72 KB, project 524 KB. Gate 2 (runtime M2–M7 smoke) PASS — core loop preserved, 9-zone unlock chain progressive, audio fail-soft, mute/volume minimal UI, 16 tweens visual-only across 9 scenes. Gate 3 (spec / anti-scope) PASS — counts 9/80/42/10/10/16/176 verified by script, anti-scope grep clean. **0 blockers.**
+- **PM merge sequence**: Alex/Заказчик выполнил последовательно #62 Content → #61 Engineer → #63 Artist → #64 QA Acceptance в `m7-integration`, затем gate-close PR #65 (`m7-integration → main`) merged Alex'ом. `main` HEAD `2399b7b`. Финальный commit `chore(M7): mark M7 DONE in status dashboard` устанавливает `staff/status/M7.md` → DONE.
+- **Lessons learned M7** (применять на M8a):
+  - **Anti-scope grep как gate**: все 4 anti-scope категории (mobs/bosses/T4/SDK) грэпались по `src/` и `content/` без хитов — перенесём паттерн в M8a (`setAds` / `getPayments` / `getLeaderboards` / `getAchievements` grep).
+  - **DoD-precision (точные числа)** сработала ровно как заявлено: 9/80/42/10/10/16/176 без deviation. На M8a залочим `~190 vitest` + точное число фиксирует QA Spec.
+  - **Audio fail-soft pattern** (M7) — переиспользуем как SDK fail-soft на M8a: missing / unavailable / blocked → silent return, no throw.
+  - **State-free tweens / state-free external systems**: gameplay системы не держат side-effect от подсистем. На M8a cloud-save должен быть write-through к локальному GameState; чтение всегда из local state.
+  - **PM merge sequence Content → Engineer → Artist → QA Acceptance** проверен трижды (M5/M6/M7). На M8a будет **Engineer → QA Acceptance** (нет Content/Artist).
+
+## 2026-05-25 — M8 split на Заказчик agreement: M8a (Platform & Persistence) сейчас, M8b (Monetization) отложен
+
+См. полное обоснование в `staff/decisions/DECISIONS.md` (запись 2026-05-25), скоуп/anti-scope/DoD — в `staff/status/M8a.md`, kickoff/handoff briefs — `staff/{handoff,kickoff}/M8a-{GD,QA-SPEC,ENG,QA-ACCEPT}.md`.
+
+- M7 gate-close PR #65 merged в `main` Alex'ом; M8a стартует от `main` HEAD `2399b7b`.
+- **Заказчик ответ 2026-05-25** на 5 PM-вопросов: Вариант Б (split) одобрен; монетизационной модели нет; Yandex partner-console TBD после рабочей SDK; leaderboards не делаем; locale — только RU.
+- **M8a scope (Platform & Persistence):** Yandex Games SDK init lifecycle + fail-soft (4 failure modes: no network / adblock / script load fail / init reject), cloud save (`player.setData/getData` с conflict policy «remote newer wins by `saved_at`» + throttle `MIN_CLOUD_SAVE_INTERVAL_S` + critical triggers post-sortie/post-craft/post-level-up/settings change/perk choice), mobile-first viewport (meta viewport-fit=cover + safe-area-inset + iOS audio autoplay unlock на pointerdown/touchstart + portrait orientation lock + double-tap zoom suppression на canvas), locale RU lock + `t(key)` stub (i18n.lang ignored на M8a), перенос M7 settings (mute / volume) в cloud-save schema.
+- **M8a anti-scope (явный):** no ads / IAP (M8b), no leaderboards / achievements (post-release/BACKLOG), no telemetry / analytics / backend, no новых languages (RU only; EN — пост-релизный хук), no новых mobs/bosses/zones/items/recipes/perks/radio/SFX/tweens, no новых combat/craft/radio/progression механик, no music/voice, no UI redesign, no третьих сторонних UI/audio/SDK libs (npm) — Yandex SDK только через `<script src="https://yandex.ru/games/sdk/v2">` script tag.
+- **M8a owners:** Engineer + QA. Content / Artist не участвуют — контент заморожен на M7 baseline (9 zones / 80 items / 42 recipes / 11 mobs / 3 boss / 8 perks / 6 radio / 10 SFX / 16 tweens).
+- **M8a DoD precision:** vitest target **~190/190 PASS** (M7 176 + ~14 новых M8a; точное число залочит QA Spec); JS bundle ≤ 2 MB (M7 baseline 1.49 MB + ~10–50 KB M8a delta); SDK script tag загружается; в чистом браузере fail-soft (no console.error); cloud save round-trip working; conflict policy "remote newer wins"; mobile viewport (Chrome mobile-emulator iPhone 14 + Pixel 7 portrait); audio gesture-unlock; anti-scope grep clean (`setAds` / `getPayments` / `getLeaderboards` / `getAchievements` = 0 hits в `src/`, `content/`).
+- **M8b (отложен)** — отдельная веха после закрытия M8a и получения от Заказчика: ads policy (где rewarded для ×2 лут / second-chance / daily-reset; где interstitial), IAP catalog (ads-remover / cosmetics / time-skip / soft-currency — что продаём), Yandex partner-console SKU + ad-units (Alex side). Без этих spec'ов Engineer-сессия M8b блокируется на дизайн-гейте.
+- **M8a sequence:** PM kickoff `pm/m8a-kickoff → main` (этот PR) → Alex review/merge → Alex создаёт `m8a-integration` от нового `main` → GD M8a amendment session (`m8a/gd-amendment → m8a-integration`) → QA Spec M8a session (verdict APPROVE/CHANGES_REQUESTED) → (optional GD fix + QA re-review) → Engineer M8a session (`m8a/platform → m8a-integration`) → QA Acceptance M8a session (3-Gate: merge-dry-run + static + runtime + spec/anti-scope; verdict в `staff/status/QA.md`) → PM merge sequence (Engineer → QA Acceptance) → PM finalize → gate-close `m8a-integration → main`.
+- **PM kickoff PR `pm/m8a-kickoff → main`** (этот PR): создаёт `staff/status/M8a.md` + `staff/handoff/M7-SUMMARY.md` + 4 handoff (`M8a-GD/QA-SPEC/ENG/QA-ACCEPT`) + 4 kickoff prompts (`M8a-GD/QA-SPEC/ENG/QA-ACCEPT`), обновляет `staff/PLAN.md` §3 (M7 → DONE, M8 split на M8a + M8b), `staff/CONTEXT.md` snapshot (M7 closed, M8a kickoff active), `staff/decisions/DECISIONS.md` (запись о M8 split), эту запись CHANGELOG. **No `src/`, `content/`, `assets/`, `docs/`** изменений. Self-merge запрещён — Alex/Заказчик мержит PM kickoff в `main`.
+- **Lessons carried from M5/M6/M7 для M8a:**
+  - Recovery-safe early Draft PR на каждой role-сессии (commit/push после каждого логического под-шага).
+  - PAT hygiene (no token в URL / echo / print).
+  - Local octopus-merge для QA Acceptance (на M8a degenerate — single role-PR, но дисциплина сохраняется).
+  - QA fix cherry-pick: ≤10 LOC runtime bug fix от QA cherry-pick'ается в Engineer's role-PR, не self-merge test-branch как role-PR.
+  - QA Acceptance PR last в merge sequence (net delta только `staff/status/QA.md`).
+  - DoD-precision (точные числа vitest / bundle / counts).
+  - Anti-scope grep как final gate.

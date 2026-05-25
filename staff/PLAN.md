@@ -58,8 +58,9 @@
 | **M4** | Перки и прогрессия | XP → уровни → перки (8 перков), UI прогрессии (ProgressionScene + LevelUpScene popup) | GD + Engineer + Content + Artist | **DONE 2026-05-22** (см. `staff/handoff/M4-SUMMARY.md`; gate-close PR #39 merged в `main` 2026-05-22 PM по делегации Alex'а) |
 | **M5** | Боссы и инстансы | 3 босса (1/зона, depth 3, 2-фазный бой + phase transition), дейли-инстанс (24h cool-down), газовые зоны (damage-per-turn без `gas_mask`), 3 T3 чертежа, MobRole runtime gating | GD + Content + Engineer + Artist | **DONE 2026-05-25** (см. `staff/handoff/M5-SUMMARY.md`; gate-close PR `m5-integration → main` merged PM по делегации Alex'а) |
 | **M6** | Радио и доверие | Полноценная система радио: 6 сигналов (2 truth / 2 trap / 2 ambiguous), решения, засады/награды, шкала `radio_trust` -5..+5 | GD + Content + Engineer + Artist | **DONE 2026-05-25** (см. `staff/handoff/M6-SUMMARY.md`; gate-close PR #57 merged в `main`) |
-| **M7** | Полировка и баланс | Тюнинг чисел, UI-звуки, анимации, 9 зон, 80+ предметов | QA + все | **PM_KICKOFF 2026-05-25** (`m7-integration` от `main` HEAD `859a652`, branch `pm/m7-kickoff`) |
-| **M8** | Yandex SDK + мобилка | Реклама, IAP, облачный сейв, mobile-first вёрстка | Engineer + QA | NOT_STARTED |
+| **M7** | Полировка и баланс | Тюнинг чисел, 10 UI-звуков, 16 tween-анимаций, 9 зон, 80 предметов, 42 рецепта | QA + все | **DONE 2026-05-25** (см. `staff/handoff/M7-SUMMARY.md`; gate-close PR #65 merged в `main` 2026-05-25 Alex'ом, HEAD `2399b7b`) |
+| **M8a** | Платформа и персистентность | Yandex Games SDK init + cloud save + mobile-first viewport + locale RU lock + перенос M7 settings | Engineer + QA | **PM_KICKOFF 2026-05-25** (split M8 по согласию Заказчика; `m8a-integration` от `main` HEAD `2399b7b`, branch `pm/m8a-kickoff`) |
+| **M8b** | Монетизация | Ads (rewarded + interstitial), IAP (catalog + purchase + restore). Требует §13b GD-amendment с ads policy + IAP-каталогом + Yandex partner-console SKU от Заказчика | Engineer + QA | NOT_STARTED (отложено до закрытия M8a + получения монетизационной модели) |
 | **M9** | Сабмит на Яндекс | Все QA-чек-листы пройдены, билд отправлен на модерацию | QA + все | NOT_STARTED |
 
 ## 4. Что НЕ делаем до релиза (Anti-scope)
