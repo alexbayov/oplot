@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
 import { generateSortieEncounters, generateZoneLoot } from "../systems/loot";
+import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
@@ -92,21 +93,26 @@ export class SortieScene extends Phaser.Scene {
   private startSortie(zoneId: string, depth: 1 | 2 | 3, fights: number): void {
     const zone = GameState.data.zones[zoneId];
     if (!zone) return;
-    const encounters = generateSortieEncounters(zone, depth, fights);
-    const zoneLootPool = generateZoneLoot(zone, depth);
-    const sortie: SortieState = {
-      zone_id: zoneId,
-      depth,
-      fights_total: fights,
-      fights_completed: 0,
-      encounters,
-      zone_loot_remaining: zoneLootPool,
-      pending_loot: [],
-      cover_active: false,
-    };
-    GameState.currentSortie = sortie;
-    GameState.player.backpack = this.takeConsumables();
-    this.scene.start("CombatScene");
+    const overlay = this.add.rectangle(180, 320, 360, 640, 0x000000).setAlpha(1).setDepth(100);
+    runTween(this, "tween_sortie_enter", overlay);
+    this.time.delayedCall(400, () => {
+      overlay.destroy();
+      const encounters = generateSortieEncounters(zone, depth, fights);
+      const zoneLootPool = generateZoneLoot(zone, depth);
+      const sortie: SortieState = {
+        zone_id: zoneId,
+        depth,
+        fights_total: fights,
+        fights_completed: 0,
+        encounters,
+        zone_loot_remaining: zoneLootPool,
+        pending_loot: [],
+        cover_active: false,
+      };
+      GameState.currentSortie = sortie;
+      GameState.player.backpack = this.takeConsumables();
+      this.scene.start("CombatScene");
+    });
   }
 
   // Move consumables from baseStash into the backpack at sortie start.
