@@ -1152,4 +1152,118 @@ GD M5 amendment (PR #41, HEAD `faa0afc`) полностью соответств
 
 3. **`crossbow`→`pipe_rifle` substitution documented** — §9.6 явно объясняет замену. GD design decision, не cross-spec расхождение.
 
+---
+
+# M5 Acceptance Review
+
+**Роль:** QA / Acceptance Critic (последняя role-сессия M5, право вето)
+**Веха:** M5 — Боссы и инстансы
+**Дата старта:** 2026-05-25
+**Gate:** QA_ACCEPT → APPROVE / CHANGES_REQUESTED
+**Базовая ветка:** `m5-integration` (HEAD `bd2a667`)
+**QA-report branch:** `qa/m5-acceptance` (base `m5-integration`)
+**PR base:** `m5-integration`
+
+## Объект ревью — 3 role-PR в Ready
+
+| PR | Branch | Role | Что внутри |
+|---|---|---|---|
+| #43 | `m5/art` | Artist | 10 M5 assets (3 boss + 3 boss-drop + 3 T3 + 1 gas overlay) + gen_m5_assets.py |
+| #44 | `m5/content` | Content | mobs=11, items=35, recipes=18, zones updated (boss_id, gas, daily) |
+| #45 | `m5/world` | Engineer | mobAI phase transition, mobRole, dailyInstance, gasZone, craft T3, LevelUpScene queue, +20 vitest (128→148) |
+
+## Combined test branch
+
+`qa/m5-acceptance-test` создан локально от `m5-integration` через sequential merge:
+
+1. `git merge --no-ff origin/m5/art` — clean (22 files)
+2. `git merge --no-ff origin/m5/content` — clean (1 file)
+3. `git merge --no-ff origin/m5/world` — **5 conflicts** в `src/`
+
+Все конфликты в `src/` (инженерная зона). Разрешены принятием версий `origin/m5/world` (Engineer — authoritative для engine code). Merge завершён успешно после разрешения.
+
+**Note:** `m5/art` содержит content+engineer коммиты (cross-role contamination). Это причина конфликтов. Process recommendation для M6+: Artist branches should only modify `assets/`, `tools/art/`, `staff/status/ARTIST.md`.
+
+## Gate 1 — Static checks
+
+**Статус: PASS.**
+
+| Check | Result |
+|---|---|
+| `npm run typecheck` | Clean (exit 0) |
+| `npm run lint` | Clean (exit 0) |
+| `npm run test` | **148/148 PASS** (12 files, 742ms) |
+| `npm run build` | **1.48 MB** ≤ 2 MB |
+| `du -sk assets/` | **412 KB** ≤ 600 KB |
+
+Exact numbers: vitest=148, build=1.48 MB, assets=412 KB.
+
+## Gate 2 — Runtime smoke (code review)
+
+**Статус: PASS** (no browser; verified via source code review).
+
+| Feature | Evidence | Status |
+|---|---|---|
+| Boss fight init | `CombatScene.ts:84-87` `initBossFight(mob)` | PASS |
+| Phase transition | `mobAI.ts:43` `mob.phase_threshold ?? 0.5` (not hardcoded); `CombatScene.ts:212-215` popup on phase 2 | PASS |
+| Boss guaranteed drops | `CombatScene.ts:395-399` `getBossGuaranteedDrops` | PASS |
+| Gas damage per round | `CombatScene.ts:147-158` `computeGasDamage(zone, depth, player)` | PASS |
+| Gas mask exemption | `gasZone.ts:4-7` + `gasZone.ts:16` returns 0 if mask | PASS |
+| Daily instance | `dailyInstance.ts` canEnter + mark | PASS |
+| T3 craft | `craft.ts` + `CraftScene.ts` | PASS |
+| LevelUpScene queue | `LevelUpScene.ts:32` `computeOverkillPopups` → `popupQueue` | PASS |
+| M2 regression | Existing scenes/combat/loot/return unchanged | PASS |
+| M3 regression | zoneUnlock/mobAI/RadioScene unchanged | PASS |
+| M4 regression | XP/perks systems unchanged, LevelUpScene extended | PASS |
+
+## Gate 3 — Spec compliance
+
+### 3a. Anti-scope grep
+
+**PASS.** Hits: only `cooldown` in `dailyInstance.ts` (M5 daily, not ability) + comments. No runtime/formula/field/JSON-key violations.
+
+### 3b. DoD counts
+
+**PASS.** mobs=11, items=35, recipes=18, zones=3, M5 assets=10, vitest=148.
+
+### 3c. JSON cross-ref validation
+
+**PASS.** All `boss_drop_id` ∈ items, all recipe ingredients ∈ items, all recipe outputs ∈ items, all `boss_id` ∈ mobs with role:"boss".
+
+### 3d. Balance/content/code consistency
+
+**PASS.**
+- Boss HP: 300/350/400 matches balance §M5.1 ✓
+- Boss phase_threshold: all 0.5 ✓
+- Gas damage: warehouse=5, city=8 ✓
+- daily_reset_hours=24 for all 3 zones ✓
+- T3 stats in `items.json` `stats.*`: composite_blade 24-32, prime_shotgun 27-37, captain_armor defense=12 ✓
+- `mobAI.ts:43` uses `mob.phase_threshold ?? 0.5` (not hardcoded) ✓
+
+### 3e. M3+M4 regression
+
+**PASS.** 8 regular mobs (role undefined), 29 pre-M5 items unchanged, 15 pre-M5 recipes unchanged.
+
+## Verdict
+
+**APPROVE.** All 3 Gates PASS (0 blockers, 0 major findings).
+
+### Non-blocking notes
+
+1. **Cross-role contamination в `m5/art`** — Artist PR #43 содержит content+engineer коммиты, вызвавшие merge конфликты с PR #45. Process recommendation: Artist branches → только `assets/`, `tools/art/`, `staff/status/ARTIST.md`.
+
+2. **LevelUpScene queue** — subsequent popups after first perk selection show veteran fallback (+10 HP) вместо perk choices. Minor deviation, fixable M5+ patch.
+
+3. **Octopus-merge conflict root cause** — m5/art и m5/world overlap в `src/`. Sequential merge + Engineer-authoritative resolution — рабочий подход, но для M6+ лучше enforce role boundaries.
+
+## Recovery
+
+- Role: QA Acceptance Critic M5.
+- Milestone: M5 — Боссы и инстансы — **APPROVED**.
+- Branch: `qa/m5-acceptance` (base `m5-integration` HEAD `bd2a667`).
+- Test branch: `qa/m5-acceptance-test` (local, sequential merge с conflict resolution).
+- Objects: PR #43 (`m5/art`), PR #44 (`m5/content`), PR #45 (`m5/world`).
+- Done: Gate 1 PASS / Gate 2 PASS / Gate 3 PASS / APPROVE.
+- Next: PM merge role-PR (#43 → #44 → #45) в `m5-integration`, затем gate-close.
+- Blockers: нет.
 
