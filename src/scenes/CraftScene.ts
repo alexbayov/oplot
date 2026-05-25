@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { applyCraft, canCraft, canCraftWithBossDrop, formatMissing } from "../systems/craft";
+import { runTween } from "../systems/tweens";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
 interface RecipeSlot {
@@ -19,11 +20,12 @@ export class CraftScene extends Phaser.Scene {
   }
 
   private lastCrafted: string | null = null;
+  private lastCraftedText?: Phaser.GameObjects.Text;
 
   public create(): void {
     createTitle(this, "Мастерская");
     if (this.lastCrafted) {
-      createSubtitle(this, 80, `Создано: ${this.lastCrafted}`);
+      this.lastCraftedText = createSubtitle(this, 80, `Создано: ${this.lastCrafted}`);
     }
 
     const recipes = Object.values(GameState.data.recipes);
@@ -55,6 +57,9 @@ export class CraftScene extends Phaser.Scene {
           if (!check.ok) return;
           const result = applyCraft(recipe, GameState.baseStash);
           GameState.baseStash = result.inventory;
+          if (this.lastCraftedText) {
+            runTween(this, "tween_craft_spin", this.lastCraftedText);
+          }
           this.scene.start("CraftScene", { lastCrafted: resultName });
         },
       });

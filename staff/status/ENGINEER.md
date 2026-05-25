@@ -1,47 +1,60 @@
 # Status: Engineer
 
-**Текущая веха:** M6
+**Текущая веха:** M7
 **Статус:** READY_FOR_REVIEW
 **Последнее обновление:** 2026-05-25
 
-## Что сделано (M6)
+## Что сделано (M7)
 
-Ветка `m6/radio` от `m6-integration`. PR: `m6/radio → m6-integration`.
+Ветка `m7/polish` от `m7-integration`. PR: `m7/polish → m7-integration`.
 
 Все 4 проверки зелёные:
 - `npm run typecheck` ✅
 - `npm run lint` ✅
-- `npm run test` ✅ (**164/164**, 152 baseline M5 + 12 M6)
+- `npm run test` ✅ (**176/176**, 164 baseline M6 + 12 M7)
 - `npm run build` ✅
 
-### Types/state
+### Audio system
 
-- `src/types/radio.ts` — M6 schema: `RadioSignalType` (`"truth" | "trap" | "ambiguous"`), `RadioReward` (`{ item_id: string; count: number }`), `RadioTrustImpact` (`{ respond: number; ignore: number }`), `RadioSignal` += `type`, `zone_id`, `reward`, `trap_mob_id`, `trust_impact`, `chosen_option`, `resolved`.
-- `src/state/types.ts` — `GameProgress` += `radio_trust: number`.
-- `src/state/GameState.ts` — `createDefaultProgress` init `radio_trust: 0`.
+- `src/systems/audio.ts` — `loadSfxRegistry()`, `playSfx(triggerId, volumeOverride?)`, `preloadSfx(scene)`. Fail-soft (dev-only console.warn) при отсутствии registry или asset. Использует Phaser built-in Sound API.
+- `src/scenes/BootScene.ts` — optional `preloadSfx` call если `content/sfx.json` загружен.
 
-### Phaser-free radio system
+### Settings
 
-- `src/systems/radio.ts`:
-  - `activeSignals(signals)` — фильтр `!resolved && expires_after_sorties > 0`.
-  - `resolveRadioChoice(signals, signalId, option, trust, baseStash, validItemIds, validMobIds)` — typed `RadioResolveResult` с `status: ResolveStatus` (`OK | ALREADY_RESOLVED | REWARD_SKIPPED | AMBUSH_SKIPPED`), `trustBefore`, `trustAfter`, `rewardAdded`, `ambushMobId`. Trust clamp [-5, +5]. No-op если уже resolved.
-  - `tickRadioOnReturn(signals, trust)` — декремент expiry, авто-resolve при 0, возвращает новый trust (с учётом trust_impact.ignore).
-  - Без `any`, без console.log, типизированные fail-safe статусы.
+- `src/state/types.ts` / `src/state/GameState.ts` — добавлены `sfxMuted: boolean` и `sfxVolume: number` (0.0–1.0, default 1.0) в `GameState.settings`.
+- `setSfxMute(value)`, `setSfxVolume(value)` с clamp.
+- `src/scenes/BaseScene.ts` — минимальные controls: mute toggle (`SFX ON/OFF`) и volume step (`Vol 100%`) в верхнем правом углу, без redesign.
 
-### Сцены
+### Tweens
 
-- `src/scenes/RadioScene.ts` — M6: отображение trust, type/zone/deadline, outcome summary (trust + reward + ambush), ambush → injection в `GameState.currentSortie` → `CombatScene`.
-- `src/scenes/ReturnScene.ts` — `tickRadioOnReturn` с trust return.
-- `src/scenes/CombatScene.ts` — `tickRadioOnReturn` импортирован, вызывается в `endSortie` (включая defeat).
+- `src/systems/tweens.ts` — `runTween(scene, eventId, target, ...)` registry-based helper. 16 event IDs из `balance.md` §M7.5. Visual-only, нет игровой логики в callbacks.
+- Интеграция по сценам:
+  - `CombatScene` — `tween_damage_flash`, `tween_hit_shake`, `tween_heal_pulse`, `tween_gas_warning`, `tween_boss_phase_red`, `tween_defeat_fade`
+  - `LootScene` — `tween_loot_bounce`
+  - `CraftScene` — `tween_craft_spin`
+  - `LevelUpScene` — `tween_level_up_glow`, `tween_xp_bar_fill`, `tween_perk_card_deal`
+  - `RadioScene` — `tween_radio_static`
+  - `ReturnScene` — `tween_return_walk`
+  - `SortieScene` — `tween_sortie_enter`
+  - `BaseScene` — `tween_menu_hover`
+  - `InventoryScene` — `tween_item_tooltip`
 
-### Тесты (vitest)
+### Runtime validation
+
+- `src/systems/dataValidation.ts` — `softWarnCounts(data, expected?)` (zones=9/items=80/recipes=42/mobs=11/sfx=10) и `validateRecipeRefs(data)`. Soft-warn в dev-only через `console.warn`.
+- `src/scenes/BootScene.ts` — вызов validation после загрузки контента.
+
+### Тесты (vitest) +12
 
 | Файл | Кол-во | Δ | Покрытие |
 |---|---|---|---|
-| `radio.test.ts` | 21 | +12 | trust clamp, truth respond/ignore, trap respond/ignore, ambiguous mixed, already resolved, expiry tick, activeSignals, missing reward/trap fail-safe, double resolve, empty list, two-signal tick |
+| `audio.test.ts` | 3 | +3 | registry fail-soft, play by trigger, mute + volume scaling |
+| `settings.test.ts` | 3 | +3 | mute toggle, volume clamp high/low |
+| `tweens.test.ts` | 3 | +3 | 16 IDs в registry, runTween для каждого, unknown id warns |
+| `dataValidation.test.ts` | 3 | +3 | soft-warn counts, recipe refs resolve, missing recipe refs flagged |
 
-Итог: **164 vitest passed** (152 baseline M5 + 12 M6). 0 failed. M5 regression PASS.
+Итог: **176 vitest passed** (164 baseline M6 + 12 M7). 0 failed. M6 regression PASS.
 
 ## PR
 
-- `m6/radio → m6-integration` — Ready for review.
+- `m7/polish → m7-integration` — Ready for review.

@@ -14,6 +14,11 @@ export interface GameProgress {
   radio_trust: number;
 }
 
+export interface SettingsState {
+  sfxMuted: boolean;
+  sfxVolume: number;
+}
+
 export interface PlayerState {
   hp: number;
   hp_max: number;
@@ -59,4 +64,5 @@ export interface GameStateShape {
   baseStash: InventoryStack[];
   // M3 GDD §6.4.M3.3 — unlock flags driving MapScene visibility.
   progress: GameProgress;
+  settings: SettingsState;
 }

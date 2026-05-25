@@ -14,6 +14,7 @@ import type {
   GameStateShape,
   InventoryStack,
   PlayerState,
+  SettingsState,
   SortieState,
 } from "./types";
 
@@ -45,12 +46,18 @@ const createDefaultProgress = (): GameProgress => ({
   radio_trust: 0,
 });
 
+const createDefaultSettings = (): SettingsState => ({
+  sfxMuted: false,
+  sfxVolume: 1.0,
+});
+
 const state: GameStateShape = {
   player: createDefaultPlayer(),
   data: createEmptyContent(),
   currentSortie: null,
   baseStash: [{ item_id: "bandage", count: HERO_START_BANDAGES }],
   progress: createDefaultProgress(),
+  settings: createDefaultSettings(),
 };
 
 export const GameState = {
@@ -84,6 +91,12 @@ export const GameState = {
   set progress(value: GameProgress) {
     state.progress = value;
   },
+  get settings(): SettingsState {
+    return state.settings;
+  },
+  set settings(value: SettingsState) {
+    state.settings = value;
+  },
   // Reset to factory defaults (used by tests and after defeat smoke).
   reset(): void {
     state.player = createDefaultPlayer();
@@ -91,6 +104,7 @@ export const GameState = {
     state.currentSortie = null;
     state.baseStash = [{ item_id: "bandage", count: HERO_START_BANDAGES }];
     state.progress = createDefaultProgress();
+    state.settings = createDefaultSettings();
   },
   // HERO_BASE_SPEED exposed for systems/combat.
   baseSpeed: HERO_BASE_SPEED,
@@ -147,4 +161,12 @@ export const countInStacks = (
     }
   }
   return total;
+};
+
+export const setSfxMute = (value: boolean): void => {
+  state.settings.sfxMuted = value;
+};
+
+export const setSfxVolume = (value: number): void => {
+  state.settings.sfxVolume = Math.max(0, Math.min(1, value));
 };

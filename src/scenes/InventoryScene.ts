@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
+import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 
@@ -40,6 +41,24 @@ export class InventoryScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     createSubtitle(this, 460, `Итого склад: ${stashWeight.toFixed(1)} кг`);
+
+    const tooltipBg = this.add.rectangle(0, 0, 120, 24, 0x2a2a2a).setStrokeStyle(1, 0x5f5a50);
+    const tooltipText = this.add.text(0, 0, "Предмет", {
+      color: "#F5F1E8",
+      fontFamily: "Arial, sans-serif",
+      fontSize: "12px",
+    }).setOrigin(0.5);
+    const tooltip = this.add.container(180, 240, [tooltipBg, tooltipText]).setAlpha(0);
+
+    const panelHit = this.add.rectangle(180, 330, 320, 240, 0x000000, 0).setInteractive({ useHandCursor: true });
+    panelHit.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
+      tooltip.setPosition(180, 290);
+      tooltip.setAlpha(0);
+      runTween(this, "tween_item_tooltip", tooltip);
+    });
+    panelHit.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
+      tooltip.setAlpha(0);
+    });
 
     // Equip controls: cycle to next available weapon / armor in stash.
     const weaponsInStash = stash.filter(
