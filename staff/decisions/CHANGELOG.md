@@ -147,3 +147,11 @@
   - QA Acceptance: октопус-merge всех 3 role-PR ДО review, чтобы ловить cross-PR конфликты до PM merge sequence.
   - Anti-scope discipline на каждой роли (явный grep-чек у QA Spec + QA Acceptance).
   - GD fix может быть отдельным PR если QA Spec CHANGES_REQUESTED (M4 паттерн: PR #34 fix для блокера из PR #33).
+
+## 2026-05-25 — M5: Closed (gate-close `m5-integration → main`)
+
+- **QA Acceptance PR #46** дал **APPROVE**: Gate 1/2/3 PASS, vitest=148 in QA report, build=1.48 MB, assets=412 KB.
+- **PM sequential merge в `m5-integration`:** #43 Artist → #44 Content → #45 Engineer. Engineer-authoritative conflict resolution retained the richer Artist/Content tests/type comments where they were supersets and accepted Engineer runtime deliverables.
+- **M5 финальное состояние:** 3 босса (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`), 3 boss-drop ресурса, 3 T3 items, 3 T3 recipes, 3 zones with boss/daily metadata, warehouse/city gas levels, boss AI phase transition, daily instance cooldown, gas damage, T3 craft gating, MobRole runtime, LevelUpScene overkill popup queue.
+- **Финальная PM verification:** `npm run typecheck`, `npm run lint`, `npm run test` (**152/152 PASS**), `npm run build` (1.48 MB JS), `du -sk assets` = **412 KB**.
+- **Полный summary** — `staff/handoff/M5-SUMMARY.md`.

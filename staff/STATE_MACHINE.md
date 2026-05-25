@@ -85,7 +85,7 @@ M{N}_PREPARED
 
 ## Текущее состояние
 
-- **Активная веха:** M5 — Боссы и инстансы. Gate: `M5_PREPARED` (PM открыл `m5-integration` от `main` HEAD `723ed1c` после M4 gate-close PR #39 merged + Draft PR #40 `pm/m5-kickoff → m5-integration` — M5 dashboards + 6 kickoff + 6 handoff). Подробно — `staff/status/M5.md`.
+- **Активная веха:** M5 — Боссы и инстансы. Gate: `PM_MERGE_IN_PROGRESS → M5_DONE` (QA Acceptance PR #46 APPROVE; PM sequential merge #43 Artist → #44 Content → #45 Engineer выполнен в `m5-integration`; PM finalize docs готовы; следующий шаг — gate-close PR `m5-integration → main`). Подробно — `staff/status/M5.md`, `staff/handoff/M5-SUMMARY.md`.
 
 **Merge-делегация на M5 (continuation M3+M4):** Alex явно делегировал PM gate-close merge в `main` на M3 («гитпат выдам свой если надо — мерж на тебе»); M4 продолжил эту делегацию (gate-close PR #39 merged PM 2026-05-22). M5 продолжает её же: PM сам мерджит и role-PR в `m5-integration` после QA Acceptance APPROVE, и gate-close PR `m5-integration → main`. Если Alex изменит политику для M5 — PM прочитает явное указание в чате и адаптирует.
 
