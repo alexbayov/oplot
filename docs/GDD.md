@@ -2108,7 +2108,7 @@ canvas.addEventListener("touchstart", (e) => {
 
 ---
 
-##### 13a.0 — Anti-scope M8a (явный)
+##### 13a.6 — Anti-scope M8a (явный)
 
 Следующие категории НЕ входят в §13a и запрещены к реализации на M8a:
 
