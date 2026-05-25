@@ -6,9 +6,10 @@
     "description_ru": "Густой лес на окраине города. Относительно безопасен, но мародёры уже добрались сюда.",
     "resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
     "mobs": ["marauder", "wild_dog", "mutant"],
-    "boss_id": null,
+    "boss_id": "forest_alpha_mutant",
     "unique_resources": ["wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope"],
     "unlock_condition": "start",
+    "daily_reset_hours": 24,
     "levels": [
       {
         "depth": 1,
@@ -43,10 +44,13 @@
     "description_ru": "Заброшенный логистический терминал на промзоне. Стеллажи до потолка, ржавая техника, разбросанная упаковка. Мародёры обустроились здесь как у себя дома; чуют любого пришлого.",
     "resources": ["wood", "scrap", "cloth", "electronics", "oil", "gunpowder", "leather"],
     "mobs": ["marauder", "looter_sniper", "armored_guard", "relic_drone"],
-    "boss_id": null,
+    "boss_id": "warehouse_drone_prime",
     "unique_resources": ["electronics", "oil"],
     "unlock_condition": "forest_depth_2_completed",
     "return_time_multiplier": 1.2,
+    "is_gas": true,
+    "gas_damage_per_turn": 5,
+    "daily_reset_hours": 24,
     "levels": [
       {
         "depth": 1,
@@ -62,7 +66,17 @@
         "enemy_count": [2, 3],
         "resources": ["scrap", "electronics", "oil", "gunpowder", "leather"],
         "resource_count": [3, 5],
-        "min_player_level": 3
+        "min_player_level": 3,
+        "is_gas": true
+      },
+      {
+        "depth": 3,
+        "enemies": ["looter_sniper", "armored_guard", "relic_drone"],
+        "enemy_count": [2, 3],
+        "resources": ["scrap", "electronics", "oil", "gunpowder"],
+        "resource_count": [3, 5],
+        "min_player_level": 5,
+        "is_gas": true
       }
     ]
   },
@@ -73,10 +87,13 @@
     "description_ru": "Руины делового квартала. Пустые витрины, проваленные перекрытия, выжженные офисы. Здесь живут культы и стаи мутантов; нормальные люди давно ушли.",
     "resources": ["scrap", "cloth", "food", "water", "medical_supplies", "circuitry", "gunpowder", "leather"],
     "mobs": ["mutant", "fanatic_berserker", "pack_rat", "relic_drone"],
-    "boss_id": null,
+    "boss_id": "city_guard_captain",
     "unique_resources": ["medical_supplies", "circuitry"],
     "unlock_condition": "any_warehouse_sortie_completed",
     "return_time_multiplier": 1.5,
+    "is_gas": true,
+    "gas_damage_per_turn": 8,
+    "daily_reset_hours": 24,
     "levels": [
       {
         "depth": 1,
@@ -92,7 +109,8 @@
         "enemy_count": [2, 4],
         "resources": ["medical_supplies", "circuitry", "gunpowder"],
         "resource_count": [3, 5],
-        "min_player_level": 4
+        "min_player_level": 4,
+        "is_gas": true
       },
       {
         "depth": 3,
@@ -100,7 +118,8 @@
         "enemy_count": [3, 5],
         "resources": ["medical_supplies", "circuitry", "leather", "water"],
         "resource_count": [4, 7],
-        "min_player_level": 5
+        "min_player_level": 5,
+        "is_gas": true
       }
     ]
   }

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { GAME_HEIGHT } from "../config";
 import { GameState } from "../state/GameState";
+import { canEnterDailyInstance } from "../systems/dailyInstance";
 import {
   describeUnlockCondition,
   evaluateUnlockCondition,
@@ -68,6 +69,18 @@ export class MapScene extends Phaser.Scene {
       const btn = createButton(this, yCenter + 42, buttonLabel, onClick);
       if (!unlocked) {
         btn.setAlpha(0.5);
+      }
+      // M5 daily instance button per zone with boss_id.
+      if (unlocked && zone.boss_id) {
+        const canDaily = canEnterDailyInstance(GameState.progress, zone, Date.now());
+        const dailyLabel = canDaily ? `Дейли: ${zone.name_ru}` : `Дейли: перезарядка`;
+        const dailyBtn = createButton(this, yCenter + 86, dailyLabel, () => {
+          if (!canDaily) return;
+          this.scene.start("SortieScene", { zoneId: zone.id, daily: true, depth: 3 });
+        });
+        if (!canDaily) {
+          dailyBtn.setAlpha(0.5);
+        }
       }
     });
 

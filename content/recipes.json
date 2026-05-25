@@ -186,5 +186,44 @@
     "tier": 2,
     "unlock_condition": null,
     "craft_time_s": 0
+  },
+  {
+    "id": "recipe_composite_blade",
+    "result_id": "composite_blade",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "crowbar", "count": 1 },
+      { "item_id": "mutated_gland", "count": 2 },
+      { "item_id": "scrap", "count": 5 }
+    ],
+    "tier": 3,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_prime_shotgun",
+    "result_id": "prime_shotgun",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "pipe_rifle", "count": 1 },
+      { "item_id": "prime_circuit", "count": 2 },
+      { "item_id": "scrap", "count": 6 }
+    ],
+    "tier": 3,
+    "unlock_condition": null,
+    "craft_time_s": 0
+  },
+  {
+    "id": "recipe_captain_armor",
+    "result_id": "captain_armor",
+    "result_count": 1,
+    "ingredients": [
+      { "item_id": "tactical_vest", "count": 1 },
+      { "item_id": "captain_insignia", "count": 2 },
+      { "item_id": "leather", "count": 4 }
+    ],
+    "tier": 3,
+    "unlock_condition": null,
+    "craft_time_s": 0
   }
 ]

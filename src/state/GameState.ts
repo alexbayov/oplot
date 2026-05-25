@@ -41,6 +41,7 @@ const createEmptyContent = (): ContentData => ({
 const createDefaultProgress = (): GameProgress => ({
   forest_depth_2_completed: false,
   any_warehouse_sortie_completed: false,
+  daily_completed: {},
 });
 
 const state: GameStateShape = {

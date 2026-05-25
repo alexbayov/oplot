@@ -174,5 +174,86 @@
       { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
       { "item_id": "oil", "chance": 0.20, "count_min": 1, "count_max": 1 }
     ]
+  },
+  {
+    "id": "forest_alpha_mutant",
+    "name_ru": "Альфа-мутант",
+    "type": "mutant",
+    "role": "boss",
+    "zone": "forest",
+    "level": 5,
+    "hp": 300,
+    "damage_min": 20,
+    "damage_max": 30,
+    "defense": 6,
+    "base_speed": 85,
+    "xp_reward": 150,
+    "behavior": "aggressive",
+    "behavior_id": "berserker_low_hp",
+    "phase_threshold": 0.5,
+    "phase_2_behavior_id": "pack_bonus_when_paired",
+    "boss_drop_id": "mutated_gland",
+    "description_ru": "Вожак стаи мутантов Леса. Огромный, мощный, теряющий контроль при ранении. В phase 1 — berserker: при HP<50% damage ×2, base_speed −30. В phase 2 — pack_bonus_when_paired: проверяет наличие ≥2 живых мобов того же типа (в M5 всегда 1 босс → бонус ×1.0). Эффект berserker из phase 1 сохраняется.",
+    "flavor_ru": "«Он не бежит. Он не сдаётся. Он просто становится хуже.»",
+    "drop_table": [
+      { "item_id": "mutated_gland", "chance": 1.0, "count_min": 1, "count_max": 1 },
+      { "item_id": "leather", "chance": 0.5, "count_min": 1, "count_max": 2 },
+      { "item_id": "scrap", "chance": 0.4, "count_min": 1, "count_max": 2 },
+      { "item_id": "gunpowder", "chance": 0.3, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "warehouse_drone_prime",
+    "name_ru": "Прайм-дрон",
+    "type": "mech",
+    "role": "boss",
+    "zone": "warehouse",
+    "level": 5,
+    "hp": 350,
+    "damage_min": 25,
+    "damage_max": 35,
+    "defense": 8,
+    "base_speed": 80,
+    "xp_reward": 200,
+    "behavior": "aggressive",
+    "behavior_id": "armor_piercing_ranged",
+    "phase_threshold": 0.5,
+    "phase_2_behavior_id": "defensive_cover",
+    "boss_drop_id": "prime_circuit",
+    "description_ru": "Тяжёлый военный дрон из довоенных арсеналов, хранящийся на Складе. В phase 1 — armor_piercing_ranged: игнорирует armor.defense героя. В phase 2 — defensive_cover: каждый нечётный ход занимает укрытие (+50% defense), пропуская атаку. В phase 2 броня героя снова работает.",
+    "flavor_ru": "«Его предки были разведчиками. Он — палач.»",
+    "drop_table": [
+      { "item_id": "prime_circuit", "chance": 1.0, "count_min": 1, "count_max": 1 },
+      { "item_id": "electronics", "chance": 0.5, "count_min": 1, "count_max": 2 },
+      { "item_id": "scrap", "chance": 0.4, "count_min": 1, "count_max": 2 },
+      { "item_id": "oil", "chance": 0.3, "count_min": 1, "count_max": 1 }
+    ]
+  },
+  {
+    "id": "city_guard_captain",
+    "name_ru": "Капитан охраны",
+    "type": "human",
+    "role": "boss",
+    "zone": "city",
+    "level": 6,
+    "hp": 400,
+    "damage_min": 22,
+    "damage_max": 32,
+    "defense": 10,
+    "base_speed": 90,
+    "xp_reward": 250,
+    "behavior": "defensive",
+    "behavior_id": "defensive_cover",
+    "phase_threshold": 0.5,
+    "phase_2_behavior_id": "ranged_keep_distance",
+    "boss_drop_id": "captain_insignia",
+    "description_ru": "Последний командир корпоративной охраны, удерживающий периметр Города. В phase 1 — defensive_cover: каждый нечётный ход — укрытие, чётный — атака. В phase 2 — ranged_keep_distance: переключается на ranged; если у героя melee-оружие — damage ×0.5.",
+    "flavor_ru": "«Жетон проржавел. Приказ — не отменён.»",
+    "drop_table": [
+      { "item_id": "captain_insignia", "chance": 1.0, "count_min": 1, "count_max": 1 },
+      { "item_id": "medical_supplies", "chance": 0.5, "count_min": 1, "count_max": 1 },
+      { "item_id": "ammo_rifle", "chance": 0.4, "count_min": 1, "count_max": 2 },
+      { "item_id": "circuitry", "chance": 0.3, "count_min": 1, "count_max": 1 }
+    ]
   }
 ]

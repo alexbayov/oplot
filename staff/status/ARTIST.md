@@ -1,66 +1,88 @@
 # Status: Artist
 
-**Текущая веха:** M4 — Перки и прогрессия
-**Статус:** DONE_PENDING_PM_REVIEW (8 perk icons generated, M4 ARTIST DoD met)
-**Ветка:** `m4/art` (base = `m4-integration`)
+**Текущая веха:** M5 — Боссы и инстансы
+**Статус:** DONE_PENDING_PM_REVIEW (10 M5 assets generated, M5 ARTIST DoD met)
+**Ветка:** `m5/art` (base = `m5-integration`)
 **Последнее обновление:** 2026-05-22
 
 ## Recovery block (для будущих сессий)
 
-- **Роль:** Artist / Asset Lead, M4
-- **Базовая ветка:** `m4-integration`
-- **Рабочая ветка:** `m4/art`
-- **PR target:** `m4-integration` (НЕ `main`)
-- **Pillow pipeline:** детерминистичный (без рандома). Запуск из repo root: `python3 tools/art/gen_m4_assets.py`. Регенерирует все M4 ассеты идентично.
+- **Роль:** Artist / Asset Lead, M5
+- **Базовая ветка:** `m5-integration`
+- **Рабочая ветка:** `m5/art`
+- **PR target:** `m5-integration` (НЕ `main`)
+- **Pillow pipeline:** детерминистичный (fixed seed 42). Запуск из repo root: `python3 tools/art/gen_m5_assets.py`. Регенерирует все M5 ассеты идентично.
 - **Палитра/размеры/обводки** строго из `docs/style-guide.md`.
 - **Recovery cadence:** после каждого step push + апдейт PR Recovery block + этого файла.
 
-## Что сделано (M4)
+## Что сделано (M5)
 
-### `tools/art/gen_m4_assets.py` — детерминистичный Pillow-генератор
+### `tools/art/gen_m5_assets.py` — детерминистичный Pillow-генератор
 
-2x super-sampling + LANCZOS downsample для smooth outlines. Палитра HEX из `docs/style-guide.md` §Палитра. Perk-специфичные цвета (red/silver/yellow/gold/cyan/steel/orange/green). Gold frame (`#C5A267`) для perk icons (distinct от T1 grey / T2 green tier-frames).
+2x super-sampling + LANCZOS downsample для smooth outlines (boss sprites/icons). Gas overlay uses direct 256×256 RGBA with quantized alpha for compression. Палитра HEX из `docs/style-guide.md` §Палитра. `random.seed(42)` в начале. Boss-specific palette extensions (mutant flesh/growth, drone prime blue, guard armor bronze/insignia gold). T3 tier frame (`#2196F3` blue) distinct от T1 grey / T2 green / perk gold.
 
-### 8 perk icons 64×64 RGBA PNG
+### 3 boss sprites 128×128 RGBA PNG
 
-| Файл | Размер | Motif | Цвет |
+| Файл | Размер | Archetype | Motif |
 |---|---|---|---|
-| `perk_tough_skin.png` | ~2.4 KB | Щит с заклёпками + заклёпки наверху | Red `#B43C3C` |
-| `perk_sharp_blade.png` | ~2.2 KB | Кинжал с рукоятью + fuller | Silver `#C0C0C8` |
-| `perk_lean_pack.png` | ~2.7 KB | Рюкзак + ремень сбоку | Yellow `#DCC864` |
-| `perk_lucky_scavenger.png` | ~3.9 KB | Монета/звезда с центром | Gold `#DCB41E` |
-| `perk_keen_eye.png` | ~3.9 KB | Глаз с прицелом-усами | Cyan `#50B4C8` |
-| `perk_reinforced_plates.png` | ~2.5 KB | Бронепластина с заклёпками + ремни | Steel `#7878B4` |
-| `perk_quick_hands.png` | ~4.0 KB | Ладонь (hex-щит) + пальцы | Orange `#C88C3C` |
-| `perk_fast_learner.png` | ~2.5 KB | Книга с закладкой-звездой | Green `#78B464` |
+| `forest_alpha_mutant.png` | 10.4 KB | mutant | Large asymmetric hulking body, left giant arm with claw, 3 mutated eyes, spine growths, hump |
+| `warehouse_drone_prime.png` | 12.8 KB | mech | Reinforced hex body, 3-lens optic array, 3 antennas (central + side), hydraulic arms, prime chevron mark |
+| `city_guard_captain.png` | 10.9 KB | human | Full tactical helmet with visor, heavy chest plate with insignia, shield + sword, pauldrons with rivets |
 
-Каждая icon — distinct silhouette + signature motif + gold perk-frame `#C5A267` (отличается от T1/T2 item-frames). snake_case naming совпадает с `id` из balance.md §M4.
+### 3 boss-drop icons 64×64 RGBA PNG
 
-## Бюджет M4
+| Файл | Размер | Motif |
+|---|---|---|
+| `mutated_gland.png` | 4.2 KB | Biological tissue oval with pink lobes, red veins, oozing duct |
+| `prime_circuit.png` | 3.4 KB | Blue metallic PCB with gold traces, processor chip, pin edges |
+| `captain_insignia.png` | 3.4 KB | Heater shield shape, bronze border, red enamel, gold chevron/star boss |
+
+### 3 T3 item icons 64×64 RGBA PNG
+
+| Файл | Размер | Motif |
+|---|---|---|
+| `composite_blade.png` | 3.3 KB | Long diagonal blade with composite stripe, fuller groove, crossguard, blue T3 glow tip |
+| `prime_shotgun.png` | 3.2 KB | Double barrel shotgun with prime circuit module (blue box + gold traces), pump grip, T3 muzzle glow |
+| `captain_armor.png` | 3.6 KB | Heavy armored vest with chest plate, insignia on chest, blue T3 accent stripe, side plates |
+
+### 1 gas zone overlay 256×256 RGBA PNG
+
+| Файл | Размер |
+|---|---|
+| `gas_overlay.png` | 15.4 KB |
+
+Semi-transparent green-yellow textured noise with large soft blobs, wisps, Gaussian blur, alpha quantization for small file size.
+
+## Бюджет M5
 
 | Категория | Факт | Бюджет |
 |---|---|---|
-| 8 perk icons (64×64) | 24.2 KB | ≤ 50 KB |
-| **Итого M4 add** | **24.2 KB** | **≤ 50 KB (48.4% used)** |
-| **Project total (M1 81.3 KB + M3 129.8 KB + M4 24.2 KB)** | **235.3 KB** | **≤ 600 KB (39.2% used) / 5 MB Яндекс** |
+| 3 boss sprites (128×128) | 34.1 KB | — |
+| 3 boss-drop icons (64×64) | 11.0 KB | — |
+| 3 T3 item icons (64×64) | 10.1 KB | — |
+| 1 gas overlay (256×256) | 15.4 KB | — |
+| **Итого M5 add** | **69.0 KB** | **≤ 80 KB (86.3% used)** |
+| **Project total** | **412 KB** | **≤ 600 KB (68.7% used) / 5 MB Яндекс** |
 
-`tools/art/gen_m4_assets.py` — tool, не runtime asset, не входит в bundle.
+`tools/art/gen_m5_assets.py` — tool, не runtime asset, не входит в bundle.
 
 ## Соответствие style-guide
 
 - Палитра из `docs/style-guide.md` §Палитра (HEX-точно).
-- Bold обводки 2–3 px (через 2x super-sampling, OUTLINE_WIDTH_ICON=4 → 2px final).
-- Прозрачные фоны на иконках (RGBA).
-- snake_case ASCII naming, file id = balance §M4 perk id.
-- Gold perk-frame (`#C5A267`) — distinct от T1/T2 tier-frames.
+- Bold обводки 2–3 px (через 2x super-sampling, OUTLINE_WIDTH_SPRITE/ICON=4 → 2px final).
+- Прозрачные фоны на спрайтах/иконках (RGBA).
+- snake_case ASCII naming, file id = balance §M5.2 / §M5.4 / GDD §9.2 boss ids.
+- T3 tier frame (`#2196F3` blue) — distinct от T1/T2/perk frames.
+- Boss sprites визуально отличимы от M3 mobs (крупнее, детальнее, boss-специфичные элементы).
+- M1+M3+M4 ассеты НЕ пересозданы.
 
-## Anti-scope M4
+## Anti-scope M5
 
-- НЕ трогаю M1/M3 ассеты.
+- НЕ трогаю M1/M3/M4 ассеты.
 - НЕ трогаю `src/`, `content/`, `docs/`, чужие `staff/status/*.md`.
 - НЕ pixel-art, не cartoon, не AI-генерация (М7 scope).
-- НЕ self-merge, НЕ push в `main`/`m4-integration` напрямую.
-- LevelUpScene decorative frame — не делаю (optional per handoff, budget safe without it).
+- НЕ self-merge, НЕ push в `main`/`m5-integration` напрямую.
+- Phase 2 sprites — НЕ сделаны (budget safe without; Engineer applies red tint overlay for phase 2 per handoff).
 
 ## Блокеры
 
@@ -68,11 +90,19 @@
 
 ## PR
 
-- `m4/art → m4-integration` — готов к PM review
+- `m5/art → m5-integration` — готов к PM review
 
 ## Self-update / Recovery
 
-Эта сессия обновляет **только** `staff/status/ARTIST.md`. `staff/status/M4.md`, `staff/status/{другие_роли}.md`, `staff/decisions/CHANGELOG.md` и `PLAN.md` синхронизирует PM.
+Эта сессия обновляет **только** `staff/status/ARTIST.md`. `staff/status/M5.md`, `staff/status/{другие_роли}.md`, `staff/decisions/CHANGELOG.md` и `PLAN.md` синхронизирует PM.
+
+---
+
+## M4 (закрытая — история)
+
+**Статус:** DONE (PR merged в m4-integration, gate-close PR #39 merged в main).
+
+M4 deliverables: 8 perk icons. M4-add 24.2 KB. Всё регенерится через `tools/art/gen_m4_assets.py`.
 
 ---
 

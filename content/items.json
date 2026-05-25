@@ -417,5 +417,92 @@
       "effect_value": 1,
       "charges": 1
     }
+  },
+  {
+    "id": "mutated_gland",
+    "name_ru": "Мутировавшая железа",
+    "type": "resource",
+    "tier": 2,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Пульсирующий орган, извлечённый из туши альфа-мутанта. Источник аномальной регенерации — единственный путь к созданию композитного клинка.",
+    "flavor_ru": "«Бьётся в руке. Как будто просится обратно.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "prime_circuit",
+    "name_ru": "Прайм-схема",
+    "type": "resource",
+    "tier": 2,
+    "zone_origin": "warehouse",
+    "weight_kg": 1,
+    "description_ru": "Военная процессорная плата из ядра прайм-дрона. Выдерживает перегрузки, которые превращают гражданскую электронику в шлак — ключевой компонент прайм-дробовика.",
+    "flavor_ru": "«Последняя печать. С неё начинается оружие.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "captain_insignia",
+    "name_ru": "Знак отличия капитана",
+    "type": "resource",
+    "tier": 2,
+    "zone_origin": "city",
+    "weight_kg": 1,
+    "description_ru": "Металлический жетон командира корпоративной охраны с влитыми нанопластинами. Артефакт довоенной технологии — без него капитанская броня не соберётся.",
+    "flavor_ru": "«Не символ власти. Сама власть — в металле.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "composite_blade",
+    "name_ru": "Композитный клинок",
+    "type": "weapon_melee",
+    "tier": 3,
+    "zone_origin": "universal",
+    "weight_kg": 3,
+    "description_ru": "Лезвие из сплава мутантной железы и металлолома, заточенное до молекулярного края. Лучший melee в игре: 24-32 damage, но тяжёлый (3 кг) и чуть медленнее монтировки (attack_speed 85 vs 90). Один удар ≈ 25% HP мутанта.",
+    "flavor_ru": "«Режет воздух. И всё, что за ним.»",
+    "recipe_id": "recipe_composite_blade",
+    "stats": {
+      "damage_min": 24,
+      "damage_max": 32,
+      "attack_speed": 85,
+      "noise": "low"
+    }
+  },
+  {
+    "id": "prime_shotgun",
+    "name_ru": "Прайм-дробовик",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "zone_origin": "universal",
+    "weight_kg": 4,
+    "description_ru": "Переработанная винтовка с прайм-схемой в затворе и расширенным стволом. Лучший ranged в игре: 27-37 damage, но медленный (attack_speed 65) и тяжёлый (4 кг). Шумный. Стреляет винтовочными патронами.",
+    "flavor_ru": "«Один выстрел — один труп. Иногда — стена за ним.»",
+    "recipe_id": "recipe_prime_shotgun",
+    "stats": {
+      "damage_min": 27,
+      "damage_max": 37,
+      "attack_speed": 65,
+      "noise": "high",
+      "ammo_id": "ammo_rifle",
+      "ammo_per_shot": 1
+    }
+  },
+  {
+    "id": "captain_armor",
+    "name_ru": "Броня капитана",
+    "type": "armor",
+    "tier": 3,
+    "zone_origin": "universal",
+    "weight_kg": 5,
+    "description_ru": "Тяжёлая корпоративная броня с нанопластинами из знака капитана. Лучшая броня в игре: defense=12 (×3 от тактического жилета), но 5 кг. Значительно снижает урон боссов и обычных мобов.",
+    "flavor_ru": "«Носит тот, кто пережил. Пока носит.»",
+    "recipe_id": "recipe_captain_armor",
+    "stats": {
+      "defense": 12,
+      "vs_melee_bonus": 0
+    }
   }
 ]
