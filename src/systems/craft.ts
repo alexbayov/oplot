@@ -69,3 +69,23 @@ export const formatMissing = (
       return `${name} ${m.have}/${m.need}`;
     })
     .join(", ");
+
+export const canCraftWithBossDrop = (
+  recipe: Recipe,
+  inventory: InventoryStack[],
+): CraftCheck => {
+  const base = canCraft(recipe, inventory);
+  if (!base.ok) return base;
+  if (recipe.tier === 3 && recipe.boss_drop_ingredient) {
+    const have = countInStacks(inventory, recipe.boss_drop_ingredient);
+    if (have < 1) {
+      return {
+        ok: false,
+        missing: [
+          { item_id: recipe.boss_drop_ingredient, need: 1, have },
+        ],
+      };
+    }
+  }
+  return base;
+};

@@ -1,4 +1,4 @@
-import { gainXP, isMaxLevel, xpProgress, canLevelUp, xpToNext, xpRequired, MAX_LEVEL } from "../xp";
+import { gainXP, isMaxLevel, xpProgress, canLevelUp, xpToNext, xpRequired, MAX_LEVEL, computeOverkillPopups } from "../xp";
 import { describe, it, expect } from "vitest";
 
 describe("xpToNext", () => {
@@ -70,4 +70,18 @@ describe("canLevelUp", () => {
   it("returns true when XP sufficient", () => expect(canLevelUp(40, 1)).toBe(true));
   it("returns false when XP insufficient", () => expect(canLevelUp(39, 1)).toBe(false));
   it("returns false at MAX_LEVEL", () => expect(canLevelUp(999999, MAX_LEVEL)).toBe(false));
+});
+
+describe("computeOverkillPopups — M5 overkill queue", () => {
+  it("single level-up returns 1 popup", () => {
+    expect(computeOverkillPopups(1, 2)).toBe(1);
+  });
+
+  it("double level-up (overkill XP) returns 2 popups", () => {
+    expect(computeOverkillPopups(1, 3)).toBe(2);
+  });
+
+  it("triple level-up returns 3 popups", () => {
+    expect(computeOverkillPopups(1, 4)).toBe(3);
+  });
 });
