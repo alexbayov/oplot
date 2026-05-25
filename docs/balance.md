@@ -420,9 +420,9 @@ return_time_s = BASE_RETURN_TIME_S
 
 - Перки и их бонусы — **M4** (см. GDD §8 placeholder).
 - Боссы / мини-боссы / T3 чертежи / дейли-инстансы — **M5** (см. GDD §9 placeholder).
-- Модули оружия / брони (head-slot, accessory slots, runes) — **M5+** (см. GDD §11 placeholder).
+- Модули оружия / брони (head-slot, accessory slots, runes) — **M5+** (см. GDD §12 placeholder).
 - Радио: rewards, ambush damage, trust scale, faction reputation — **M6** (см. GDD §10 placeholder).
-- IAP, реклама, Yandex SDK rewards — **M8** (см. GDD §12 placeholder).
+- IAP, реклама, Yandex SDK rewards — **M8** (см. GDD §13 placeholder).
 - Газовые зоны (требующие `gas_mask`) — **M5** (`gas_mask` на M3 — lore stub).
 
 ---
@@ -610,9 +610,9 @@ xp_required(level) = sum(xp_to_next(k) for k in 1..level-1)
 
 Эти числа сознательно не заданы на M5; они появятся на своих вехах:
 
-- Модульное оружие / брони-слоты (head-slot, accessory, runes) — **M5+** (см. GDD §11 placeholder).
+- Модульное оружие / брони-слоты (head-slot, accessory, runes) — **M5+** (см. GDD §12 placeholder).
 - Полная радио-логика (rewards, ambush damage, trust scale, faction reputation) — **M6** (см. GDD §10.M6).
-- Yandex SDK / IAP / реклама — **M8** (см. GDD §12 placeholder).
+- Yandex SDK / IAP / реклама — **M8** (см. GDD §13 placeholder).
 - Skill tree / поинты / prereq / tier / cost / cooldown — **M5+ refactor path**.
 - Boss-cinematics / animated phase transition — **M7 polish**.
 - Дейли-instance reward rotation / weekly events — M5 daily = 24h cool-down + boss-drop, без вариативности.
@@ -688,3 +688,302 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 - Real-time/background timers — **не M6** (sortie-based expiry only).
 - Новые combat mechanics — **не M6** (ambush uses existing CombatScene).
 - Voice/audio/sound — **M7 polish**.
+
+---
+
+## M7 — Полировка, баланс и расширение контента
+
+> Скоуп: балансный тюнинг M2–M6, 6 новых зон, 45 новых предметов, 24 новых рецепта, 10 UI SFX, 16 визуальных tween'ов, smoke regression.
+
+### M7.1 — Balance Tuning Pass (Before/After M2–M6)
+
+**Hero baseline**
+
+| Параметр | M6 | M7 | Δ |
+|---|---|---|---|
+| `hero.hp_max` | 100 | 100 | 0 |
+| `hero.base_speed` | 100 | 105 | +5 |
+| `hero.max_weight_kg` | 30 | 32 | +2 |
+| `hero.start_level` | 1 | 1 | 0 |
+
+**Mob stat fine-tune (8 regular + 3 boss)**
+
+| id | name_ru | xp_reward M6 | xp_reward M7 | damage_min M6 | damage_min M7 | damage_max M6 | damage_max M7 |
+|---|---|---|---|---|---|---|---|
+| `marauder` | Мародёр | 18 | 18 | 5 | 5 | 8 | 8 |
+| `wild_dog` | Дикий пёс | 14 | 14 | 8 | 8 | 12 | 12 |
+| `mutant` | Мутант | 45 | 45 | 10 | 10 | 15 | 15 |
+| `looter_sniper` | Мародёр-снайпер | 28 | 28 | 9 | 9 | 13 | 13 |
+| `armored_guard` | Бронированный охранник | 36 | 36 | 7 | 7 | 10 | 10 |
+| `fanatic_berserker` | Фанатик-берсерк | 42 | 42 | 8 | 8 | 12 | 12 |
+| `pack_rat` | Стайная крыса-мутант | 22 | 22 | 6 | 6 | 9 | 9 |
+| `relic_drone` | Реликтовый дрон | 50 | 50 | 8 | 8 | 11 | 11 |
+| `forest_alpha_mutant` | Альфа-мутант | 150 | 150 | 20 | 20 | 30 | 30 |
+| `warehouse_drone_prime` | Прайм-дрон | 200 | 200 | 25 | 25 | 35 | 35 |
+| `city_guard_captain` | Капитан охраны | 250 | 250 | 22 | 22 | 32 | 32 |
+
+> M7 tuning pass сохраняет все M2–M6 числа; таблица — верификация before/after для smoke regression.
+
+**Weapon / Armor gap T1→T2→T3**
+
+| Type | Tier | Benchmark (damage_avg / defense) | Gap vs lower tier |
+|---|---|---|---|
+| Melee | T1 (`knife` 4-7) | 5.5 | — |
+| Melee | T2 (`crowbar` 7-11) | 9.0 | ×1.6 vs T1 |
+| Melee | T3 (`composite_blade` 24-32) | 28.0 | ×3.1 vs T2 |
+| Ranged | T1 (`makeshift_pistol` 9-14) | 11.5 | — |
+| Ranged | T2 (`pipe_rifle` 14-20) | 17.0 | ×1.5 vs T1 |
+| Ranged | T3 (`prime_shotgun` 27-37) | 32.0 | ×1.9 vs T2 |
+| Armor | T1 (`cloth_jacket` def 1) | 1 | — |
+| Armor | T2 (`tactical_vest` def 4) | 4 | ×4.0 vs T1 |
+| Armor | T3 (`captain_armor` def 12) | 12 | ×3.0 vs T2 |
+
+**Economy & Return tuning (multipliers for 9 zones)**
+
+| id | return_mult M7 | drop_mult M7 |
+|---|---|---|
+| `forest` | 1.0 | 1.0 |
+| `suburbs` | 1.0 | 0.9 |
+| `school` | 1.1 | 1.0 |
+| `warehouse` | 1.2 | 1.0 |
+| `factory` | 1.3 | 1.1 |
+| `hospital` | 1.3 | 1.0 |
+| `city` | 1.5 | 1.0 |
+| `metro` | 1.6 | 1.1 |
+| `power_plant` | 1.8 | 1.2 |
+
+**Perk & Progression sanity check**
+
+Все 8 перков M4 и fallback `veteran_conditioning` остаются валидными при 9-зонной экономике. Никаких изменений значений perk'ов на M7.
+
+---
+
+### M7.2 — 9-Zone Master Table
+
+| id | unlock_condition | risk_rating | mob_pool | item_pool (resources) | return_mult | drop_mult |
+|---|---|---|---|---|---|---|
+| `forest` | `start` | 1 | `marauder`, `wild_dog`, `mutant` | `wood`, `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `rope` | 1.0 | 1.0 |
+| `suburbs` | `any_forest_sortie_completed` | 1 | `marauder`, `wild_dog`, `pack_rat` | `wood`, `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `rope`, `suburban_scrap`, `garden_seed` | 1.0 | 0.9 |
+| `school` | `suburbs_sortie_completed` | 2 | `marauder`, `looter_sniper`, `pack_rat` | `wood`, `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `rope`, `school_book`, `broken_tablet` | 1.1 | 1.0 |
+| `warehouse` | `forest_depth_2_completed` | 2 | `marauder`, `looter_sniper`, `armored_guard`, `relic_drone` | `wood`, `scrap`, `cloth`, `electronics`, `oil`, `gunpowder`, `leather` | 1.2 | 1.0 |
+| `factory` | `warehouse_boss_defeated` | 3 | `mutant`, `armored_guard`, `relic_drone` | `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `machine_part`, `industrial_cable` | 1.3 | 1.1 |
+| `hospital` | `factory_sortie_completed` | 3 | `mutant`, `fanatic_berserker`, `pack_rat` | `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `hospital_supply`, `sterile_wrap` | 1.3 | 1.0 |
+| `city` | `any_warehouse_sortie_completed` | 4 | `mutant`, `fanatic_berserker`, `pack_rat`, `relic_drone` | `scrap`, `cloth`, `food`, `water`, `medical_supplies`, `circuitry`, `gunpowder`, `leather` | 1.5 | 1.0 |
+| `metro` | `city_boss_defeated` | 4 | `looter_sniper`, `armored_guard`, `fanatic_berserker`, `relic_drone` | `scrap`, `cloth`, `food`, `water`, `gunpowder`, `leather`, `metro_token`, `rail_shard` | 1.6 | 1.1 |
+| `power_plant` | `metro_sortie_completed` | 5 | `mutant`, `armored_guard`, `fanatic_berserker`, `relic_drone` | `scrap`, `cloth`, `gunpowder`, `leather`, `reactor_ash`, `copper_coil` | 1.8 | 1.2 |
+
+> Боссы (`forest_alpha_mutant`, `warehouse_drone_prime`, `city_guard_captain`) остаются в `forest`, `warehouse`, `city` depth 3 и дейли-инстансах.
+
+**Depth config — новые зоны**
+
+`suburbs`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 1 | 2 |
+| 2 | [2, 3] | [3, 5] | 2 | 3 |
+| 3 | [2, 4] | [4, 6] | 3 | 4 |
+
+`school`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 1 | 2 |
+| 2 | [2, 3] | [3, 5] | 2 | 3 |
+| 3 | [2, 4] | [4, 6] | 3 | 4 |
+
+`factory`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 |
+| 2 | [2, 3] | [3, 5] | 3 | 3 |
+| 3 | [2, 4] | [4, 6] | 4 | 4 |
+
+`hospital`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [1, 2] | [2, 4] | 2 | 2 |
+| 2 | [2, 3] | [3, 5] | 3 | 3 |
+| 3 | [2, 4] | [4, 6] | 4 | 4 |
+
+`metro`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [2, 3] | [2, 4] | 3 | 2 |
+| 2 | [2, 4] | [3, 5] | 4 | 3 |
+| 3 | [3, 5] | [4, 7] | 5 | 4 |
+
+`power_plant`:
+
+| depth | enemy_count | resource_count | min_player_level | fights_per_depth |
+|---|---|---|---|---|
+| 1 | [2, 3] | [2, 4] | 4 | 2 |
+| 2 | [2, 4] | [3, 5] | 5 | 3 |
+| 3 | [3, 5] | [4, 7] | 6 | 4 |
+
+---
+
+### M7.3 — 80-Item Taxonomy (45 New)
+
+**Item delta table (45 rows)**
+
+| id | name_ru | type | tier | zone_origin | weight_kg | recipe_id | notes |
+|---|---|---|---|---|---|---|---|
+| `suburban_scrap` | Пригородный лом | resource | 1 | suburbs | 2.0 | null | Новый T1 ресурс |
+| `garden_seed` | Семена из грядки | resource | 1 | suburbs | 0.5 | null | Новый T1 ресурс |
+| `school_book` | Учебник | resource | 1 | school | 1.0 | null | Новый T1 ресурс |
+| `broken_tablet` | Разбитый планшет | resource | 1 | school | 0.5 | null | Новый T1 ресурс |
+| `machine_part` | Деталь станка | resource | 1 | factory | 3.0 | null | Новый T1 ресурс |
+| `industrial_cable` | Кабель заводской | resource | 1 | factory | 2.0 | null | Новый T1 ресурс |
+| `hospital_supply` | Медицинский набор | resource | 1 | hospital | 0.5 | null | Новый T1 ресурс |
+| `sterile_wrap` | Стерильная плёнка | resource | 1 | hospital | 0.3 | null | Новый T1 ресурс |
+| `metro_token` | Жетон метро | resource | 1 | metro | 0.1 | null | Новый T1 ресурс |
+| `rail_shard` | Осколок рельса | resource | 1 | metro | 1.5 | null | Новый T1 ресурс |
+| `reactor_ash` | Зола реактора | resource | 1 | power_plant | 1.0 | null | Новый T1 ресурс |
+| `copper_coil` | Медная катушка | resource | 1 | power_plant | 1.5 | null | Новый T1 ресурс |
+| `shiv` | Заточка | weapon_melee | 2 | universal | 0.3 | `recipe_shiv` | Лёгкий T2 melee |
+| `machete` | Мачете | weapon_melee | 2 | universal | 1.5 | `recipe_machete` | Средний T2 melee |
+| `sledgehammer` | Кувалда | weapon_melee | 2 | universal | 3.5 | `recipe_sledgehammer` | Тяжёлый T2 melee |
+| `crossbow` | Арбалет | weapon_ranged | 2 | universal | 2.0 | `recipe_crossbow` | Тихий T2 ranged |
+| `hunting_rifle` | Охотничья винтовка | weapon_ranged | 2 | universal | 3.0 | `recipe_hunting_rifle` | Мощный T2 ranged |
+| `spear` | Копьё | weapon_melee | 2 | universal | 2.0 | null | Loot-only T2 melee |
+| `flare_pistol` | Ракетница | weapon_ranged | 2 | universal | 1.0 | null | Loot-only T2 ranged |
+| `cleaver` | Тесак | weapon_melee | 2 | universal | 1.2 | null | Loot-only T2 melee |
+| `sawed_off` | Обрез | weapon_ranged | 2 | universal | 2.0 | null | Loot-only T2 ranged |
+| `riot_shield` | Щит полицейский | armor | 2 | universal | 4.0 | `recipe_riot_shield` | Тяжёлый T2 armor |
+| `scout_mask` | Маска разведчика | armor | 2 | universal | 0.3 | `recipe_scout_mask` | Лёгкий T2 armor |
+| `padded_coat` | Стёганка | armor | 2 | universal | 2.0 | `recipe_padded_coat` | Средний T2 armor |
+| `ballistic_vest` | Бронежилет | armor | 2 | universal | 3.5 | `recipe_ballistic_vest` | Высокий def T2 |
+| `medical_gown` | Халат хирурга | armor | 2 | universal | 0.5 | `recipe_medical_gown` | Лёгкий T2 armor |
+| `insulated_vest` | Изолированный жилет | armor | 2 | universal | 2.5 | `recipe_insulated_vest` | Средний T2 armor |
+| `metal_helm` | Стальной шлем | armor | 2 | universal | 1.5 | `recipe_metal_helm` | Голова T2 armor |
+| `reinforced_gloves` | Усиленные перчатки | armor | 2 | universal | 0.3 | null | Loot-only T2 armor |
+| `tactical_pants` | Тактические штаны | armor | 2 | universal | 1.2 | null | Loot-only T2 armor |
+| `heal_salve` | Целительная мазь | consumable | 2 | universal | 0.4 | `recipe_heal_salve` | Heal 30 |
+| `stimpack` | Стимулятор | consumable | 2 | universal | 0.6 | `recipe_stimpack` | Heal 65 |
+| `adrenaline_shot` | Адреналин | consumable | 2 | universal | 0.3 | `recipe_adrenaline_shot` | Initiative +30 |
+| `tear_gas` | Слезоточивый газ | consumable | 2 | universal | 0.4 | `recipe_tear_gas` | Cover boost 75 |
+| `ammo_bolt` | Болты | consumable | 2 | universal | 0.3 | `recipe_ammo_bolt` | Ammo refill 1 |
+| `ammo_flare` | Ракеты | consumable | 2 | universal | 0.4 | `recipe_ammo_flare` | Ammo refill 1 |
+| `electrolyte` | Электролит | consumable | 2 | universal | 0.2 | `recipe_electrolyte` | Initiative +15 |
+| `speed_drug` | Ускоритель | consumable | 2 | universal | 0.4 | `recipe_speed_drug` | Initiative +45 |
+| `decoy_flare` | Ложная ракета | consumable | 2 | universal | 0.3 | `recipe_decoy_flare` | Cover boost 30 |
+| `pulse_grenade` | Импульсная граната | consumable | 2 | universal | 0.5 | `recipe_pulse_grenade` | Mech disable 1 |
+| `smoke_grenade` | Дымовая граната | consumable | 2 | universal | 0.4 | `recipe_smoke_grenade` | Cover boost 60 |
+| `energy_gel` | Энергогель | consumable | 2 | universal | 0.2 | `recipe_energy_gel` | Initiative +25 |
+| `ration_bar` | Сухпаёк | consumable | 2 | universal | 0.2 | null | Loot-only heal 20 |
+| `healing_patch` | Пластырь | consumable | 2 | universal | 0.2 | null | Loot-only heal 35 |
+| `makeshift_grenade` | Самодельная граната | consumable | 2 | universal | 0.4 | null | Loot-only cover 40 |
+
+**Recipe delta table (24 rows)**
+
+| id | result_id | result_count | ingredients | tier | unlock_condition |
+|---|---|---|---|---|---|
+| `recipe_shiv` | `shiv` | 1 | `suburban_scrap` x2, `rope` x1 | 2 | null |
+| `recipe_machete` | `machete` | 1 | `wood` x3, `suburban_scrap` x2, `oil` x1 | 2 | null |
+| `recipe_sledgehammer` | `sledgehammer` | 1 | `scrap` x6, `wood` x2, `machine_part` x1 | 2 | null |
+| `recipe_crossbow` | `crossbow` | 1 | `wood` x3, `industrial_cable` x2, `rope` x1 | 2 | null |
+| `recipe_hunting_rifle` | `hunting_rifle` | 1 | `scrap` x5, `machine_part` x1, `gunpowder` x2 | 2 | null |
+| `recipe_riot_shield` | `riot_shield` | 1 | `scrap` x4, `leather` x2, `machine_part` x1 | 2 | null |
+| `recipe_scout_mask` | `scout_mask` | 1 | `cloth` x2, `school_book` x1 | 2 | null |
+| `recipe_padded_coat` | `padded_coat` | 1 | `cloth` x4, `leather` x2, `garden_seed` x1 | 2 | null |
+| `recipe_ballistic_vest` | `ballistic_vest` | 1 | `scrap` x5, `industrial_cable` x2, `electronics` x1 | 2 | null |
+| `recipe_medical_gown` | `medical_gown` | 1 | `cloth` x3, `sterile_wrap` x1 | 2 | null |
+| `recipe_insulated_vest` | `insulated_vest` | 1 | `scrap` x3, `copper_coil` x2, `cloth` x2 | 2 | null |
+| `recipe_metal_helm` | `metal_helm` | 1 | `scrap` x2, `copper_coil` x1 | 2 | null |
+| `recipe_heal_salve` | `heal_salve` | 1 | `cloth` x2, `garden_seed` x1 | 2 | null |
+| `recipe_stimpack` | `stimpack` | 1 | `medical_supplies` x1, `bandage` x1, `hospital_supply` x1 | 2 | null |
+| `recipe_adrenaline_shot` | `adrenaline_shot` | 1 | `medical_supplies` x1, `sterile_wrap` x1 | 2 | null |
+| `recipe_tear_gas` | `tear_gas` | 1 | `gunpowder` x2, `industrial_cable` x1, `oil` x1 | 2 | null |
+| `recipe_ammo_bolt` | `ammo_bolt` | 5 | `scrap` x1, `rail_shard` x1 | 2 | null |
+| `recipe_ammo_flare` | `ammo_flare` | 5 | `gunpowder` x1, `scrap` x1, `school_book` x1 | 2 | null |
+| `recipe_electrolyte` | `electrolyte` | 2 | `water` x2, `hospital_supply` x1 | 2 | null |
+| `recipe_speed_drug` | `speed_drug` | 1 | `medical_supplies` x1, `reactor_ash` x1 | 2 | null |
+| `recipe_decoy_flare` | `decoy_flare` | 1 | `gunpowder` x1, `metro_token` x1, `scrap` x1 | 2 | null |
+| `recipe_pulse_grenade` | `pulse_grenade` | 1 | `electronics` x1, `machine_part` x1, `gunpowder` x1 | 2 | null |
+| `recipe_smoke_grenade` | `smoke_grenade` | 1 | `cloth` x2, `rail_shard` x1, `gunpowder` x1 | 2 | null |
+| `recipe_energy_gel` | `energy_gel` | 1 | `water` x1, `broken_tablet` x1, `medical_supplies` x1 | 2 | null |
+
+**Coverage matrix: новые зонные ресурсы → рецепты**
+
+| Ресурс | Рецепты использующие ресурс |
+|---|---|
+| `suburban_scrap` | `recipe_shiv`, `recipe_machete` |
+| `garden_seed` | `recipe_padded_coat`, `recipe_heal_salve` |
+| `school_book` | `recipe_scout_mask`, `recipe_ammo_flare` |
+| `broken_tablet` | `recipe_energy_gel` |
+| `machine_part` | `recipe_sledgehammer`, `recipe_riot_shield`, `recipe_hunting_rifle`, `recipe_pulse_grenade` |
+| `industrial_cable` | `recipe_crossbow`, `recipe_ballistic_vest`, `recipe_tear_gas` |
+| `hospital_supply` | `recipe_stimpack`, `recipe_electrolyte` |
+| `sterile_wrap` | `recipe_adrenaline_shot`, `recipe_medical_gown` |
+| `metro_token` | `recipe_decoy_flare` |
+| `rail_shard` | `recipe_smoke_grenade`, `recipe_ammo_bolt` |
+| `reactor_ash` | `recipe_speed_drug` |
+| `copper_coil` | `recipe_insulated_vest`, `recipe_metal_helm` |
+
+---
+
+### M7.4 — SFX Registry (10)
+
+| trigger_id | scene | event | recommended_volume | max_duration_ms | asset_pattern |
+|---|---|---|---|---|---|
+| `sfx_hit` | CombatScene | damage dealt / taken | 0.8 | 800 | `sfx_hit_{N}.wav` |
+| `sfx_heal` | CombatScene, InventoryScene | heal consumable used | 0.7 | 600 | `sfx_heal_{N}.wav` |
+| `sfx_craft` | CraftScene | recipe crafted | 0.6 | 700 | `sfx_craft_{N}.wav` |
+| `sfx_loot` | LootScene | item picked up | 0.7 | 500 | `sfx_loot_{N}.wav` |
+| `sfx_radio` | RadioScene | signal opened | 0.5 | 900 | `sfx_radio_{N}.wav` |
+| `sfx_menu_click` | Any UI | button pressed | 0.4 | 300 | `sfx_click_{N}.wav` |
+| `sfx_level_up` | LevelUpScene | level gained | 0.9 | 1000 | `sfx_levelup_{N}.wav` |
+| `sfx_boss_phase` | CombatScene | boss phase transition | 0.9 | 1000 | `sfx_bossphase_{N}.wav` |
+| `sfx_blocked` | CombatScene | attack blocked by cover | 0.6 | 400 | `sfx_blocked_{N}.wav` |
+| `sfx_confirm` | Any UI | positive confirm | 0.5 | 400 | `sfx_confirm_{N}.wav` |
+
+---
+
+### M7.5 — Tween Registry (16)
+
+| event_id | scene_target | trigger_condition | duration_ms | easing | effect |
+|---|---|---|---|---|---|
+| `tween_damage_flash` | CombatScene | hero takes damage | 200 | Linear | red overlay alpha 0→0.3→0 |
+| `tween_hit_shake` | CombatScene | any unit hit | 150 | Elastic.Out | camera offset ±2 px |
+| `tween_heal_pulse` | CombatScene | heal applied | 400 | Sine.Out | target scale 1→1.2→1 |
+| `tween_loot_bounce` | LootScene | item picked | 300 | Back.Out | icon y -10 px bounce |
+| `tween_craft_spin` | CraftScene | craft success | 500 | Cubic.InOut | icon rotation 0→360° |
+| `tween_menu_hover` | BaseScene | button hover | 150 | Sine.Out | scale 1→1.05 |
+| `tween_level_up_glow` | LevelUpScene | level up | 600 | Sine.InOut | gold glow alpha 0→1→0 |
+| `tween_boss_phase_red` | CombatScene | boss phase swap | 400 | Quintic.Out | boss red tint flash |
+| `tween_return_walk` | ReturnScene | return start | 1000 | Linear | hero sprite x +20 px |
+| `tween_xp_bar_fill` | LevelUpScene | xp added | 300 | Cubic.Out | bar width to target% |
+| `tween_radio_static` | RadioScene | signal list open | 250 | Linear | static alpha flicker 0.2→0.8 |
+| `tween_gas_warning` | CombatScene | gas tick | 200 | Linear | yellow border alpha 0→0.5→0 |
+| `tween_sortie_enter` | SortieScene | depth selected | 400 | Sine.Out | overlay alpha 1→0 |
+| `tween_defeat_fade` | CombatScene | hero defeated | 500 | Quadratic.Out | screen fade to black |
+| `tween_perk_card_deal` | LevelUpScene | perk shown | 300 | Back.Out | card slide y +50→0 |
+| `tween_item_tooltip` | InventoryScene | item hover | 150 | Linear | tooltip alpha 0→1 |
+
+---
+
+### M7.6 — Test & Build Contract
+
+| Gate | Metric | Target |
+|---|---|---|
+| M7 vitest | PASS | 176/176 |
+| M7 build | JS bundle | ≤ 2 MB |
+| M7 assets | total assets | ≤ 730 KB |
+| M7 audio | SFX files | ≤ 80 KB |
+
+---
+
+### M7.7 — Count Verification
+
+| Entity | M6 Count | M7 Count | Delta | Status |
+|---|---|---|---|---|
+| zones | 3 | 9 | +6 | ✓ |
+| items | 35 | 80 | +45 | ✓ |
+| recipes | 18 | 42 | +24 | ✓ |
+| SFX | 0 | 10 | +10 | ✓ |
+| tweens | 0 | 16 | +16 | ✓ |
+| tests | 164 | 176 | +12 | ✓ |

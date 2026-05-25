@@ -1,8 +1,76 @@
 # Status: Game Designer
 
-**Текущая веха:** M6 (amendment)
+**Текущая веха:** M7 (amendment)
 **Статус:** IN_PROGRESS
-**Последнее обновление:** 2026-05-25 (M6 GD-amendment)
+**Последнее обновление:** 2026-05-25 (M7 GD-amendment)
+
+---
+
+## M7 GD-amendment (ветка `m7/gd-amendment`, PR #59 → `m7-integration`)
+
+**Базируется на M7-integration** (PM kickoff PR #58 merged, HEAD `e384591`).
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §11.M7 «Полировка, баланс и расширение контента» | **+** §11.M7.1 Scope, Anti-scope, Count Contract (9 zones / 80 items / 42 recipes / 10 SFX / 16 tweens / 176 tests); §11.M7.2 9-Zone Model (3 existing + 6 new: suburbs, school, factory, hospital, metro, power_plant; zone tier progression T1→T2→T3; depth configs; unlock chain; existing mob pool only); §11.M7.3 80-Item Taxonomy (35→80, tier policy T1/T2/≤5 T3, no T4, uniqueness 2-of-4) + 42-Recipe Policy (18+24, each new recipe uses ≥1 new zone resource); §11.M7.4 Audio Policy (10 short UI SFX ≤1s, no music/voice, Settings mute+volume); §11.M7.5 Animation Policy (16 visual Phaser tweens, no gameplay logic in callbacks); §11.M7.6 Smoke Regression Outline (42 points M2→M7); §11.M7.7 Anti-scope §11.M7 |
+| `docs/balance.md` | §M7 «Полировка, баланс и расширение контента» | **+** §M7.1 Balance Tuning Pass (hero baseline, mob stats, weapon/armor gap T1→T2→T3, return/drop multipliers, perk sanity); §M7.2 9-Zone Master Table (exact 9 rows: id, unlock, risk, mob_pool, item_pool, return_mult, drop_mult) + depth configs for 6 new zones; §M7.3 80-Item Taxonomy (45 new items: 12 T1 resources + 33 T2 gear/consumables, 0 T3, 0 T4) + 24 new recipes + coverage matrix; §M7.4 SFX Registry (10 trigger_ids); §M7.5 Tween Registry (16 event_ids); §M7.6 Test & Build Contract (176 tests, build ≤2 MB, assets ≤730 KB, audio ≤80 KB); §M7.7 Count Verification |
+| `staff/status/GAME_DESIGNER.md` | — | этот M7 status block |
+
+### Числа M7 (exact counts)
+
+- **Zones:** 3 existing (`forest`, `warehouse`, `city`) + 6 new (`suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant`) = 9 total.
+- **Items:** 35 existing + 45 new = 80 total. New: 12 T1 resources, 33 T2 gear/consumables, 0 T3, 0 T4.
+- **Recipes:** 18 existing + 24 new = 42 total.
+- **SFX:** 10 short UI SFX (≤1s), no music/voice/ambience.
+- **Tweens:** 16 visual-only Phaser tweens, no gameplay logic in callbacks.
+- **Tests:** 164 baseline + 12 M7 = 176 vitest target.
+- **Build:** ≤2 MB JS, assets ≤730 KB, M7 audio add ≤80 KB.
+
+### Anti-scope §11.M7 (explicit rejections)
+
+- **NO new mobs/bosses** — mob pool frozen: 8 regular + 3 boss.
+- **NO T4** — ceiling T3.
+- **NO music/voice/ambience** — only 10 short UI SFX.
+- **NO SDK/cloud/ads/IAP** — audio stored locally.
+- **NO UI redesign** — only SFX and tween polish over existing scenes.
+- **NO skill tree / active abilities / cooldowns / modular slots / faction reputation**.
+
+### Коммиты на ветке `m7/gd-amendment`
+
+1. `[wip] M7 GD amendment — Draft PR placeholder` — recovery-safe Draft PR start.
+2. `docs(M7): GDD §11.M7 — scope, 9 zones, 80 items, 42 recipes, 10 SFX, 16 tweens, anti-scope`.
+3. `docs(M7): balance.md §M7 — tuning, zone table, items, recipes, SFX, tweens, build contract`.
+4. `chore(M7): update GAME_DESIGNER status`.
+
+### Что НЕ сделано (намеренно вне скоупа M7 GD-amendment)
+
+- **`src/`:** не трогал. Engineer реализует SFX/tweens/balance tuning после QA Spec APPROVE.
+- **`content/*.json`:** не трогал. Content M7 создаст 45 new items, 24 new recipes, 6 new zone configs.
+- **`assets/`:** не трогал. Artist M7 создаст SFX assets (if any) — but SFX are likely procedural/generated.
+- **GDD §1–§10:** не переписывал; только добавил §11.M7 + cross-refs.
+- **M1–M6 числа в `balance.md`:** не менял; только добавил §M7.
+- **Чужие staff-файлы:** не трогал.
+
+### Блокеры
+
+- Нет. PR #59 Draft → Ready после этого commit.
+
+### PM guardrails проверены
+
+1. Exact counts — 9/80/42/10/16/176, no `≥` or `~` in count contract. ✓
+2. 6 new zones: suburbs, school, factory, hospital, metro, power_plant. ✓
+3. Mob pool: existing 8 regular + 3 boss only, zero new mobs. ✓
+4. New items: 0 T4, 0 T3 (all T1/T2), within ≤5 T3 limit. ✓
+5. 24 new recipes: each uses ≥1 new zone resource (verified in coverage matrix). ✓
+6. 10 SFX: short UI only, no music/voice. ✓
+7. 16 tweens: visual-only, no gameplay logic in callbacks. ✓
+
+### Следующая роль после моего merge
+
+- **QA Spec M7** review'ит GDD §11.M7, balance §M7 на соответствие M7 scope / anti-scope.
+- После QA Spec APPROVE + PM merge `m7/gd-amendment → m7-integration` → стартуют Content + Engineer + Artist параллельно.
 
 ---
 
