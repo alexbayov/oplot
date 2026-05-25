@@ -3,11 +3,40 @@
 Branch: `m7/content`
 Base: `m7-integration`
 
-## Scaffold
+## Done
 
-- [ ] zones.json (9 zones)
-- [ ] items.json (80 items)
-- [ ] recipes.json (42 recipes)
-- [ ] sfx.json (10 entries)
-- [ ] Validation
-- [ ] PR Ready
+- Added 6 new zones to `content/zones.json`: `suburbs`, `school`, `factory`, `hospital`, `metro`, `power_plant`.
+- Added 45 new items to `content/items.json`: 12 T1 zone-exclusive resources + 33 T2 gear/consumables.
+- Added 24 new recipes to `content/recipes.json`, each using ≥1 new-zone resource.
+- Created `content/sfx.json` with 10 SFX entries (schema/path strings only; no physical asset requirement).
+- `boss_id=null` for all 6 new zones; existing `forest`/`warehouse`/`city` bosses untouched.
+- No `fights_per_depth` added to `zones.json` — field absent, per existing schema.
+
+## Counts
+
+| Entity | Count | Status |
+|---|---|---|
+| zones | 9 | OK |
+| items | 80 | OK |
+| recipes | 42 | OK |
+| sfx | 10 | OK |
+
+## Validation
+
+```bash
+python3 /tmp/oplot/m7_content.py
+python3 -m json.tool content/zones.json
+python3 -m json.tool content/items.json
+python3 -m json.tool content/recipes.json
+python3 -m json.tool content/sfx.json
+```
+
+All checks passed (unique IDs, recipe ingredients exist in items, zone mobs exist in mobs.json, valid zone_origin values, SFX paths are valid strings targeting `assets/audio/<id>.wav`).
+
+## PR
+
+Draft: https://github.com/alexbayov/oplot/pull/62
+
+## Ready
+
+Content M7 PR Ready.
