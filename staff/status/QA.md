@@ -1267,3 +1267,169 @@ Exact numbers: vitest=148, build=1.48 MB, assets=412 KB.
 - Next: PM merge role-PR (#43 → #44 → #45) в `m5-integration`, затем gate-close.
 - Blockers: нет.
 
+---
+
+# M6 Spec Review
+
+**Роль:** QA Spec Reviewer (отдельная сессия от QA Acceptance)
+**Веха:** M6 — Радио и доверие
+**Объект ревью:** GD M6 amendment PR [#49](https://github.com/alexbayov/oplot/pull/49) (`m6/gd-amendment → m6-integration`), HEAD `019db22`
+**QA-report ветка:** `qa/m6-spec-review` (base `m6-integration`)
+**Дата:** 2026-05-25
+**Статус:** DONE — **APPROVE**
+
+## Recovery
+
+- Role: QA Spec Reviewer M6.
+- Milestone: M6 spec review (GD amendment).
+- Branch: `qa/m6-spec-review` от `m6-integration`.
+- Base: `m6-integration`.
+- Object under review: `m6/gd-amendment` HEAD `019db22` (PR #49).
+- Done sections: 7-checklist verdict complete — all PASS.
+- Next concrete step: PM merge GD PR #49, then Content/Engineer/Artist start.
+- Blockers: нет.
+- Forbidden: править GDD/balance/content/src/assets; self-merge; push в `main`/`m6-integration` напрямую; менять чужие `staff/status/*.md`; резолвить cross-spec расхождения (эскалация в PM).
+
+## Объект ревью — артефакты
+
+| Артефакт | Источник | Что смотрел |
+|---|---|---|
+| GD PR | #49 (`m6/gd-amendment → m6-integration`), HEAD `019db22` | весь diff, +295 / −4 строки |
+| GDD §10.M6 (10 подсекций) | `docs/GDD.md` | §10.M6.1–§10.M6.10 |
+| GDD §10.M3 (historical stub) | `docs/GDD.md` | сохранена без изменений |
+| balance §M6 (6 подсекций) | `docs/balance.md` | §M6.1–§M6.6 |
+| `staff/status/GAME_DESIGNER.md` | обновлён GD PR | под M6 |
+| `content/items.json` / `content/mobs.json` | baseline (M5) | cross-ref verification для reward items и trap mobs |
+
+## Метрика diff
+
+| Файл | + строк | − строк | Тип изменений |
+|---|---|---|---|
+| `docs/GDD.md` | 165 | 0 | Чисто аддитивное: §10.M6 вставлен после §10.M3, перед §11. §1–§9 не тронуты. |
+| `docs/balance.md` | 71 | 1 | 1 deletion: «M6 (см. GDD §10 placeholder)» → «M6 (см. GDD §10.M6)» (reference update). §M1–§M5 не тронуты. |
+| `staff/status/GAME_DESIGNER.md` | 59 | 3 | GD статус-апдейт M5→M6 header. |
+| **Всего** | **295 +** | **4 −** | Изменения — purely additive по существу. |
+
+## Checklist 1 — GDD §10.M6 full radio/trust
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §10.M6 присутствует (не placeholder) | **PASS** | 10 подсекций (§10.M6.1–§10.M6.10), ~165 строк нового контента. |
+| 3 signal types: truth, trap, ambiguous | **PASS** | §10.M6.1: таблица исходов для truth/trap/ambiguous + respond/ignore. |
+| respond и ignore имеют разные consequences | **PASS** | truth respond → reward + trust; trap respond → ambush + trust; ambiguous respond → reward THEN ambush + trust; all ignore → no reward/ambush, trust only. |
+| Global radio_trust описан: init 0, clamp -5..+5 | **PASS** | §10.M6.3: init=0, clamp `[−5, +5]`, формула `clamp(trust + impact, −5, +5)`. |
+| Rewards/ambush/trust one-time resolution | **PASS** | §10.M6.3: «ровно один раз при выборе опции»; resolved=true → no-op. |
+| Edge cases listed | **PASS** | §10.M6.8: 8 edge cases (expiry race, double-click, trust clamp, missing reward, missing mob, ignore trap, ambiguous both, M3 migration). |
+
+**§1 verdict: PASS.**
+
+## Checklist 2 — Schema extensions
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| `RadioSignal` schema includes: type, zone_id, reward, trap_mob_id, trust_impact, chosen_option, resolved | **PASS** | §10.M6.2: полный TypeScript-интерфейс со всеми 7 полями. |
+| `RadioReward` and `RadioTrustImpact` shapes exact | **PASS** | `RadioReward {item_id: string, count: number}`, `RadioTrustImpact {respond: number, ignore: number}`. |
+| M3 `dismissed` migration documented | **PASS** | §10.M6.2: «`dismissed` заменяется на `resolved`. Content M6: удалить 3 dummy, заполнить 6 canonical. Engineer: удалить `dismissed`, заменить на `resolved` + `chosen_option`.» |
+| `GameState.progress.radio_trust` documented | **PASS** | §10.M6.3: `GameState.progress.radio_trust: number` init=0 clamp=[-5,+5]. §10.M6.9: cross-ref §6 JSON-схемы. |
+| No faction-specific reputation schema | **PASS** | Anti-scope §10.M6.10: «Faction-specific reputation — M7+. M6 = одна глобальная шкала `radio_trust`.» |
+
+**§2 verdict: PASS.**
+
+## Checklist 3 — balance.md §M6 exact numbers
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| §M6 section exists | **PASS** | 6 подсекций (§M6.1–§M6.6). |
+| Trust range and clamp exact | **PASS** | §M6.1: init=0, clamp `[−5, +5]`, formula `Math.max(-5, Math.min(5, radio_trust + impact))`. |
+| Trust impact table exact | **PASS** | §M6.2: truth respond +2 / ignore −1; trap respond −2 / ignore +1; ambiguous per-signal (see §M6.3). |
+| Exactly 6 signal archetypes: 2 truth, 2 trap, 2 ambiguous | **PASS** | §M6.3: `radio_supply_drop` (truth), `radio_drone_cache` (truth), `radio_distress_trap` (trap), `radio_medical_ambush` (trap), `radio_shady_deal` (ambiguous), `radio_partial_sos` (ambiguous). 2+2+2=6. |
+| Reward item/count exact and sane | **PASS** | bandage×2, electronics×2, scrap×3, medical_supplies×1. All ∈ content/items.json (M1–M5 items). Counts ≤3. Verified via script. |
+| Trap mob ids exact and existing regular mobs only | **PASS** | marauder, fanatic_berserker, looter_sniper, pack_rat. All ∈ content/mobs.json, role≠boss. Verified via script. |
+| `expires_after_sorties` exact | **PASS** | 4, 5, 3, 4, 4, 3 — все ∈ [3, 5]. |
+
+**§3 verdict: PASS.**
+
+## Checklist 4 — Consistency with M3/M5
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| M3 RadioScene stub extended, not contradicted without migration | **PASS** | §10.M3 сохранена как историческая подсекция. §10.M6 миграция: `dismissed→resolved`, 3 dummies superseded by 6 canonical signals. Явная миграционная заметка в §10.M6.2. |
+| M5 systems not redefined | **PASS** | §10.M6.9: «Radio не влияет на boss fight / daily instance / gas zones. Независимые системы.» §1–§9 не затронуты diff'ом. |
+| Rewards use existing M5 item ids | **PASS** | bandage, electronics, scrap, medical_supplies — все M1/M3 items в content/items.json. |
+| Ambush uses existing mob ids from M5 | **PASS** | marauder, fanatic_berserker, looter_sniper, pack_rat — regular mobs из content/mobs.json. |
+| Sortie-based expiry preserved; no real-time timers | **PASS** | §10.M6.7: «уменьшается в `ReturnScene.onComplete()` (как M3)»; anti-scope: «Real-time/background timers — expiry остаётся sortie-based.» |
+
+**§4 verdict: PASS.**
+
+## Checklist 5 — Anti-scope M6
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Yandex SDK/Cloud Saves/Leaderboard/IAP only M8 | **PASS** | §10.M6.10 + balance §M6.6: «M8». Grep: 0 hits in §10.M6 body. |
+| No new zones/mobs/bosses/T4 | **PASS** | §10.M6.10: «M6 работает на M5 world (11 mobs, 35 items, 3 zones)». Verified: all reward items ∈ M5, all trap mobs ∈ regular M3/M1 mobs. |
+| No module weapons/armor slots/runes | **PASS** | §10.M6.10: «M5+ отдельная подсистема». |
+| No skill tree/active abilities/cooldowns | **PASS** | §10.M6.10: «не M6». Grep `skill_tree\|active_ability\|cooldown` in §10.M6: 0 hits. |
+| No faction-specific reputation | **PASS** | §10.M6.10: «M7+. M6 = одна глобальная шкала `radio_trust`.» No faction field in schema. |
+| No real-time/background timers | **PASS** | §10.M6.10: «expiry остаётся sortie-based». |
+| No new combat mechanics/voice/audio | **PASS** | §10.M6.10: «ambush использует существующий CombatScene» / «M7 polish». |
+
+**§5 verdict: PASS.**
+
+## Checklist 6 — Handoff readiness
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| Content has enough exact data for 6 signals | **PASS** | §M6.3: exact rows with id, type, zone_id, from, subject, reward (item_id+count), trap_mob_id, expires, trust respond/ignore. Content只需要 написать body_ru и label_ru. |
+| Engineer has enough exact data for state/outcomes/tests | **PASS** | §10.M6.2: full TypeScript schema. §10.M6.3: trust formula + clamp. §10.M6.7: implementation hint ~8 LOC. §10.M6.8: 8 edge cases. §M6.1–§M6.5: exact numbers for all outcomes. DoD: 164 vitest (152+12). |
+| Artist has enough visual brief | **PASS** | §10.M6.6: UI-flow описан (trust display, outcome summary, zone label). DoD M6: 4 PNG assets, M6-add ≤ 40 KB. GD не определяет точный art spec — это Artist territory (M6 handoff уточнит). |
+| DoD-precision: exact counts | **PASS** | 6 signals (2+2+2), trust [-5,+5] exact, reward counts 1-3 exact, expiry 3-5 exact, 164 tests exact. No «≥X» or «примерно» in §M6. |
+
+**§6 verdict: PASS.**
+
+## Checklist 7 — Recovery-safe + PR hygiene
+
+| Критерий | Статус | Детали |
+|---|---|---|
+| PR base = `m6-integration` | **PASS** | Verified: `gh pr view 49` → base: m6-integration. |
+| Scope only 3 files | **PASS** | `git diff --name-only` = exactly GDD + balance + GAME_DESIGNER.md. No src/content/assets. |
+| Recovery block present | **PASS** | PR body contains «## Recovery» with base, branch, scope, continue-from, forbidden. |
+| No src/content/assets/other staff | **PASS** | Verified via diff --name-only. |
+| Plan was 5–7 points | **PASS** | 7-point plan presented and approved by PM before implementation. |
+
+**§7 verdict: PASS.**
+
+## Сводка по 7 чек-листам
+
+| # | Чек-лист | Verdict |
+|---|---|---|
+| 1 | GDD §10.M6 full radio/trust | **PASS** |
+| 2 | Schema extensions (RadioSignal + trust + migration) | **PASS** |
+| 3 | balance §M6 exact numbers (6 signals + trust matrix) | **PASS** |
+| 4 | Consistency с M3/M5 (no regression, existing ids) | **PASS** |
+| 5 | Anti-scope M6 (8 items, grep verified) | **PASS** |
+| 6 | Handoff readiness (Content/Engineer/Artist) | **PASS** |
+| 7 | Recovery-safe + PR hygiene | **PASS** |
+
+## Final verdict
+
+**APPROVE.**
+
+GD M6 amendment (PR #49, HEAD `019db22`) полностью соответствует брифу `staff/handoff/M6-GD.md` и чек-листам `staff/handoff/M6-QA-SPEC.md`:
+- 3 signal types с different consequences (truth→reward, trap→ambush, ambiguous→reward+ambush).
+- Global trust шкала [-5, +5] с exact per-signal impact integers (PM nit: ambiguous trust = exact per-row, not «mixed»).
+- M3→M6 migration: `dismissed→resolved`, 3 dummies superseded by 6 canonical signals.
+- Fail-safe: typed `REWARD_SKIPPED`/`AMBUSH_SKIPPED` (PM nit: no console.log).
+- Backward-compatible: §1–§9 untouched, §M1–§M5 untouched.
+- Zero violations of anti-scope (grep verified).
+- All reward items ∈ content/items.json, all trap mobs ∈ regular mobs.
+
+**Готов к merge в `m6-integration`.** После merge Content / Engineer / Artist могут стартовать параллельно.
+
+### Non-blocking notes
+
+1. **§10.M6.6 UI-flow рекомендация** — «не показывать type игроку» — это GD recommendation, не enforcement. Engineer может решить иначе. Non-blocking — meaningful choice обеспечивается текстом контента, не только скрытием типа.
+
+2. **§10.M6.7 expiry decrement при defeat** — M3 уменьшал только при успешном возврате; M6 расширяет до defeat тоже. Это поведение может ускорить истечение сигналов (больше тиков). Игрок, который часто проигрывает, увидит сигналы реже. Non-blocking — это дизайн-решение, разумное для «сигналы протухают в реальном игровом времени».
+
+3. **`radio_trust` UX feedback** — GDD §10.M6.6 описывает «trust change indicator: Доверие: <old> → <new>», но не специфицирует persistent UI для текущего trust значения (только «отображается вверху списка»). Artist/Engineer могут расширить. Non-blocking.
+
