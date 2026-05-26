@@ -37,6 +37,8 @@ import {
   createPanel,
   createSubtitle,
   createTitle,
+  createSmallButton,
+  createHpBar,
 } from "./sceneUi";
 
 interface MobInstance {
@@ -132,10 +134,10 @@ export class CombatScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.buttonsContainer.push(
-      createButton(this, 384, "Атака", () => this.onHeroAttack()),
-      createButton(this, 432, "Укрытие", () => this.onHeroCover()),
-      createButton(this, 480, "Аптечка", () => this.onHeroHeal()),
-      createButton(this, 528, "Отступить", () => this.onHeroRetreat()),
+      createSmallButton(this, 60, 420, "Атака", 100, () => this.onHeroAttack()),
+      createSmallButton(this, 180, 420, "Укрытие", 100, () => this.onHeroCover()),
+      createSmallButton(this, 300, 420, "Аптечка", 100, () => this.onHeroHeal()),
+      createButton(this, 480, "Отступить", () => this.onHeroRetreat()),
     );
 
     this.updateDisplay();
@@ -533,20 +535,51 @@ export class CombatScene extends Phaser.Scene {
     const player = GameState.player;
     const items = GameState.data.items;
     const weight = computeWeight(player.backpack, items);
+
+    // Destroy old HP bars
+    for (const c of this.children.list.filter((c) => c.getData("hpBar") === true)) {
+      c.destroy();
+    }
+
+    // Hero HP bar and stats
+    const [bgHero, barHero] = createHpBar(this, 80, 130, player.hp, player.hp_max, 120, 8);
+    bgHero.setData("hpBar", true);
+    barHero.setData("hpBar", true);
+
     if (this.heroPanel) {
       this.heroPanel.setText(
-        `Герой HP: ${player.hp.toFixed(0)}/${player.hp_max} · Вес ${weight.toFixed(1)}/${player.max_weight_kg} кг`,
+        `Ур. ${player.level} · Вес ${weight.toFixed(1)}/${player.max_weight_kg} кг`
       );
+      this.heroPanel.setX(160);
+      this.heroPanel.setY(150);
+      this.heroPanel.setFontSize("12px");
     }
+
+    // Enemies HP bars
     if (this.enemyPanel) {
-      const lines = this.mobs.map((inst) => {
-        if (inst.state.fled) return `${inst.mob.name_ru}: убежал`;
-        if (inst.state.hp <= 0) return `${inst.mob.name_ru}: повержен`;
-        const coverTag = inst.state.cover_active ? " · в укрытии" : "";
-        return `${inst.mob.name_ru}: ${inst.state.hp.toFixed(0)}/${inst.state.hp_max}${coverTag}`;
-      });
-      this.enemyPanel.setText(lines.join("\n"));
+      this.enemyPanel.setText(""); // clear legacy enemy panel text
     }
+
+    let startY = 175;
+    this.mobs.forEach((inst) => {
+      if (inst.state.fled || inst.state.hp <= 0) return;
+      
+      this.add.text(80, startY, `${inst.mob.name_ru}`, {
+        color: "#C8C0B0",
+        fontFamily: "Arial, sans-serif",
+        fontSize: "12px",
+      }).setOrigin(0, 0.5).setData("hpBar", true);
+      
+      const [bgE, barE] = createHpBar(this, 190, startY, inst.state.hp, inst.state.hp_max, 100, 6);
+      bgE.setData("hpBar", true);
+      barE.setData("hpBar", true);
+      
+      if (inst.state.cover_active) {
+        this.add.text(300, startY, "🛡️", { fontSize: "10px" }).setOrigin(0.5).setData("hpBar", true);
+      }
+      startY += 16;
+    });
+
     if (this.logText) {
       this.logText.setText(this.logLines.slice(-3).join("\n"));
     }

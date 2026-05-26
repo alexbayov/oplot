@@ -62,6 +62,13 @@ export class BootScene extends Phaser.Scene {
     for (const id of MOB_SPRITE_IDS) {
       this.load.image(`mob_${id}`, `assets/sprites/mobs/${id}.png`);
     }
+    const PERK_IDS = [
+      "tough_skin", "sharp_blade", "lean_pack", "lucky_scavenger",
+      "keen_eye", "reinforced_plates", "quick_hands", "fast_learner"
+    ];
+    for (const id of PERK_IDS) {
+      this.load.image(`perk_${id}`, `assets/sprites/perks/perk_${id}.png`);
+    }
   }
 
   public create(): void {

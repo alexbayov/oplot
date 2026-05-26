@@ -17,6 +17,7 @@ import {
   createPanel,
   createSubtitle,
   createTitle,
+  createHpBar,
 } from "./sceneUi";
 
 // GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
@@ -58,16 +59,12 @@ export class ReturnScene extends Phaser.Scene {
 
     // Progress bar: filled rect grows from 0 → barWidth over returnTimeS seconds.
     const barWidth = 280;
-    const barHeight = 20;
+    const barHeight = 16;
     const barX = 180 - barWidth / 2;
     const barY = 320;
-    this.add
-      .rectangle(barX, barY, barWidth, barHeight, 0x2a2a2a, 1)
-      .setOrigin(0, 0.5)
-      .setStrokeStyle(1, 0x5f5a50, 1);
-    this.progressFill = this.add
-      .rectangle(barX, barY, 0, barHeight, 0x6f8a4d, 1)
-      .setOrigin(0, 0.5);
+
+    const [, fillBar] = createHpBar(this, barX, barY, 0, 100, barWidth, barHeight, 0x4682B4, 0x1A2F3E);
+    this.progressFill = fillBar;
 
     this.tweens.add({
       targets: this.progressFill,

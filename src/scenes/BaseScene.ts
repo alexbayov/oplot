@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameState";
 import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
-import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
 
@@ -19,32 +19,37 @@ export class BaseScene extends Phaser.Scene {
     const stashStacks = baseStash.length;
 
     createTitle(this, "ОПЛОТ");
-    this.add.image(180, 320, "bg_forest").setAlpha(0.1).setScale(1.2).setDepth(-1);
-    this.add.image(280, 480, "hero").setOrigin(0.5).setScale(0.8).setAlpha(0.9).setDepth(1);
+    this.add.image(180, 320, "bg_forest").setAlpha(0.15).setScale(1.2).setDepth(-1);
+    this.add.image(75, 220, "hero").setOrigin(0.5).setScale(0.8).setAlpha(0.9).setDepth(1);
     createPanel(this, 180, 220, 320, 200);
-    createSubtitle(
-      this,
-      164,
-      `HP: ${player.hp}/${player.hp_max} · Уровень ${player.level}`,
-    );
-    createSubtitle(
-      this,
-      200,
-      `Оружие: ${weapon?.name_ru ?? "—"}\nБроня: ${armor?.name_ru ?? "—"}`,
-    );
-    createSubtitle(
-      this,
-      256,
-      `Склад: ${stashStacks} стаков · ${stashWeight.toFixed(1)} кг`,
-    );
 
-    const buttons = [
-      createButton(this, 380, "В вылазку", () => this.scene.start("MapScene")),
-      createButton(this, 436, "Мастерская", () => this.scene.start("CraftScene")),
-      createButton(this, 492, "Инвентарь", () => this.scene.start("InventoryScene")),
-      createButton(this, 548, "Радио", () => this.scene.start("RadioScene")),
-      createButton(this, 604, "Прогрессия", () => this.scene.start("ProgressionScene")),
-    ];
+    createHpBar(this, 135, 140, player.hp, player.hp_max, 160, 10);
+    this.add.text(135, 155, `HP: ${player.hp}/${player.hp_max} · Ур. ${player.level}`, {
+      color: "#C8C0B0",
+      fontFamily: "Arial, sans-serif",
+      fontSize: "14px",
+    });
+
+    this.add.text(135, 185, `Оружие: ${weapon?.name_ru ?? "—"}\nБроня: ${armor?.name_ru ?? "—"}`, {
+      color: "#C8C0B0",
+      fontFamily: "Arial, sans-serif",
+      fontSize: "13px",
+    });
+
+    this.add.text(135, 245, `Склад: ${stashStacks} стак. · ${stashWeight.toFixed(1)} кг`, {
+      color: "#D4C5A0",
+      fontFamily: "Arial, sans-serif",
+      fontSize: "13px",
+      fontStyle: "bold",
+    });
+
+    const sortieBtn = createButton(this, 360, "В вылазку", () => this.scene.start("MapScene"), true);
+    const craftBtn = createSmallButton(this, 100, 420, "Мастерская", 140, () => this.scene.start("CraftScene"));
+    const invBtn = createSmallButton(this, 260, 420, "Инвентарь", 140, () => this.scene.start("InventoryScene"));
+    const radioBtn = createSmallButton(this, 100, 470, "Радио", 140, () => this.scene.start("RadioScene"));
+    const progBtn = createSmallButton(this, 260, 470, "Прогрессия", 140, () => this.scene.start("ProgressionScene"));
+
+    const buttons = [sortieBtn, craftBtn, invBtn, radioBtn, progBtn];
 
     for (const btn of buttons) {
       btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {

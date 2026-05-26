@@ -5,17 +5,17 @@ import { computePerkModifiers } from "../systems/perks";
 import { runTween } from "../systems/tweens";
 import { computeOverkillPopups, xpProgress } from "../systems/xp";
 import type { Perk } from "../types";
-import { createPanel, createTitle } from "./sceneUi";
+import { createPanel, createTitle, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 
 const CARD_WIDTH = 300;
 const CARD_HEIGHT = 100;
 const CARD_GAP = 12;
 const START_Y = 140;
-const CARD_FILL = 0x2a2a2a;
-const CARD_STROKE = 0xa5a58d;
-const CARD_HOVER = 0x4f6f3d;
-const TEXT_COLOR = "#F5F1E8";
+const CARD_FILL = 0x2d2d2a;
+const CARD_STROKE = 0x4a4a3a;
+const CARD_HOVER = 0xc5a267;
+const TEXT_COLOR = "#D4C5A0";
 const SUB_COLOR = "#C8C0B0";
 
 export class LevelUpScene extends Phaser.Scene {
@@ -45,8 +45,7 @@ export class LevelUpScene extends Phaser.Scene {
     const barWidth = 280;
     const barX = 180 - barWidth / 2;
     const barY = 110;
-    this.add.rectangle(180, barY, barWidth, 12, 0x2a2a2a).setStrokeStyle(1, 0x5f5a50);
-    const barFill = this.add.rectangle(barX, barY, 0, 12, 0x6f8a4d).setOrigin(0, 0.5);
+    const [, barFill] = createHpBar(this, barX, barY, 0, 100, barWidth, 12, 0xc5a267, 0x2d2d2a);
     const targetWidth = barWidth * xpProgress(player.xp, player.level);
     runTween(this, "tween_xp_bar_fill", barFill, targetWidth);
 
@@ -64,20 +63,27 @@ export class LevelUpScene extends Phaser.Scene {
   private renderPerkCard(perk: Perk, y: number): void {
     const bg = this.add.rectangle(180, y, CARD_WIDTH, CARD_HEIGHT, CARD_FILL).setStrokeStyle(2, CARD_STROKE);
     runTween(this, "tween_perk_card_deal", bg);
-    this.add.text(40, y - 32, perk.name, {
+
+    // Draw perk icon
+    const texKey = `perk_${perk.id}`;
+    if (this.textures.exists(texKey)) {
+      this.add.image(65, y, texKey).setScale(0.85);
+    }
+
+    this.add.text(105, y - 32, perk.name, {
       color: TEXT_COLOR,
       fontFamily: "Arial, sans-serif",
       fontSize: "16px",
       fontStyle: "bold",
     });
-    this.add.text(40, y - 10, perk.description, {
+    this.add.text(105, y - 10, perk.description, {
       color: SUB_COLOR,
       fontFamily: "Arial, sans-serif",
-      fontSize: "13px",
-      wordWrap: { width: CARD_WIDTH - 40 },
+      fontSize: "12px",
+      wordWrap: { width: CARD_WIDTH - 120 },
     });
-    this.add.text(40, y + 20, `[${perk.type === "additive" ? "+" : "×"} ${perk.stat}]`, {
-      color: "#8a8a70",
+    this.add.text(105, y + 22, `[${perk.type === "additive" ? "+" : "×"} ${perk.stat}]`, {
+      color: "#8A8070",
       fontFamily: "Arial, sans-serif",
       fontSize: "11px",
     });
@@ -85,10 +91,10 @@ export class LevelUpScene extends Phaser.Scene {
     const hitArea = this.add.rectangle(180, y, CARD_WIDTH, CARD_HEIGHT, 0x000000, 0);
     hitArea.setInteractive({ useHandCursor: true });
     hitArea.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-      bg.setFillStyle(CARD_HOVER);
+      bg.setStrokeStyle(2, CARD_HOVER);
     });
     hitArea.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-      bg.setFillStyle(CARD_FILL);
+      bg.setStrokeStyle(2, CARD_STROKE);
     });
     hitArea.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
       this.selectPerk(perk);

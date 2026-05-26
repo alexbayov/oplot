@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { GAME_HEIGHT } from "../config";
 import { GameState } from "../state/GameState";
 import { canEnterDailyInstance } from "../systems/dailyInstance";
 import {
@@ -12,16 +11,11 @@ import {
   createPanel,
   createSubtitle,
   createTitle,
+  createSmallButton,
 } from "./sceneUi";
 import { showRewardedVideo } from "../systems/ads";
 import { showBanner } from "../systems/banner";
 
-// GDD §6.4.M3.3: MapScene lists every zone with its unlock_condition evaluated
-// against GameState.progress. Locked zones render as a disabled label so the player
-// can see what's coming next. M2 forest path is unchanged ("start" → always unlocked).
-//
-// Zone ordering: explicit array first (forest → warehouse → city) so the player
-// reads the progression top-to-bottom; unknown ids fall to the tail of the list.
 const ZONE_ORDER: readonly string[] = ["forest", "warehouse", "city"];
 
 const sortZonesForMap = (zones: Zone[]): Zone[] => {
@@ -51,34 +45,46 @@ export class MapScene extends Phaser.Scene {
       return;
     }
 
-    // Stack zone cards top-to-bottom. Each card has enough room for two-line wrapped
-    // descriptions plus the entry button without overlap (GAME_HEIGHT 640px budget).
     const startY = 140;
-    const rowHeight = 150;
+    const rowHeight = 125;
     zones.forEach((zone, idx) => {
       const yCenter = startY + idx * rowHeight;
-      createPanel(this, 180, yCenter, 320, rowHeight - 18);
+      createPanel(this, 180, yCenter, 320, rowHeight - 15);
       const unlocked = evaluateUnlockCondition(zone.unlock_condition, GameState.progress);
-      const header = `${zone.name_ru} (ур. ${zone.level})`;
+      
+      const header = unlocked ? `${zone.name_ru} (ур. ${zone.level})` : `${zone.name_ru} (ур. ${zone.level}) 🔒`;
       const subtitle = unlocked
         ? zone.description_ru
-        : `Закрыто. Откроется после: ${describeUnlockCondition(zone.unlock_condition)}.`;
-      createSubtitle(this, yCenter - 50, header);
-      createSubtitle(this, yCenter - 12, subtitle);
-      const buttonLabel = unlocked ? `Войти: ${zone.name_ru}` : `Закрыто: ${zone.name_ru}`;
+        : `Закрыто. Требуется: ${describeUnlockCondition(zone.unlock_condition)}.`;
+
+      // Header text
+      this.add.text(35, yCenter - 38, header, {
+        color: unlocked ? "#D4C5A0" : "#8A8070",
+        fontFamily: "Arial",
+        fontSize: "14px",
+        fontStyle: "bold",
+      });
+
+      // Subtitle description text
+      this.add.text(35, yCenter - 15, subtitle, {
+        color: "#C8C0B0",
+        fontFamily: "Arial",
+        fontSize: "11px",
+        wordWrap: { width: 175 },
+      });
+
       const onClick = (): void => {
         if (!unlocked) return;
         this.scene.start("SortieScene", { zoneId: zone.id });
       };
-      const btn = createButton(this, yCenter + 42, buttonLabel, onClick);
-      if (!unlocked) {
-        btn.setAlpha(0.5);
-      }
-      // M5 daily instance button per zone with boss_id.
+
       if (unlocked && zone.boss_id) {
+        // Daily boss zone has two buttons (Enter & Daily)
+        createSmallButton(this, 270, yCenter - 22, "Войти", 100, onClick, true);
+        
         const canDaily = canEnterDailyInstance(GameState.progress, zone, Date.now());
-        const dailyLabel = canDaily ? `Дейли: ${zone.name_ru}` : `Дейли: перезарядка`;
-        const dailyBtn = createButton(this, yCenter + 86, dailyLabel, () => {
+        const dailyLabel = canDaily ? "Дейли" : "Кулдаун";
+        const dailyBtn = createSmallButton(this, 270, yCenter + 22, dailyLabel, 100, () => {
           if (canDaily) {
             this.scene.start("SortieScene", { zoneId: zone.id, daily: true, depth: 3 });
           } else {
@@ -87,17 +93,22 @@ export class MapScene extends Phaser.Scene {
               this.scene.restart();
             });
           }
-        });
+        }, canDaily);
+        
         if (!canDaily) {
-          dailyBtn.setAlpha(0.5);
+          dailyBtn.setAlpha(0.6);
+        }
+      } else {
+        // Normal zone has one button in the center right
+        const btnLabel = unlocked ? "Войти" : "Закрыто";
+        const enterBtn = createSmallButton(this, 270, yCenter, btnLabel, 100, onClick, unlocked);
+        if (!unlocked) {
+          enterBtn.setAlpha(0.5);
         }
       }
     });
 
-    const backY = Math.min(
-      startY + zones.length * rowHeight + 6,
-      GAME_HEIGHT - 24,
-    );
+    const backY = startY + zones.length * rowHeight;
     createButton(this, backY, "Назад в Оплот", () => this.scene.start("BaseScene"));
   }
 }
