@@ -3,6 +3,7 @@ import { GameState } from "../state/GameState";
 import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { showBanner } from "../systems/banner";
 
 export class InventoryScene extends Phaser.Scene {
   public constructor() {
@@ -16,6 +17,7 @@ export class InventoryScene extends Phaser.Scene {
     const stashWeight = computeWeight(stash, items);
 
     createTitle(this, "Инвентарь");
+    void showBanner();
     createPanel(this, 180, 150, 320, 70);
     createSubtitle(
       this,

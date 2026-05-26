@@ -13,6 +13,8 @@ import {
   createSubtitle,
   createTitle,
 } from "./sceneUi";
+import { showRewardedVideo } from "../systems/ads";
+import { showBanner } from "../systems/banner";
 
 // GDD §6.4.M3.3: MapScene lists every zone with its unlock_condition evaluated
 // against GameState.progress. Locked zones render as a disabled label so the player
@@ -37,6 +39,7 @@ export class MapScene extends Phaser.Scene {
 
   public create(): void {
     createTitle(this, "Карта");
+    void showBanner();
     const zones = sortZonesForMap(Object.values(GameState.data.zones));
     if (zones.length === 0) {
       createPanel(this, 180, 240, 320, 120);
@@ -75,8 +78,14 @@ export class MapScene extends Phaser.Scene {
         const canDaily = canEnterDailyInstance(GameState.progress, zone, Date.now());
         const dailyLabel = canDaily ? `Дейли: ${zone.name_ru}` : `Дейли: перезарядка`;
         const dailyBtn = createButton(this, yCenter + 86, dailyLabel, () => {
-          if (!canDaily) return;
-          this.scene.start("SortieScene", { zoneId: zone.id, daily: true, depth: 3 });
+          if (canDaily) {
+            this.scene.start("SortieScene", { zoneId: zone.id, daily: true, depth: 3 });
+          } else {
+            showRewardedVideo("daily_reset", () => {
+              GameState.progress.daily_completed[zone.id] = 0;
+              this.scene.restart();
+            });
+          }
         });
         if (!canDaily) {
           dailyBtn.setAlpha(0.5);

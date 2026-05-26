@@ -29,6 +29,7 @@ export interface PlayerState {
   equipped_armor_id: string;
   perks: Perk[];
   backpack: InventoryStack[];
+  gas: number;
 }
 
 export interface SortieState {

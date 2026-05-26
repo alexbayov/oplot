@@ -28,6 +28,7 @@ const createDefaultPlayer = (): PlayerState => ({
   equipped_armor_id: HERO_START_ARMOR_ID,
   perks: [],
   backpack: [],
+  gas: 5,
 });
 
 const createEmptyContent = (): ContentData => ({

@@ -4,6 +4,7 @@ import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
+import { showBanner } from "../systems/banner";
 
 export class BaseScene extends Phaser.Scene {
   public constructor() {
@@ -50,6 +51,8 @@ export class BaseScene extends Phaser.Scene {
     }
 
     this.addSettingsControls();
+
+    void showBanner();
 
     if (import.meta.env.DEV) {
       this.setupDevCheats();

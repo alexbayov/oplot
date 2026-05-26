@@ -15,6 +15,7 @@ export interface CloudSaveSnapshot {
   resolvedSignals: string[];
   settings: { mute: boolean; volume: number };
   saved_at: string;
+  gas?: number;
 }
 
 let lastSaveTime = 0;
@@ -33,6 +34,7 @@ export function serializeGameState(): CloudSaveSnapshot {
       .map((s) => s.id),
     settings: { mute: settings.sfxMuted, volume: settings.sfxVolume },
     saved_at: new Date().toISOString(),
+    gas: player.gas,
   };
 }
 
@@ -75,6 +77,9 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.baseStash = baseStash;
   GameState.settings = settings;
   GameState.progress.radio_trust = radio_trust;
+  if (snapshot.gas !== undefined) {
+    GameState.player.gas = snapshot.gas;
+  }
 
   for (const signal of GameState.data.radioSignals) {
     if (snapshot.resolvedSignals.includes(signal.id)) {
@@ -147,6 +152,7 @@ export async function loadFromCloud(): Promise<CloudSaveSnapshot | null> {
       "resolvedSignals",
       "settings",
       "saved_at",
+      "gas",
     ];
     const raw = await platform.player.getData(keys);
     if (!raw || typeof raw !== "object") return null;

@@ -13,6 +13,7 @@ const makePlayer = (armorId: string, backpackItems: string[] = []): PlayerState 
   equipped_armor_id: armorId,
   perks: [],
   backpack: backpackItems.map((id) => ({ item_id: id, count: 1 })),
+  gas: 5,
 });
 
 const makeZone = (isGas: boolean, gasDamage: number): Zone => ({
