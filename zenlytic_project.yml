@@ -1,0 +1,8 @@
+name: oplot_analytics
+version: 1.0.0
+profile: oplot
+
+topic-paths: [topics]
+view-paths: [views]
+dashboard-paths: [dashboards]
+model-paths: [models]
