@@ -1,8 +1,63 @@
 # Status: Engineer
 
-**Текущая веха:** M8a
+**Текущая веха:** M8b (Monetization)
 **Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-26
+**Последнее обновление:** 2026-05-26 (M8b)
+
+## Что сделано (M8b)
+
+Ветка `m8b/monetization` от `m8b-integration`. Draft PR: `m8b/monetization → m8b-integration`.
+
+Все 4 проверки зелёные:
+- `npm run typecheck` ✅
+- `npm run lint` ✅
+- `npm run test` ✅ (**213/213**, 193 M8a + 20 M8b)
+- `npm run build` ✅ (JS 1.5 MB ≤ 2 MB)
+
+### 1. Rewarded Video — `src/systems/ads.ts`
+
+- `showRewardedVideo(context, onRewarded, onClose)` — fail-soft, 4 коллбэка
+- `showInterstitial(onClose)` — fail-soft
+- `setAdsRemoved(boolean)` / `isAdsRemoved()` — integration with IAP
+- 4 контекста: loot_double, second_chance, daily_reset, gas_refill
+
+### 2. T1-T3 rewarded triggers в сценах
+
+- **ReturnScene:** кнопка "×2 лут (реклама)" → дублирует resource-типы в рюкзаке перед merge. Interstitial при переходе в BaseScene.
+- **CombatScene:** кнопка "Второй шанс (реклама)" → +50% HP. Max 1/sortie.
+- **MapScene:** daily-кнопка на кулдауне → `showRewardedVideo("daily_reset")` → сбрасывает таймер.
+
+### 3. Sticky Banner — `src/systems/banner.ts`
+
+- `showBanner()` / `hideBanner()` — fail-soft no-op
+- Scene-aware: show (Base/Craft/Inventory/Map), hide (Combat/Sortie)
+- При `isAdsRemoved()` → всегда скрыт
+
+### 4. IAP — `src/systems/iap.ts`
+
+- `initIap()` / `purchaseProduct(id)` / `getPurchases()` / `getCatalog()` / `consumePurchase(token)`
+- `checkUnprocessedPurchases()` — boot check: disable_ads → setAdsRemoved, consumable → reward → consume. Moderation §1.13.1 compliance.
+- `registerConsumable(productId, handler)` — паттерн для consumable rewards
+- Client-side `signed: false`
+
+### 5. Инфраструктура
+
+- `PlayerState.gas` (default 5), cloud save persist
+- `main.ts`: `initPlatform()` → `initIap()` → `checkUnprocessedPurchases()`
+
+### Что НЕ сделано
+- T4 gas refill: counter и cloud save готовы, но нет depletion mechanics (sortie cost) — anti-scope. Кнопка не показывается (газ всегда max).
+- Gas display в UI
+
+### Тесты (20 новых)
+- ads.test.ts: 10 tests (rewarded 5 + interstitial 4 + availability 1)
+- iap.test.ts: 10 tests (init 3, purchase 3, unprocessed 2, catalog 2)
+
+### PR
+- Branch: `m8b/monetization` → `m8b-integration`
+- Self-merge запрещён
+
+---
 
 ## Что сделано (M8a)
 

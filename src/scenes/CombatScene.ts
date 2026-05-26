@@ -29,6 +29,8 @@ import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
 import { saveToCloud } from "../systems/cloudSave";
+import { showRewardedVideo } from "../systems/ads";
+import { hideBanner } from "../systems/banner";
 import type { ConsumableItem, Mob } from "../types";
 import {
   createButton,
@@ -63,6 +65,7 @@ export class CombatScene extends Phaser.Scene {
   private state: CombatState = "awaiting_hero";
   private logLines: string[] = [];
   private logText?: Phaser.GameObjects.Text;
+  private secondChanceUsed = false;
   private heroPanel?: Phaser.GameObjects.Text;
   private enemyPanel?: Phaser.GameObjects.Text;
   private buttonsContainer: Phaser.GameObjects.Container[] = [];
@@ -73,6 +76,8 @@ export class CombatScene extends Phaser.Scene {
   }
 
   public create(): void {
+    void hideBanner();
+
     const sortie = GameState.currentSortie;
     if (!sortie) {
       createTitle(this, "Бой");
@@ -464,6 +469,28 @@ export class CombatScene extends Phaser.Scene {
 
   private endCombatDefeat(): void {
     this.state = "ended";
+    if (!this.secondChanceUsed) {
+      createButton(this, 420, "Второй шанс (реклама)", () => {
+        this.secondChanceUsed = true;
+        showRewardedVideo("second_chance", () => {
+          const player = GameState.player;
+          player.hp = player.hp_max * 0.5;
+          this.state = "awaiting_hero";
+          this.updateDisplay();
+          this.advanceTurn();
+        }, () => {
+          this.proceedToDefeatEnd();
+        });
+      });
+      createButton(this, 476, "Сдаться", () => {
+        this.proceedToDefeatEnd();
+      });
+    } else {
+      this.proceedToDefeatEnd();
+    }
+  }
+
+  private proceedToDefeatEnd(): void {
     const overlay = this.add.rectangle(180, 320, 360, 640, 0x000000, 0).setAlpha(0).setDepth(200);
     runTween(this, "tween_defeat_fade", overlay);
     this.time.delayedCall(500, () => {

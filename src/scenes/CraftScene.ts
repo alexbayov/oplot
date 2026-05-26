@@ -4,6 +4,7 @@ import { applyCraft, canCraft, canCraftWithBossDrop, formatMissing } from "../sy
 import { runTween } from "../systems/tweens";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
+import { showBanner } from "../systems/banner";
 
 interface RecipeSlot {
   label: string;
@@ -25,6 +26,7 @@ export class CraftScene extends Phaser.Scene {
 
   public create(): void {
     createTitle(this, "Мастерская");
+    void showBanner();
     if (this.lastCrafted) {
       this.lastCraftedText = createSubtitle(this, 80, `Создано: ${this.lastCrafted}`);
     }
