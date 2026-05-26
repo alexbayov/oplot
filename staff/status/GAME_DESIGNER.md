@@ -40,7 +40,7 @@
 
 ### PR
 - Branch: `m8b/gd-amendment` → `m8b-integration`
-- Draft PR: https://github.com/alexbayov/oplot/pull/TBD
+- Draft PR: https://github.com/alexbayov/oplot/pull/73
 - Self-merge запрещён — жду ревью PM
 
 ---
