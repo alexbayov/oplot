@@ -12,6 +12,11 @@ import { ProgressionScene } from "./scenes/ProgressionScene";
 import { RadioScene } from "./scenes/RadioScene";
 import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
+import { initPlatform } from "./systems/platform";
+import { startCloudSave } from "./systems/cloudSave";
+import { initAudioUnlock } from "./utils/audioUnlock";
+
+void initPlatform();
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -39,4 +44,22 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+startCloudSave();
+
+initAudioUnlock(() => {
+  if ("context" in game.sound) {
+    return (game.sound as { context: AudioContext }).context;
+  }
+  return null;
+});
+
+const canvas = game.canvas;
+canvas.addEventListener(
+  "touchstart",
+  (e: TouchEvent) => {
+    if (e.target === canvas) e.preventDefault();
+  },
+  { passive: false },
+);

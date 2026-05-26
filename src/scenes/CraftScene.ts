@@ -3,6 +3,7 @@ import { GameState } from "../state/GameState";
 import { applyCraft, canCraft, canCraftWithBossDrop, formatMissing } from "../systems/craft";
 import { runTween } from "../systems/tweens";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { saveToCloud } from "../systems/cloudSave";
 
 interface RecipeSlot {
   label: string;
@@ -57,6 +58,7 @@ export class CraftScene extends Phaser.Scene {
           if (!check.ok) return;
           const result = applyCraft(recipe, GameState.baseStash);
           GameState.baseStash = result.inventory;
+          void saveToCloud();
           if (this.lastCraftedText) {
             runTween(this, "tween_craft_spin", this.lastCraftedText);
           }

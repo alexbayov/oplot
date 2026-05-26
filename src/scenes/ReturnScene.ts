@@ -11,6 +11,7 @@ import {
   createSubtitle,
   createTitle,
 } from "./sceneUi";
+import { saveToCloud } from "../systems/cloudSave";
 
 // GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
 // Duration = return_time_s from balance.md §Формулы; heavy pack = longer trip.
@@ -102,6 +103,7 @@ export class ReturnScene extends Phaser.Scene {
     player.backpack = [];
     player.hp = player.hp_max;
     GameState.currentSortie = null;
+    void saveToCloud();
     this.scene.start("BaseScene");
   }
 }
