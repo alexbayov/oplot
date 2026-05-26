@@ -1005,3 +1005,44 @@ Ambush запускает бой с 1 mob указанным в `trap_mob_id`:
 | `SETTINGS_DEFAULT_VOLUME` | 1.0 | Default значения при отсутствии remote snapshot. |
 
 **Sanity check:** `EXPECTED_SNAPSHOT_SIZE_BYTES` ~2 KB при quota ~200 KB → запас ×100 даже с метаданными SDK. Schema safe.
+
+---
+
+## §M8b — Монетизация
+
+> Числа rewarded rewards, IAP каталог, ads-remover behaviour. Все параметры для Engineer и QA Acceptance.
+
+### Rewarded Video Rewards
+
+| Parameter | Value | Notes |
+|---|---|---|
+| `REWARDED_LOOT_MULTIPLIER` | 2.0 | ×2 all resource items in sortie loot |
+| `SECOND_CHANCE_HP_FRACTION` | 0.5 | 50% max HP restored |
+| `SECOND_CHANCE_MAX_PER_SORTIE` | 1 | One second-chance per sortie |
+| `DAILY_RESET_REWARDED_COOLDOWN` | 1 | One per sortie (только если кулдаун > 0) |
+| `GAS_REWARDED_AMOUNT` | 1 | +1 gas |
+| `GAS_REWARDED_COOLDOWN_S` | 300 | 5 min между rewarded gas refills |
+
+### IAP Catalog (создаётся в Yandex Developer Console)
+
+| ID | Name RU | Type | Price YAN | Reward |
+|---|---|---|---|---|
+| `disable_ads` | Отключить рекламу | non-consumable | 99 | Все ads → instant/no |
+| `starter_pack` | Стартовый набор | consumable | 49 | +5 bandage, +3 scrap, +2 electronics → baseStash |
+| `gas_pack` | Бак топлива | consumable | 29 | +3 gas |
+
+**Consume flow (consumable):** reward FIRST, `consumePurchase(token)` SECOND.
+
+**Unprocessed check (boot):** `getPurchases()` → foreach consumable → reward → consume. Mandatory per Yandex moderation §1.13.1.
+
+### Ads-Remover Behaviour
+
+При `disable_ads` purchased:
+
+| Component | Without disable_ads | With disable_ads |
+|---|---|---|
+| Rewarded trigger button | Show ad → onRewarded → reward | Instant reward, text changes |
+| Interstitial | Show between ReturnScene → BaseScene | Skip, instant transition |
+| Sticky banner | Show/hide per scene | Always hidden |
+
+`ads_removed` флаг хранится в рантайме; не в cloud-save (восстанавливается из `getPurchases()` при каждом boot).
