@@ -9,6 +9,12 @@ export interface SfxEntry {
 
 export type SfxRegistry = Record<string, SfxEntry>;
 
+interface SfxJsonEntry {
+  id: string;
+  path: string;
+  volume: number;
+}
+
 let sfxRegistry: SfxRegistry | null = null;
 
 export const getSfxRegistry = (): SfxRegistry | null => sfxRegistry;
@@ -17,11 +23,19 @@ export const setSfxRegistry = (reg: SfxRegistry | null): void => {
   sfxRegistry = reg;
 };
 
+const normalizeSfx = (raw: SfxJsonEntry[]): SfxRegistry => {
+  const reg: SfxRegistry = {};
+  for (const entry of raw) {
+    reg[entry.id] = { asset: entry.path, volume: entry.volume };
+  }
+  return reg;
+};
+
 export const loadSfxRegistry = async (): Promise<SfxRegistry | null> => {
   try {
-    const data = await loadJson<SfxRegistry>("content/sfx.json");
-    sfxRegistry = data;
-    return data;
+    const data = await loadJson<SfxJsonEntry[]>("content/sfx.json");
+    sfxRegistry = normalizeSfx(data);
+    return sfxRegistry;
   } catch {
     sfxRegistry = null;
     return null;

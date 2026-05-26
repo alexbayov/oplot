@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
 import type { ContentData } from "../state/types";
 import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
-import { setSfxRegistry, preloadSfx, loadSfxRegistry, type SfxRegistry } from "../systems/audio";
+import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
 import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
@@ -62,7 +62,6 @@ export class BootScene extends Phaser.Scene {
     for (const id of MOB_SPRITE_IDS) {
       this.load.image(`mob_${id}`, `assets/sprites/mobs/${id}.png`);
     }
-    this.load.json("sfx_registry", "content/sfx.json");
   }
 
   public create(): void {
@@ -98,13 +97,11 @@ export class BootScene extends Phaser.Scene {
         );
       }
 
-      const sfxReg = this.cache.json.get("sfx_registry") as SfxRegistry | undefined;
+      const sfxReg = await loadSfxRegistry();
       if (sfxReg) {
         setSfxRegistry(sfxReg);
         preloadSfx(this);
         this.load.start();
-      } else {
-        await loadSfxRegistry();
       }
 
       GameState.reset();
