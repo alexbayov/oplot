@@ -240,4 +240,27 @@
   - QA fix cherry-pick: ≤10 LOC runtime bug fix от QA cherry-pick'ается в Engineer's role-PR, не self-merge test-branch как role-PR.
   - QA Acceptance PR last в merge sequence (net delta только `staff/status/QA.md`).
   - DoD-precision (точные числа vitest / bundle / counts).
-  - Anti-scope grep как final gate.
+   - Anti-scope grep как final gate.
+
+## 2026-05-25 — M8a: Платформа и персистентность (COMPLETED)
+
+- **Gate-close PR #71 `m8a-integration → main` merged** in `main` HEAD `c88f395`.
+- **GD M8a amendment PR #67** merged: `docs/GDD.md` §13a (5 blocks + anti-scope) + `docs/balance.md` §M8a (5 параметров).
+- **QA Spec M8a PR #68** APPROVE merged: 7/7 checklists PASS.
+- **Engineer M8a PR #69** merged: `src/systems/platform.ts` (4 fail-soft modes), `src/systems/cloudSave.ts` (7 triggers, throttle 10s), `src/systems/locale.ts` (t()), `src/utils/audioUnlock.ts`, `index.html` (viewport meta + SDK script), +17 tests → 193/193 vitest.
+- **QA Acceptance M8a PR #70** APPROVE merged: 4 Gates PASS (merge dry-run, static, runtime, spec/anti-scope).
+- **Lessons continued:** Devin sub-agent sessions unreliable; PM took direct orchestrator role after M8a completion.
+
+## 2026-05-25 — M8b: Монетизация (PM_KICKOFF)
+
+- **PM kickoff PR `pm/m8b-kickoff → main`**: Rust Yandex Games SDK monetization API research complete. `staff/status/M8b.md` dashboard создан. Scope: rewarded video (×4 triggers), interstitial (×1), sticky banner, IAP (3 products + ads-remover + unprocessed-check §1.13.1).
+- **API research findings:**
+  - Rewarded: `ysdk.adv.showRewardedVideo({onOpen, onRewarded, onClose(wasShown), onError})` — no frequency limit
+  - Interstitial: `ysdk.adv.showFullscreenAdv({onOpen, onClose(wasShown), onError})` — Yandex controls frequency
+  - Banner: `showBannerAdv()` / `hideBannerAdv()` / `getBannerAdvStatus()` — API toggle in console
+  - IAP: `getPayments()` → `purchase({id})` / `getPurchases()` / `getCatalog()` / `consumePurchase(token)` — client-side `signed: false`; mandatory unprocessed-check §1.13.1
+  - Products created in Developer Console; IDs used in code
+- **IAP catalog proposal:** `disable_ads` (non-consumable, ~99 YAN), `starter_pack` (consumable, ~49 YAN), `gas_pack` (consumable, ~29 YAN)
+- **4 rewarded triggers:** ×2 looting, second chance in combat, daily reset skip, gas refill +1
+- **4 kickoff + 4 handoff files created:** GD, QA-Spec, Engineer, QA-Acceptance. PLAN/CONTEXT updates. M8a moved to closed milestones.
+- **Next:** merge → `m8b-integration` → GD §13b amendment.
