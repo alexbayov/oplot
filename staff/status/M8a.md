@@ -1,6 +1,17 @@
 # Status Dashboard: M8a — Платформа и персистентность
 
-**Статус:** PM_KICKOFF 2026-05-25 (PM kickoff PR `pm/m8a-kickoff → main`).
+**Статус:** ✅ DONE (gate-close PR #71 `m8a-integration → main`, merged 2026-05-25, `main` HEAD `50ff49e`).
+
+## Итоги
+
+- Yandex SDK lifecycle: platform wrapper (4 fail-soft modes), LoadingAPI?.ready(), singleton typed.
+- Cloud save: serialize/deserialize full GameState (9 fields), throttle 10s, 7 triggers incl. flush-on-unload, conflict policy "remote newer wins on boot".
+- Locale RU lock: `t(key)` registry, new M8a code only.
+- Mobile-first viewport: exact meta, safe-area CSS, iOS audio unlock, portrait lock, double-tap suppress.
+- Settings persistence: mute/volume → cloud-save schema, defaults false/1.0.
+- 193/193 vitest PASS, typecheck/lint/build green, JS 1.49 MB, no new npm deps.
+- Anti-scope clean: no ads/IAP/leaderboards/achievements/telemetry/new content/new mechanics.
+- Role PRs merged: GD #67, QA Spec #68, Engineer #69, QA Acceptance #70.
 
 ## Контекст
 
@@ -13,7 +24,7 @@ Owners по PLAN §3: **Engineer + QA**. Content / Artist в M8a не участ
 
 ## Текущий gate
 
-**M8a_PM_KICKOFF_PR_OPEN → after merge → GD §13a amendment.**
+**M8a_CLOSED → PM awaits Customer decision on M8b monetization model (ads policy + IAP catalog).**
 
 ## Scope M8a
 
@@ -89,17 +100,17 @@ Owners по PLAN §3: **Engineer + QA**. Content / Artist в M8a не участ
 - Audio: первый user gesture resume AudioContext; SFX работают на iOS Safari.
 - Anti-scope grep clean: no `setAds`, no `getPayments`, no `getLeaderboards`, no `getAchievements`.
 
-## Sequence
+## Sequence ✓ DONE
 
-1. PM kickoff PR `pm/m8a-kickoff → main` (этот) — Alex review + merge.
-2. Alex создаёт `m8a-integration` от свежего main.
-3. GD M8a amendment session → PR `m8a/gd-amendment → m8a-integration`.
-4. QA Spec M8a session → PR `qa/m8a-spec-review → m8a-integration` (verdict).
-5. (Optional GD fix + QA re-review).
-6. Engineer M8a session → PR `m8a/platform → m8a-integration`.
-7. QA Acceptance M8a session → local octopus-merge (single PR) + 3 Gates → PR `qa/m8a-acceptance-test → m8a-integration` (verdict).
-8. PM merge sequence: Engineer → QA Acceptance.
-9. PM finalize PR (`pm/m8a-finalize`) + gate-close PR `m8a-integration → main`.
+1. ✅ PM kickoff PR #66 → main.
+2. ✅ `m8a-integration` created.
+3. ✅ GD M8a amendment PR #67 → m8a-integration.
+4. ✅ QA Spec M8a PR #68 APPROVE → m8a-integration.
+5. — (No fixes needed.)
+6. ✅ Engineer M8a PR #69 → m8a-integration.
+7. ✅ QA Acceptance M8a PR #70 APPROVE (4 gates) → m8a-integration.
+8. ✅ PM merge: Engineer #69 + QA Acceptance #70 → m8a-integration.
+9. ✅ Gate-close PR #71 `m8a-integration → main`.
 
 ## Recovery hooks
 
