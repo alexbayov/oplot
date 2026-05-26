@@ -81,6 +81,18 @@ export class CombatScene extends Phaser.Scene {
   public create(): void {
     void hideBanner();
 
+    // Reset instance state to prevent leakage from previous combat runs
+    this.state = "awaiting_hero";
+    this.mobs = [];
+    this.turnQueue = [];
+    this.logLines = [];
+    this.secondChanceUsed = false;
+    this.buttonsContainer = [];
+    this.phaseLabel = undefined;
+    this.heroPanel = undefined;
+    this.enemyPanel = undefined;
+    this.logText = undefined;
+
     const sortie = GameState.currentSortie;
     if (!sortie) {
       createTitle(this, "Бой");
