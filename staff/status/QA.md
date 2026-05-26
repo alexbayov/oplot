@@ -1,8 +1,8 @@
 # Status: QA
 
-**Текущая веха:** M2 — Playable MVP
-**Последнее действие:** re-review after Engineer fix (commits 872503d + 1335977) → APPROVE
-**Статус:** APPROVED
+**Текущая веха:** M8b — Monetization
+**Последнее действие:** M8b Spec Review → APPROVE (2026-05-26)
+**Статус:** APPROVED (M8b Spec)
 **Дата:** 2026-05-19
 **Текущий шаг:** done (ready for PM merge)
 
@@ -2043,3 +2043,89 @@ rg "music|voice|ambience" content/sfx.json assets/audio/  # Gate 3
 - Gate 0/1/2/3: all PASS
 - Verdict: **APPROVE**
 - Next: PM merge Engineer PR #69 → `m8a-integration`, then gate-close `m8a-integration → main`
+
+---
+
+# M8b Spec Review
+
+**Date:** 2026-05-26
+**Object:** GD M8b amendment PR #73 (`m8b/gd-amendment → m8b-integration`)
+**Verdict:** **APPROVE**
+
+## Checklist Results
+
+### 1. Rewarded video spec is implementable — PASS
+
+- API signature: `showRewardedVideo({onOpen, onRewarded, onClose(wasShown), onError})` correct
+- 4 triggers enumerated with exact scenes: ReturnScene T1, CombatScene T2, MapScene T3, MapScene T4
+- Per-trigger rewards: ×2 loot (T1), 50% HP (T2), daily reset (T3), gas+1 (T4)
+- Per-trigger limits: 1/sortie (T2), 5min cooldown (T4)
+- Fail-soft: if platform unavailable → button not shown, game continues
+- Ads-remover instant: all 4 triggers → instant reward, button text changed
+- No `setInterval` auto-calls
+- Rewards documented in balance.md §M8b (6 params)
+
+### 2. Interstitial spec is complete — PASS
+
+- API signature: `showFullscreenAdv({onOpen, onClose(wasShown), onError})` correct
+- 1 placement: ReturnScene → user clicks "Return" → interstitial → BaseScene
+- Exact flow: result shown → "Return to Base" press → showFullscreenAdv → onClose → BaseScene
+- Frequency note: Yandex controls automatically, game does not throttle
+- Ads-remover integration: skip when disable_ads active
+
+### 3. Sticky banner spec is complete — PASS
+
+- API: showBannerAdv / hideBannerAdv / getBannerAdvStatus correct
+- Show/hide per scene enumerated: show in Base/Craft/Inventory/Map, hide in Combat/Sortie/Loot/Region/Boot
+- Position: bottom
+- Ads-remover integration: always hidden
+
+### 4. IAP spec is complete — PASS
+
+- API: getPayments → purchase/getPurchases/getCatalog/consumePurchase correct
+- Client-side `signed: false`
+- 3 products with IDs, types, rewards, prices
+- Consume flow: reward FIRST, consumePurchase SECOND — explicitly documented
+- Unprocessed-check on boot: getPurchases → foreach consumable → reward → consume. §1.13.1 moderation note present
+- initIap failure: IAP buttons hidden, unprocessed-check skipped, game works without purchases
+
+### 5. Ads-remover logic is complete — PASS
+
+- disable_ads non-consumable product
+- Boot check via getPurchases()
+- Instant rewards for all 4 rewarded triggers
+- Interstitial skipped
+- Banner always hidden
+- Runtime flag, not in cloud-save (restored from getPurchases each boot)
+
+### 6. Anti-scope §13b explicit and matches M8b.md — PASS
+
+§13b.0 lists: NO leaderboards/achievements, NO server-side IAP, NO telemetry, NO new languages, NO new content/mechanics, NO music/voice, NO UI redesign, M8a untouched.
+Matches staff/status/M8b.md anti-scope item-for-item.
+
+### 7. M2-M8a regression carry-over — PASS
+
+- §13a (M8a) not modified
+- M7 content counts untouched (9 zones / 80 items / 42 recipes / 11 mobs / 3 boss / 8 perks / 6 radio / 10 SFX / 16 tweens)
+- platform.ts / cloudSave.ts / locale.ts / audioUnlock.ts not modified
+- No contradiction with shipped M2-M7 behavior
+
+## Blockers
+— (none)
+
+## Non-blocking notes
+
+1. **IAP prices (99/49/29 YAN)** — предварительные. Точные цены устанавливаются в Yandex Developer Console. GD spec использует эти цифры как target для balance.md; Engineer код использует только product IDs, цены читаются из `getCatalog()`.
+2. **Rewarded cooldowns** — T1 (×2 loot) и T3 (daily reset) не имеют hard cooldown'ов в спеке, rely на то что триггер контекстуальный (после sortie / при кулдауне). Engineer должен убедиться что повторный вызов невозможен без повторной sortie.
+3. **Banner toggle console** — Engineer need to remind about console toggle in `src/systems/banner.ts` comment.
+
+## Recovery state
+- Branch: `qa/m8b-spec-review` from `m8b-integration` HEAD `20cd7d1`
+- Changes: only this verdict append to `staff/status/QA.md`
+- PR: `qa/m8b-spec-review → m8b-integration`
+
+## Commands
+— (spec review, no commands to run; Engineer will run ninstall/typecheck/lint/test/build on his PR)
+
+## Next
+PM merge QA Spec → dispatch Engineer M8b to implement.
