@@ -6,6 +6,7 @@ import { runTween } from "../systems/tweens";
 import { computeOverkillPopups, xpProgress } from "../systems/xp";
 import type { Perk } from "../types";
 import { createPanel, createTitle } from "./sceneUi";
+import { saveToCloud } from "../systems/cloudSave";
 
 const CARD_WIDTH = 300;
 const CARD_HEIGHT = 100;
@@ -100,6 +101,7 @@ export class LevelUpScene extends Phaser.Scene {
     const mods = computePerkModifiers(player.perks);
     player.hp_max = 100 + mods.hp_max_additive;
     player.hp = Math.min(player.hp, player.hp_max);
+    void saveToCloud();
     this.popupQueue -= 1;
     if (this.popupQueue > 0) {
       this.candidatePerks = [];

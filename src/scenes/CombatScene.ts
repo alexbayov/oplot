@@ -28,6 +28,7 @@ import {
 import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
+import { saveToCloud } from "../systems/cloudSave";
 import type { ConsumableItem, Mob } from "../types";
 import {
   createButton,
@@ -484,6 +485,7 @@ export class CombatScene extends Phaser.Scene {
       GameState.progress.radio_trust,
     );
     GameState.currentSortie = null;
+    void saveToCloud();
     this.scene.start("BaseScene");
   }
 

@@ -3,6 +3,7 @@ import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameSt
 import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { saveToCloud } from "../systems/cloudSave";
 
 export class BaseScene extends Phaser.Scene {
   public constructor() {
@@ -66,6 +67,7 @@ export class BaseScene extends Phaser.Scene {
     muteLabel.setInteractive({ useHandCursor: true });
     muteLabel.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
       setSfxMute(!GameState.settings.sfxMuted);
+      void saveToCloud();
       this.scene.restart();
     });
 
@@ -81,6 +83,7 @@ export class BaseScene extends Phaser.Scene {
       let next = GameState.settings.sfxVolume - 0.25;
       if (next < 0) next = 1;
       setSfxVolume(next);
+      void saveToCloud();
       this.scene.restart();
     });
   }
