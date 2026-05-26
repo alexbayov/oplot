@@ -116,6 +116,7 @@ export class CombatScene extends Phaser.Scene {
         .setOrigin(0.5);
     }
     createPanel(this, 180, 170, 320, 130);
+    this.add.image(30, 180, "hero").setOrigin(0.5).setScale(0.5).setAlpha(0.9);
     this.heroPanel = createSubtitle(this, 150, "");
     this.enemyPanel = createSubtitle(this, 200, "");
 
@@ -549,6 +550,21 @@ export class CombatScene extends Phaser.Scene {
     if (this.logText) {
       this.logText.setText(this.logLines.slice(-3).join("\n"));
     }
+    // M9: render mob sprites
+    for (const c of this.children.list.filter((c) => c.getData("mobSprite") === true)) {
+      c.destroy();
+    }
+    this.mobs.forEach((inst, idx) => {
+      const alive = inst.state.hp > 0 && !inst.state.fled;
+      if (!alive) return;
+      const x = 310 + idx * 40;
+      const y = 570;
+      const texKey = `mob_${inst.mob.id}`;
+      if (this.textures.exists(texKey)) {
+        const spr = this.add.image(x, y, texKey);
+        spr.setScale(0.4).setAlpha(0.85).setData("mobSprite", true);
+      }
+    });
     const bossInst = this.mobs.find((m) => m.isBoss);
     if (bossInst && this.phaseLabel) {
       this.phaseLabel.setText(`Фаза ${bossInst.state.phase}`);

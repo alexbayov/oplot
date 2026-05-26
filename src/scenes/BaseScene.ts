@@ -19,6 +19,8 @@ export class BaseScene extends Phaser.Scene {
     const stashStacks = baseStash.length;
 
     createTitle(this, "ОПЛОТ");
+    this.add.image(180, 320, "bg_forest").setAlpha(0.1).setScale(1.2).setDepth(-1);
+    this.add.image(280, 480, "hero").setOrigin(0.5).setScale(0.8).setAlpha(0.9).setDepth(1);
     createPanel(this, 180, 220, 320, 200);
     createSubtitle(
       this,
