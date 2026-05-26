@@ -60,7 +60,7 @@
 | **M6** | Радио и доверие | Полноценная система радио: 6 сигналов (2 truth / 2 trap / 2 ambiguous), решения, засады/награды, шкала `radio_trust` -5..+5 | GD + Content + Engineer + Artist | **DONE 2026-05-25** (см. `staff/handoff/M6-SUMMARY.md`; gate-close PR #57 merged в `main`) |
 | **M7** | Полировка и баланс | Тюнинг чисел, 10 UI-звуков, 16 tween-анимаций, 9 зон, 80 предметов, 42 рецепта | QA + все | **DONE 2026-05-25** (см. `staff/handoff/M7-SUMMARY.md`; gate-close PR #65 merged в `main` 2026-05-25 Alex'ом, HEAD `2399b7b`) |
 | **M8a** | Платформа и персистентность | Yandex Games SDK init + cloud save + mobile-first viewport + locale RU lock + перенос M7 settings | Engineer + QA | **DONE 2026-05-25** (gate-close PR #71; 193 vitest, JS 1.49 MB, platform/cloudSave/locale/audioUnlock) |
-| **M8b** | Монетизация | Ads (rewarded ×4 triggers + interstitial ×1 + sticky banner), IAP (3 products + ads-remover + unprocessed-check §1.13.1) | Engineer + QA (+ GD для §13b) | **PM_KICKOFF 2026-05-25** (branch `pm/m8b-kickoff`; based on Yandex SDK monetization API research) |
+| **M8b** | Монетизация | Ads (rewarded ×4 triggers + interstitial ×1 + sticky banner), IAP (3 products + ads-remover + unprocessed-check §1.13.1) | Engineer + QA (+ GD для §13b) | **DONE 2026-05-26** (gate-close PR #77; 213 vitest, JS 1.5 MB, ads/banner/iap ready) |
 | **M9** | Сабмит на Яндекс | Все QA-чек-листы пройдены, билд отправлен на модерацию | QA + все | NOT_STARTED |
 
 ## 4. Что НЕ делаем до релиза (Anti-scope)

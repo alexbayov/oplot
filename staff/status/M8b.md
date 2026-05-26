@@ -1,6 +1,21 @@
 # Status Dashboard: M8b — Монетизация
 
-**Статус:** PM_KICKOFF 2026-05-25 (PM kickoff PR `pm/m8b-kickoff → main`).
+**Статус:** ✅ DONE (gate-close PR #77 `m8b-integration → main`, merged 2026-05-26, `main` HEAD `b1c9e2f`).
+
+## Итоги
+
+- Rewarded video: 4 triggers (×2 loot, second chance 50% HP, daily reset, gas counter)
+- Interstitial: 1 placement (ReturnScene → BaseScene)
+- Sticky banner: scene-aware show/hide
+- IAP: 3 products (disable_ads, starter_pack, gas_pack) + §1.13.1 unprocessed-check
+- Ads-remover: instant rewards when disable_ads purchased
+- 213/213 vitest PASS, typecheck/lint/build green, JS 1.5 MB ≤ 2 MB
+- Anti-scope clean: no leaderboards/achievements/server-side
+- Role PRs merged: GD #73, QA Spec #74, Engineer #75, QA Acceptance #76
+
+## Текущий gate
+
+**M8b_CLOSED → PM awaits Customer decision on M9 release/submission.**
 
 ## Контекст
 
