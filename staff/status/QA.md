@@ -2129,3 +2129,58 @@ Matches staff/status/M8b.md anti-scope item-for-item.
 
 ## Next
 PM merge QA Spec → dispatch Engineer M8b to implement.
+
+---
+
+# M8b Acceptance
+
+**Date:** 2026-05-26
+**Object:** Engineer M8b PR #75 (`m8b/monetization → m8b-integration`)
+**Verdict:** **APPROVE** — все 4 Gate PASS
+
+### Gate 0 — Merge dry-run
+- Локальный merge `m8b/monetization` в `qa/m8b-acceptance-test`
+- **0 conflicts.** 19 files, +875/-20 LOC
+- New files: ads.ts, banner.ts, iap.ts, ads.test.ts, iap.test.ts
+- Modified: main.ts, 6 scenes, GameState.ts, types.ts, platform.ts, cloudSave.ts, engineer status
+- **PASS**
+
+### Gate 1 — Static checks
+- `npm run typecheck` ✅
+- `npm run lint` ✅
+- `npm run test` ✅ **213/213 PASS** (193 M8a + 20 M8b)
+- `npm run build` ✅ JS 1.5 MB ≤ 2 MB
+- `assets/` unchanged, `package.json` unchanged, `content/` unchanged
+- **PASS**
+
+### Gate 2 — Runtime smoke (code review)
+- M2-M8a regression: all 193 existing vitest PASS, typecheck/lint clean
+- Ads fail-soft: confirmed via test — rewarded/interstitial/tumble fallback when platform unavailable
+- Rewarded triggers: ReturnScene (×2 loot button + interstitial), CombatScene (second chance button), MapScene (daily reset on cooldown)
+- Banner: show in non-combat, hide in combat/sortie; hidden when ads_removed
+- IAP: init → unprocessed-check → disable_ads flag → consumable handling
+- No `setInterval` for ads (verified via grep)
+- No `any` types in new system files
+- **PASS**
+
+### Gate 3 — Spec/anti-scope compliance
+- GDD §13b matches scope: 4 rewarded triggers, 1 interstitial, banner, 3 IAP products, ads-remover
+- Anti-scope grep clean: `getLeaderboards`, `setScore`, `getAchievements` — 0 hits
+- No `signed: true` — client-side IAP only
+- `content/*.json` unchanged — M7 content frozen
+- `package.json` unchanged — no new npm deps
+- §13a M8a not modified (platform/cloudSave/viewport untouched)
+- **PASS**
+
+### Non-blocking notes
+
+1. **T4 gas refill:** gas counter added to PlayerState (default 5) and cloud save, but no sortie gas cost exists. Rewarded button won't show until gas < GAS_MAX. Engineer noted this as anti-scope — future update.
+2. **Daily reset mechanic:** `GameState.progress.daily_completed[zone.id] = 0` effectively resets the cooldown. `canEnterDailyInstance` reads this field. Verified functional via code review.
+3. **Cloud save bug fix:** `signal_id` → `id` in serializeGameState (M8a regression, pre-existing, found and fixed in this PR).
+
+### PR
+- Branch: `qa/m8b-acceptance-test` → `m8b-integration`
+- Changes: only `staff/status/QA.md` (this verdict)
+
+### Next
+PM merge sequence: Engineer #75 → QA Acceptance #76 → gate-close `m8b-integration → main`
