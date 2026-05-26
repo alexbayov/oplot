@@ -39,6 +39,7 @@ export class MapScene extends Phaser.Scene {
 
   public create(): void {
     createTitle(this, "Карта");
+    this.add.image(180, 320, "bg_forest").setAlpha(0.15).setScale(1.2).setDepth(-1);
     void showBanner();
     const zones = sortZonesForMap(Object.values(GameState.data.zones));
     if (zones.length === 0) {

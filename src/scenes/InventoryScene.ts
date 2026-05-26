@@ -19,6 +19,12 @@ export class InventoryScene extends Phaser.Scene {
     createTitle(this, "Инвентарь");
     void showBanner();
     createPanel(this, 180, 150, 320, 70);
+    if (player.equipped_weapon_id) {
+      this.add.image(75, 136, `item_${player.equipped_weapon_id}`).setScale(0.5);
+    }
+    if (player.equipped_armor_id) {
+      this.add.image(75, 170, `item_${player.equipped_armor_id}`).setScale(0.5);
+    }
     createSubtitle(
       this,
       136,
