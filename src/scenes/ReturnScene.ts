@@ -1,17 +1,23 @@
 import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
-import { markDailyCompleted } from "../systems/dailyInstance";
-import { tickRadioOnReturn } from "../systems/radio";
+import type { InventoryStack } from "../state/types";
+import { computeWeight, computeReturnTime } from "../systems/weight";
 import { computePerkModifiers } from "../systems/perks";
-import { runTween } from "../systems/tweens";
-import { computeReturnTime, computeWeight } from "../systems/weight";
-import { applySortieCompletion } from "../systems/zoneUnlock";
 import {
+  applySortieCompletion,
+} from "../systems/zoneUnlock";
+import { tickRadioOnReturn } from "../systems/radio";
+import { runTween } from "../systems/tweens";
+import { markDailyCompleted } from "../systems/dailyInstance";
+import { saveToCloud } from "../systems/cloudSave";
+import { showRewardedVideo, showInterstitial } from "../systems/ads";
+import { checkUnprocessedPurchases } from "../systems/iap";
+import {
+  createButton,
   createPanel,
   createSubtitle,
   createTitle,
 } from "./sceneUi";
-import { saveToCloud } from "../systems/cloudSave";
 
 // GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
 // Duration = return_time_s from balance.md §Формулы; heavy pack = longer trip.
@@ -73,28 +79,50 @@ export class ReturnScene extends Phaser.Scene {
   }
 
   private completeReturn(): void {
-    const player = GameState.player;
     const sortie = GameState.currentSortie;
     const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
-    // Successful return: flip unlock flags BEFORE clearing the sortie. fights_completed > 0
-    // guards against marking "completed" if the hero immediately retreated.
     if (sortie && zone && sortie.fights_completed > 0) {
       GameState.progress = applySortieCompletion(
-        GameState.progress,
-        zone,
-        sortie.depth,
-        true,
+        GameState.progress, zone, sortie.depth, true,
       );
-      // M5: mark daily instance cooldown after successful return from boss zone.
       if (zone.boss_id) {
         markDailyCompleted(GameState.progress, zone.id, Date.now());
       }
+      this.showReturnOptions();
+    } else {
+      this.finishReturn();
     }
+  }
+
+  private showReturnOptions(): void {
+    const player = GameState.player;
+    const yCenter = 420;
+    createButton(this, yCenter, "×2 лут (реклама)", () => {
+      showRewardedVideo("loot_double", () => {
+        const doubled: InventoryStack[] = [];
+        for (const stack of player.backpack) {
+          const item = GameState.data.items[stack.item_id];
+          if (item && item.type === "resource") {
+            doubled.push({ item_id: stack.item_id, count: stack.count });
+          }
+        }
+        for (const stack of doubled) {
+          player.backpack.push({ ...stack });
+        }
+      }, () => { this.finishReturn(); });
+    });
+
+    createButton(this, yCenter + 56, "Вернуться на базу", () => {
+      this.finishReturn();
+    });
+  }
+
+  private finishReturn(): void {
+    const player = GameState.player;
     GameState.progress.radio_trust = tickRadioOnReturn(
       GameState.data.radioSignals,
       GameState.progress.radio_trust,
     );
-    // Merge backpack into stash (logic moved from LootScene.endSortie).
     let stash = GameState.baseStash;
     for (const stack of player.backpack) {
       stash = addToStack(stash, stack.item_id, stack.count);
@@ -104,6 +132,9 @@ export class ReturnScene extends Phaser.Scene {
     player.hp = player.hp_max;
     GameState.currentSortie = null;
     void saveToCloud();
-    this.scene.start("BaseScene");
+    showInterstitial(() => {
+      void checkUnprocessedPurchases();
+      this.scene.start("BaseScene");
+    });
   }
 }

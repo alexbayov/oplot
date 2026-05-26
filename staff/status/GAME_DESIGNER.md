@@ -1,8 +1,47 @@
 # Status: Game Designer
 
-**Текущая веха:** M8a (Platform & Persistence)
+**Текущая веха:** M8b (Monetization)
 **Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-26 (M8a GD-amendment)
+**Последнее обновление:** 2026-05-26 (M8b GD-amendment)
+
+---
+
+## M8b GD-amendment (ветка `m8b/gd-amendment`, PR TBD → `m8b-integration`)
+
+**Базируется на `m8b-integration`** (создана PM от `main` HEAD после закрытия M8a).
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §13b «Монетизация (M8b)» | Заменил placeholder на полную спецификацию: §13b.1 Rewarded Video (API + 4 triggers: ×2 loot, second chance, daily reset, gas refill, fail-soft + ads-remover instant), §13b.2 Interstitial (API + 1 placement: post-sortie ReturnScene→BaseScene), §13b.3 Sticky Banner (API + scene-aware show/hide), §13b.4 IAP (API + 3 продукта + consume flow + mandatory unprocessed-check §1.13.1), §13b.5 Ads-Remover Logic (disable_ads → instant rewards + no ads/banner), §13b.0 Anti-scope M8b (10 пунктов) |
+| `docs/balance.md` | §M8b «Монетизация» | 6 параметров rewarded rewards (REWARDED_LOOT_MULTIPLIER=2.0, SECOND_CHANCE_HP_FRACTION=0.5, DAILY/GAS), IAP catalog (3 продукта с ценами 99/49/29 YAN), ads-remover behaviour table |
+| `staff/status/GAME_DESIGNER.md` | — | этот M8b status block |
+
+### Что НЕ сделано
+- §13a не модифицирован (M8a platform/cloudSave/locale/audioUnlock/viewport untouched)
+- M7 content counts заморожены (9/80/42/11/3/8/6/10/16)
+- No src/content/assets/staff-other
+
+### Само-проверка: QA Spec чек-листы (pre-flight)
+
+| # | Checklist | Verdict |
+|---|---|---|
+| 1 | Rewarded video spec implementable (4 triggers + rewards + fail-soft) | PASS |
+| 2 | Interstitial spec complete (1 placement + ads-remover) | PASS |
+| 3 | Sticky banner spec complete (API + show/hide per-scene) | PASS |
+| 4 | IAP spec complete (3 products + consume + unprocessed-check) | PASS |
+| 5 | Ads-remover logic complete (instant + no ads/banner + boot check) | PASS |
+| 6 | Anti-scope §13b matches M8b.md (no leaderboards/server-side/telemetry) | PASS |
+| 7 | M2-M8a regression (no contradiction, content frozen) | PASS |
+
+### Блокеры
+— (нет)
+
+### PR
+- Branch: `m8b/gd-amendment` → `m8b-integration`
+- Draft PR: https://github.com/alexbayov/oplot/pull/73
+- Self-merge запрещён — жду ревью PM
 
 ---
 

@@ -14,9 +14,24 @@ import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
 import { initPlatform } from "./systems/platform";
 import { startCloudSave } from "./systems/cloudSave";
+import { initIap, checkUnprocessedPurchases, registerConsumable } from "./systems/iap";
 import { initAudioUnlock } from "./utils/audioUnlock";
+import { GameState, addToStack } from "./state/GameState";
 
-void initPlatform();
+registerConsumable("starter_pack", async () => {
+  GameState.baseStash = addToStack(GameState.baseStash, "bandage", 5);
+  GameState.baseStash = addToStack(GameState.baseStash, "scrap", 3);
+  GameState.baseStash = addToStack(GameState.baseStash, "electronics", 2);
+});
+registerConsumable("gas_pack", async () => {
+  GameState.player.gas = (GameState.player.gas ?? 0) + 3;
+});
+
+void initPlatform().then(() => {
+  void initIap().then(() => {
+    void checkUnprocessedPurchases();
+  });
+});
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,

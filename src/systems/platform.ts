@@ -5,6 +5,7 @@ interface YaGamesSDK {
     };
   };
   getPlayer: () => Promise<Player>;
+  getPayments?: (opts?: { signed?: boolean }) => Promise<PaymentsAPI>;
   screen?: {
     orientation?: {
       lock: (orientation: string) => Promise<void>;
@@ -15,6 +16,47 @@ interface YaGamesSDK {
       lang: string;
     };
   };
+  adv?: AdvAPI;
+  payments?: PaymentsAPI;
+}
+
+interface AdvCallbacks {
+  onOpen?: () => void;
+  onClose?: (wasShown: boolean) => void;
+  onError?: (error: unknown) => void;
+  onRewarded?: () => void;
+}
+
+interface AdvAPI {
+  showFullscreenAdv: (callbacks?: { callbacks?: AdvCallbacks }) => void;
+  showRewardedVideo: (callbacks?: { callbacks?: AdvCallbacks }) => void;
+  showBannerAdv: () => Promise<{ stickyAdvIsShowing: boolean; reason?: string }>;
+  hideBannerAdv: () => Promise<{ stickyAdvIsShowing: boolean }>;
+  getBannerAdvStatus: () => Promise<{ stickyAdvIsShowing: boolean; reason?: string }>;
+}
+
+interface IapPurchase {
+  productID: string;
+  purchaseToken: string;
+  developerPayload?: string;
+}
+
+interface IapProduct {
+  id: string;
+  title: string;
+  description: string;
+  imageURI: string;
+  price: string;
+  priceValue: string;
+  priceCurrencyCode: string;
+  getPriceCurrencyImage: (size: 'small' | 'medium' | 'svg') => string;
+}
+
+interface PaymentsAPI {
+  purchase: (data: { id: string; developerPayload?: string }) => Promise<IapPurchase>;
+  getPurchases: () => Promise<IapPurchase[]>;
+  getCatalog: () => Promise<IapProduct[]>;
+  consumePurchase: (purchaseToken: string) => Promise<void>;
 }
 
 interface Player {

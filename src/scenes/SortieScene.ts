@@ -4,6 +4,7 @@ import { generateSortieEncounters, generateZoneLoot } from "../systems/loot";
 import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { hideBanner } from "../systems/banner";
 
 interface SortieInit {
   zoneId?: string;
@@ -36,6 +37,7 @@ export class SortieScene extends Phaser.Scene {
   }
 
   public create(): void {
+    void hideBanner();
     const zone = this.zoneId ? GameState.data.zones[this.zoneId] : null;
     createTitle(this, "Вылазка");
     if (!zone) {

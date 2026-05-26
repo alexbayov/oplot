@@ -2112,8 +2112,8 @@ canvas.addEventListener("touchstart", (e) => {
 
 Следующие категории НЕ входят в §13a и запрещены к реализации на M8a:
 
-- **NO ads** (rewarded / interstitial) — отложено в M8b §13b.
-- **NO IAP** (catalog / purchase / restore) — отложено в M8b §13b.
+- **NO ads** (rewarded / interstitial) — реализовано в M8b §13b.
+- **NO IAP** (catalog / purchase / restore) — реализовано в M8b §13b.
 - **NO leaderboards / achievements** — пост-релиз (BACKLOG).
 - **NO telemetry / analytics / backend**.
 - **NO новых языков** — только RU. `t()` для нового кода, масс-миграция в BACKLOG.
@@ -2123,6 +2123,146 @@ canvas.addEventListener("touchstart", (e) => {
 - **NO UI redesign** — только safe-area / viewport / zoom suppression поверх существующих сцен.
 - **NO third-party libs** кроме `YaGames` SDK (внешний script tag, не npm-зависимость).
 
-#### §13b — Монетизация (M8b — отложено)
+#### §13b — Монетизация (M8b)
 
-<!-- GD заполнит на M8b: реклама (rewarded + interstitial), IAP (catalog + purchase + restore), Yandex partner console SKU. Требует решения Заказчика по ads policy и IAP-каталогу. -->
+Монетизация через Yandex Games SDK: rewarded video, interstitial, sticky banner, in-app purchases (IAP) и ads-remover.
+
+---
+
+##### 13b.1 — Rewarded Video
+
+API: `ysdk.adv.showRewardedVideo({callbacks: {onOpen, onRewarded, onClose(wasShown), onError}})`. Callback `onRewarded` срабатывает когда рекламное видео засчитано, в нём выдаётся награда. `onClose(wasShown)` получает `boolean` — показана ли была реклама. `onError` — ошибка загрузки/показа. Yandex не лимитирует частоту rewarded-показов.
+
+**4 триггера:**
+
+**T1 — ×2 looting (ReturnScene):** После успешной вылазки, перед кнопкой "Вернуться на базу". Кнопка "×2 (реклама)" рядом. Награда: удвоить все resource-типы в sortie loot (пройти инвентарь, добавить копию каждого resource item). Fail-soft: если ad не загрузился или platform unavailable → обычный возврат без удвоения. При `disable_ads` → мгновенное удвоение без просмотра (текст кнопки "×2 (без рекламы)").
+
+**T2 — Second chance in combat (CombatScene):** При смерти игрока (HP ≤ 0). Кнопка "Второй шанс (реклама)". Награда: восстановить 50% max HP, продолжить бой с того же раунда. Ограничение: 1 second-chance на вылазку. Fail-soft: без ad → обычная смерть (return to map, lose loot). При `disable_ads` → мгновенное восстановление (кнопка "Второй шанс (без рекламы)").
+
+**T3 — Daily reset skip (MapScene/SortieScene):** Если daily_instance на кулдауне (cooldown > 0). Награда: мгновенный сброс daily-таймера до 0. Fail-soft: ждать таймер. При `disable_ads` → мгновенный сброс.
+
+**T4 — Gas refill +1 (MapScene/SortieScene):** Если `gas < GAS_MAX`. Награда: `gas += 1`. Кулдаун между rewarded gas: `GAS_REWARDED_COOLDOWN_S = 300` (5 min). Fail-soft: ждать пассивной регенерации. При `disable_ads` → мгновенный газ.
+
+**Общие правила rewarded:**
+- Кнопка видна только если ad доступен (`ysdk !== null`). На локальном dev без SDK кнопка не показывается.
+- Никаких `setInterval` auto-call'ов — только explicit user action.
+- Per-context кулдауны в `balance.md` §M8b.
+
+---
+
+##### 13b.2 — Interstitial
+
+API: `ysdk.adv.showFullscreenAdv({callbacks: {onOpen, onClose(wasShown), onError}})`. Fullscreen ad, перекрывает всю игру.
+
+**1 размещение — post-sortie (ReturnScene → BaseScene):**
+1. ReturnScene показывает результат вылазки (loot, XP, etc.)
+2. Игрок жмёт "Вернуться на базу"
+3. Вызывается `showFullscreenAdv()`
+4. Коллбэк `onClose(wasShown)` — независимо от `wasShown`, переход в BaseScene
+
+Правила:
+- Частота показа контролируется Яндексом (frequency cap на серверной стороне). Игра не управляет частотой.
+- Не показывать если `disable_ads` active (переход без interstitial).
+- Не показывать если platform unavailable (fallback: переход без interstitial).
+- Не показывать interstitial во время боя/крафта/лута — только на transition ReturnScene → BaseScene.
+
+---
+
+##### 13b.3 — Sticky Banner
+
+API: `ysdk.adv.showBannerAdv()` / `ysdk.adv.hideBannerAdv()` / `ysdk.adv.getBannerAdvStatus()`. Требует включения «Use the API to display a sticky-banner» в Developer Console.
+
+**Scene-aware visibility:**
+
+| Сцена | Баннер |
+|---|---|
+| BaseScene, CraftScene, InventoryScene, MapScene | **show** |
+| CombatScene, SortieScene, LootScene, RegionScene (gameplay) | **hide** |
+| BootScene (загрузка) | **hide** |
+
+- Позиция: bottom (portrait + landscape), настраивается в Developer Console
+- При `disable_ads` → баннер всегда скрыт (hide + не показывать нигде)
+- Fail-soft: если platform unavailable → no-op
+
+---
+
+##### 13b.4 — In-App Purchases (IAP)
+
+API: `ysdk.getPayments()` → `payments` объект с методами:
+- `payments.purchase({id: string, developerPayload?: string})` → `Promise<IPurchase | reject>`
+- `payments.getPurchases()` → `Promise<IPurchase[]>`
+- `payments.getCatalog()` → `Promise<IProduct[]>`
+- `payments.consumePurchase(purchaseToken: string)` → `Promise<void>`
+
+Client-side processing (`signed: false`). Server-side верификация — MVP не требуется (будет в M9+).
+
+**IAP-каталог (3 продукта, создаются в Developer Console):**
+
+| ID | Название | Тип | Цена (YAN) | Награда |
+|---|---|---|---|---|
+| `disable_ads` | Отключить рекламу | non-consumable | ~99 | Все rewarded → instant, interstitial/banner отключены навсегда |
+| `starter_pack` | Стартовый набор | consumable | ~49 | +5 bandage +3 scrap +2 electronics → baseStash |
+| `gas_pack` | Бак топлива | consumable | ~29 | +3 gas (сверх капа) |
+
+**Check-unprocessed-purchases (обязательно для модерации §1.13.1):**
+
+На boot (после `initPlatform()` и `initIap()`):
+```
+1. payments.getPurchases() → массив покупок
+2. Для каждой покупки:
+   a. Если non-consumable (disable_ads): установить ads_removed флаг
+   b. Если consumable (starter_pack, gas_pack):
+      - ВЫДАТЬ награду ПЕРВОЙ (добавить в baseStash/gas)
+      - ПОТОМ payments.consumePurchase(token) — удаляет покупку
+3. Если consumePurchase успешен → покупка обработана
+```
+
+**Consume flow (для новых покупок после boot):**
+```
+1. payments.purchase({id: 'starter_pack'}) → resolve с {productID, purchaseToken}
+2. Выдать награду (baseStash += items)
+3. payments.consumePurchase(purchaseToken) → удалить из списка
+```
+
+Warning: consumePurchase удаляет покупку безвозвратно. Награда должна быть выдана ДО consume.
+
+**Общие правила IAP:**
+- `payments.getCatalog()` — динамический каталог цен из консоли. В коде используются ID, цены берутся из ответа `getCatalog()` для UI.
+- При failed purchase (юзер отменил / закрыл окно / таймаут) — `Promise` rejects, игра не выдаёт награду.
+- При `initIap()` fails (no SDK / no payments) — IAP-кнопки не показываются, unprocessed-check пропускается, игра работает без покупок.
+
+---
+
+##### 13b.5 — Ads-Remover Logic
+
+`disable_ads` — non-consumable продукт. Проверка при каждом boot через `payments.getPurchases()`.
+
+**Если disable_ads куплен:**
+
+| Компонент | Поведение |
+|---|---|
+| Rewarded кнопки | Мгновенная награда без просмотра рекламы. Текст кнопки: "×2 (без рекламы)" / "Второй шанс (без рекламы)" и т.д. |
+| Interstitial | Не показывается. ReturnScene → BaseScene мгновенно. |
+| Sticky banner | Всегда скрыт. `hideBannerAdv()` на boot, не показывать ни в каких сценах. |
+
+**Если disable_ads НЕ куплен:** стандартный ad-fallback (если ad не загрузился / ошибка, игра продолжается без награды для rewarded, без блокировки для interstitial).
+
+Хранить `adsRemoved` флаг в рантайме; не в cloud-save (восстанавливается из `getPurchases()` каждый boot).
+
+---
+
+##### 13b.0 — Anti-scope M8b (явный)
+
+Следующие категории НЕ входят в §13b и запрещены к реализации на M8b:
+
+- **NO leaderboards** (`getLeaderboards`, `setScore`) — пост-релиз BACKLOG.
+- **NO achievements** (`getAchievements`).
+- **NO server-side IAP verification** (`signed: true`) — MVP client-side only.
+- **NO backend / telemetry / analytics**.
+- **NO новых языков** — только RU.
+- **NO новых mobs / bosses / zones / items / recipes / perks / radio signals / SFX / tweens** — контент заморожен на M7.
+- **NO новых combat / craft / radio / progression механик** — gameplay заморожен на M7.
+- **NO music / voice / ambience**.
+- **NO UI redesign** — только монетизационные кнопки/текст поверх существующих сцен.
+- **NO third-party libs** кроме Yandex SDK.
+- **M8a §13a не модифицируется** — platform/cloudSave/locale/audioUnlock/viewport untouched.
