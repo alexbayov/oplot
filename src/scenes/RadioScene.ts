@@ -47,7 +47,7 @@ export class RadioScene extends Phaser.Scene {
     this.add
       .text(180, 50, `Доверие: ${trust}`, {
         color: trust >= 0 ? "#8a8a70" : "#FF6644",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
       })
       .setOrigin(0.5);
@@ -71,7 +71,7 @@ export class RadioScene extends Phaser.Scene {
       this.add
         .text(330, yCenter + 4, sig.zone_id, {
           color: "#8a8a70",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "12px",
         })
         .setOrigin(1, 0);
@@ -107,14 +107,14 @@ export class RadioScene extends Phaser.Scene {
     createSubtitle(this, 156, `${sig.from} — ${sig.subject}`);
     this.add.text(330, 170, sig.zone_id, {
       color: "#8a8a70",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "12px",
     });
     this.add
       .text(180, 220, sig.body_ru, {
         align: "center",
         color: "#C8C0B0",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
         wordWrap: { width: 300 },
       })

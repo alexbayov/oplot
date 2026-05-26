@@ -60,7 +60,7 @@ export class MapScene extends Phaser.Scene {
       // Header text
       this.add.text(35, yCenter - 38, header, {
         color: unlocked ? "#D4C5A0" : "#8A8070",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
         fontStyle: "bold",
       });
@@ -68,7 +68,7 @@ export class MapScene extends Phaser.Scene {
       // Subtitle description text
       this.add.text(35, yCenter - 15, subtitle, {
         color: "#C8C0B0",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "11px",
         wordWrap: { width: 175 },
       });

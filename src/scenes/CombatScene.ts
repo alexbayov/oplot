@@ -39,6 +39,7 @@ import {
   createTitle,
   createSmallButton,
   createHpBar,
+  showFloatingText,
 } from "./sceneUi";
 
 interface MobInstance {
@@ -104,7 +105,7 @@ export class CombatScene extends Phaser.Scene {
       this.add
         .text(180, 30, `Босс: ${bossInst.mob.name_ru}`, {
           color: "#FF4444",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "18px",
           fontStyle: "bold",
         })
@@ -112,7 +113,7 @@ export class CombatScene extends Phaser.Scene {
       this.phaseLabel = this.add
         .text(180, 54, `Фаза ${bossInst.state.phase}`, {
           color: "#FFAA44",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "14px",
         })
         .setOrigin(0.5);
@@ -127,8 +128,8 @@ export class CombatScene extends Phaser.Scene {
       .text(180, 290, "", {
         align: "center",
         color: "#C8C0B0",
-        fontFamily: "Arial, sans-serif",
-        fontSize: "13px",
+        fontFamily: "Share Tech Mono, monospace",
+        fontSize: "12px",
         wordWrap: { width: 300 },
       })
       .setOrigin(0.5);
@@ -268,6 +269,7 @@ export class CombatScene extends Phaser.Scene {
     );
     runTween(this, "tween_hit_shake", this.cameras.main);
     this.flashDamage();
+    showFloatingText(this, 50, 150, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
     this.updateDisplay();
     this.time.delayedCall(250, () => this.advanceTurn());
   }
@@ -321,6 +323,24 @@ export class CombatScene extends Phaser.Scene {
       `Герой бьёт ${target.mob.name_ru} на ${result.damage_dealt.toFixed(1)} (HP: ${target.state.hp.toFixed(0)})`,
     );
     runTween(this, "tween_hit_shake", this.cameras.main);
+
+    // Scale pulse mob sprite
+    const spr = this.children.list.find((c) => {
+      const transform = c as unknown as Phaser.GameObjects.Components.Transform;
+      return c.getData("mobSprite") === true && transform.x === (310 + aliveIdx * 40);
+    });
+    if (spr) {
+      this.tweens.add({
+        targets: spr,
+        scaleX: 0.5,
+        scaleY: 0.5,
+        duration: 100,
+        yoyo: true
+      });
+    }
+
+    showFloatingText(this, 310 + aliveIdx * 40, 530, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
+
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
@@ -362,6 +382,7 @@ export class CombatScene extends Phaser.Scene {
     if (this.heroPanel) {
       runTween(this, "tween_heal_pulse", this.heroPanel);
     }
+    showFloatingText(this, 50, 150, `+${delta.toFixed(0)} HP`, "#4CAF50");
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
@@ -566,7 +587,7 @@ export class CombatScene extends Phaser.Scene {
       
       this.add.text(80, startY, `${inst.mob.name_ru}`, {
         color: "#C8C0B0",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "12px",
       }).setOrigin(0, 0.5).setData("hpBar", true);
       

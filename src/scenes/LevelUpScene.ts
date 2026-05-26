@@ -72,19 +72,19 @@ export class LevelUpScene extends Phaser.Scene {
 
     this.add.text(105, y - 32, perk.name, {
       color: TEXT_COLOR,
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "16px",
       fontStyle: "bold",
     });
     this.add.text(105, y - 10, perk.description, {
       color: SUB_COLOR,
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "12px",
       wordWrap: { width: CARD_WIDTH - 120 },
     });
     this.add.text(105, y + 22, `[${perk.type === "additive" ? "+" : "×"} ${perk.stat}]`, {
       color: "#8A8070",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
     });
 
@@ -122,13 +122,13 @@ export class LevelUpScene extends Phaser.Scene {
     createPanel(this, 180, 220, 320, 120);
     this.add.text(180, 200, "Все перки уже взяты!", {
       color: TEXT_COLOR,
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "16px",
       fontStyle: "bold",
     }).setOrigin(0.5);
     this.add.text(180, 240, `Ветеранская закалка: +${VETERAN_CONDITIONING_HP_BONUS} HP макс`, {
       color: SUB_COLOR,
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "14px",
     }).setOrigin(0.5);
 
@@ -142,7 +142,7 @@ export class LevelUpScene extends Phaser.Scene {
     });
     this.add.text(180, 300, "Принять", {
       color: TEXT_COLOR,
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "18px",
     }).setOrigin(0.5);
   }

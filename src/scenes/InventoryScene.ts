@@ -22,7 +22,7 @@ export class InventoryScene extends Phaser.Scene {
     createHpBar(this, 30, 105, stashWeight, player.max_weight_kg, 200, 12, 0x4682B4, 0x1A2F3E);
     this.add.text(240, 99, `ВЕС: ${stashWeight.toFixed(1)}/${player.max_weight_kg} кг`, {
       color: "#C8C0B0",
-      fontFamily: "Arial",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
       fontStyle: "bold"
     });
@@ -31,7 +31,7 @@ export class InventoryScene extends Phaser.Scene {
     const tooltipBg = this.add.rectangle(0, 0, 160, 36, 0x2d2d2a, 0.95).setStrokeStyle(1, 0x4a4a3a);
     const tooltipText = this.add.text(0, 0, "", {
       color: "#D4C5A0",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
       align: "center",
       wordWrap: { width: 150 }
@@ -42,7 +42,7 @@ export class InventoryScene extends Phaser.Scene {
     if (stash.length === 0) {
       this.add.text(180, 220, "Склад пуст", {
         color: "#8A8070",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "16px",
       }).setOrigin(0.5);
     } else {
@@ -64,7 +64,7 @@ export class InventoryScene extends Phaser.Scene {
 
         this.add.text(x, y + 18, `x${s.count}`, {
           color: "#C8C0B0",
-          fontFamily: "Arial",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "11px",
         }).setOrigin(0.5);
 
@@ -93,7 +93,7 @@ export class InventoryScene extends Phaser.Scene {
     const weaponItem = items[player.equipped_weapon_id];
     this.add.text(95, 375, `Оружие: ${weaponItem?.name_ru ?? "—"}`, {
       color: "#C8C0B0",
-      fontFamily: "Arial",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
       align: "center"
     }).setOrigin(0.5);
@@ -113,7 +113,7 @@ export class InventoryScene extends Phaser.Scene {
     const armorItem = items[player.equipped_armor_id];
     this.add.text(265, 375, `Броня: ${armorItem?.name_ru ?? "—"}`, {
       color: "#C8C0B0",
-      fontFamily: "Arial",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
       align: "center"
     }).setOrigin(0.5);

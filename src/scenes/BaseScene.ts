@@ -26,19 +26,19 @@ export class BaseScene extends Phaser.Scene {
     createHpBar(this, 135, 140, player.hp, player.hp_max, 160, 10);
     this.add.text(135, 155, `HP: ${player.hp}/${player.hp_max} · Ур. ${player.level}`, {
       color: "#C8C0B0",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "14px",
     });
 
     this.add.text(135, 185, `Оружие: ${weapon?.name_ru ?? "—"}\nБроня: ${armor?.name_ru ?? "—"}`, {
       color: "#C8C0B0",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "13px",
     });
 
     this.add.text(135, 245, `Склад: ${stashStacks} стак. · ${stashWeight.toFixed(1)} кг`, {
       color: "#D4C5A0",
-      fontFamily: "Arial, sans-serif",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "13px",
       fontStyle: "bold",
     });
@@ -57,6 +57,13 @@ export class BaseScene extends Phaser.Scene {
       });
     }
 
+    // Scanlines tactical overlay
+    const scanlines = this.add.graphics().setDepth(100).setAlpha(0.06);
+    scanlines.lineStyle(1.5, 0x000000, 1);
+    for (let sy = 0; sy < 640; sy += 4) {
+      scanlines.lineBetween(0, sy, 360, sy);
+    }
+
     this.addSettingsControls();
 
     void showBanner();
@@ -70,7 +77,7 @@ export class BaseScene extends Phaser.Scene {
     const muteLabel = this.add
       .text(300, 20, `SFX ${GameState.settings.sfxMuted ? "OFF" : "ON"}`, {
         color: "#F5F1E8",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "12px",
       })
       .setOrigin(0.5);
@@ -84,7 +91,7 @@ export class BaseScene extends Phaser.Scene {
     const volLabel = this.add
       .text(300, 40, `Vol ${Math.round(GameState.settings.sfxVolume * 100)}%`, {
         color: "#C8C0B0",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "12px",
       })
       .setOrigin(0.5);

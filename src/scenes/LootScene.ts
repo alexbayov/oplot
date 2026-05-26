@@ -26,7 +26,7 @@ export class LootScene extends Phaser.Scene {
     createPanel(this, 180, 150, 320, 60);
     this.weightText = this.add.text(255, 150, "", {
       color: "#C8C0B0",
-      fontFamily: "Arial",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "12px",
       fontStyle: "bold"
     }).setOrigin(0.5);
@@ -50,7 +50,7 @@ export class LootScene extends Phaser.Scene {
     if (sortie.pending_loot.length === 0) {
       this.add.text(180, 310, "Лут пуст.", {
         color: "#8A8070",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
       }).setOrigin(0.5).setData("lootGridItem", true);
     } else {
@@ -77,7 +77,7 @@ export class LootScene extends Phaser.Scene {
         // Count
         this.add.text(x, y + 18, `x${s.count}`, {
           color: "#C8C0B0",
-          fontFamily: "Arial",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "11px",
         }).setOrigin(0.5).setData("lootGridItem", true);
       });

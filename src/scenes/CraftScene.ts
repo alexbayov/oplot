@@ -57,7 +57,7 @@ export class CraftScene extends Phaser.Scene {
       // Title Text
       this.add.text(75, cardY - 18, resultName, {
         color: "#D4C5A0",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "12px",
         fontStyle: "bold",
       });
@@ -72,7 +72,7 @@ export class CraftScene extends Phaser.Scene {
 
       this.add.text(75, cardY + 2, ingText, {
         color: check.ok ? "#C8C0B0" : "#8A8070",
-        fontFamily: "Arial",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "9px",
         wordWrap: { width: 140 },
       });
@@ -117,7 +117,7 @@ export class CraftScene extends Phaser.Scene {
     // Page number text
     this.add.text(180, 475, `${this.page + 1}/${totalPages}`, {
       color: "#8A8070",
-      fontFamily: "Arial",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
     }).setOrigin(0.5);
 
@@ -127,10 +127,12 @@ export class CraftScene extends Phaser.Scene {
   private showToast(itemName: string): void {
     const toast = this.add.text(180, 95, `Создано: ${itemName}`, {
       color: "#4CAF50",
-      fontFamily: "Arial",
-      fontSize: "13px",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "14px",
       fontStyle: "bold",
       align: "center",
+      stroke: "#1a1a1a",
+      strokeThickness: 3,
     }).setOrigin(0.5).setDepth(200);
     
     this.tweens.add({
@@ -140,5 +142,25 @@ export class CraftScene extends Phaser.Scene {
       duration: 1000,
       onComplete: () => toast.destroy(),
     });
+
+    // Radial flash gold particles
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4;
+      const dist = 36;
+      const px = 180 + Math.cos(angle) * dist;
+      const py = 95 + Math.sin(angle) * dist;
+
+      const circle = this.add.circle(180, 95, 3.5, 0xc5a267).setDepth(150);
+      this.tweens.add({
+        targets: circle,
+        x: px,
+        y: py,
+        alpha: { from: 1, to: 0 },
+        scale: { from: 1.5, to: 0.2 },
+        duration: 550,
+        ease: "Cubic.Out",
+        onComplete: () => circle.destroy(),
+      });
+    }
   }
 }

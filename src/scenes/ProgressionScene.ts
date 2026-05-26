@@ -46,13 +46,13 @@ export class ProgressionScene extends Phaser.Scene {
         const y = perkY - player.perks.length * 20 + idx * 40 + 10;
         this.add.text(30, y, perk.name, {
           color: "#F5F1E8",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "14px",
           fontStyle: "bold",
         });
         this.add.text(30, y + 18, perk.description, {
           color: "#C8C0B0",
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "12px",
         });
       });
@@ -75,7 +75,7 @@ export class ProgressionScene extends Phaser.Scene {
     statLines.forEach((line, idx) => {
       this.add.text(30, statsY + idx * 18, line, {
         color: "#C8C0B0",
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
       });
     });
