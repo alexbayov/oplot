@@ -1,8 +1,70 @@
 # Status: Game Designer
 
-**Текущая веха:** M7 (amendment)
-**Статус:** IN_PROGRESS
-**Последнее обновление:** 2026-05-25 (M7 GD-amendment)
+**Текущая веха:** M8a (Platform & Persistence)
+**Статус:** DONE_PENDING_REVIEW
+**Последнее обновление:** 2026-05-26 (M8a GD-amendment)
+
+---
+
+## M8a GD-amendment (ветка `m8a/gd-amendment`, PR TBD → `m8a-integration`)
+
+**Базируется на `m8a-integration`** (создана Alex'ом от `main` HEAD после закрытия M7).
+
+### Что сделано
+
+| Файл | Секция | Изменение |
+|---|---|---|
+| `docs/GDD.md` | §13a «Платформа, персистентность и мобильный (M8a)» | **+** §13a.1 SDK Lifecycle (script tag, `YaGames.init()`, `LoadingAPI?.ready()`, fail-soft table 4 режима); §13a.2 Cloud Save Schema (full GameState snapshot, setData/getData, conflict policy «remote newer wins» на boot + last-writer-wins на save, throttle MIN_CLOUD_SAVE_INTERVAL_S=10, 7 critical save triggers включая flush-on-unload bypass throttle, quota note с balance.md cross-ref, fail-soft); §13a.3 Locale RU Lock (t(key) stub, sdk.i18n.lang ignored, scope: new M8a code only → no mass-refactor existing scenes); §13a.4 Mobile-First Viewport Polish (viewport meta, safe-area CSS, iOS audio unlock gesture, portrait lock, double-tap zoom suppress on canvas only); §13a.5 Settings Persistence Migration (mute/volume → cloud-save, defaults); §13a.0 Anti-scope M8a (явный список, совпадает с staff/status/M8a.md) |
+| `docs/GDD.md` | §13b (reserved) | **+** placeholder для M8b (монетизация: реклама + IAP). Сохранён без изменений, ждёт решения Заказчика. |
+| `docs/balance.md` | §M8a «Платформа и персистентность» | **+** Таблица: `MIN_CLOUD_SAVE_INTERVAL_S`=10, `YANDEX_PLAYER_DATA_QUOTA_BYTES`=204800, `EXPECTED_SNAPSHOT_SIZE_BYTES`=~2048, `SETTINGS_DEFAULT_MUTE`=false, `SETTINGS_DEFAULT_VOLUME`=1.0 |
+| `staff/status/GAME_DESIGNER.md` | — | этот M8a status block |
+
+### Числа M8a
+
+- `MIN_CLOUD_SAVE_INTERVAL_S` = 10 (throttle guard, согласовано PM).
+- `YANDEX_PLAYER_DATA_QUOTA_BYTES` = 204800 ≈ 200 KB (документированный лимит).
+- `EXPECTED_SNAPSHOT_SIZE_BYTES` ≈ 2048 (≈2 KB; запас quota > ×20).
+- `SETTINGS_DEFAULT_MUTE` = false, `SETTINGS_DEFAULT_VOLUME` = 1.0.
+- M7 counts untouched: 9 zones / 80 items / 42 recipes / 11 mobs / 8 perks / 6 radio / 10 SFX / 16 tweens.
+
+### Коммиты на ветке `m8a/gd-amendment`
+
+1. `[scaffold] M8a GD amendment — Draft PR placeholder` — recovery-safe Draft PR start.
+2. (этот commit) — `docs(M8a): GDD §13a (5 blocks) + balance §M8a + GD status update`.
+
+### Что НЕ сделано (намеренно вне скоупа M8a GD-amendment)
+
+- **`src/`:** не трогал. Engineer реализует platform.ts / cloudSave.ts / locale.ts / audioUnlock.ts после QA Spec APPROVE.
+- **`content/*.json`:** не трогал. Контент заморожен на M7; M8a не добавляет новых зон/мобов/айтемов/рецептов.
+- **`assets/`:** не трогал. M8a не требует новых ассетов.
+- **GDD §1–§12:** не переписывал; только добавил §13a + резерв §13b.
+- **M1–M7 числа в `balance.md`:** не менял; только добавил §M8a.
+- **Чужие staff-файлы:** не трогал.
+- **Anti-scope §13a:** ads / IAP / leaderboards / achievements / telemetry / new languages / new content / new mechanics / music / voice / UI redesign — не добавлял.
+- **Mass-refactor scene strings на `t()`:** отложено в BACKLOG (post-MVP). На M8a `t(key)` обязателен только для нового кода.
+
+### Self-check: QA Spec (7 checklists)
+
+Проверено перед финальным commit:
+
+| # | Checklist | Result |
+|---|---|---|
+| 1 | SDK lifecycle spec implementable (4 fail modes explicit) | PASS |
+| 2 | Cloud save schema complete (fields, quota, conflict, throttle, triggers, fail-soft) | PASS |
+| 3 | Locale RU lock unambiguous (t(key) signature, i18n.lang ignored, forward hook, scope) | PASS |
+| 4 | Mobile-first viewport complete (meta exact, safe-area, audio unlock, portrait, zoom suppress) | PASS |
+| 5 | Settings persistence clear (mute/volume mapped, defaults) | PASS |
+| 6 | Anti-scope explicit + matches staff/status/M8a.md | PASS |
+| 7 | M2–M7 regression: no contradicting changes, existing counts untouched | PASS |
+
+### Блокеры
+
+- Нет.
+
+### Следующая роль после моего merge
+
+- **QA Spec M8a** review'ит GDD §13a / balance §M8a на соответствие M8a scope / anti-scope (verdict `APPROVE` или `CHANGES_REQUESTED`).
+- После QA Spec APPROVE + PM merge `m8a/gd-amendment → m8a-integration` → стартует **Engineer M8a**.
 
 ---
 

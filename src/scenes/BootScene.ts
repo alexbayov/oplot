@@ -6,6 +6,8 @@ import { setSfxRegistry, preloadSfx, loadSfxRegistry, type SfxRegistry } from ".
 import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
+import { initPlatform } from "../systems/platform";
+import { loadFromCloud, applySnapshot } from "../systems/cloudSave";
 
 const ITEM_ICON_IDS = [
   "wood",
@@ -116,6 +118,15 @@ export class BootScene extends Phaser.Scene {
 
       GameState.reset();
       setContent(data);
+
+      const platform = await initPlatform();
+      platform.sdk?.features?.LoadingAPI?.ready();
+
+      const snapshot = await loadFromCloud();
+      if (snapshot) {
+        applySnapshot(snapshot);
+      }
+
       this.scene.start("BaseScene");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
