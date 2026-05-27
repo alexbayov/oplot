@@ -95,6 +95,11 @@ export function initPlatform(): Promise<PlatformResult> {
     try {
       const raw = await yaGames.init();
       const sdk = raw as YaGamesSDK;
+      try {
+        await sdk.screen?.orientation?.lock?.("landscape");
+      } catch {
+        // не критично — fallback на CSS rotate prompt
+      }
       let player: Player | null = null;
       try {
         player = await sdk.getPlayer();
