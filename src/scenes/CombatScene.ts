@@ -620,11 +620,17 @@ export class CombatScene extends Phaser.Scene {
     for (const c of this.children.list.filter((c) => c.getData("mobSprite") === true)) {
       c.destroy();
     }
+    const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     this.mobs.forEach((inst, idx) => {
       const alive = inst.state.hp > 0 && !inst.state.fled;
       if (!alive) return;
       const x = 310 + idx * 40;
       const y = 570;
+      const isTarget = inst === firstAlive;
+      if (isTarget) {
+        this.add.rectangle(x, y, 44, 44, 0x000000, 0)
+          .setStrokeStyle(2, 0xc5a267, 0.8).setData("mobSprite", true);
+      }
       const texKey = `mob_${inst.mob.id}`;
       if (this.textures.exists(texKey)) {
         const spr = this.add.image(x, y, texKey);

@@ -62,19 +62,20 @@ export class CraftScene extends Phaser.Scene {
         fontStyle: "bold",
       });
 
-      // Ingredients list
-      const ingText = recipe.ingredients
-        .map((ing) => {
-          const it = items[ing.item_id];
-          return `${it?.name_ru ?? ing.item_id} (x${ing.count})`;
-        })
-        .join(", ");
-
-      this.add.text(75, cardY + 2, ingText, {
-        color: check.ok ? "#C8C0B0" : "#8A8070",
-        fontFamily: "Roboto Condensed, sans-serif",
-        fontSize: "9px",
-        wordWrap: { width: 140 },
+      // Ingredient icons in a row
+      recipe.ingredients.forEach((ing, iIdx) => {
+        const ix = 80 + iIdx * 42;
+        const ingTex = `item_${ing.item_id}`;
+        if (this.textures.exists(ingTex)) {
+          this.add.image(ix, cardY + 18, ingTex).setScale(0.4);
+        }
+        const have = GameState.baseStash.find((s) => s.item_id === ing.item_id)?.count ?? 0;
+        const ok = have >= ing.count;
+        this.add.text(ix, cardY + 28, `x${ing.count}`, {
+          color: ok ? "#C8C0B0" : "#FF6644",
+          fontFamily: "Share Tech Mono, monospace",
+          fontSize: "8px",
+        }).setOrigin(0.5);
       });
 
       // Action button

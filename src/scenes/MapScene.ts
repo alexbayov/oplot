@@ -65,8 +65,19 @@ export class MapScene extends Phaser.Scene {
         fontStyle: "bold",
       });
 
-      // Subtitle description text
-      this.add.text(35, yCenter - 15, subtitle, {
+      // Risk dot
+      const riskColors = [0x4682b4, 0x6f8a4d, 0xffb300, 0x8b0000];
+      const riskIdx = Math.min(zone.level - 1, 3);
+      this.add.rectangle(30, yCenter - 38, 8, 8, riskColors[riskIdx] ?? 0xffb300).setDepth(5);
+
+      // Enemy count
+      const mobsInZone = Object.values(GameState.data.mobs).filter((m) => m.zone === zone.id).length;
+
+      // Subtitle with enemies
+      const descExtra = unlocked
+        ? `${subtitle}\nВрагов: ${mobsInZone} · Глубина: max ${zone.levels.length}`
+        : subtitle;
+      this.add.text(35, yCenter - 15, descExtra, {
         color: "#C8C0B0",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "11px",
