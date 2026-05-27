@@ -22,13 +22,13 @@ export class LootScene extends Phaser.Scene {
   public create(): void {
     createTitle(this, "Лут");
     
-    // Weight panel
-    createPanel(this, 180, 150, 320, 60);
-    this.weightText = this.add.text(255, 150, "", {
+    // Weight panel with bar
+    createPanel(this, 180, 135, 320, 50);
+    this.weightText = this.add.text(180, 120, "", {
       color: "#C8C0B0",
       fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "12px",
-      fontStyle: "bold"
+      fontStyle: "bold",
     }).setOrigin(0.5);
 
     // Pending loot panel
