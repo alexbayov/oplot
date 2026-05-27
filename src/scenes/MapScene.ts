@@ -12,6 +12,8 @@ import {
   createSubtitle,
   createTitle,
   createSmallButton,
+  addVignette,
+  addDustParticles,
 } from "./sceneUi";
 import { showRewardedVideo } from "../systems/ads";
 import { showBanner } from "../systems/banner";
@@ -35,6 +37,8 @@ export class MapScene extends Phaser.Scene {
   public create(): void {
     this.add.image(CX, CY, "bg_forest").setAlpha(0.15).setDisplaySize(W, H).setDepth(-10);
     createTitle(this, "Карта");
+    addVignette(this);
+    addDustParticles(this);
     void showBanner();
     const zones = sortZonesForMap(Object.values(GameState.data.zones));
     if (zones.length === 0) {
