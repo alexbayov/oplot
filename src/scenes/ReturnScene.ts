@@ -19,13 +19,8 @@ import {
   createTitle,
   createHpBar,
 } from "./sceneUi";
+import { CX, CY, H } from "../ui/layout";
 
-// GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
-// Duration = return_time_s from balance.md §Формулы; heavy pack = longer trip.
-// No skip — weight = time = risk is the whole point of the mechanic.
-// M3 (§6.4.M3.4): zone-specific return_time_multiplier scales the base trip duration;
-// M3 (§6.4.M3.3): on successful return we flip the appropriate unlock_condition flag;
-// M3 (§10.M3.3): every return decrements radioSignal.expires_after_sorties by 1.
 export class ReturnScene extends Phaser.Scene {
   private progressFill?: Phaser.GameObjects.Rectangle;
 
@@ -49,19 +44,20 @@ export class ReturnScene extends Phaser.Scene {
       mods.weight_penalty_multiplier,
     );
 
-    createPanel(this, 180, 200, 320, 80);
+    createPanel(this, CX, 200, 600, 100);
     createSubtitle(this, 180, `Вес ${curWeight.toFixed(1)}/${player.max_weight_kg} кг`);
     const zoneLabel = zone ? ` · ${zone.name_ru}` : "";
     createSubtitle(this, 220, `Время возврата: ${returnTimeS.toFixed(0)}с${zoneLabel}`);
 
-    const hero = this.add.rectangle(50, 400, 20, 20, 0x6f8a4d);
+    // Walking hero animation across screen
+    const hero = this.add.rectangle(50, CY, 20, 20, 0x6f8a4d);
     runTween(this, "tween_return_walk", hero);
 
-    // Progress bar: filled rect grows from 0 → barWidth over returnTimeS seconds.
-    const barWidth = 280;
-    const barHeight = 16;
-    const barX = 180 - barWidth / 2;
-    const barY = 320;
+    // Progress bar centered
+    const barWidth = 800;
+    const barHeight = 18;
+    const barX = CX - barWidth / 2;
+    const barY = 380;
 
     const [, fillBar] = createHpBar(this, barX, barY, 0, 100, barWidth, barHeight, 0x4682B4, 0x1A2F3E);
     this.progressFill = fillBar;
@@ -93,8 +89,14 @@ export class ReturnScene extends Phaser.Scene {
 
   private showReturnOptions(): void {
     const player = GameState.player;
-    const yCenter = 420;
-    createButton(this, yCenter, "×2 лут (реклама)", () => {
+    // Две кнопки в ряд
+    const btnW = 300;
+    const gap = 40;
+    const totalW = 2 * btnW + gap;
+    const startX = CX - totalW / 2 + btnW / 2;
+    const btnY = H - 70;
+
+    createButton(this, btnY, "×2 лут (реклама)", () => {
       showRewardedVideo("loot_double", () => {
         const doubled: InventoryStack[] = [];
         for (const stack of player.backpack) {
@@ -107,11 +109,11 @@ export class ReturnScene extends Phaser.Scene {
           player.backpack.push({ ...stack });
         }
       }, () => { this.finishReturn(); });
-    });
+    }, false, startX);
 
-    createButton(this, yCenter + 56, "Вернуться на базу", () => {
+    createButton(this, btnY, "На базу", () => {
       this.finishReturn();
-    });
+    }, true, startX + btnW + gap);
   }
 
   private finishReturn(): void {

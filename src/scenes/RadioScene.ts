@@ -9,6 +9,7 @@ import {
   createSubtitle,
   createTitle,
 } from "./sceneUi";
+import { CX, CY, W, H } from "../ui/layout";
 
 type Mode =
   | { kind: "list" }
@@ -40,12 +41,12 @@ export class RadioScene extends Phaser.Scene {
 
   private renderList(): void {
     createTitle(this, "Радио");
-    const staticOverlay = this.add.rectangle(180, 320, 360, 640, 0xaaaaaa, 0).setAlpha(0).setDepth(-1);
+    const staticOverlay = this.add.rectangle(CX, CY, W, H, 0xaaaaaa, 0).setAlpha(0).setDepth(-1);
     runTween(this, "tween_radio_static", staticOverlay);
 
     const trust = GameState.progress.radio_trust;
     this.add
-      .text(180, 50, `Доверие: ${trust}`, {
+      .text(CX, 80, `Доверие: ${trust}`, {
         color: trust >= 0 ? "#8a8a70" : "#FF6644",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
@@ -54,22 +55,34 @@ export class RadioScene extends Phaser.Scene {
 
     const list = activeSignals(GameState.data.radioSignals);
     if (list.length === 0) {
-      createPanel(this, 180, 240, 320, 200);
-      createSubtitle(this, 240, "Эфир пуст.");
-      createButton(this, 460, "Назад в Оплот", () =>
+      createPanel(this, CX, CY, 600, 200);
+      createSubtitle(this, CY, "Эфир пуст.");
+      createButton(this, H - 60, "Назад в Оплот", () =>
         this.scene.start("BaseScene"),
       );
       return;
     }
 
+    // Сигналы — 2 колонки
+    const cols = 2;
+    const cardW = 560;
+    const cardH = 130;
+    const gapX = 30;
+    const gapY = 18;
+    const gridW = cols * cardW + (cols - 1) * gapX;
+    const startX = (W - gridW) / 2 + cardW / 2;
     const startY = 150;
-    const rowHeight = 120;
+
     list.forEach((sig, idx) => {
-      const yCenter = startY + idx * rowHeight;
-      createPanel(this, 180, yCenter, 320, rowHeight - 12);
-      createSubtitle(this, yCenter - 22, `${sig.from} — ${sig.subject}`);
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const xCenter = startX + col * (cardW + gapX);
+      const yCenter = startY + row * (cardH + gapY);
+
+      createPanel(this, xCenter, yCenter, cardW, cardH);
+      createSubtitle(this, yCenter - 36, `${sig.from} — ${sig.subject}`, xCenter);
       this.add
-        .text(330, yCenter + 4, sig.zone_id, {
+        .text(xCenter + cardW / 2 - 20, yCenter - 50, sig.zone_id, {
           color: "#8a8a70",
           fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "12px",
@@ -77,17 +90,17 @@ export class RadioScene extends Phaser.Scene {
         .setOrigin(1, 0);
       createSubtitle(
         this,
-        yCenter + 4,
+        yCenter - 8,
         `Истекает через ${sig.expires_after_sorties} вылазок`,
+        xCenter,
       );
-      createButton(this, yCenter + 30, "Открыть", () => {
+      createButton(this, yCenter + 28, "Открыть", () => {
         this.mode = { kind: "detail", signalId: sig.id };
         this.scene.restart();
-      });
+      }, false, xCenter);
     });
 
-    const backY = startY + list.length * rowHeight + 8;
-    createButton(this, backY, "Назад в Оплот", () =>
+    createButton(this, H - 50, "Назад в Оплот", () =>
       this.scene.start("BaseScene"),
     );
   }
@@ -103,39 +116,36 @@ export class RadioScene extends Phaser.Scene {
       return;
     }
 
-    createPanel(this, 180, 220, 320, 180);
-    createSubtitle(this, 156, `${sig.from} — ${sig.subject}`);
-    this.add.text(330, 170, sig.zone_id, {
-      color: "#8a8a70",
-      fontFamily: "Roboto Condensed, sans-serif",
-      fontSize: "12px",
-    });
+    createPanel(this, CX, 260, 800, 280);
+    createSubtitle(this, 150, `${sig.from} — ${sig.subject}`);
     this.add
-      .text(180, 220, sig.body_ru, {
+      .text(CX, 260, sig.body_ru, {
         align: "center",
         color: "#C8C0B0",
         fontFamily: "Roboto Condensed, sans-serif",
-        fontSize: "13px",
-        wordWrap: { width: 300 },
+        fontSize: "14px",
+        wordWrap: { width: 720 },
       })
       .setOrigin(0.5);
 
-    createSubtitle(
-      this,
-      340,
-      `Истекает через ${sig.expires_after_sorties} вылазок`,
-    );
+    createSubtitle(this, 380, `Истекает через ${sig.expires_after_sorties} вылазок`);
 
-    const buttonYs = [400, 460];
-    sig.options.slice(0, 2).forEach((opt, idx) => {
-      const y = buttonYs[idx] ?? 400 + idx * 60;
-      createButton(this, y, opt.label_ru, () => {
+    // Опции в ряд
+    const opts = sig.options.slice(0, 2);
+    const btnW = 320;
+    const gap = 40;
+    const totalW = opts.length * btnW + (opts.length - 1) * gap;
+    const startX = CX - totalW / 2 + btnW / 2;
+    const btnY = 470;
+
+    opts.forEach((opt, idx) => {
+      createButton(this, btnY, opt.label_ru, () => {
         this.mode = { kind: "outcome", signalId: sig.id, option: opt.id };
         this.scene.restart();
-      });
+      }, idx === 0, startX + idx * (btnW + gap));
     });
 
-    createButton(this, 540, "Назад к списку", () => this.returnToList());
+    createButton(this, H - 50, "Назад к списку", () => this.returnToList());
   }
 
   private renderOutcome(signalId: string, option: RadioSignalOptionId): void {
@@ -155,7 +165,7 @@ export class RadioScene extends Phaser.Scene {
 
     GameState.progress.radio_trust = result.trustAfter;
 
-    createPanel(this, 180, 240, 320, 200);
+    createPanel(this, CX, 260, 700, 220);
 
     if (option === "respond" && result.rewardAdded) {
       const item = GameState.data.items[result.rewardAdded.item_id];
@@ -166,7 +176,7 @@ export class RadioScene extends Phaser.Scene {
     if (result.ambushMobId) {
       const mob = GameState.data.mobs[result.ambushMobId];
       const name = mob?.name_ru ?? result.ambushMobId;
-      createSubtitle(this, 240, `Засада! ${name} атакует!`);
+      createSubtitle(this, 260, `Засада! ${name} атакует!`);
       const signal = GameState.data.radioSignals.find((s) => s.id === signalId);
       this.time.delayedCall(1200, () => {
         GameState.currentSortie = {
@@ -185,15 +195,11 @@ export class RadioScene extends Phaser.Scene {
     }
 
     if (option === "ignore") {
-      createSubtitle(this, 240, "Сигнал проигнорирован.");
+      createSubtitle(this, 260, "Сигнал проигнорирован.");
     }
 
-    createSubtitle(
-      this,
-      300,
-      `Доверие: ${result.trustBefore} → ${result.trustAfter}`,
-    );
-    createButton(this, 460, "Назад", () => this.returnToList());
+    createSubtitle(this, 320, `Доверие: ${result.trustBefore} → ${result.trustAfter}`);
+    createButton(this, H - 60, "Назад", () => this.returnToList());
   }
 
   private returnToList(): void {

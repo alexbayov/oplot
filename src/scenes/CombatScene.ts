@@ -41,6 +41,7 @@ import {
   createHpBar,
   showFloatingText,
 } from "./sceneUi";
+import { CX, CY, W, H, LAYOUT } from "../ui/layout";
 
 interface MobInstance {
   mob: Mob;
@@ -81,7 +82,7 @@ export class CombatScene extends Phaser.Scene {
   public create(): void {
     void hideBanner();
 
-    // Reset instance state to prevent leakage from previous combat runs
+    // Reset instance state
     this.state = "awaiting_hero";
     this.mobs = [];
     this.turnQueue = [];
@@ -96,8 +97,8 @@ export class CombatScene extends Phaser.Scene {
     const sortie = GameState.currentSortie;
     if (!sortie) {
       createTitle(this, "Бой");
-      createSubtitle(this, 200, "Вылазка не активна.");
-      createButton(this, 400, "В Оплот", () => this.scene.start("BaseScene"));
+      createSubtitle(this, CY, "Вылазка не активна.");
+      createButton(this, H - 80, "В Оплот", () => this.scene.start("BaseScene"));
       return;
     }
     const enemyIds = sortie.encounters[sortie.fights_completed] ?? [];
@@ -110,47 +111,75 @@ export class CombatScene extends Phaser.Scene {
       });
     sortie.cover_active = false;
 
-    createTitle(this, "Бой");
-    // M5: boss HUD overlay.
+    // Background — растянутый painted-фон зоны
+    const zone = GameState.data.zones[sortie.zone_id];
+    const bgKey = zone ? `bg_${zone.id}` : "bg_forest";
+    this.add.image(CX, CY, bgKey).setAlpha(0.55).setDisplaySize(W, H).setDepth(-10);
+
+    createTitle(this, "БОЙ");
+
+    const combat = LAYOUT.combat;
+
+    // ── Boss HUD overlay (top) ──────────────────────────────────
     const bossInst = this.mobs.find((m) => m.isBoss);
     if (bossInst) {
       this.add
-        .text(180, 30, `Босс: ${bossInst.mob.name_ru}`, {
+        .text(CX, 80, `Босс: ${bossInst.mob.name_ru}`, {
           color: "#FF4444",
           fontFamily: "Roboto Condensed, sans-serif",
-          fontSize: "18px",
+          fontSize: "20px",
           fontStyle: "bold",
         })
         .setOrigin(0.5);
       this.phaseLabel = this.add
-        .text(180, 54, `Фаза ${bossInst.state.phase}`, {
+        .text(CX, 108, `Фаза ${bossInst.state.phase}`, {
           color: "#FFAA44",
           fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "14px",
         })
         .setOrigin(0.5);
     }
-    createPanel(this, 180, 170, 320, 130);
-    this.add.image(30, 180, "hero").setOrigin(0.5).setScale(0.5).setAlpha(0.9);
-    this.heroPanel = createSubtitle(this, 150, "");
-    this.enemyPanel = createSubtitle(this, 200, "");
 
-    createPanel(this, 180, 290, 320, 90);
+    // ── Hero portrait + HP/XP card (bottom-left HUD) ────────────
+    createPanel(this, 180, 620, 320, 80);
+
+    // Big hero sprite in main combat area (mirrors mob position)
+    this.add.image(combat.heroX, combat.heroY, "hero")
+      .setOrigin(0.5)
+      .setScale(combat.spriteScale)
+      .setAlpha(0.95)
+      .setFlipX(true)
+      .setDepth(1);
+
+    // ── Combat log (center, between hero and mob) ───────────────
+    createPanel(this, CX, 300, 500, 100);
     this.logText = this.add
-      .text(180, 290, "", {
+      .text(CX, 300, "", {
         align: "center",
         color: "#C8C0B0",
         fontFamily: "Share Tech Mono, monospace",
-        fontSize: "12px",
-        wordWrap: { width: 300 },
+        fontSize: "13px",
+        wordWrap: { width: 480 },
       })
       .setOrigin(0.5);
 
+    // Static panels for hero/enemy info (heroPanel uses createSubtitle, so created with text only)
+    this.heroPanel = createSubtitle(this, 600, "", 180);
+    this.enemyPanel = createSubtitle(this, 600, "", W - 180);
+
+    // ── Action bar (bottom, 4 buttons in row) ───────────────────
+    const actionY = combat.actionBarY;
+    const btnW = 200;
+    const gap = 18;
+    const actions = 4;
+    const totalW = actions * btnW + (actions - 1) * gap;
+    const startX = CX - totalW / 2 + btnW / 2;
+
     this.buttonsContainer.push(
-      createSmallButton(this, 60, 420, "Атака", 100, () => this.onHeroAttack()),
-      createSmallButton(this, 180, 420, "Укрытие", 100, () => this.onHeroCover()),
-      createSmallButton(this, 300, 420, "Аптечка", 100, () => this.onHeroHeal()),
-      createButton(this, 480, "Отступить", () => this.onHeroRetreat()),
+      createSmallButton(this, startX, actionY, "АТАКА", btnW, () => this.onHeroAttack(), true),
+      createSmallButton(this, startX + (btnW + gap), actionY, "УКРЫТИЕ", btnW, () => this.onHeroCover()),
+      createSmallButton(this, startX + (btnW + gap) * 2, actionY, "АПТЕЧКА", btnW, () => this.onHeroHeal()),
+      createSmallButton(this, startX + (btnW + gap) * 3, actionY, "ОТСТУП", btnW, () => this.onHeroRetreat()),
     );
 
     this.updateDisplay();
@@ -161,7 +190,6 @@ export class CombatScene extends Phaser.Scene {
 
   private startRound(): void {
     if (this.checkEnd()) return;
-    // M5: apply gas damage at the start of each round after the first.
     this.applyGasDamage();
     if (this.checkEnd()) return;
     this.turnQueue = this.computeTurnOrder();
@@ -178,7 +206,7 @@ export class CombatScene extends Phaser.Scene {
     if (gasDamage > 0) {
       player.hp = Math.max(0, player.hp - gasDamage);
       this.log(`Газ: -${gasDamage} HP`);
-      const overlay = this.add.rectangle(180, 320, 360, 640, 0xffff00, 0).setAlpha(0);
+      const overlay = this.add.rectangle(CX, CY, W, H, 0xffff00, 0).setAlpha(0);
       const tween = runTween(this, "tween_gas_warning", overlay);
       tween?.once("complete", () => overlay.destroy());
     }
@@ -194,7 +222,6 @@ export class CombatScene extends Phaser.Scene {
     });
     this.mobs.forEach((inst, idx) => {
       if (inst.state.hp <= 0 || inst.state.fled) return;
-      // base_speed may have been mutated by mobAI (berserker_low_hp -30).
       order.push({ kind: "mob", mobIndex: idx, initiative: inst.state.base_speed });
     });
     order.sort((a, b) => b.initiative - a.initiative);
@@ -209,7 +236,6 @@ export class CombatScene extends Phaser.Scene {
       return;
     }
     if (entry.kind === "hero") {
-      // Cover expires on hero's own next turn.
       const sortie = GameState.currentSortie;
       if (sortie) sortie.cover_active = false;
       this.state = "awaiting_hero";
@@ -235,11 +261,10 @@ export class CombatScene extends Phaser.Scene {
       allies: this.mobs.map((m) => ({ mob: m.mob, state: m.state })),
       heroEquippedWeapon: heroWeapon,
     });
-    // M5: phase transition popup.
     if (inst.isBoss && inst.state.phase_transition_done && inst.state.phase === 2 && !inst._phase2PopupShown) {
       this.log(`${inst.mob.name_ru} переходит в фазу 2!`);
       inst._phase2PopupShown = true;
-      const overlay = this.add.rectangle(180, 40, 360, 40, 0xff0000, 0).setAlpha(0).setDepth(50);
+      const overlay = this.add.rectangle(CX, 80, W, 50, 0xff0000, 0).setAlpha(0).setDepth(50);
       const tween = runTween(this, "tween_boss_phase_red", overlay);
       tween?.once("complete", () => overlay.destroy());
     }
@@ -251,15 +276,11 @@ export class CombatScene extends Phaser.Scene {
       return;
     }
     if (action.kind === "cover") {
-      // defensive_cover: mob takes cover instead of attacking. cover_active flag
-      // was set inside chooseMobActionV2; calcHeroAttackDefense() will pick it up
-      // for the hero's next strike against this mob and reset it after the hit.
       this.log(`${inst.mob.name_ru} прячется в укрытие.`);
       this.updateDisplay();
       this.time.delayedCall(250, () => this.advanceTurn());
       return;
     }
-    // Attack hero.
     const armorItem = GameState.data.items[player.equipped_armor_id];
     const armorStats =
       action.ignore_armor_defense || !armorItem ? null : getArmorStats(armorItem);
@@ -281,7 +302,7 @@ export class CombatScene extends Phaser.Scene {
     );
     runTween(this, "tween_hit_shake", this.cameras.main);
     this.flashDamage();
-    showFloatingText(this, 50, 150, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
+    showFloatingText(this, LAYOUT.combat.heroX, LAYOUT.combat.heroY - 80, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
     this.updateDisplay();
     this.time.delayedCall(250, () => this.advanceTurn());
   }
@@ -304,7 +325,6 @@ export class CombatScene extends Phaser.Scene {
     if (melee) {
       weaponStats = melee;
     } else if (ranged) {
-      // Consume ammo if available; otherwise fall back to 1 dmg jab.
       const ammoHave = countInStacks(player.backpack, ranged.ammo_id);
       if (ammoHave >= ranged.ammo_per_shot) {
         player.backpack = removeFromStack(player.backpack, ranged.ammo_id, ranged.ammo_per_shot);
@@ -321,8 +341,6 @@ export class CombatScene extends Phaser.Scene {
       this.advanceTurn();
       return;
     }
-    // defensive_cover mobs: while in cover, defense is multiplied by (1 + 0.5).
-    // Cover is consumed by this single incoming attack.
     const coverActive = target.state.cover_active;
     const targetDefense = coverActive
       ? target.mob.defense * (1 + COVER_DEFENSE_BONUS_PCT)
@@ -336,22 +354,23 @@ export class CombatScene extends Phaser.Scene {
     );
     runTween(this, "tween_hit_shake", this.cameras.main);
 
-    // Scale pulse mob sprite
+    // Scale pulse mob sprite at landscape mob position
+    const mobScreenX = LAYOUT.combat.mobX + aliveIdx * 40;
     const spr = this.children.list.find((c) => {
       const transform = c as unknown as Phaser.GameObjects.Components.Transform;
-      return c.getData("mobSprite") === true && transform.x === (310 + aliveIdx * 40);
+      return c.getData("mobSprite") === true && transform.x === mobScreenX;
     });
     if (spr) {
       this.tweens.add({
         targets: spr,
-        scaleX: 0.5,
-        scaleY: 0.5,
+        scaleX: LAYOUT.combat.spriteScale * 0.95,
+        scaleY: LAYOUT.combat.spriteScale * 0.95,
         duration: 100,
-        yoyo: true
+        yoyo: true,
       });
     }
 
-    showFloatingText(this, 310 + aliveIdx * 40, 530, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
+    showFloatingText(this, mobScreenX, LAYOUT.combat.mobY - 80, `-${result.damage_dealt.toFixed(0)}`, "#D32F2F");
 
     this.updateDisplay();
     this.state = "resolving_mobs";
@@ -379,7 +398,6 @@ export class CombatScene extends Phaser.Scene {
       if (item.stats.effect_type !== "heal") continue;
       heals.push({ stack, item, value: item.stats.effect_value });
     }
-    // Prefer lower-value heal first to save medkit for emergencies.
     heals.sort((a, b) => a.value - b.value);
     const pick = heals[0];
     if (!pick) {
@@ -394,7 +412,7 @@ export class CombatScene extends Phaser.Scene {
     if (this.heroPanel) {
       runTween(this, "tween_heal_pulse", this.heroPanel);
     }
-    showFloatingText(this, 50, 150, `+${delta.toFixed(0)} HP`, "#4CAF50");
+    showFloatingText(this, LAYOUT.combat.heroX, LAYOUT.combat.heroY - 80, `+${delta.toFixed(0)} HP`, "#4CAF50");
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
@@ -404,8 +422,6 @@ export class CombatScene extends Phaser.Scene {
     if (this.state !== "awaiting_hero") return;
     this.state = "ended";
     const sortie = GameState.currentSortie;
-    // Retreat abandons the current fight without ending the sortie:
-    // hero returns to SortieScene if any fights remain, otherwise to BaseScene.
     if (sortie && sortie.fights_completed < sortie.fights_total) {
       sortie.cover_active = false;
       this.scene.start("SortieScene");
@@ -447,7 +463,6 @@ export class CombatScene extends Phaser.Scene {
       for (const stack of drops) {
         mobLoot = addToStack(mobLoot, stack.item_id, stack.count);
       }
-      // M5: boss guaranteed drops.
       if (inst.isBoss) {
         const guaranteed = getBossGuaranteedDrops(inst.mob);
         for (const stack of guaranteed) {
@@ -468,7 +483,6 @@ export class CombatScene extends Phaser.Scene {
       player.hp_max = 100 + modsAfter.hp_max_additive;
       player.hp = Math.min(player.hp, player.hp_max);
     }
-    // Drain zone loot proportionally.
     const fightsRemaining = sortie.fights_total - sortie.fights_completed;
     const drainedZone: InventoryStack[] = [];
     const newPool: InventoryStack[] = [];
@@ -506,7 +520,7 @@ export class CombatScene extends Phaser.Scene {
   private endCombatDefeat(): void {
     this.state = "ended";
     if (!this.secondChanceUsed) {
-      createButton(this, 420, "Второй шанс (реклама)", () => {
+      createButton(this, H - 110, "Второй шанс (реклама)", () => {
         this.secondChanceUsed = true;
         showRewardedVideo("second_chance", () => {
           const player = GameState.player;
@@ -518,7 +532,7 @@ export class CombatScene extends Phaser.Scene {
           this.proceedToDefeatEnd();
         });
       });
-      createButton(this, 476, "Сдаться", () => {
+      createButton(this, H - 50, "Сдаться", () => {
         this.proceedToDefeatEnd();
       });
     } else {
@@ -527,7 +541,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private proceedToDefeatEnd(): void {
-    const overlay = this.add.rectangle(180, 320, 360, 640, 0x000000, 0).setAlpha(0).setDepth(200);
+    const overlay = this.add.rectangle(CX, CY, W, H, 0x000000, 0).setAlpha(0).setDepth(200);
     runTween(this, "tween_defeat_fade", overlay);
     this.time.delayedCall(500, () => {
       overlay.destroy();
@@ -568,55 +582,65 @@ export class CombatScene extends Phaser.Scene {
     const player = GameState.player;
     const items = GameState.data.items;
     const weight = computeWeight(player.backpack, items);
+    const combat = LAYOUT.combat;
 
     // Destroy old HP bars
     for (const c of this.children.list.filter((c) => c.getData("hpBar") === true)) {
       c.destroy();
     }
 
-    // Hero HP bar and stats
-    const [bgHero, barHero] = createHpBar(this, 80, 130, player.hp, player.hp_max, 120, 8);
+    // Hero HP bar (bottom-left card)
+    const heroBarX = 50;
+    const heroBarY = 580;
+    const [bgHero, barHero] = createHpBar(this, heroBarX, heroBarY, player.hp, player.hp_max, 240, 12);
     bgHero.setData("hpBar", true);
     barHero.setData("hpBar", true);
+    this.add.text(heroBarX, heroBarY + 14, `HP ${player.hp.toFixed(0)}/${player.hp_max}`, {
+      color: "#C8C0B0",
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "12px",
+    }).setData("hpBar", true);
 
     if (this.heroPanel) {
       this.heroPanel.setText(
-        `Ур. ${player.level} · Вес ${weight.toFixed(1)}/${player.max_weight_kg} кг`
+        `Ур. ${player.level} · Вес ${weight.toFixed(1)}/${player.max_weight_kg} кг`,
       );
-      this.heroPanel.setX(160);
-      this.heroPanel.setY(150);
-      this.heroPanel.setFontSize("12px");
+      this.heroPanel.setFontSize("13px");
     }
 
-    // Enemies HP bars
     if (this.enemyPanel) {
-      this.enemyPanel.setText(""); // clear legacy enemy panel text
+      this.enemyPanel.setText("");
     }
 
-    let startY = 175;
+    // Enemy HP bars (top-right HUD, выше моба чтобы не перекрывались)
+    const enemyBarX = W - 290;
+    let enemyY = 150;
     this.mobs.forEach((inst) => {
       if (inst.state.fled || inst.state.hp <= 0) return;
-      
-      this.add.text(80, startY, `${inst.mob.name_ru}`, {
+
+      this.add.text(enemyBarX, enemyY, `${inst.mob.name_ru}`, {
         color: "#C8C0B0",
         fontFamily: "Roboto Condensed, sans-serif",
-        fontSize: "12px",
-      }).setOrigin(0, 0.5).setData("hpBar", true);
-      
-      const [bgE, barE] = createHpBar(this, 190, startY, inst.state.hp, inst.state.hp_max, 100, 6);
+        fontSize: "13px",
+        fontStyle: "bold",
+      }).setData("hpBar", true);
+
+      const [bgE, barE] = createHpBar(this, enemyBarX, enemyY + 18, inst.state.hp, inst.state.hp_max, 240, 10);
       bgE.setData("hpBar", true);
       barE.setData("hpBar", true);
-      
+
       if (inst.state.cover_active) {
-        this.add.text(300, startY, "🛡️", { fontSize: "10px" }).setOrigin(0.5).setData("hpBar", true);
+        this.add.text(enemyBarX + 250, enemyY + 18, "🛡️", { fontSize: "12px" })
+          .setOrigin(0.5).setData("hpBar", true);
       }
-      startY += 16;
+      enemyY += 40;
     });
 
     if (this.logText) {
       this.logText.setText(this.logLines.slice(-3).join("\n"));
     }
-    // M9: render mob sprites
+
+    // M9: render mob sprites (landscape positions from LAYOUT.combat)
     for (const c of this.children.list.filter((c) => c.getData("mobSprite") === true)) {
       c.destroy();
     }
@@ -624,17 +648,18 @@ export class CombatScene extends Phaser.Scene {
     this.mobs.forEach((inst, idx) => {
       const alive = inst.state.hp > 0 && !inst.state.fled;
       if (!alive) return;
-      const x = 310 + idx * 40;
-      const y = 570;
+      const x = combat.mobX + idx * 40;
+      const y = combat.mobY;
       const isTarget = inst === firstAlive;
       if (isTarget) {
-        this.add.rectangle(x, y, 44, 44, 0x000000, 0)
-          .setStrokeStyle(2, 0xc5a267, 0.8).setData("mobSprite", true);
+        // Target highlight ring (size matches sprite at scale 2.5)
+        this.add.rectangle(x, y, 340, 340, 0x000000, 0)
+          .setStrokeStyle(3, 0xc5a267, 0.8).setData("mobSprite", true);
       }
       const texKey = `mob_${inst.mob.id}`;
       if (this.textures.exists(texKey)) {
         const spr = this.add.image(x, y, texKey);
-        spr.setScale(0.4).setAlpha(0.85).setData("mobSprite", true);
+        spr.setScale(combat.spriteScale).setAlpha(0.95).setData("mobSprite", true);
       }
     });
     const bossInst = this.mobs.find((m) => m.isBoss);
@@ -651,7 +676,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private flashDamage(): void {
-    const overlay = this.add.rectangle(180, 320, 360, 640, 0xff0000, 0).setAlpha(0);
+    const overlay = this.add.rectangle(CX, CY, W, H, 0xff0000, 0).setAlpha(0);
     const tween = runTween(this, "tween_damage_flash", overlay);
     tween?.once("complete", () => overlay.destroy());
   }
