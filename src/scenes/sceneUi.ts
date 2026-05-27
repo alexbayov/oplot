@@ -1,11 +1,12 @@
 import Phaser from "phaser";
+import { CX, BTN, SAFE_W } from "../ui/layout";
 
-const BUTTON_WIDTH = 220;
-const BUTTON_HEIGHT = 48;
+const BUTTON_WIDTH = BTN.main.w;
+const BUTTON_HEIGHT = BTN.main.h;
 
 export const createTitle = (scene: Phaser.Scene, title: string): Phaser.GameObjects.Text =>
   scene.add
-    .text(180, 64, title, {
+    .text(CX, 36, title, {
       color: "#D4C5A0",
       fontFamily: "Oswald, sans-serif",
       fontSize: "30px",
@@ -19,14 +20,15 @@ export const createSubtitle = (
   scene: Phaser.Scene,
   y: number,
   text: string,
+  x: number = CX,
 ): Phaser.GameObjects.Text =>
   scene.add
-    .text(180, y, text, {
+    .text(x, y, text, {
       align: "center",
       color: "#C8C0B0",
       fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "14px",
-      wordWrap: { width: 300 },
+      wordWrap: { width: Math.min(640, SAFE_W) },
     })
     .setOrigin(0.5);
 
@@ -60,6 +62,7 @@ export const createButton = (
   label: string,
   onClick: () => void,
   accent = false,
+  x: number = CX,
 ): Phaser.GameObjects.Container => {
   const width = BUTTON_WIDTH;
   const height = BUTTON_HEIGHT;
@@ -83,7 +86,7 @@ export const createButton = (
     .rectangle(0, 0, width, height, 0x000000, 0)
     .setStrokeStyle(3, 0xc5a267, 0);
 
-  const button = scene.add.container(180, y, [background, glow, text]);
+  const button = scene.add.container(x, y, [background, glow, text]);
   button.setSize(width, height);
   button.setInteractive({ useHandCursor: true });
   button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {

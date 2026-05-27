@@ -8,6 +8,7 @@ import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
 import { loadFromCloud, applySnapshot } from "../systems/cloudSave";
+import { CY } from "../ui/layout";
 
 const ITEM_ICON_IDS = [
   "wood", "scrap", "cloth", "food", "water", "gunpowder", "leather", "rope",
@@ -73,7 +74,7 @@ export class BootScene extends Phaser.Scene {
 
   public create(): void {
     createTitle(this, "ОПЛОТ");
-    this.status = createSubtitle(this, 200, "Загрузка контента...");
+    this.status = createSubtitle(this, CY, "Загрузка контента...");
     void this.loadContent();
   }
 

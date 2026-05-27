@@ -5,6 +5,7 @@ import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 import { hideBanner } from "../systems/banner";
+import { CX, CY, W, H } from "../ui/layout";
 
 interface SortieInit {
   zoneId?: string;
@@ -41,61 +42,70 @@ export class SortieScene extends Phaser.Scene {
     const zone = this.zoneId ? GameState.data.zones[this.zoneId] : null;
     createTitle(this, "Вылазка");
     if (!zone) {
-      createSubtitle(this, 180, "Зона не найдена.");
-      createButton(this, 380, "Назад", () => this.scene.start("MapScene"));
+      createSubtitle(this, CY, "Зона не найдена.");
+      createButton(this, H - 80, "Назад", () => this.scene.start("MapScene"));
       return;
     }
 
     const sortie = GameState.currentSortie;
     if (sortie && sortie.zone_id === zone.id && sortie.fights_completed < sortie.fights_total) {
       const remaining = sortie.fights_total - sortie.fights_completed;
-      createPanel(this, 180, 240, 320, 200);
+      createPanel(this, CX, CY - 40, 600, 200);
       createSubtitle(
         this,
-        180,
+        CY - 40,
         `Зона: ${zone.name_ru}\nГлубина ${sortie.depth}: бои ${sortie.fights_total}\nБоёв осталось: ${remaining}`,
       );
-      createButton(this, 380, "Следующий бой", () => this.scene.start("CombatScene"));
-      createButton(this, 436, "Назад в Оплот", () => {
+      createButton(this, H - 130, "Следующий бой", () => this.scene.start("CombatScene"), true);
+      createButton(this, H - 70, "Назад в Оплот", () => {
         GameState.currentSortie = null;
         this.scene.start("BaseScene");
       });
       return;
     }
 
-    createPanel(this, 180, 240, 320, 200);
+    createPanel(this, CX, 220, 600, 160);
     createSubtitle(
       this,
-      176,
-      `Зона: ${zone.name_ru}\nВыбери глубину`,
+      200,
+      `Зона: ${zone.name_ru}`,
     );
+    createSubtitle(this, 240, "Выбери глубину вылазки");
 
     const playerLevel = GameState.player.level;
-    const buttonYs = [340, 396, 452];
     const depths: (1 | 2 | 3)[] = [1, 2, 3];
+    // 3 кнопки в ряд по центру
+    const btnW = 260;
+    const gap = 20;
+    const totalW = depths.length * btnW + (depths.length - 1) * gap;
+    const startX = CX - totalW / 2 + btnW / 2;
+    const btnY = 420;
+
     depths.forEach((depth, idx) => {
       const level = zone.levels.find((l) => l.depth === depth);
-      const yPos = buttonYs[idx] ?? 340 + idx * 56;
+      const xPos = startX + idx * (btnW + gap);
       if (!level) {
-        createButton(this, yPos, `Depth ${depth} нет`, () => undefined);
+        createButton(this, btnY, `Depth ${depth} нет`, () => undefined, false, xPos);
         return;
       }
       const fights = FIGHTS_PER_DEPTH[depth];
       const locked = playerLevel < level.min_player_level;
       const label = locked
-        ? `Depth ${depth} закрыт (need lvl ${level.min_player_level})`
-        : `Старт depth ${depth} (${fights} боёв)`;
-      createButton(this, yPos, label, () => {
+        ? `Depth ${depth} 🔒 lvl ${level.min_player_level}`
+        : `Depth ${depth} (${fights} боёв)`;
+      createButton(this, btnY, label, () => {
         if (locked) return;
         this.startSortie(zone.id, depth, fights);
-      });
+      }, !locked && depth === 1, xPos);
     });
+
+    createButton(this, H - 60, "Назад", () => this.scene.start("MapScene"));
   }
 
   private startSortie(zoneId: string, depth: 1 | 2 | 3, fights: number): void {
     const zone = GameState.data.zones[zoneId];
     if (!zone) return;
-    const overlay = this.add.rectangle(180, 320, 360, 640, 0x000000).setAlpha(1).setDepth(100);
+    const overlay = this.add.rectangle(CX, CY, W, H, 0x000000).setAlpha(1).setDepth(100);
     runTween(this, "tween_sortie_enter", overlay);
     this.time.delayedCall(400, () => {
       overlay.destroy();

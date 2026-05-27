@@ -15,6 +15,7 @@ import {
 } from "./sceneUi";
 import { showRewardedVideo } from "../systems/ads";
 import { showBanner } from "../systems/banner";
+import { CX, CY, W, H } from "../ui/layout";
 
 const ZONE_ORDER: readonly string[] = ["forest", "warehouse", "city"];
 
@@ -32,24 +33,36 @@ export class MapScene extends Phaser.Scene {
   }
 
   public create(): void {
+    this.add.image(CX, CY, "bg_forest").setAlpha(0.15).setDisplaySize(W, H).setDepth(-10);
     createTitle(this, "Карта");
-    this.add.image(180, 320, "bg_forest").setAlpha(0.15).setScale(1.2).setDepth(-1);
     void showBanner();
     const zones = sortZonesForMap(Object.values(GameState.data.zones));
     if (zones.length === 0) {
-      createPanel(this, 180, 240, 320, 120);
-      createSubtitle(this, 240, "Нет доступных зон.");
-      createButton(this, 460, "Назад в Оплот", () =>
+      createPanel(this, CX, CY, 600, 120);
+      createSubtitle(this, CY, "Нет доступных зон.");
+      createButton(this, H - 60, "Назад в Оплот", () =>
         this.scene.start("BaseScene"),
       );
       return;
     }
 
-    const startY = 140;
-    const rowHeight = 125;
+    // Зоны раскладываем в 3 колонки (landscape позволяет)
+    const cols = 3;
+    const cardW = 400;
+    const cardH = 140;
+    const gapX = 16;
+    const gapY = 14;
+    const gridW = cols * cardW + (cols - 1) * gapX;
+    const startX = (W - gridW) / 2 + cardW / 2;
+    const startY = 130;
+
     zones.forEach((zone, idx) => {
-      const yCenter = startY + idx * rowHeight;
-      createPanel(this, 180, yCenter, 320, rowHeight - 15);
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const xCenter = startX + col * (cardW + gapX);
+      const yCenter = startY + row * (cardH + gapY);
+
+      createPanel(this, xCenter, yCenter, cardW, cardH);
       const unlocked = evaluateUnlockCondition(zone.unlock_condition, GameState.progress);
       
       const header = unlocked ? `${zone.name_ru} (ур. ${zone.level})` : `${zone.name_ru} (ур. ${zone.level}) 🔒`;
@@ -57,8 +70,9 @@ export class MapScene extends Phaser.Scene {
         ? zone.description_ru
         : `Закрыто. Требуется: ${describeUnlockCondition(zone.unlock_condition)}.`;
 
+      const leftX = xCenter - cardW / 2 + 20;
       // Header text
-      this.add.text(35, yCenter - 38, header, {
+      this.add.text(leftX + 16, yCenter - 54, header, {
         color: unlocked ? "#D4C5A0" : "#8A8070",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
@@ -68,20 +82,17 @@ export class MapScene extends Phaser.Scene {
       // Risk dot
       const riskColors = [0x4682b4, 0x6f8a4d, 0xffb300, 0x8b0000];
       const riskIdx = Math.min(zone.level - 1, 3);
-      this.add.rectangle(30, yCenter - 38, 8, 8, riskColors[riskIdx] ?? 0xffb300).setDepth(5);
+      this.add.rectangle(leftX, yCenter - 48, 9, 9, riskColors[riskIdx] ?? 0xffb300).setDepth(5);
 
-      // Enemy count
       const mobsInZone = Object.values(GameState.data.mobs).filter((m) => m.zone === zone.id).length;
-
-      // Subtitle with enemies
       const descExtra = unlocked
         ? `${subtitle}\nВрагов: ${mobsInZone} · Глубина: max ${zone.levels.length}`
         : subtitle;
-      this.add.text(35, yCenter - 15, descExtra, {
+      this.add.text(leftX, yCenter - 28, descExtra, {
         color: "#C8C0B0",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "11px",
-        wordWrap: { width: 175 },
+        wordWrap: { width: cardW - 140 },
       });
 
       const onClick = (): void => {
@@ -89,13 +100,12 @@ export class MapScene extends Phaser.Scene {
         this.scene.start("SortieScene", { zoneId: zone.id });
       };
 
+      const btnRightX = xCenter + cardW / 2 - 60;
       if (unlocked && zone.boss_id) {
-        // Daily boss zone has two buttons (Enter & Daily)
-        createSmallButton(this, 270, yCenter - 22, "Войти", 100, onClick, true);
-        
+        createSmallButton(this, btnRightX, yCenter - 22, "Войти", 100, onClick, true);
         const canDaily = canEnterDailyInstance(GameState.progress, zone, Date.now());
         const dailyLabel = canDaily ? "Дейли" : "Кулдаун";
-        const dailyBtn = createSmallButton(this, 270, yCenter + 22, dailyLabel, 100, () => {
+        const dailyBtn = createSmallButton(this, btnRightX, yCenter + 18, dailyLabel, 100, () => {
           if (canDaily) {
             this.scene.start("SortieScene", { zoneId: zone.id, daily: true, depth: 3 });
           } else {
@@ -105,21 +115,14 @@ export class MapScene extends Phaser.Scene {
             });
           }
         }, canDaily);
-        
-        if (!canDaily) {
-          dailyBtn.setAlpha(0.6);
-        }
+        if (!canDaily) dailyBtn.setAlpha(0.6);
       } else {
-        // Normal zone has one button in the center right
         const btnLabel = unlocked ? "Войти" : "Закрыто";
-        const enterBtn = createSmallButton(this, 270, yCenter, btnLabel, 100, onClick, unlocked);
-        if (!unlocked) {
-          enterBtn.setAlpha(0.5);
-        }
+        const enterBtn = createSmallButton(this, btnRightX, yCenter, btnLabel, 100, onClick, unlocked);
+        if (!unlocked) enterBtn.setAlpha(0.5);
       }
     });
 
-    const backY = startY + zones.length * rowHeight;
-    createButton(this, backY, "Назад в Оплот", () => this.scene.start("BaseScene"));
+    createButton(this, H - 40, "Назад в Оплот", () => this.scene.start("BaseScene"));
   }
 }
