@@ -1,7 +1,16 @@
 import Phaser from "phaser";
+import { playSfx } from "../systems/audio";
+import { COLORS, FONTS } from "../ui/tokens";
 
 const BUTTON_WIDTH = 220;
 const BUTTON_HEIGHT = 48;
+const NOISE_DOTS = [
+  [-0.42, -0.28],
+  [-0.22, 0.24],
+  [0.08, -0.18],
+  [0.32, 0.18],
+  [0.44, -0.08],
+] as const;
 
 export const createTitle = (scene: Phaser.Scene, title: string): Phaser.GameObjects.Text =>
   scene.add
@@ -36,22 +45,122 @@ export const createPanel = (
   y: number,
   width: number,
   height: number,
-): Phaser.GameObjects.Rectangle => {
+): Phaser.GameObjects.Container => {
+  const shadow = scene.add
+    .rectangle(4, 6, width, height, 0x000000, 0.38)
+    .setOrigin(0.5);
   const bg = scene.add
-    .rectangle(x, y, width, height, 0x2d2d2a, 0.94)
-    .setStrokeStyle(2, 0x4a4a3a, 1);
-  
-  // Tactical inner border glow
+    .rectangle(0, 0, width, height, COLORS.panelBg, 0.96)
+    .setStrokeStyle(2, COLORS.panelBorder, 1);
+  const topWash = scene.add
+    .rectangle(0, -height / 2 + 8, width - 8, 12, COLORS.bgPanelLight, 0.32)
+    .setOrigin(0.5);
   const inner = scene.add
-    .rectangle(x, y, width - 6, height - 6, 0x000000, 0)
-    .setStrokeStyle(1, 0xd4c5a0, 0.22);
+    .rectangle(0, 0, width - 8, height - 8, 0x000000, 0)
+    .setStrokeStyle(1, COLORS.panelInnerBorder, 0.18);
+  const leftBracket = scene.add.rectangle(-width / 2 + 6, 0, 3, height - 18, COLORS.accent, 0.34);
+  const topBolt = scene.add.circle(-width / 2 + 13, -height / 2 + 13, 2.5, COLORS.border, 0.9);
+  const bottomBolt = scene.add.circle(width / 2 - 13, height / 2 - 13, 2.5, COLORS.border, 0.9);
 
-  // Link inner border to bg so it gets cleaned up if bg is destroyed
+  const panel = scene.add.container(x, y, [
+    shadow,
+    bg,
+    topWash,
+    inner,
+    leftBracket,
+    topBolt,
+    bottomBolt,
+  ]);
+  panel.setSize(width, height);
+
   bg.on("destroy", () => {
-    inner.destroy();
+    panel.destroy();
   });
 
-  return bg;
+  return panel;
+};
+
+const createButtonPlate = (
+  scene: Phaser.Scene,
+  width: number,
+  height: number,
+  accent: boolean,
+  onPress: () => void,
+): {
+  container: Phaser.GameObjects.Container;
+  plate: Phaser.GameObjects.Rectangle;
+  bevel: Phaser.GameObjects.Rectangle;
+  glow: Phaser.GameObjects.Rectangle;
+  labelColor: string;
+  normalFill: number;
+} => {
+  const normalFill = accent ? COLORS.accent : COLORS.buttonBg;
+  const labelColor = accent ? COLORS.accentText : COLORS.textMain;
+  const shadow = scene.add.rectangle(4, 5, width, height, 0x000000, 0.45);
+  const underplate = scene.add
+    .rectangle(-3, 3, width + 6, height - 4, accent ? 0x7a6337 : 0x191a17, 0.9)
+    .setStrokeStyle(1, 0x000000, 0.5);
+  const plate = scene.add.rectangle(0, 0, width, height, normalFill, accent ? 1 : 0.97).setStrokeStyle(
+    2,
+    accent ? 0xf0d18a : COLORS.border,
+    1,
+  );
+  const bevel = scene.add
+    .rectangle(0, -height / 2 + 7, width - 12, 8, accent ? 0xf3d891 : COLORS.bgPanelLight, accent ? 0.26 : 0.2);
+  const bottomShade = scene.add
+    .rectangle(0, height / 2 - 6, width - 12, 7, 0x000000, accent ? 0.16 : 0.28);
+  const leftCut = scene.add.triangle(
+    -width / 2 + 6,
+    -height / 2 + 6,
+    0,
+    0,
+    10,
+    0,
+    0,
+    10,
+    accent ? 0x7a6337 : 0x151612,
+    0.9,
+  );
+  const rightCut = scene.add.triangle(
+    width / 2 - 6,
+    height / 2 - 6,
+    0,
+    0,
+    -10,
+    0,
+    0,
+    -10,
+    accent ? 0x7a6337 : 0x151612,
+    0.9,
+  );
+  const glow = scene.add
+    .rectangle(0, 0, width + 8, height + 8, 0x000000, 0)
+    .setStrokeStyle(3, COLORS.accent, 0);
+
+  const pockmarks = NOISE_DOTS.map(([nx, ny]) =>
+    scene.add.circle(
+      nx * width,
+      ny * height,
+      1.2,
+      accent ? 0x6f5529 : 0x8a8070,
+      accent ? 0.22 : 0.16,
+    ),
+  );
+
+  const container = scene.add.container(0, 0, [
+    shadow,
+    underplate,
+    plate,
+    bevel,
+    bottomShade,
+    leftCut,
+    rightCut,
+    ...pockmarks,
+    glow,
+  ]);
+  plate.setInteractive({ useHandCursor: true });
+  plate.on(Phaser.Input.Events.POINTER_UP, onPress);
+  return { container, plate, bevel, glow, labelColor, normalFill };
 };
 
 export const createButton = (
@@ -63,30 +172,8 @@ export const createButton = (
 ): Phaser.GameObjects.Container => {
   const width = BUTTON_WIDTH;
   const height = BUTTON_HEIGHT;
-  const bgColor = accent ? 0xc5a267 : 0x2d2d2a;
-  const strokeColor = 0x4a4a3a;
-  const textColor = accent ? "#1a1a1a" : "#d4c5a0";
-
-  const background = scene.add
-    .rectangle(0, 0, width, height, bgColor, 0.95)
-    .setStrokeStyle(2, strokeColor, 1);
-  const text = scene.add
-    .text(0, 0, label, {
-      color: textColor,
-      fontFamily: "Oswald, sans-serif",
-      fontSize: "16px",
-      fontStyle: "bold",
-    })
-    .setOrigin(0.5);
-
-  const glow = scene.add
-    .rectangle(0, 0, width, height, 0x000000, 0)
-    .setStrokeStyle(3, 0xc5a267, 0);
-
-  const button = scene.add.container(180, y, [background, glow, text]);
-  button.setSize(width, height);
-  button.setInteractive({ useHandCursor: true });
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
+  const press = (): void => {
+    playSfx(scene, "ui_click");
     scene.tweens.add({
       targets: button,
       scaleX: 0.94,
@@ -95,16 +182,45 @@ export const createButton = (
       yoyo: true,
       onComplete: onClick,
     });
-  });
+  };
+  const plate = createButtonPlate(scene, width, height, accent, press);
+  const text = scene.add
+    .text(0, 0, label, {
+      color: plate.labelColor,
+      fontFamily: FONTS.title,
+      fontSize: "16px",
+      fontStyle: "bold",
+      stroke: accent ? "#d9bc78" : "#111210",
+      strokeThickness: accent ? 0 : 2,
+    })
+    .setOrigin(0.5);
+  const edgeMark = scene.add.rectangle(-width / 2 + 14, 0, 3, height - 14, accent ? 0x1a1a1a : COLORS.accent, accent ? 0.34 : 0.55);
+
+  const hitArea = scene.add.rectangle(0, 0, width, height, 0x000000, 0);
+  const button = scene.add.container(180, y, [plate.container, edgeMark, text, hitArea]);
+  button.setSize(width, height);
+  button.setInteractive(
+    new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+    Phaser.Geom.Rectangle.Contains,
+  );
+  if (button.input) button.input.cursor = "pointer";
+  hitArea.setInteractive(
+    new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+    Phaser.Geom.Rectangle.Contains,
+  );
+  if (hitArea.input) hitArea.input.cursor = "pointer";
+  button.on(Phaser.Input.Events.POINTER_UP, press);
+  hitArea.on(Phaser.Input.Events.POINTER_UP, press);
 
   let glowTween: Phaser.Tweens.Tween | null = null;
 
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-    background.setFillStyle(0xc5a267);
+  hitArea.on(Phaser.Input.Events.POINTER_OVER, () => {
+    plate.plate.setFillStyle(COLORS.buttonHover, 1);
+    plate.bevel.setFillStyle(0xf3d891, 0.28);
     text.setColor("#1a1a1a");
-    glow.setStrokeStyle(3, 0xc5a267, 1);
+    plate.glow.setStrokeStyle(3, COLORS.accent, 1);
     glowTween = scene.tweens.add({
-      targets: glow,
+      targets: plate.glow,
       alpha: { from: 1, to: 0.2 },
       duration: 500,
       yoyo: true,
@@ -113,15 +229,16 @@ export const createButton = (
     });
   });
 
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-    background.setFillStyle(bgColor);
-    text.setColor(textColor);
+  hitArea.on(Phaser.Input.Events.POINTER_OUT, () => {
+    plate.plate.setFillStyle(plate.normalFill, accent ? 1 : 0.97);
+    plate.bevel.setFillStyle(accent ? 0xf3d891 : COLORS.bgPanelLight, accent ? 0.26 : 0.2);
+    text.setColor(plate.labelColor);
     if (glowTween) {
       glowTween.stop();
       glowTween = null;
     }
-    glow.setStrokeStyle(3, 0xc5a267, 0);
-    glow.setAlpha(1);
+    plate.glow.setStrokeStyle(3, COLORS.accent, 0);
+    plate.glow.setAlpha(1);
   });
 
   return button;
@@ -137,30 +254,8 @@ export const createSmallButton = (
   accent = false,
 ): Phaser.GameObjects.Container => {
   const height = 36;
-  const bgColor = accent ? 0xc5a267 : 0x2d2d2a;
-  const strokeColor = 0x4a4a3a;
-  const textColor = accent ? "#1a1a1a" : "#d4c5a0";
-
-  const background = scene.add
-    .rectangle(0, 0, width, height, bgColor, 0.95)
-    .setStrokeStyle(2, strokeColor, 1);
-  const text = scene.add
-    .text(0, 0, label, {
-      color: textColor,
-      fontFamily: "Oswald, sans-serif",
-      fontSize: "14px",
-      fontStyle: "bold",
-    })
-    .setOrigin(0.5);
-
-  const glow = scene.add
-    .rectangle(0, 0, width, height, 0x000000, 0)
-    .setStrokeStyle(2.5, 0xc5a267, 0);
-
-  const button = scene.add.container(x, y, [background, glow, text]);
-  button.setSize(width, height);
-  button.setInteractive({ useHandCursor: true });
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
+  const press = (): void => {
+    playSfx(scene, "ui_click");
     scene.tweens.add({
       targets: button,
       scaleX: 0.94,
@@ -169,16 +264,45 @@ export const createSmallButton = (
       yoyo: true,
       onComplete: onClick,
     });
-  });
+  };
+  const plate = createButtonPlate(scene, width, height, accent, press);
+  const text = scene.add
+    .text(0, 0, label, {
+      color: plate.labelColor,
+      fontFamily: FONTS.title,
+      fontSize: "14px",
+      fontStyle: "bold",
+      stroke: accent ? "#d9bc78" : "#111210",
+      strokeThickness: accent ? 0 : 2,
+    })
+    .setOrigin(0.5);
+  const edgeMark = scene.add.rectangle(-width / 2 + 10, 0, 2.5, height - 12, accent ? 0x1a1a1a : COLORS.accent, accent ? 0.3 : 0.46);
+
+  const hitArea = scene.add.rectangle(0, 0, width, height, 0x000000, 0);
+  const button = scene.add.container(x, y, [plate.container, edgeMark, text, hitArea]);
+  button.setSize(width, height);
+  button.setInteractive(
+    new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+    Phaser.Geom.Rectangle.Contains,
+  );
+  if (button.input) button.input.cursor = "pointer";
+  hitArea.setInteractive(
+    new Phaser.Geom.Rectangle(-width / 2, -height / 2, width, height),
+    Phaser.Geom.Rectangle.Contains,
+  );
+  if (hitArea.input) hitArea.input.cursor = "pointer";
+  button.on(Phaser.Input.Events.POINTER_UP, press);
+  hitArea.on(Phaser.Input.Events.POINTER_UP, press);
 
   let glowTween: Phaser.Tweens.Tween | null = null;
 
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-    background.setFillStyle(0xc5a267);
+  hitArea.on(Phaser.Input.Events.POINTER_OVER, () => {
+    plate.plate.setFillStyle(COLORS.buttonHover, 1);
+    plate.bevel.setFillStyle(0xf3d891, 0.28);
     text.setColor("#1a1a1a");
-    glow.setStrokeStyle(2.5, 0xc5a267, 1);
+    plate.glow.setStrokeStyle(2.5, COLORS.accent, 1);
     glowTween = scene.tweens.add({
-      targets: glow,
+      targets: plate.glow,
       alpha: { from: 1, to: 0.25 },
       duration: 500,
       yoyo: true,
@@ -187,15 +311,16 @@ export const createSmallButton = (
     });
   });
 
-  button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-    background.setFillStyle(bgColor);
-    text.setColor(textColor);
+  hitArea.on(Phaser.Input.Events.POINTER_OUT, () => {
+    plate.plate.setFillStyle(plate.normalFill, accent ? 1 : 0.97);
+    plate.bevel.setFillStyle(accent ? 0xf3d891 : COLORS.bgPanelLight, accent ? 0.26 : 0.2);
+    text.setColor(plate.labelColor);
     if (glowTween) {
       glowTween.stop();
       glowTween = null;
     }
-    glow.setStrokeStyle(2.5, 0xc5a267, 0);
-    glow.setAlpha(1);
+    plate.glow.setStrokeStyle(2.5, COLORS.accent, 0);
+    plate.glow.setAlpha(1);
   });
 
   return button;
