@@ -40,6 +40,8 @@ import {
   createSmallButton,
   createHpBar,
   showFloatingText,
+  addVignette,
+  addDustParticles,
 } from "./sceneUi";
 import { CX, CY, W, H, LAYOUT } from "../ui/layout";
 
@@ -97,6 +99,8 @@ export class CombatScene extends Phaser.Scene {
     const sortie = GameState.currentSortie;
     if (!sortie) {
       createTitle(this, "Бой");
+    addVignette(this);
+    addDustParticles(this);
       createSubtitle(this, CY, "Вылазка не активна.");
       createButton(this, H - 80, "В Оплот", () => this.scene.start("BaseScene"));
       return;

@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameState";
 import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
-import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
+import { createButton, createPanel, createTitle, createSmallButton, createHpBar, addVignette, addDustParticles } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
 import { createBadge } from "../ui/components/Badge";
@@ -28,6 +28,8 @@ export class BaseScene extends Phaser.Scene {
     this.add.image(CX, CY, "bg_forest").setAlpha(0.15).setDisplaySize(W, H).setDepth(-10);
 
     createTitle(this, "ОПЛОТ");
+    addVignette(this);
+    addDustParticles(this);
 
     // ── Portrait card (слева, как в мокапе) ──────────────────────
     const card = LAYOUT.base;
