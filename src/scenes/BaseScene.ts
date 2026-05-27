@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameState";
 import { runTween } from "../systems/tweens";
 import { computeWeight } from "../systems/weight";
-import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
+import { createButton, createPanel, createSmallButton, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
 import { createBadge } from "../ui/components/Badge";
@@ -10,6 +10,7 @@ import { COLORS, FONTS } from "../ui/tokens";
 import { activeSignals } from "../systems/radio";
 import { canEnterDailyInstance } from "../systems/dailyInstance";
 import { xpToNext, xpRequired } from "../state/balance";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 export class BaseScene extends Phaser.Scene {
   public constructor() {
@@ -23,7 +24,7 @@ export class BaseScene extends Phaser.Scene {
     const stashWeight = computeWeight(baseStash, data.items);
     const stashStacks = baseStash.length;
 
-    createTitle(this, "ОПЛОТ");
+    createSceneHeader(this, { title: "ОПЛОТ" });
     this.add.image(180, 320, "bg_forest").setAlpha(0.15).setScale(1.2).setDepth(-1);
     this.add.image(75, 220, "hero").setOrigin(0.5).setScale(0.8).setAlpha(0.9).setDepth(1);
     createPanel(this, 180, 220, 320, 200);

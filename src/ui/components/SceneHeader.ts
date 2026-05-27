@@ -8,7 +8,7 @@ import { CX, HEADER_Y } from "../layout";
 interface SceneHeaderOptions {
   title: string;
   subtitle?: string;
-  backTo?: string;
+  backTo?: string | (() => void);
   /** Дополнительная кнопка справа */
   rightButton?: {
     label: string;
@@ -69,7 +69,11 @@ export const createSceneHeader = (
 
     backBg.on("pointerup", () => {
       const target = opts.backTo;
-      scene.scene.start(target);
+      if (typeof target === "function") {
+        target();
+      } else if (typeof target === "string") {
+        scene.scene.start(target);
+      }
     });
     backBg.on("pointerover", () => backBg.setFillStyle(COLORS.accent, 0.9));
     backBg.on("pointerout", () => backBg.setFillStyle(COLORS.panelBg, 0.9));

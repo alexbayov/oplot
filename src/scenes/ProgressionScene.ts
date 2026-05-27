@@ -4,11 +4,10 @@ import { xpProgress, xpToNext } from "../systems/xp";
 import { computePerkModifiers } from "../systems/perks";
 import { VETERAN_CONDITIONING_HP_BONUS } from "../state/balance";
 import {
-  createButton,
   createPanel,
   createSubtitle,
-  createTitle,
 } from "./sceneUi";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 const BAR_X = 30;
 const BAR_Y = 118;
@@ -25,7 +24,11 @@ export class ProgressionScene extends Phaser.Scene {
     const { player } = GameState;
     const mods = computePerkModifiers(player.perks);
 
-    createTitle(this, `Уровень ${player.level}`);
+    createSceneHeader(this, {
+      title: "Досье выжившего",
+      subtitle: `Уровень ${player.level}`,
+      backTo: "BaseScene"
+    });
 
     this.add.rectangle(BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, 0x2a2a2a).setStrokeStyle(1, 0x5f5a50).setOrigin(0);
     const progress = xpProgress(player.xp, player.level);
@@ -86,8 +89,5 @@ export class ProgressionScene extends Phaser.Scene {
     if (veteranNote) {
       createSubtitle(this, statsY + statLines.length * 18 + 16, veteranNote);
     }
-
-    const backY = Math.max(statsY + 130, 540);
-    createButton(this, backY, "Назад", () => this.scene.start("BaseScene"));
   }
 }

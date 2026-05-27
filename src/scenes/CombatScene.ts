@@ -36,11 +36,11 @@ import {
   createButton,
   createPanel,
   createSubtitle,
-  createTitle,
   createSmallButton,
   createHpBar,
   showFloatingText,
 } from "./sceneUi";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 interface MobInstance {
   mob: Mob;
@@ -95,7 +95,7 @@ export class CombatScene extends Phaser.Scene {
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
-      createTitle(this, "Бой");
+      createSceneHeader(this, { title: "Бой" });
       createSubtitle(this, 200, "Вылазка не активна.");
       createButton(this, 400, "В Оплот", () => this.scene.start("BaseScene"));
       return;
@@ -110,7 +110,7 @@ export class CombatScene extends Phaser.Scene {
       });
     sortie.cover_active = false;
 
-    createTitle(this, "Бой");
+    createSceneHeader(this, { title: "Бой" });
     // M5: boss HUD overlay.
     const bossInst = this.mobs.find((m) => m.isBoss);
     if (bossInst) {

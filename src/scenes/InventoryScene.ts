@@ -1,8 +1,10 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { computeWeight } from "../systems/weight";
-import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
+import { createPanel, createSmallButton, createHpBar } from "./sceneUi";
 import { showBanner } from "../systems/banner";
+import { createSceneHeader } from "../ui/components/SceneHeader";
+import { createItemSlot, showItemDetail } from "../ui/components/ItemCard";
 
 export class InventoryScene extends Phaser.Scene {
   public constructor() {
@@ -15,7 +17,7 @@ export class InventoryScene extends Phaser.Scene {
     const stash = GameState.baseStash;
     const stashWeight = computeWeight(stash, items);
 
-    createTitle(this, "Инвентарь");
+    createSceneHeader(this, { title: "Склад", backTo: "BaseScene" });
     void showBanner();
 
     // Weight bar
@@ -26,17 +28,6 @@ export class InventoryScene extends Phaser.Scene {
       fontSize: "11px",
       fontStyle: "bold"
     });
-
-    // Tooltip setup
-    const tooltipBg = this.add.rectangle(0, 0, 160, 36, 0x2d2d2a, 0.95).setStrokeStyle(1, 0x4a4a3a);
-    const tooltipText = this.add.text(0, 0, "", {
-      color: "#D4C5A0",
-      fontFamily: "Roboto Condensed, sans-serif",
-      fontSize: "11px",
-      align: "center",
-      wordWrap: { width: 150 }
-    }).setOrigin(0.5);
-    const tooltip = this.add.container(180, 240, [tooltipBg, tooltipText]).setAlpha(0).setDepth(100);
 
     // Stash inventory grid (5 columns)
     if (stash.length === 0) {
@@ -55,29 +46,12 @@ export class InventoryScene extends Phaser.Scene {
         const x = 50 + col * 65;
         const y = 160 + row * 65;
 
-        const slotBg = this.add.rectangle(x, y, 56, 56, 0x2d2d2a, 0.95).setStrokeStyle(2, 0x4a4a3a);
-
-        const texKey = `item_${s.item_id}`;
-        if (this.textures.exists(texKey)) {
-          this.add.image(x, y - 4, texKey).setScale(0.75);
-        }
-
-        this.add.text(x, y + 18, `x${s.count}`, {
-          color: "#C8C0B0",
-          fontFamily: "Roboto Condensed, sans-serif",
-          fontSize: "11px",
-        }).setOrigin(0.5);
-
-        slotBg.setInteractive({ useHandCursor: true });
-        slotBg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-          slotBg.setStrokeStyle(2, 0xc5a267);
-          tooltipText.setText(`${item.name_ru}\nВес: ${(item.weight_kg * s.count).toFixed(1)} кг`);
-          tooltip.setPosition(x, y - 48);
-          tooltip.setAlpha(1);
-        });
-        slotBg.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OUT, () => {
-          slotBg.setStrokeStyle(2, 0x4a4a3a);
-          tooltip.setAlpha(0);
+        createItemSlot(this, x, y, {
+          item,
+          count: s.count,
+          tier: item.tier ?? 2,
+        }, () => {
+          showItemDetail(this, x, y, item, s.count);
         });
       });
     }
@@ -128,6 +102,5 @@ export class InventoryScene extends Phaser.Scene {
       this.scene.restart();
     });
 
-    createButton(this, 540, "Назад", () => this.scene.start("BaseScene"));
   }
 }

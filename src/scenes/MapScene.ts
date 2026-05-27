@@ -7,14 +7,13 @@ import {
 } from "../systems/zoneUnlock";
 import type { Zone } from "../types";
 import {
-  createButton,
   createPanel,
   createSubtitle,
-  createTitle,
   createSmallButton,
 } from "./sceneUi";
 import { showRewardedVideo } from "../systems/ads";
 import { showBanner } from "../systems/banner";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 const ZONE_ORDER: readonly string[] = ["forest", "warehouse", "city"];
 
@@ -32,16 +31,13 @@ export class MapScene extends Phaser.Scene {
   }
 
   public create(): void {
-    createTitle(this, "Карта");
+    createSceneHeader(this, { title: "Карта секторов", backTo: "BaseScene" });
     this.add.image(180, 320, "bg_forest").setAlpha(0.15).setScale(1.2).setDepth(-1);
     void showBanner();
     const zones = sortZonesForMap(Object.values(GameState.data.zones));
     if (zones.length === 0) {
       createPanel(this, 180, 240, 320, 120);
       createSubtitle(this, 240, "Нет доступных зон.");
-      createButton(this, 460, "Назад в Оплот", () =>
-        this.scene.start("BaseScene"),
-      );
       return;
     }
 
@@ -118,8 +114,5 @@ export class MapScene extends Phaser.Scene {
         }
       }
     });
-
-    const backY = startY + zones.length * rowHeight;
-    createButton(this, backY, "Назад в Оплот", () => this.scene.start("BaseScene"));
   }
 }

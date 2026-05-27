@@ -7,8 +7,9 @@ import {
   createButton,
   createPanel,
   createSubtitle,
-  createTitle,
 } from "./sceneUi";
+import { createSceneHeader } from "../ui/components/SceneHeader";
+
 
 type Mode =
   | { kind: "list" }
@@ -39,7 +40,7 @@ export class RadioScene extends Phaser.Scene {
   }
 
   private renderList(): void {
-    createTitle(this, "Радио");
+    createSceneHeader(this, { title: "Радиосвязь", backTo: "BaseScene" });
     const staticOverlay = this.add.rectangle(180, 320, 360, 640, 0xaaaaaa, 0).setAlpha(0).setDepth(-1);
     runTween(this, "tween_radio_static", staticOverlay);
 
@@ -56,9 +57,6 @@ export class RadioScene extends Phaser.Scene {
     if (list.length === 0) {
       createPanel(this, 180, 240, 320, 200);
       createSubtitle(this, 240, "Эфир пуст.");
-      createButton(this, 460, "Назад в Оплот", () =>
-        this.scene.start("BaseScene"),
-      );
       return;
     }
 
@@ -85,15 +83,10 @@ export class RadioScene extends Phaser.Scene {
         this.scene.restart();
       });
     });
-
-    const backY = startY + list.length * rowHeight + 8;
-    createButton(this, backY, "Назад в Оплот", () =>
-      this.scene.start("BaseScene"),
-    );
   }
 
   private renderDetail(signalId: string): void {
-    createTitle(this, "Радио");
+    createSceneHeader(this, { title: "Радиосвязь", backTo: () => this.returnToList() });
     const sig = GameState.data.radioSignals.find(
       (s) => s.id === signalId && !s.resolved,
     );
@@ -134,12 +127,10 @@ export class RadioScene extends Phaser.Scene {
         this.scene.restart();
       });
     });
-
-    createButton(this, 540, "Назад к списку", () => this.returnToList());
   }
 
   private renderOutcome(signalId: string, option: RadioSignalOptionId): void {
-    createTitle(this, "Радио");
+    createSceneHeader(this, { title: "Радиосвязь", backTo: () => this.returnToList() });
 
     const validItemIds = new Set(Object.keys(GameState.data.items));
     const validMobIds = new Set(Object.keys(GameState.data.mobs));
@@ -193,7 +184,6 @@ export class RadioScene extends Phaser.Scene {
       300,
       `Доверие: ${result.trustBefore} → ${result.trustAfter}`,
     );
-    createButton(this, 460, "Назад", () => this.returnToList());
   }
 
   private returnToList(): void {

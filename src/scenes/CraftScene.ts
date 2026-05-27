@@ -1,9 +1,10 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
 import { applyCraft, canCraft, canCraftWithBossDrop } from "../systems/craft";
-import { createButton, createPanel, createTitle, createSmallButton } from "./sceneUi";
+import { createPanel, createSmallButton } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 export class CraftScene extends Phaser.Scene {
   public constructor() {
@@ -19,7 +20,7 @@ export class CraftScene extends Phaser.Scene {
   private page = 0;
 
   public create(): void {
-    createTitle(this, "Мастерская");
+    createSceneHeader(this, { title: "Мастерская", backTo: "BaseScene" });
     void showBanner();
 
     if (this.lastCrafted) {
@@ -121,8 +122,6 @@ export class CraftScene extends Phaser.Scene {
       fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
     }).setOrigin(0.5);
-
-    createButton(this, 535, "Назад", () => this.scene.start("BaseScene"));
   }
 
   private showToast(itemName: string): void {

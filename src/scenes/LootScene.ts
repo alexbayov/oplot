@@ -5,9 +5,11 @@ import { canAddItem, computeWeight } from "../systems/weight";
 import {
   createButton,
   createPanel,
-  createTitle,
   createHpBar,
+  showFloatingText,
 } from "./sceneUi";
+import { createSceneHeader } from "../ui/components/SceneHeader";
+import { createItemSlot } from "../ui/components/ItemCard";
 
 export class LootScene extends Phaser.Scene {
   private weightText?: Phaser.GameObjects.Text;
@@ -20,7 +22,7 @@ export class LootScene extends Phaser.Scene {
   }
 
   public create(): void {
-    createTitle(this, "Лут");
+    createSceneHeader(this, { title: "Сбор добычи" });
     
     // Weight panel with bar
     createPanel(this, 180, 135, 320, 50);
@@ -63,23 +65,26 @@ export class LootScene extends Phaser.Scene {
         const x = 50 + col * 65;
         const y = 250 + row * 65;
 
-        // Slot background
-        this.add.rectangle(x, y, 56, 56, 0x2d2d2a, 0.95)
-          .setStrokeStyle(2, 0x4a4a3a)
-          .setData("lootGridItem", true);
-
-        // Icon
-        const texKey = `item_${s.item_id}`;
-        if (this.textures.exists(texKey)) {
-          this.add.image(x, y - 4, texKey).setScale(0.75).setData("lootGridItem", true);
-        }
-
-        // Count
-        this.add.text(x, y + 18, `x${s.count}`, {
-          color: "#C8C0B0",
-          fontFamily: "Roboto Condensed, sans-serif",
-          fontSize: "11px",
-        }).setOrigin(0.5).setData("lootGridItem", true);
+        const slot = createItemSlot(this, x, y, {
+          item,
+          count: s.count,
+          tier: item.tier ?? 2,
+        }, () => {
+          const player = GameState.player;
+          const backpackWeight = computeWeight(player.backpack, GameState.data.items);
+          if (canAddItem(backpackWeight, s.item_id, 1, player.max_weight_kg, GameState.data.items)) {
+            player.backpack = addToStack(player.backpack, s.item_id, 1);
+            s.count -= 1;
+            if (s.count <= 0) {
+              sortie.pending_loot.splice(idx, 1);
+            }
+            this.refreshLootButtons();
+            this.refreshControls();
+          } else {
+            showFloatingText(this, x, y, "Перегруз!", "#FF3333");
+          }
+        });
+        slot.setData("lootGridItem", true);
       });
     }
 

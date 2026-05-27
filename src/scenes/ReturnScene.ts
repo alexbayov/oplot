@@ -16,9 +16,9 @@ import {
   createButton,
   createPanel,
   createSubtitle,
-  createTitle,
   createHpBar,
 } from "./sceneUi";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 // GDD §1 «Core Loop»: LootScene → ReturnScene → BaseScene.
 // Duration = return_time_s from balance.md §Формулы; heavy pack = longer trip.
@@ -34,7 +34,7 @@ export class ReturnScene extends Phaser.Scene {
   }
 
   public create(): void {
-    createTitle(this, "Возврат на базу");
+    createSceneHeader(this, { title: "Возврат на базу" });
 
     const player = GameState.player;
     const sortie = GameState.currentSortie;

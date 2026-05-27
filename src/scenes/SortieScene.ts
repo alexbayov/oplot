@@ -3,8 +3,9 @@ import { GameState, addToStack } from "../state/GameState";
 import { generateSortieEncounters, generateZoneLoot } from "../systems/loot";
 import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
-import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { createButton, createPanel, createSubtitle } from "./sceneUi";
 import { hideBanner } from "../systems/banner";
+import { createSceneHeader } from "../ui/components/SceneHeader";
 
 interface SortieInit {
   zoneId?: string;
@@ -39,10 +40,9 @@ export class SortieScene extends Phaser.Scene {
   public create(): void {
     void hideBanner();
     const zone = this.zoneId ? GameState.data.zones[this.zoneId] : null;
-    createTitle(this, "Вылазка");
+    createSceneHeader(this, { title: "Вылазка", backTo: "MapScene" });
     if (!zone) {
       createSubtitle(this, 180, "Зона не найдена.");
-      createButton(this, 380, "Назад", () => this.scene.start("MapScene"));
       return;
     }
 
