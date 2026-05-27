@@ -5,6 +5,11 @@ import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
+import { createBadge } from "../ui/components/Badge";
+import { COLORS, FONTS } from "../ui/tokens";
+import { activeSignals } from "../systems/radio";
+import { canEnterDailyInstance } from "../systems/dailyInstance";
+import { xpToNext, xpRequired } from "../state/balance";
 
 export class BaseScene extends Phaser.Scene {
   public constructor() {
@@ -23,25 +28,47 @@ export class BaseScene extends Phaser.Scene {
     this.add.image(75, 220, "hero").setOrigin(0.5).setScale(0.8).setAlpha(0.9).setDepth(1);
     createPanel(this, 180, 220, 320, 200);
 
+    // HP bar
     createHpBar(this, 135, 140, player.hp, player.hp_max, 160, 10);
-    this.add.text(135, 155, `HP: ${player.hp}/${player.hp_max} · Ур. ${player.level}`, {
+    this.add.text(135, 155, `HP ${player.hp}/${player.hp_max}  ·  Ур. ${player.level}`, {
       color: "#C8C0B0",
-      fontFamily: "Roboto Condensed, sans-serif",
-      fontSize: "14px",
-    });
-
-    this.add.text(135, 185, `Оружие: ${weapon?.name_ru ?? "—"}\nБроня: ${armor?.name_ru ?? "—"}`, {
-      color: "#C8C0B0",
-      fontFamily: "Roboto Condensed, sans-serif",
+      fontFamily: FONTS.body,
       fontSize: "13px",
     });
 
-    this.add.text(135, 245, `Склад: ${stashStacks} стак. · ${stashWeight.toFixed(1)} кг`, {
-      color: "#D4C5A0",
-      fontFamily: "Roboto Condensed, sans-serif",
+    // XP bar
+    const xpForNext = xpToNext(player.level);
+    const xpInLevel = player.xp - xpRequired(player.level);
+    createHpBar(this, 135, 174, xpInLevel, xpForNext, 160, 6, COLORS.accent, 0x2a2a20);
+    this.add.text(135, 184, `XP ${xpInLevel}/${xpForNext}`, {
+      color: COLORS.textMuted,
+      fontFamily: FONTS.body,
+      fontSize: "11px",
+    });
+
+    this.add.text(135, 205, `${weapon?.name_ru ?? "—"}  ·  ${armor?.name_ru ?? "—"}`, {
+      color: "#C8C0B0",
+      fontFamily: FONTS.body,
+      fontSize: "13px",
+    });
+
+    this.add.text(135, 245, `Склад: ${stashStacks} ст. · ${stashWeight.toFixed(1)} кг`, {
+      color: COLORS.textMain,
+      fontFamily: FONTS.body,
       fontSize: "13px",
       fontStyle: "bold",
     });
+
+    // Status badges
+    const signals = activeSignals(GameState.data.radioSignals);
+    if (signals.length > 0) {
+      createBadge(this, 280, 120, `${signals.length}`, "warning", true);
+    }
+    const zones = Object.values(GameState.data.zones);
+    const hasDaily = zones.some((z) => z.boss_id && canEnterDailyInstance(GameState.progress, z, Date.now()));
+    if (hasDaily) {
+      createBadge(this, 310, 120, "D", "accent", true);
+    }
 
     const sortieBtn = createButton(this, 360, "В вылазку", () => this.scene.start("MapScene"), true);
     const craftBtn = createSmallButton(this, 100, 420, "Мастерская", 140, () => this.scene.start("CraftScene"));
