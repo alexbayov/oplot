@@ -16,6 +16,18 @@ export interface CloudSaveSnapshot {
   settings: { mute: boolean; volume: number };
   saved_at: string;
   gas?: number;
+  // Optional for backward-compat with saves predating the unlock-flag fix.
+  // Missing keys are treated as false on load.
+  progress_flags?: {
+    forest_depth_2_completed?: boolean;
+    any_warehouse_sortie_completed?: boolean;
+    any_forest_sortie_completed?: boolean;
+    suburbs_sortie_completed?: boolean;
+    warehouse_boss_defeated?: boolean;
+    factory_sortie_completed?: boolean;
+    city_boss_defeated?: boolean;
+    metro_sortie_completed?: boolean;
+  };
 }
 
 let lastSaveTime = 0;
@@ -35,6 +47,16 @@ export function serializeGameState(): CloudSaveSnapshot {
     settings: { mute: settings.sfxMuted, volume: settings.sfxVolume },
     saved_at: new Date().toISOString(),
     gas: player.gas,
+    progress_flags: {
+      forest_depth_2_completed: progress.forest_depth_2_completed,
+      any_warehouse_sortie_completed: progress.any_warehouse_sortie_completed,
+      any_forest_sortie_completed: progress.any_forest_sortie_completed,
+      suburbs_sortie_completed: progress.suburbs_sortie_completed,
+      warehouse_boss_defeated: progress.warehouse_boss_defeated,
+      factory_sortie_completed: progress.factory_sortie_completed,
+      city_boss_defeated: progress.city_boss_defeated,
+      metro_sortie_completed: progress.metro_sortie_completed,
+    },
   };
 }
 
@@ -77,6 +99,16 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.baseStash = baseStash;
   GameState.settings = settings;
   GameState.progress.radio_trust = radio_trust;
+  // Restore unlock flags; missing keys default to false.
+  const flags = snapshot.progress_flags ?? {};
+  GameState.progress.forest_depth_2_completed = flags.forest_depth_2_completed ?? false;
+  GameState.progress.any_warehouse_sortie_completed = flags.any_warehouse_sortie_completed ?? false;
+  GameState.progress.any_forest_sortie_completed = flags.any_forest_sortie_completed ?? false;
+  GameState.progress.suburbs_sortie_completed = flags.suburbs_sortie_completed ?? false;
+  GameState.progress.warehouse_boss_defeated = flags.warehouse_boss_defeated ?? false;
+  GameState.progress.factory_sortie_completed = flags.factory_sortie_completed ?? false;
+  GameState.progress.city_boss_defeated = flags.city_boss_defeated ?? false;
+  GameState.progress.metro_sortie_completed = flags.metro_sortie_completed ?? false;
   if (snapshot.gas !== undefined) {
     GameState.player.gas = snapshot.gas;
   }

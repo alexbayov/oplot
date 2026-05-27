@@ -10,6 +10,12 @@ export interface InventoryStack {
 export interface GameProgress {
   forest_depth_2_completed: boolean;
   any_warehouse_sortie_completed: boolean;
+  any_forest_sortie_completed: boolean;
+  suburbs_sortie_completed: boolean;
+  warehouse_boss_defeated: boolean;
+  factory_sortie_completed: boolean;
+  city_boss_defeated: boolean;
+  metro_sortie_completed: boolean;
   daily_completed: Record<string, number>;
   radio_trust: number;
 }

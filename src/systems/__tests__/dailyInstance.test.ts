@@ -20,6 +20,12 @@ const makeZone = (overrides: Partial<Zone> = {}): Zone => ({
 const makeProgress = (dailyCompleted: Record<string, number> = {}): GameProgress => ({
   forest_depth_2_completed: true,
   any_warehouse_sortie_completed: true,
+  any_forest_sortie_completed: true,
+  suburbs_sortie_completed: true,
+  warehouse_boss_defeated: true,
+  factory_sortie_completed: true,
+  city_boss_defeated: true,
+  metro_sortie_completed: true,
   daily_completed: { ...dailyCompleted },
   radio_trust: 0,
 });
