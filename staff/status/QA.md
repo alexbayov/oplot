@@ -2184,3 +2184,84 @@ PM merge QA Spec → dispatch Engineer M8b to implement.
 
 ### Next
 PM merge sequence: Engineer #75 → QA Acceptance #76 → gate-close `m8b-integration → main`
+
+
+---
+
+# M11.0b Acceptance — PR #97 (Engineer content wire-up)
+
+**Дата:** 2026-05-28
+**Reviewer:** Zo (QA Acceptance session)
+**Объект:** PR #97 `m11.0b/eng-content-wireup → m11-integration`
+**Verdict:** ✅ **APPROVE**
+
+## Gate 0 — Merge dry-run
+
+Локальный merge `m11.0b/eng-content-wireup` в `qa/m11.0b-accept` — **0 конфликтов** ✅.
+
+## Gate 1 — Static checks
+
+| Check | Result |
+|---|---|
+| `bun install` | PASS, 0 vulnerabilities |
+| `bun run typecheck` | PASS — clean |
+| `bun run test` | **279/279** ✅ (273 baseline + 6 новых integration) |
+| `bun run build` | PASS, JS bundle 1.57 MB |
+| `bun run lint` | 6 errors, **все 6 pre-existing** (encounters.ts из M10.2, base тоже падает) — 0 новых |
+
+Verified pre-existing lint: `git checkout origin/m11-integration -- src/state/ && bun run lint` → те же 6 errors. PR не вносит регрессий.
+
+## Gate 2 — Runtime smoke
+
+- Dev server старт чистый ✅
+- BaseScene рендерится (painted интерьер + 6 hotspots + HUD) ✅
+- InventoryScene открывается через stash hotspot, items отображаются (bandage x2 stash, knife + cloth_jacket equipped, защита 1 +1 bonus) ✅
+- Только console-warnings из platform (no Yandex SDK в dev — expected) + dataValidation soft-warning `items=187 (expected 80)` — это pre-existing soft-check, не от этого PR ✅
+- 0 runtime errors связанных с `loadContentItems` / `adaptLegacyItem` / `getItem`
+
+## Gate 3 — Spec / anti-scope compliance
+
+Файлы изменены:
+```
+src/state/GameState.ts                          (+2 строки)
+src/state/ItemRegistry.ts                       (+157/-8)
+src/state/__tests__/contentIntegration.test.ts  (+109 новый)
+staff/handoff/M11.0b-ENG.md                     (+26 новый)
+```
+
+Anti-scope grep — нет правок в:
+- ✅ `combat.ts`, `loot.ts`, `craft.ts` (это M11.0c-e)
+- ✅ `scenes/`, `ui/`
+- ✅ `content/*.json`, `assets/`, `docs/`
+- ✅ `package.json`
+
+Соответствие спеке `docs/redesign/m11/M11.0-weapons.md` §11:
+- ✅ ItemRegistry поддерживает 6 item_class веток: craft / drop / part / mod / ammo / broken_craft
+- ✅ Hybrid формат: legacy `type` + M11 поля (snake_case) — priority `item_class` над heuristic
+- ✅ `loadContentItems(items)` bulk loader реализован
+- ✅ `GameState.setContent` автоматически заливает registry
+- ✅ Fallback на legacy сохранён (pure M9-M10 формат без `item_class` тоже работает)
+
+## Integration test coverage
+
+Файл `src/state/__tests__/contentIntegration.test.ts` парсит **реальный** `content/items.json` через `loadContentItems` + `getItem`. Покрывает:
+- 187 items → adapter не падает
+- Все ID возвращают M11Item (failures === 0)
+- 8 модов → `isWeaponMod === true`
+- ≥50 партов → `isWeaponPart === true`
+- ≥5 craft → `isCraftWeapon === true`
+- `itemName()` уважает `WEAPON_NAMING_MODE`
+
+Это **end-to-end smoke test** — гарантирует что M11.0a content (PR #95) совместим с M11.0b engine.
+
+## Замечания (не блокеры)
+
+**N-1.** dataValidation soft-warning `Content count mismatch (soft): items=187 (expected 80), recipes=71 (expected 42)` — pre-existing валидатор (M3), не от этого PR. Engineer M11.0c или PM должны обновить expected counts при следующем заходе. Не блокер.
+
+**N-2.** Integration-test покрывает реальный content, но не имеет unit-теста для каждой ветки `adaptLegacyItem` с искусственным минимальным input (например, `{ id:"x", item_class:"mod", mod_slot:"muzzle" }` → expect WeaponMod). Cовокупное покрытие через real content норм, но точечные unit'ы упростят будущие правки. Опционально.
+
+## Verdict
+
+✅ **APPROVE** для мерджа `m11.0b/eng-content-wireup → m11-integration`.
+
+PR соответствует спеке, тесты зелёные, anti-scope соблюдён, integration-test надёжный.
