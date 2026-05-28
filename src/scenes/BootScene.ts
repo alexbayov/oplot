@@ -55,6 +55,7 @@ export class BootScene extends Phaser.Scene {
 
   public preload(): void {
     this.load.image("hero", "assets/sprites/hero.png");
+    this.load.image("base_interior", "assets/backgrounds/base_interior_painted.jpg");
     for (const id of ZONE_BG_IDS) {
       this.load.image(`bg_${id}`, `assets/backgrounds/${id}.png`);
     }

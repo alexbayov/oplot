@@ -1,175 +1,405 @@
 import Phaser from "phaser";
-import { GameState, addToStack, setSfxMute, setSfxVolume } from "../state/GameState";
-import { runTween } from "../systems/tweens";
+import { GameState, setSfxMute, setSfxVolume } from "../state/GameState";
 import { computeWeight } from "../systems/weight";
-import { createButton, createPanel, createTitle, createSmallButton, createHpBar, addVignette, addDustParticles } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
-import { showBanner } from "../systems/banner";
-import { createBadge } from "../ui/components/Badge";
-import { COLORS, FONTS } from "../ui/tokens";
 import { activeSignals } from "../systems/radio";
-import { canEnterDailyInstance } from "../systems/dailyInstance";
-import { xpToNext, xpRequired } from "../state/balance";
-import { CX, CY, W, H, LAYOUT } from "../ui/layout";
+import { xpToNext } from "../state/balance";
+import { W, H } from "../ui/layout";
+import { track } from "../systems/telemetry";
+
+/**
+ * BaseScene — «Оплот» как живая painted-сцена (M10.3).
+ *
+ * Painted-фон убежища занимает весь экран. Поверх — 6 кликабельных hotspot'ов
+ * соответствующих элементам сцены (верстак, ящик, радио, костёр, лежанка, дверь).
+ * Top bar содержит день и кнопку настроек.
+ *
+ * Координаты hotspots в game-coordinates (1280×720), привязаны к painted-фону.
+ */
+
+interface Hotspot {
+  id: string;
+  /** Center X в game coords */
+  x: number;
+  /** Center Y в game coords */
+  y: number;
+  /** Полу-ширина hit-area */
+  hw: number;
+  /** Полу-высота hit-area */
+  hh: number;
+  /** Подпись для hover-tooltip */
+  label: string;
+  /** Цвет акцента подсветки (hex) */
+  glow: number;
+  /** Действие по клику */
+  action: (scene: BaseScene) => void;
+}
+
+/**
+ * Координаты hotspots — выверены по painted assetу.
+ * Painted-source 1366×768, мы рендерим на 1280×720 (scale ~0.937).
+ */
+const HOTSPOTS: Hotspot[] = [
+  {
+    id: "workbench",
+    x: 195,
+    y: 470,
+    hw: 165,
+    hh: 110,
+    label: "ВЕРСТАК",
+    glow: 0xc5a267,
+    action: (s) => s.openSubscene("CraftScene"),
+  },
+  {
+    id: "stash",
+    x: 1010,
+    y: 490,
+    hw: 120,
+    hh: 110,
+    label: "СНАРЯЖЕНИЕ",
+    glow: 0xb5a05a,
+    action: (s) => s.openSubscene("InventoryScene"),
+  },
+  {
+    id: "radio",
+    x: 1045,
+    y: 240,
+    hw: 80,
+    hh: 60,
+    label: "РАДИО",
+    glow: 0x6fc26f,
+    action: (s) => s.openSubscene("RadioScene"),
+  },
+  {
+    id: "kettle",
+    x: 770,
+    y: 580,
+    hw: 80,
+    hh: 80,
+    label: "КОСТЁР",
+    glow: 0xff8844,
+    action: (s) => s.openSubscene("ProgressionScene"),
+  },
+  {
+    id: "cot",
+    x: 690,
+    y: 510,
+    hw: 130,
+    hh: 80,
+    label: "ОТДЫХ",
+    glow: 0x8aa86f,
+    action: (s) => s.showRestInfo(),
+  },
+  {
+    id: "door",
+    x: 1230,
+    y: 440,
+    hw: 70,
+    hh: 280,
+    label: "В ВЫЛАЗКУ",
+    glow: 0xd4a04a,
+    action: (s) => s.scene.start("MapScene"),
+  },
+];
 
 export class BaseScene extends Phaser.Scene {
+  private radioBlink?: Phaser.GameObjects.Arc;
+  private weightOverloadIcon?: Phaser.GameObjects.Text;
+
   public constructor() {
     super("BaseScene");
   }
 
   public create(): void {
-    const { player, data, baseStash } = GameState;
-    const weapon = data.items[player.equipped_weapon_id];
-    const armor = data.items[player.equipped_armor_id];
-    const stashWeight = computeWeight(baseStash, data.items);
-    const stashStacks = baseStash.length;
+    // ── Painted background ────────────────────────────────────
+    this.add.image(W / 2, H / 2, "base_interior")
+      .setDisplaySize(W, H)
+      .setDepth(-10);
 
-    // Background — растянутый painted-фон
-    this.add.image(CX, CY, "bg_forest").setAlpha(0.15).setDisplaySize(W, H).setDepth(-10);
+    // Тёмная виньетка по краям — фокус в центр
+    const vignette = this.add.graphics().setDepth(-9);
+    vignette.fillStyle(0x000000, 0.35);
+    vignette.fillRect(0, 0, W, 80);
+    vignette.fillRect(0, H - 80, W, 80);
 
-    createTitle(this, "ОПЛОТ");
-    addVignette(this);
-    addDustParticles(this);
+    // ── Top bar — day counter + settings ──────────────────────
+    this.renderTopBar();
 
-    // ── Portrait card (слева, как в мокапе) ──────────────────────
-    const card = LAYOUT.base;
-    createPanel(this, card.portraitCardX, card.portraitCardY, card.portraitCardW, card.portraitCardH);
-    this.add.image(card.portraitCardX, card.portraitCardY - 80, "hero")
-      .setOrigin(0.5)
-      .setScale(1.2)
-      .setAlpha(0.95)
-      .setDepth(1);
+    // ── HP/XP HUD внизу слева ────────────────────────────────
+    this.renderHpHud();
 
-    // HP bar внутри карточки
-    const cardLeft = card.portraitCardX - card.portraitCardW / 2 + 20;
-    const barY = card.portraitCardY + 60;
-    createHpBar(this, cardLeft, barY, player.hp, player.hp_max, card.portraitCardW - 40, 12);
-    this.add.text(cardLeft, barY + 16, `HP ${player.hp}/${player.hp_max}  ·  Ур. ${player.level}`, {
-      color: "#C8C0B0",
-      fontFamily: FONTS.body,
-      fontSize: "13px",
+    // ── Status conditions ─────────────────────────────────────
+    this.renderStatusOverlays();
+
+    // ── Hotspots ──────────────────────────────────────────────
+    HOTSPOTS.forEach((h) => this.attachHotspot(h));
+
+    // ── Костёр: subtle animated flicker overlay ───────────────
+    this.attachKettleAnimation();
+
+    // ── Cleanup on shutdown ──────────────────────────────────
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.radioBlink = undefined;
+      this.weightOverloadIcon = undefined;
+    });
+  }
+
+  private renderTopBar(): void {
+    const { player, progress, settings } = GameState;
+    const dayCount = Object.keys(progress.daily_completed).length;
+
+    // Бар-плашка над всем
+    const bg = this.add.rectangle(W / 2, 22, W, 44, 0x0a0806, 0.6).setDepth(8);
+    bg.setStrokeStyle(1, 0x3a2f1a, 0.5);
+
+    // Left: день + sortie counter
+    this.add.text(20, 22, `ДЕНЬ ${dayCount + 1}  ·  УР. ${player.level}`, {
+      color: "#D4C5A0",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "18px",
+      fontStyle: "bold",
+    }).setOrigin(0, 0.5).setDepth(9);
+
+    // Center: title small
+    this.add.text(W / 2, 22, "ОПЛОТ", {
+      color: "#a89968",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "16px",
+      fontStyle: "bold",
+    }).setOrigin(0.5).setDepth(9);
+
+    // Right: settings (mute toggle)
+    const muteIcon = settings.sfxMuted ? "🔇" : "🔊";
+    const mute = this.add.text(W - 80, 22, muteIcon, {
+      fontSize: "20px",
+    }).setOrigin(0.5).setDepth(9).setInteractive({ useHandCursor: true });
+    mute.on("pointerdown", () => {
+      const next = !GameState.settings.sfxMuted;
+      setSfxMute(next);
+      mute.setText(next ? "🔇" : "🔊");
     });
 
-    // XP bar
-    const xpForNext = xpToNext(player.level);
-    const xpInLevel = player.xp - xpRequired(player.level);
-    createHpBar(this, cardLeft, barY + 40, xpInLevel, xpForNext, card.portraitCardW - 40, 8, COLORS.accent, 0x2a2a20);
-    this.add.text(cardLeft, barY + 52, `XP ${xpInLevel}/${xpForNext}`, {
-      color: COLORS.textMuted,
-      fontFamily: FONTS.body,
-      fontSize: "11px",
+    // Save indicator (manual save)
+    const save = this.add.text(W - 30, 22, "💾", {
+      fontSize: "20px",
+    }).setOrigin(0.5).setDepth(9).setInteractive({ useHandCursor: true });
+    save.on("pointerdown", () => {
+      void saveToCloud().then(() => this.showToast("Сохранено в облако"));
     });
 
-    this.add.text(cardLeft, barY + 78, `${weapon?.name_ru ?? "—"}`, {
-      color: "#C8C0B0",
-      fontFamily: FONTS.body,
-      fontSize: "13px",
-    });
-    this.add.text(cardLeft, barY + 98, `${armor?.name_ru ?? "—"}`, {
-      color: "#C8C0B0",
-      fontFamily: FONTS.body,
-      fontSize: "13px",
-    });
+    // Volume hint
+    this.add.text(W - 130, 22, `${Math.round(settings.sfxVolume * 100)}%`, {
+      color: "#8a8270",
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "12px",
+    }).setOrigin(1, 0.5).setDepth(9);
+    void setSfxVolume; // keep import live for future use
+  }
 
-    this.add.text(cardLeft, barY + 124, `Склад: ${stashStacks} ст. · ${stashWeight.toFixed(1)} кг`, {
-      color: COLORS.textMain,
-      fontFamily: FONTS.body,
+  private renderHpHud(): void {
+    const { player } = GameState;
+    const hudX = 30;
+    const hudY = H - 60;
+    const hudW = 260;
+
+    // Background panel
+    const bg = this.add.rectangle(hudX + hudW / 2, hudY, hudW, 70, 0x0a0806, 0.78)
+      .setStrokeStyle(2, 0x3a2f1a, 1)
+      .setDepth(8);
+    void bg;
+
+    // HP bar
+    const barW = hudW - 30;
+    const barH = 12;
+    this.add.rectangle(hudX + 15 + barW / 2, hudY - 12, barW, barH, 0x2a1010, 1)
+      .setStrokeStyle(1, 0x4a2010, 1)
+      .setDepth(9);
+    const hpPct = player.hp / player.hp_max;
+    this.add.rectangle(hudX + 15, hudY - 12, barW * hpPct, barH, 0x9a4a4a, 1)
+      .setOrigin(0, 0.5)
+      .setDepth(9);
+    this.add.text(hudX + 15, hudY - 36, `HP ${player.hp}/${player.hp_max}`, {
+      color: "#c5a267",
+      fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "13px",
       fontStyle: "bold",
-    });
+    }).setDepth(9);
 
-    // ── Status badges (top-right) ───────────────────────────────
-    const signals = activeSignals(GameState.data.radioSignals);
+    // XP bar
+    const xpNext = xpToNext(player.level);
+    const xpPct = xpNext > 0 ? Math.min(1, player.xp / xpNext) : 1;
+    this.add.rectangle(hudX + 15 + barW / 2, hudY + 8, barW, 6, 0x1a1a0a, 1)
+      .setStrokeStyle(1, 0x2a2a1a, 1)
+      .setDepth(9);
+    this.add.rectangle(hudX + 15, hudY + 8, barW * xpPct, 6, 0xc5a267, 1)
+      .setOrigin(0, 0.5)
+      .setDepth(9);
+
+    // Weight indicator справа от HUD
+    const data = GameState.data;
+    const carryWeight = computeWeight(GameState.baseStash, data.items);
+    const weightPct = carryWeight / GameState.player.max_weight_kg;
+    const weightColor = weightPct > 0.8 ? "#ff8844" : weightPct > 0.5 ? "#d4c5a0" : "#8aa86f";
+    this.add.text(hudX + 15, hudY + 22, `СКЛАД  ${carryWeight.toFixed(1)} / ${GameState.player.max_weight_kg} кг  · ${GameState.baseStash.length} предм.`, {
+      color: weightColor,
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "11px",
+    }).setDepth(9);
+  }
+
+  private renderStatusOverlays(): void {
+    // Radio blink — если есть непрочитанные сигналы
+    const radioSignals = GameState.data.radioSignals ?? [];
+    const signals = activeSignals(radioSignals);
     if (signals.length > 0) {
-      createBadge(this, W - 80, 80, `${signals.length}`, "warning", true);
-    }
-    const zones = Object.values(GameState.data.zones);
-    const hasDaily = zones.some((z) => z.boss_id && canEnterDailyInstance(GameState.progress, z, Date.now()));
-    if (hasDaily) {
-      createBadge(this, W - 40, 80, "D", "accent", true);
-    }
+      const radio = HOTSPOTS.find((h) => h.id === "radio");
+      if (radio) {
+        // Красный мигающий диод над радио
+        this.radioBlink = this.add.circle(radio.x + 30, radio.y - 10, 5, 0xff3030, 1)
+          .setDepth(5);
+        this.tweens.add({
+          targets: this.radioBlink,
+          alpha: { from: 1, to: 0.2 },
+          duration: 600,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.InOut",
+        });
 
-    // ── Главный CTA (центр) ──────────────────────────────────────
-    createPanel(this, card.ctaX, card.ctaY - 30, 380, 100);
-    this.add.text(card.ctaX, card.ctaY - 60, "Готов к вылазке?", {
-      color: "#D4C5A0",
-      fontFamily: FONTS.title,
-      fontSize: "16px",
-    }).setOrigin(0.5);
-
-    createButton(this, card.ctaY, "В ВЫЛАЗКУ", () => this.scene.start("MapScene"), true, card.ctaX);
-
-    // ── Меню справа (вертикальная колонка) ───────────────────────
-    const menuX = card.menuColX;
-    const menuY = card.menuColY;
-    const menuStep = 64;
-    const menuBtnW = card.menuBtnW;
-
-    const craftBtn = createSmallButton(this, menuX, menuY, "МАСТЕРСКАЯ", menuBtnW, () => this.scene.start("CraftScene"));
-    const invBtn = createSmallButton(this, menuX, menuY + menuStep, "ИНВЕНТАРЬ", menuBtnW, () => this.scene.start("InventoryScene"));
-    const radioBtn = createSmallButton(this, menuX, menuY + menuStep * 2, "РАДИО", menuBtnW, () => this.scene.start("RadioScene"));
-    const progBtn = createSmallButton(this, menuX, menuY + menuStep * 3, "ГЕРОЙ", menuBtnW, () => this.scene.start("ProgressionScene"));
-
-    const sortieBtnArr: Phaser.GameObjects.Container[] = [craftBtn, invBtn, radioBtn, progBtn];
-    for (const btn of sortieBtnArr) {
-      btn.on(Phaser.Input.Events.GAMEOBJECT_POINTER_OVER, () => {
-        runTween(this, "tween_menu_hover", btn);
-      });
+        // Badge с количеством
+        if (signals.length > 1) {
+          this.add.text(radio.x + 50, radio.y - 30, `${signals.length}`, {
+            color: "#ffffff",
+            backgroundColor: "#aa2020",
+            fontFamily: "Oswald, sans-serif",
+            fontSize: "11px",
+            fontStyle: "bold",
+            padding: { x: 4, y: 1 },
+          }).setOrigin(0.5).setDepth(6);
+        }
+      }
     }
 
-    // ── Scanlines tactical overlay (полный экран) ────────────────
-    const scanlines = this.add.graphics().setDepth(100).setAlpha(0.06);
-    scanlines.lineStyle(1.5, 0x000000, 1);
-    for (let sy = 0; sy < H; sy += 4) {
-      scanlines.lineBetween(0, sy, W, sy);
+    // Overweight icon — если склад переполнен (>80% от max)
+    const data = GameState.data;
+    const carryWeight = computeWeight(GameState.baseStash, data.items);
+    if (carryWeight > GameState.player.max_weight_kg * 0.8) {
+      const stash = HOTSPOTS.find((h) => h.id === "stash");
+      if (stash) {
+        this.weightOverloadIcon = this.add.text(stash.x, stash.y - stash.hh - 15, "⚠", {
+          fontSize: "26px",
+          color: "#ff8844",
+          stroke: "#1a0a0a",
+          strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(5);
+        this.tweens.add({
+          targets: this.weightOverloadIcon,
+          y: stash.y - stash.hh - 22,
+          duration: 1400,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.InOut",
+        });
+      }
     }
 
-    this.addSettingsControls();
-
-    void showBanner();
-
-    if (import.meta.env.DEV) {
-      this.setupDevCheats();
+    // Daily completed mark — если в эту дату уже была вылазка
+    const today = new Date().toISOString().slice(0, 10);
+    if (GameState.progress.daily_completed[today]) {
+      this.add.text(W - 100, 60, "✓ ДНЕВНАЯ ВЫЛАЗКА", {
+        color: "#8aa86f",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "11px",
+        backgroundColor: "#0a0806",
+        padding: { x: 6, y: 2 },
+      }).setOrigin(1, 0.5).setDepth(9);
     }
   }
 
-  private addSettingsControls(): void {
-    const muteLabel = this.add
-      .text(W - 24, 20, `SFX ${GameState.settings.sfxMuted ? "OFF" : "ON"}`, {
-        color: "#F5F1E8",
-        fontFamily: "Roboto Condensed, sans-serif",
-        fontSize: "12px",
-      })
-      .setOrigin(1, 0);
-    muteLabel.setInteractive({ useHandCursor: true });
-    muteLabel.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
-      setSfxMute(!GameState.settings.sfxMuted);
-      void saveToCloud();
-      this.scene.restart();
-    });
+  private attachHotspot(h: Hotspot): void {
+    const hit = this.add.zone(h.x, h.y, h.hw * 2, h.hh * 2)
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
 
-    const volLabel = this.add
-      .text(W - 24, 40, `Vol ${Math.round(GameState.settings.sfxVolume * 100)}%`, {
-        color: "#C8C0B0",
-        fontFamily: "Roboto Condensed, sans-serif",
-        fontSize: "12px",
-      })
-      .setOrigin(1, 0);
-    volLabel.setInteractive({ useHandCursor: true });
-    volLabel.on(Phaser.Input.Events.GAMEOBJECT_POINTER_UP, () => {
-      let next = GameState.settings.sfxVolume - 0.25;
-      if (next < 0) next = 1;
-      setSfxVolume(next);
-      void saveToCloud();
-      this.scene.restart();
+    // Тонкий outline по умолчанию невидим
+    const outline = this.add.rectangle(h.x, h.y, h.hw * 2, h.hh * 2)
+      .setStrokeStyle(2, h.glow, 0)
+      .setDepth(4);
+
+    // Glow (на hover/active)
+    const glowRect = this.add.rectangle(h.x, h.y, h.hw * 2 + 30, h.hh * 2 + 30, h.glow, 0)
+      .setDepth(3)
+      .setBlendMode(Phaser.BlendModes.ADD);
+
+    // Label tooltip (hidden by default)
+    const tooltip = this.add.text(h.x, h.y - h.hh - 18, h.label, {
+      color: "#1a1208",
+      backgroundColor: "#d4c5a0",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "13px",
+      fontStyle: "bold",
+      padding: { x: 8, y: 3 },
+    }).setOrigin(0.5).setDepth(7).setAlpha(0);
+
+    hit.on("pointerover", () => {
+      this.tweens.add({ targets: outline, alpha: 0.9, duration: 180 });
+      this.tweens.add({ targets: glowRect, alpha: 0.18, duration: 240 });
+      this.tweens.add({ targets: tooltip, alpha: 1, duration: 180 });
+    });
+    hit.on("pointerout", () => {
+      this.tweens.add({ targets: outline, alpha: 0, duration: 240 });
+      this.tweens.add({ targets: glowRect, alpha: 0, duration: 300 });
+      this.tweens.add({ targets: tooltip, alpha: 0, duration: 180 });
+    });
+    hit.on("pointerdown", () => {
+      // Quick flash
+      this.tweens.add({ targets: glowRect, alpha: 0.35, duration: 60, yoyo: true });
+      track("hotspot_clicked", { id: h.id });
+      h.action(this);
     });
   }
 
-  private setupDevCheats(): void {
-    // DEV ONLY — guarded by import.meta.env.DEV; tree-shaken in prod build.
-    this.input.keyboard?.on("keydown-O", () => {
-      GameState.baseStash = addToStack(GameState.baseStash, "cloth", 10);
-      this.scene.restart();
+  private attachKettleAnimation(): void {
+    const k = HOTSPOTS.find((h) => h.id === "kettle");
+    if (!k) return;
+    // Subtle pulsing glow — "костёр живой"
+    const flame = this.add.circle(k.x, k.y + 10, 35, 0xff7728, 0.18)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(2);
+    this.tweens.add({
+      targets: flame,
+      alpha: { from: 0.18, to: 0.32 },
+      scale: { from: 1, to: 1.15 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.InOut",
+    });
+  }
+
+  public openSubscene(key: string): void {
+    this.scene.start(key);
+  }
+
+  public showRestInfo(): void {
+    this.showToast("Лежанка — отдых восстанавливает HP в начале вылазки");
+  }
+
+  private showToast(msg: string): void {
+    const txt = this.add.text(W / 2, H - 130, msg, {
+      color: "#1a1208",
+      backgroundColor: "#d4c5a0",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "14px",
+      padding: { x: 14, y: 6 },
+    }).setOrigin(0.5).setDepth(20).setAlpha(0);
+    this.tweens.add({
+      targets: txt,
+      alpha: 1,
+      duration: 200,
+      yoyo: true,
+      hold: 1800,
+      onComplete: () => txt.destroy(),
     });
   }
 }
