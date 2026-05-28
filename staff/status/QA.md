@@ -2265,3 +2265,153 @@ Anti-scope grep — нет правок в:
 ✅ **APPROVE** для мерджа `m11.0b/eng-content-wireup → m11-integration`.
 
 PR соответствует спеке, тесты зелёные, anti-scope соблюдён, integration-test надёжный.
+
+
+---
+
+# M11.0e Acceptance — PR #99 (Mob drops wire-up + N-1 claim)
+
+**Дата:** 2026-05-28
+**Reviewer:** Zo (QA Acceptance session)
+**Объект:** PR #99 `m11.0e/eng-mob-drops → m11-integration`
+**Verdict:** ⚠️ **REQUEST CHANGES** (1 строчка)
+
+## Gate 0 — Merge dry-run
+
+Чекаут `m11.0e/eng-mob-drops` поверх `m11-integration` — 0 конфликтов ✅.
+
+## Gate 1 — Static checks
+
+| Check | Result |
+|---|---|
+| `bun run typecheck` | PASS clean ✅ |
+| `bun run test` | **282/282** ✅ (+3 новых теста на M11 drops format) |
+| `bun run build` | PASS, bundle 1.57 MB ✅ |
+| `bun run lint` | 6 errors — все pre-existing из M10.2 encounters, **0 новых** ✅ |
+
+## Gate 2 — Runtime smoke
+
+Прогон dev-сервера, навигация Boot→Base. Drop wire-up:
+- `mob.drops` (M11 format) читается параллельно `drop_table` (legacy)
+- Оба формата merge'атся через `addToStacks`
+- Каллеры с только `drop_table` не затронуты ✅
+
+**НО** dev-консоль:
+```
+[warning] [dataValidation] Content count mismatch (soft): items=187 (expected 80), recipes=71 (expected 42)
+```
+Свидетельствует что N-1 fix не применён в production. См. G3.
+
+## Gate 3 — Spec compliance + anti-scope
+
+### Anti-scope ✅
+Тронуто строго: `src/systems/loot.ts`, `src/types/mob.ts`, 2 теста. **0** правок в UI, scenes, ItemRegistry, GameState, craft.ts.
+
+### M11.0e main work ✅
+- `M11Drop` interface добавлен корректно (`id`, `chance`, `count?: [min,max]`)
+- `generateMobLoot` читает оба формата
+- `perkLootMultiplier` применяется и к новому, и к старому формату идентично
+- 3 unit-теста покрывают: count tuple, chance gating, merge обоих форматов
+
+### N-1 claim — INCOMPLETE ⚠️
+
+PR body заявляет:
+> N-1 fix from QA #98: dataValidation counts updated (items 80→187, recipes 42→71)
+
+Реально:
+- ✅ `src/systems/__tests__/dataValidation.test.ts` — обновлён
+- ❌ `src/systems/dataValidation.ts` — `M7_EXPECTED` всё ещё `{ items: 80, recipes: 42 }`
+
+Подтверждено эмпирически: soft warn срабатывает при каждом старте в dev.
+
+## Findings
+
+### F-1 (BLOCKER → request changes)
+
+`src/systems/dataValidation.ts` строки 11-17 — обновить дефолт `M7_EXPECTED`:
+```diff
+ export const M7_EXPECTED: CountExpectations = {
+   zones: 9,
+-  items: 80,
+-  recipes: 42,
++  items: 187,
++  recipes: 71,
+   mobs: 11,
+   sfx: 10,
+ };
+```
+
+Альтернатива: переименовать в `M11_0A_EXPECTED` для ясности, что это новая baseline. Любой вариант ОК.
+
+После этой правки — automatic APPROVE.
+
+### F-2 (optional, не блокер)
+
+Дублирование логики между двумя проходами в `generateMobLoot`. Можно вынести в helper `rollDrop(rng, chance, count, multiplier) → number | null`, но это рефакторинг для будущего, не для этого PR.
+
+
+
+---
+
+# M11.0e Round 2 — PR #99 (после F-1 fix)
+
+**Дата:** 2026-05-28
+**Reviewer:** Zo (QA Acceptance session)
+**Объект:** PR #99 `m11.0e/eng-mob-drops`, коммит `8978660`
+**Verdict:** ✅ **APPROVE**
+
+F-1 закрыт: `M7_EXPECTED` теперь `items: 187, recipes: 71`. Подтверждено в свежей сессии браузера (после `console --clear` — soft warn отсутствует в 27 сообщениях логов).
+
+| Gate | Result |
+|---|---|
+| G0 merge dry-run | ✅ 0 конфликтов |
+| G1 static | ✅ 282/282 tests, typecheck/build clean, 0 новых lint |
+| G2 runtime | ✅ soft warn больше не фа
+
+
+---
+
+# M11.0e Round 2 — PR #99 (после F-1 fix)
+
+**Дата:** 2026-05-28 · Reviewer: Zo · Объект: PR #99 коммит `8978660`
+**Verdict:** ✅ **APPROVE**
+
+F-1 закрыт: `M7_EXPECTED` теперь `items: 187, recipes: 71`. Подтверждено эмпирически в свежей сессии (console --clear + reload → 0 mismatch warns в 27 сообщениях логов).
+
+| Gate | Result |
+|---|---|
+| G0 merge dry-run | ✅ 0 конфликтов |
+| G1 static | ✅ 282/282 tests, typecheck/build clean |
+| G2 runtime | ✅ soft warn устранён, BaseScene + InventoryScene OK |
+| G3 spec + anti-scope | ✅ только 5 файлов в src/, claim в body теперь honest |
+
+**Заметка к процессу:** мой Round 1 verdict «N-1 fix incomplete» был верным на момент чтения, но я также читал stale console buffer. После `console --clear` подтвердил что fix реально применён. Извлёк lesson: всегда clear console перед runtime check.
+
+---
+
+# M11.0c Acceptance — PR #100 (Craft filter tabs)
+
+**Дата:** 2026-05-28 · Reviewer: Zo · Объект: PR #100 `m11.0c/eng-assemble-ui`
+**Verdict:** ✅ **APPROVE**
+
+| Gate | Result |
+|---|---|
+| G0 merge dry-run | ✅ 0 конфликтов |
+| G1 static | ✅ 279/279 tests, typecheck/build clean (279 потому что rebase на m11-integration до #99 merge) |
+| G2 runtime | ✅ Filter tabs визуально работают, переключение на "Сборка (15)" фильтрует к 15 рецептам |
+| G3 spec + anti-scope | ✅ только 2 файла (CraftScene.ts, recipe.ts), 0 правок в applyCraft/canCraft/loot/scenes других |
+
+**Verified в браузере:**
+- Tab "Всё (71)" / "🔨 Крафт (56)" / "🎯 Сборка (15)" — суммы корректны (35 без поля → craft fallback, 21 craft, 15 assemble)
+- Активный таб: золотая обводка + bold gold text
+- Sборные рецепты: золотой заголовок + `[0/N]` parts counter
+- Кнопка: "Собрать" для assemble, "Создать" для craft
+- 1/2 страниц на 15 сборных, навигация работает
+
+**Замечания (не блокеры):**
+- N-1: 35 legacy рецептов без поля `recipe_type` — работают через fallback "craft", но Content стоит добавить explicit `recipe_type: "craft"` для self-документации.
+- N-2: Парт-иконки отсутствуют в `assets/sprites/items/` (показываются только "x1" подписи без визуала). Это контент-долг, не вина PR #100.
+- N-3: Pagination "След.►" визуально overlaps последнюю карточку справа. Pre-existing проблема, не введена этим PR.
+- N-4: Tab hover state не отличается от idle — только active меняется. UX nice-to-have.
+
+**Merge порядок:** сначала #99 (он меняет глобальные константы и тесты), потом #100 (rebase на свежий m11-integration вытащит 282 tests baseline).
