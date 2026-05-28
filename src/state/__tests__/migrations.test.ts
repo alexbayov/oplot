@@ -22,7 +22,7 @@ const makeV1Snapshot = (
 });
 
 describe("migrateSnapshot v1 → v2", () => {
-  test("v1 snapshot (no version) gets version=3 (full v1->v3 chain)", () => {
+  test("v1 snapshot (no version) gets full chain to v3", () => {
     const v1 = makeV1Snapshot();
     const v2 = migrateSnapshot(v1);
     expect(v2.version).toBe(3);
@@ -79,7 +79,21 @@ describe("migrateSnapshot v1 → v2", () => {
     };
     const result = migrateSnapshot(v2);
     expect(result.version).toBe(3);
-    expect(result.inventory).toEqual(v2.inventory); // not re-migrated
+    expect(result.inventory).toEqual(v2.inventory); // not re-migrated through v1→v2 rename pass
+  });
+
+  test("v3 snapshot passes through unchanged version", () => {
+    const v3: VersionedSnapshot = { ...makeV1Snapshot(), version: 3 };
+    const migrated = migrateSnapshot(v3);
+    expect(migrated.version).toBe(3);
+  });
+
+  test("migrateSnapshot идемпотентна на любой версии", () => {
+    const v1 = makeV1Snapshot();
+    const once = migrateSnapshot(v1);
+    const twice = migrateSnapshot(once);
+    expect(twice.version).toBe(3);
+    expect(twice).toEqual(once);
   });
 
   test("knife + craft_knife in same v1 save → merged into one stack", () => {
