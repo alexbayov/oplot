@@ -19,7 +19,7 @@ import type {
 } from "../types/skillNode";
 import type { Perk } from "../types";
 
-let nodeRegistry: Map<string, SkillNode> = new Map();
+let nodeRegistry = new Map<string, SkillNode>();
 
 /** Загружается из BootScene после parse'а content/perks.json. */
 export const loadSkillNodes = (nodes: SkillNode[]): void => {

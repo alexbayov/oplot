@@ -15,6 +15,7 @@
 
 import type { CloudSaveSnapshot } from "../systems/cloudSave";
 import { SAVE_VERSION } from "../config";
+import { PERK_MIGRATION_MAP } from "./SkillTree";
 
 /**
  * Карта переименований v1 → v2.
@@ -72,7 +73,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 2) {
     next = migrateV1ToV2(next);
   }
-  // future: if (version < 3) next = migrateV2ToV3(next);
+  if (version < 3) {
+    next = migrateV2ToV3(next);
+  }
 
   return next;
 };
@@ -124,3 +127,23 @@ const remapId = (oldId: string): string => {
 
 /** Утилита для тестов: применить ремап одной строки. */
 export const _testRemapId = remapId;
+
+/** v2 → v3 (M11.4): legacy perks[] → unlockedSkillNodes[] + bonus skillPoints для unmapped. */
+const migrateV2ToV3 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  const unlocked: string[] = [];
+  let bonus = 0;
+  for (const perkId of snap.perks ?? []) {
+    const newId = PERK_MIGRATION_MAP[perkId];
+    if (newId) {
+      unlocked.push(newId);
+    } else {
+      bonus++;
+    }
+  }
+  return {
+    ...snap,
+    version: 3,
+    unlockedSkillNodes: unlocked,
+    skillPoints: bonus,
+  };
+};

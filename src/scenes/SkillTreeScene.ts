@@ -6,6 +6,7 @@ import {
   isUnlocked,
   canUnlock,
   unlockNode,
+  derivePerks,
 } from "../state/SkillTree";
 import type { SkillBranch, SkillNode } from "../types/skillNode";
 import { CX, W, H } from "../ui/layout";
@@ -122,6 +123,8 @@ export class SkillTreeScene extends Phaser.Scene {
       if (!result) return;
       player.unlockedSkillNodes = result.unlocked;
       player.skillPoints = result.skillPoints;
+      // B-2 fix: rebuild legacy perks[] so combat/loot/craft pick up the new bonus.
+      player.perks = derivePerks(player.unlockedSkillNodes);
       this.refresh();
     });
 
