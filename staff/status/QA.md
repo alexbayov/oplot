@@ -2415,3 +2415,23 @@ F-1 закрыт: `M7_EXPECTED` теперь `items: 187, recipes: 71`. Подт
 - N-4: Tab hover state не отличается от idle — только active меняется. UX nice-to-have.
 
 **Merge порядок:** сначала #99 (он меняет глобальные константы и тесты), потом #100 (rebase на свежий m11-integration вытащит 282 tests baseline).
+
+
+
+---
+
+# QA Round 3 — 5 параллельных PR
+
+**Date:** 2026-05-28 · **Reviewer:** Zo
+
+Полный отчёт: [`staff/handoff/M11.1-QA-ROUND3.md`](../handoff/M11.1-QA-ROUND3.md)
+
+| PR | Verdict |
+|---|---|
+| #106 content tiers | ✅ APPROVE |
+| #108 tier UI | ✅ APPROVE |
+| #109 skill tree | 🛑 REWORK (3 блокера) |
+| #110 docs sync | ✅ APPROVE w/ notes |
+| #107 combat engine | ✅ APPROVE |
+
+#109 не блокирует остальные — параллельно мержим 4, ждём фиксов #109.
