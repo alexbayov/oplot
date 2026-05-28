@@ -44,7 +44,7 @@ const setupGameState = async (): Promise<void> => {
         resolved: false,
       },
     ],
-    perks: mockPerks,
+    perks: {} as Record<string, never>,
   });
 };
 

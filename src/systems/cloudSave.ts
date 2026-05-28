@@ -4,6 +4,7 @@ import { getPlatform } from "./platform";
 import { t } from "./locale";
 import { SAVE_VERSION } from "../config";
 import { migrateSnapshot } from "../state/migrations";
+import { derivePerks } from "../state/SkillTree";
 
 export const MIN_CLOUD_SAVE_INTERVAL_MS = 10_000;
 
@@ -18,8 +19,11 @@ export interface CloudSaveSnapshot {
   settings: { mute: boolean; volume: number };
   saved_at: string;
   gas?: number;
-  /** M11.0: version поля. v1 (legacy, no field) → v2 (M11.0a). */
+  /** M11.0: version поля. v1 (legacy, no field) → v2 (M11.0a) → v3 (M11.4). */
   version?: number;
+  /** M11.4: skill tree state. */
+  unlockedSkillNodes?: string[];
+  skillPoints?: number;
   // Optional for backward-compat with saves predating the unlock-flag fix.
   // Missing keys are treated as false on load.
   progress_flags?: {
@@ -52,6 +56,8 @@ export function serializeGameState(): CloudSaveSnapshot {
     settings: { mute: settings.sfxMuted, volume: settings.sfxVolume },
     saved_at: new Date().toISOString(),
     gas: player.gas,
+    unlockedSkillNodes: player.unlockedSkillNodes ?? [],
+    skillPoints: player.skillPoints ?? 0,
     progress_flags: {
       forest_depth_2_completed: progress.forest_depth_2_completed,
       any_warehouse_sortie_completed: progress.any_warehouse_sortie_completed,
@@ -106,6 +112,10 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.baseStash = baseStash;
   GameState.settings = settings;
   GameState.progress.radio_trust = radio_trust;
+  // M11.4: restore skill tree state и пересчитать legacy perks для combat/loot/craft.
+  GameState.player.unlockedSkillNodes = migrated.unlockedSkillNodes ?? [];
+  GameState.player.skillPoints = migrated.skillPoints ?? 0;
+  GameState.player.perks = derivePerks(GameState.player.unlockedSkillNodes);
   // Restore unlock flags; missing keys default to false.
   const flags = migrated.progress_flags ?? {};
   GameState.progress.forest_depth_2_completed = flags.forest_depth_2_completed ?? false;

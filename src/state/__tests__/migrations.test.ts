@@ -22,10 +22,10 @@ const makeV1Snapshot = (
 });
 
 describe("migrateSnapshot v1 → v2", () => {
-  test("v1 snapshot (no version) gets version=2", () => {
+  test("v1 snapshot (no version) gets version=3 (full v1->v3 chain)", () => {
     const v1 = makeV1Snapshot();
     const v2 = migrateSnapshot(v1);
-    expect(v2.version).toBe(2);
+    expect(v2.version).toBe(3);
   });
 
   test("knife → craft_knife", () => {
@@ -71,14 +71,15 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(second).toEqual(first);
   });
 
-  test("v2 snapshot (already migrated) is passthrough", () => {
+  test("v2 snapshot (m11.0 only) gets bumped to v3", () => {
     const v2: VersionedSnapshot = {
       ...makeV1Snapshot(),
       version: 2,
       inventory: [{ id: "craft_knife", count: 1 }],
     };
     const result = migrateSnapshot(v2);
-    expect(result).toEqual(v2);
+    expect(result.version).toBe(3);
+    expect(result.inventory).toEqual(v2.inventory); // not re-migrated
   });
 
   test("knife + craft_knife in same v1 save → merged into one stack", () => {
@@ -104,5 +105,32 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(_testRemapId("craft_machete")).toBe("craft_machete");
     expect(_testRemapId("pistol_t2_pm")).toBe("pistol_t2_pm");
     expect(_testRemapId("ammo_5x45")).toBe("ammo_5x45");
+  });
+});
+
+describe("v2 -> v3 migration (M11.4 skill tree)", () => {
+  test("v2 with legacy perks -> v3 with unlockedSkillNodes + skillPoints", () => {
+    const v2: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 2,
+      perks: ["toughness", "scavenger", "unknown_perk"],
+    };
+    const v3 = migrateSnapshot(v2);
+    expect(v3.version).toBe(3);
+    expect(Array.isArray(v3.unlockedSkillNodes)).toBe(true);
+    expect(typeof v3.skillPoints).toBe("number");
+  });
+
+  test("v1 -> v3 chain works", () => {
+    const v1 = makeV1Snapshot();
+    const out = migrateSnapshot(v1);
+    expect(out.version).toBe(3);
+  });
+
+  test("v3 snapshot passes through unchanged", () => {
+    const v3 = { ...makeV1Snapshot(), version: 3, unlockedSkillNodes: ["marks_1"], skillPoints: 2 };
+    const out = migrateSnapshot(v3);
+    expect(out.unlockedSkillNodes).toEqual(["marks_1"]);
+    expect(out.skillPoints).toBe(2);
   });
 });

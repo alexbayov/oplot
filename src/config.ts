@@ -20,4 +20,4 @@ export const WEAPON_NAMING_MODE: "real" | "generic" = "real";
  * v1 = до M11 (CloudSaveSnapshot без поля version).
  * v2 = M11.0a (новые item IDs, broken_craft, ammo by caliber).
  */
-export const SAVE_VERSION = 2 as const;
+export const SAVE_VERSION = 3 as const;
