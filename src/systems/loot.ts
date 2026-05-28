@@ -28,8 +28,13 @@ const addToStacks = (
 
 // drop_table → InventoryStack[]: roll each entry independently against `chance`,
 // then roll count_min..count_max uniformly.
+//
+// M11.0e: also reads optional `mob.drops` (new M11 format) and merges results.
+// Legacy callers with only `drop_table` continue to work unchanged.
 export const generateMobLoot = (mob: Mob, rng: Rng = defaultRng, perkLootMultiplier = 1.0): InventoryStack[] => {
   const result: InventoryStack[] = [];
+
+  // Legacy drop_table
   for (const entry of mob.drop_table) {
     if (rng() >= entry.chance) continue;
     const min = entry.count_min ?? 1;
@@ -39,6 +44,19 @@ export const generateMobLoot = (mob: Mob, rng: Rng = defaultRng, perkLootMultipl
     if (count <= 0) continue;
     addToStacks(result, entry.item_id, count);
   }
+
+  // M11 drops format (после Devin M11.0a content PR)
+  if (mob.drops) {
+    for (const entry of mob.drops) {
+      if (rng() >= entry.chance) continue;
+      const [min, max] = entry.count ?? [1, 1];
+      const baseCount = rollIntInclusive(min, max, rng);
+      const count = Math.max(1, Math.round(baseCount * perkLootMultiplier));
+      if (count <= 0) continue;
+      addToStacks(result, entry.id, count);
+    }
+  }
+
   return result;
 };
 
