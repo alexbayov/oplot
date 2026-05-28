@@ -2265,3 +2265,87 @@ Anti-scope grep — нет правок в:
 ✅ **APPROVE** для мерджа `m11.0b/eng-content-wireup → m11-integration`.
 
 PR соответствует спеке, тесты зелёные, anti-scope соблюдён, integration-test надёжный.
+
+
+---
+
+# M11.0e Acceptance — PR #99 (Mob drops wire-up + N-1 claim)
+
+**Дата:** 2026-05-28
+**Reviewer:** Zo (QA Acceptance session)
+**Объект:** PR #99 `m11.0e/eng-mob-drops → m11-integration`
+**Verdict:** ⚠️ **REQUEST CHANGES** (1 строчка)
+
+## Gate 0 — Merge dry-run
+
+Чекаут `m11.0e/eng-mob-drops` поверх `m11-integration` — 0 конфликтов ✅.
+
+## Gate 1 — Static checks
+
+| Check | Result |
+|---|---|
+| `bun run typecheck` | PASS clean ✅ |
+| `bun run test` | **282/282** ✅ (+3 новых теста на M11 drops format) |
+| `bun run build` | PASS, bundle 1.57 MB ✅ |
+| `bun run lint` | 6 errors — все pre-existing из M10.2 encounters, **0 новых** ✅ |
+
+## Gate 2 — Runtime smoke
+
+Прогон dev-сервера, навигация Boot→Base. Drop wire-up:
+- `mob.drops` (M11 format) читается параллельно `drop_table` (legacy)
+- Оба формата merge'атся через `addToStacks`
+- Каллеры с только `drop_table` не затронуты ✅
+
+**НО** dev-консоль:
+```
+[warning] [dataValidation] Content count mismatch (soft): items=187 (expected 80), recipes=71 (expected 42)
+```
+Свидетельствует что N-1 fix не применён в production. См. G3.
+
+## Gate 3 — Spec compliance + anti-scope
+
+### Anti-scope ✅
+Тронуто строго: `src/systems/loot.ts`, `src/types/mob.ts`, 2 теста. **0** правок в UI, scenes, ItemRegistry, GameState, craft.ts.
+
+### M11.0e main work ✅
+- `M11Drop` interface добавлен корректно (`id`, `chance`, `count?: [min,max]`)
+- `generateMobLoot` читает оба формата
+- `perkLootMultiplier` применяется и к новому, и к старому формату идентично
+- 3 unit-теста покрывают: count tuple, chance gating, merge обоих форматов
+
+### N-1 claim — INCOMPLETE ⚠️
+
+PR body заявляет:
+> N-1 fix from QA #98: dataValidation counts updated (items 80→187, recipes 42→71)
+
+Реально:
+- ✅ `src/systems/__tests__/dataValidation.test.ts` — обновлён
+- ❌ `src/systems/dataValidation.ts` — `M7_EXPECTED` всё ещё `{ items: 80, recipes: 42 }`
+
+Подтверждено эмпирически: soft warn срабатывает при каждом старте в dev.
+
+## Findings
+
+### F-1 (BLOCKER → request changes)
+
+`src/systems/dataValidation.ts` строки 11-17 — обновить дефолт `M7_EXPECTED`:
+```diff
+ export const M7_EXPECTED: CountExpectations = {
+   zones: 9,
+-  items: 80,
+-  recipes: 42,
++  items: 187,
++  recipes: 71,
+   mobs: 11,
+   sfx: 10,
+ };
+```
+
+Альтернатива: переименовать в `M11_0A_EXPECTED` для ясности, что это новая baseline. Любой вариант ОК.
+
+После этой правки — automatic APPROVE.
+
+### F-2 (optional, не блокер)
+
+Дублирование логики между двумя проходами в `generateMobLoot`. Можно вынести в helper `rollDrop(rng, chance, count, multiplier) → number | null`, но это рефакторинг для будущего, не для этого PR.
+
