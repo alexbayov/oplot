@@ -358,3 +358,57 @@ M11.5  Docs Sync — GDD/balance/content-brief    (1 PR,   2 дня)
 - [`m11/M11.2-spot-grinding.md`](m11/M11.2-spot-grinding.md) — wireframe «Точки», тайминги волн, mini-boss правила ✅
 - [`m11/M11.3-dungeon-clear.md`](m11/M11.3-dungeon-clear.md) — структура комнат, боссы, cooldown ✅
 - [`m11/M11.4-skill-tree.md`](m11/M11.4-skill-tree.md) — все 24 узла, UI дерева, миграция старых перков ✅
+
+---
+
+## M11 Outcomes (закрытие вехи)
+
+> Версия: v3 (post-M11.5 docs sync) · Date: 2026-05-28
+
+### Что фактически реализовано
+
+| Фаза | Status | PR(ы) |
+|---|---|---|
+| **M11.0a** Items Foundation (types + ItemRegistry) | ✅ DONE | #94, #95, #96 |
+| **M11.0b** Content Wire-up | ✅ DONE | #97 |
+| **M11.0c** Filter tabs UI | ✅ DONE | #100 |
+| **M11.0d** Mod-attach UI | ⏸️ deferred → M12.0 (сливается с Combat Overhaul) |
+| **M11.0e** Mob drops integration | ✅ DONE | #99 |
+| **M11.1** Tier system | 🚧 IN PROGRESS (kickoff #105) |
+| **M11.2** Spot Grinding | ⏸️ deferred → M13 (после M12) |
+| **M11.3** Dungeon Clear | ⏸️ deferred → M13 |
+| **M11.4** Skill Tree | 🚧 IN PROGRESS (kickoff #105, PR #109) |
+| **M11.5** Docs Sync | ✅ DONE (этот PR) |
+
+### Метрика «до и после»
+
+| Метрика | До M11 (на m11-integration HEAD до #94) | После M11 (на m12-integration после M11.5) |
+|---|---|---|
+| `content/items.json` | 80 | **187** (+107) |
+| `content/recipes.json` | 42 | **71** (+29) |
+| `content/mobs.json` (с drops) | 0/11 | **11/11** |
+| Тесты | 248/248 | **293/293** (+45) |
+| Lint errors | 6 (encounters.ts pre-existing) | 6 (same) |
+| Build size (JS bundle) | 1.55 MB | 1.57 MB |
+| Item classes | 1 (`type`) | **5** (craft/drop/mod/part/broken_craft) |
+| Перки | 8 (flat random) | **24** (skill tree, 3 ветки × 8) |
+
+### Технический долг к моменту закрытия M11
+
+| ID | Долг | Severity | Где зафиксировано |
+|---|---|---|---|
+| TD-1 | 6 pre-existing lint errors в `src/systems/encounters.ts` (non-null-assertion) | low | ADR-001, M11.0b verdict |
+| TD-2 | `flare_pistol`/`sledgehammer`/`circuitry` migration map opечатки | low | M11.0a-QA-SPEC verdict M-1 |
+| TD-3 | 35 рецептов из M1-M9 без `recipe_type` field | low | M11.0c PR #100 body |
+| TD-4 | Двойной формат `mob.drops` + `mob.drop_table` — bridge | medium | M11.0e PR #99 body |
+| TD-5 | 8 legacy perks мигрируют через PERK_MIGRATION_MAP, неизвестные → bonus points | low | M11.4 SkillTree.ts |
+
+**Нет блокеров для M12.** Все TD — мелкие или мониторные.
+
+### Что M11 разблокировал
+
+- **M12.0 (Combat Foundation)** — стабильная Item shape для калибра/прочности/модов, нужна боёвке
+- **M12.1 (Abilities)** — 3 active skill узла из M11.4 — готовая основа для AP-based абилок
+- **M12.2 (Statuses + Bleed)** — гранаты + мутант кровотечение из M11.0a drops
+- **M13** (Spot/Dungeon) — обновлённая loot pipeline после M11.0e
+
