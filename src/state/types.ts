@@ -1,4 +1,5 @@
 import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
+import type { Encounter } from "../types/encounter";
 
 export interface InventoryStack {
   item_id: string;
@@ -51,6 +52,10 @@ export interface SortieState {
   pending_loot: InventoryStack[];
   // Set when hero used "Укрытие"; expires at hero's next turn.
   cover_active: boolean;
+  // M10.2: эффекты предыдущего encounter'а, применяются в следующем бою и сбрасываются.
+  next_fight_initiative_loss?: boolean;
+  next_mob_hp_bonus_pct?: number;
+  next_fight_enemy_count_delta?: number;
 }
 
 export interface ContentData {
@@ -62,6 +67,8 @@ export interface ContentData {
   // Empty array when the file is missing or content count mismatches (soft-warn).
   radioSignals: RadioSignal[];
   perks: Perk[];
+  // M10.2: encounters between fights — loaded from content/encounters.json.
+  encounters?: Encounter[];
 }
 
 export interface GameStateShape {

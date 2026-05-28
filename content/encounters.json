@@ -1,0 +1,482 @@
+[
+  {
+    "id": "rusty_safe",
+    "category": "resource_trade",
+    "zones": ["warehouse", "factory", "city"],
+    "text_ru": "Ржавый сейф под завалом. Чтобы достать содержимое — придётся час долбить ломом, грохот будет на весь район.",
+    "choices": [
+      {
+        "id": "force_open",
+        "text_ru": "Долбить ломом (грохот, +1 ход)",
+        "outcomes": [
+          { "weight": 0.7, "loot": [{ "id": "scrap", "n": 3 }, { "id": "cloth", "n": 1 }], "time_cost": 1 },
+          { "weight": 0.2, "loot": [{ "id": "scrap", "n": 5 }, { "id": "ammo_pistol", "n": 2 }], "time_cost": 1 },
+          { "weight": 0.1, "hp_delta": -8, "time_cost": 1 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Пройти мимо", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "oily_puddle",
+    "category": "resource_trade",
+    "zones": ["factory", "power_plant"],
+    "text_ru": "Лужа с маслянистой жидкостью. Можно набрать в флягу — пахнет химией, но химики просили.",
+    "choices": [
+      {
+        "id": "collect",
+        "text_ru": "Набрать в флягу",
+        "outcomes": [
+          { "weight": 0.7, "loot": [{ "id": "chem", "n": 2 }] },
+          { "weight": 0.3, "loot": [{ "id": "chem", "n": 2 }], "hp_delta": -5 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Не трогать", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "abandoned_pack",
+    "category": "resource_trade",
+    "zones": ["forest", "suburbs", "city"],
+    "text_ru": "Рюкзак висит на ветке. Высоко. Кто-то спрятал и не вернулся. Лезть — рискованно: ветка сухая.",
+    "choices": [
+      {
+        "id": "climb",
+        "text_ru": "Лезть",
+        "outcomes": [
+          { "weight": 0.6, "loot": [{ "id": "cloth", "n": 2 }, { "id": "ammo_pistol", "n": 3 }] },
+          { "weight": 0.4, "hp_delta": -10 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Пройти", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "broken_vending",
+    "category": "resource_trade",
+    "zones": ["school", "hospital", "metro"],
+    "text_ru": "Автомат с газировкой, выбитое стекло. Внутри пара жестянок. Можно достать — стекло острое.",
+    "choices": [
+      {
+        "id": "reach_in",
+        "text_ru": "Достать жестянки",
+        "outcomes": [
+          { "weight": 0.75, "loot": [{ "id": "food", "n": 2 }] },
+          { "weight": 0.25, "loot": [{ "id": "food", "n": 1 }], "hp_delta": -4 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Не лезть", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "buried_cache",
+    "category": "resource_trade",
+    "zones": ["*"],
+    "text_ru": "Свежий бугор земли. Кто-то закопал и пометил камнем. Раскопать — потерять время.",
+    "choices": [
+      {
+        "id": "dig",
+        "text_ru": "Раскопать (+1 ход)",
+        "outcomes": [
+          { "weight": 0.5, "loot": [{ "id": "scrap", "n": 2 }], "time_cost": 1 },
+          { "weight": 0.3, "loot": [{ "id": "ammo_rifle", "n": 4 }], "time_cost": 1 },
+          { "weight": 0.2, "time_cost": 1 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Не копать", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+
+  {
+    "id": "dying_stranger",
+    "category": "moral_choice",
+    "zones": ["suburbs", "city", "school"],
+    "text_ru": "У стены сидит человек. Хрипит. Дышит через раз. Аптечку дать — он встанет. Не дать — он замолчит.",
+    "choices": [
+      {
+        "id": "give_medkit",
+        "text_ru": "Дать аптечку",
+        "requires": [{ "type": "has_item", "id": "medkit" }],
+        "outcomes": [{ "weight": 1, "consume_item": "medkit", "trust_delta": 1 }]
+      },
+      {
+        "id": "leave",
+        "text_ru": "Пройти мимо",
+        "outcomes": [
+          { "weight": 0.5, "loot": [{ "id": "medkit", "n": 1 }] },
+          { "weight": 0.5, "trust_delta": -1 }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "children_at_fire",
+    "category": "moral_choice",
+    "zones": ["city", "suburbs"],
+    "text_ru": "Дети у костра. Делят последний сухарь. Услышали тебя, замерли.",
+    "choices": [
+      {
+        "id": "share",
+        "text_ru": "Поделиться запасами",
+        "requires": [{ "type": "has_item", "id": "food", "min": 2 }],
+        "outcomes": [{ "weight": 1, "consume_item": "food", "consume_n": 2, "trust_delta": 1 }]
+      },
+      {
+        "id": "pass",
+        "text_ru": "Пройти мимо",
+        "outcomes": [{ "weight": 1, "trust_delta": -1 }]
+      }
+    ]
+  },
+  {
+    "id": "wounded_dog",
+    "category": "moral_choice",
+    "zones": ["forest", "suburbs"],
+    "text_ru": "Бродячая собака с раной на боку. Скулит, но не агрессивна. Подойти — она может укусить. Уйти — она тебя проводит ещё немного.",
+    "choices": [
+      {
+        "id": "bandage",
+        "text_ru": "Перевязать",
+        "requires": [{ "type": "has_item", "id": "cloth" }],
+        "outcomes": [{ "weight": 1, "consume_item": "cloth", "trust_delta": 1 }]
+      },
+      {
+        "id": "shoot",
+        "text_ru": "Убить (милосердие)",
+        "outcomes": [{ "weight": 1, "trust_delta": -1, "loot": [{ "id": "cloth", "n": 1 }] }]
+      },
+      {
+        "id": "pass",
+        "text_ru": "Уйти",
+        "outcomes": [{ "weight": 1 }]
+      }
+    ]
+  },
+  {
+    "id": "scavenger_corpse",
+    "category": "moral_choice",
+    "zones": ["city", "factory", "warehouse"],
+    "text_ru": "Свежий труп мародёра. На шее — медальон с фотографией ребёнка. В кармане — патроны. Забрать всё? Только патроны? Похоронить?",
+    "choices": [
+      { "id": "take_all", "text_ru": "Забрать всё", "outcomes": [{ "weight": 1, "loot": [{ "id": "ammo_pistol", "n": 3 }], "trust_delta": -1 }] },
+      { "id": "take_ammo", "text_ru": "Только патроны", "outcomes": [{ "weight": 1, "loot": [{ "id": "ammo_pistol", "n": 3 }] }] },
+      { "id": "bury", "text_ru": "Похоронить", "outcomes": [{ "weight": 1, "time_cost": 1, "trust_delta": 1 }] }
+    ]
+  },
+
+  {
+    "id": "can_tripwire",
+    "category": "trap",
+    "zones": ["*"],
+    "text_ru": "Растяжка от консервной банки. Звон разнёсся на весь этаж. Кто-то услышал.",
+    "choices": [
+      {
+        "id": "continue",
+        "text_ru": "Идти дальше — настороже",
+        "outcomes": [{ "weight": 1, "next_fight_initiative_loss": true }]
+      }
+    ]
+  },
+  {
+    "id": "burnt_smell",
+    "category": "trap",
+    "zones": ["forest", "warehouse"],
+    "text_ru": "Пахнет гарью. Костёр потух недавно. Тот, кто грелся — где-то рядом. И, кажется, уже выспался.",
+    "choices": [
+      {
+        "id": "press_on",
+        "text_ru": "Идти дальше",
+        "outcomes": [{ "weight": 1, "next_mob_hp_bonus_pct": 0.2 }]
+      },
+      {
+        "id": "retreat_step",
+        "text_ru": "Сделать крюк (+1 ход)",
+        "outcomes": [{ "weight": 1, "time_cost": 1 }]
+      }
+    ]
+  },
+  {
+    "id": "loose_floor",
+    "category": "trap",
+    "zones": ["school", "hospital", "suburbs"],
+    "text_ru": "Половица проседает. Слишком поздно.",
+    "choices": [
+      {
+        "id": "fall",
+        "text_ru": "—",
+        "outcomes": [
+          { "weight": 0.7, "hp_delta": -6 },
+          { "weight": 0.3, "hp_delta": -3, "loot": [{ "id": "scrap", "n": 1 }] }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "gas_pocket",
+    "category": "trap",
+    "zones": ["factory", "power_plant", "metro"],
+    "text_ru": "Что-то шипит в воздухе. Запах сладкий, тошнотворный. Газ.",
+    "choices": [
+      {
+        "id": "mask",
+        "text_ru": "Надеть маску",
+        "requires": [{ "type": "has_item", "id": "gas_mask" }],
+        "outcomes": [{ "weight": 1 }]
+      },
+      {
+        "id": "run_through",
+        "text_ru": "Проскочить, задержав дыхание",
+        "outcomes": [
+          { "weight": 0.4, "hp_delta": -8 },
+          { "weight": 0.6, "hp_delta": -4 }
+        ]
+      }
+    ]
+  },
+
+  {
+    "id": "chalk_warning",
+    "category": "lore",
+    "zones": ["*"],
+    "text_ru": "На стене мелом: «Они приходят с дождём. Не верь радио.»",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "read", "text_ru": "Запомнить", "outcomes": [{ "weight": 1, "lore_fragment": "rain_warning" }] }
+    ]
+  },
+  {
+    "id": "childs_shoe",
+    "category": "lore",
+    "zones": ["suburbs", "city", "school"],
+    "text_ru": "Старая детская обувь у двери. Одна. Кто-то очень торопился.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "continue", "text_ru": "Идти дальше", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "diary_page",
+    "category": "lore",
+    "zones": ["hospital", "school"],
+    "text_ru": "Страница из дневника. «День 47. Запасы кончаются. Мать перестала вставать. Завтра пойду на завод, говорят, там ещё есть тушёнка.» Дата — три года назад.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "fold", "text_ru": "Сложить в карман", "outcomes": [{ "weight": 1, "lore_fragment": "day_47" }] }
+    ]
+  },
+  {
+    "id": "soviet_poster",
+    "category": "lore",
+    "zones": ["city", "suburbs", "school"],
+    "text_ru": "Облупленный плакат: «РОДИНА-МАТЬ ЗОВЁТ». Глаза на ней — выцарапаны. Чьим-то ножом, аккуратно. По одному.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "pass", "text_ru": "Пройти", "outcomes": [{ "weight": 1, "lore_fragment": "rodina" }] }
+    ]
+  },
+  {
+    "id": "barricade_skeleton",
+    "category": "lore",
+    "zones": ["city", "factory"],
+    "text_ru": "Скелет в форме охранника. Сидит за самодельной баррикадой. Автомат — пуст. Магазины — пусты. Он держался до конца.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "salute", "text_ru": "Постоять секунду", "outcomes": [{ "weight": 1, "lore_fragment": "last_stand" }] }
+    ]
+  },
+
+  {
+    "id": "locked_crate",
+    "category": "skill_check",
+    "zones": ["warehouse", "factory", "city"],
+    "text_ru": "Деревянный ящик. Замок навесной, ржавый. Дужка ещё крепкая.",
+    "choices": [
+      {
+        "id": "pick",
+        "text_ru": "Взломать",
+        "requires": [{ "type": "has_item", "id": "lockpick" }],
+        "outcomes": [{ "weight": 1, "loot": [{ "id": "scrap", "n": 5 }, { "id": "ammo_rifle", "n": 2 }] }]
+      },
+      {
+        "id": "smash",
+        "text_ru": "Сломать прикладом (грохот)",
+        "outcomes": [
+          { "weight": 0.5, "loot": [{ "id": "scrap", "n": 3 }], "next_fight_initiative_loss": true },
+          { "weight": 0.5, "loot": [{ "id": "scrap", "n": 2 }], "next_fight_initiative_loss": true }
+        ]
+      },
+      { "id": "skip", "text_ru": "Пройти", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "deep_water",
+    "category": "skill_check",
+    "zones": ["suburbs", "metro"],
+    "text_ru": "Затопленный проход. Вода по пояс, мутная, холодная.",
+    "choices": [
+      {
+        "id": "wade_skilled",
+        "text_ru": "Пройти аккуратно",
+        "requires": [{ "type": "has_perk", "id": "outdoorsman" }],
+        "outcomes": [{ "weight": 1 }]
+      },
+      {
+        "id": "wade_wet",
+        "text_ru": "Идти как есть (броня размокнет)",
+        "outcomes": [{ "weight": 1, "armor_cond_delta": -1 }]
+      },
+      {
+        "id": "detour",
+        "text_ru": "Обойти (+1 ход)",
+        "outcomes": [{ "weight": 1, "time_cost": 1 }]
+      }
+    ]
+  },
+  {
+    "id": "radio_static",
+    "category": "skill_check",
+    "zones": ["*"],
+    "text_ru": "В кармане — шипение. Раритетный коротковолновик ловит чей-то сигнал. Слабо, но узнаваемо.",
+    "choices": [
+      {
+        "id": "tune",
+        "text_ru": "Подстроить (нужен опыт)",
+        "requires": [{ "type": "has_perk", "id": "keen_eye" }],
+        "outcomes": [{ "weight": 1, "trust_delta": 1, "lore_fragment": "radio_signal" }]
+      },
+      { "id": "ignore", "text_ru": "Не отвлекаться", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "high_ledge",
+    "category": "skill_check",
+    "zones": ["city", "factory"],
+    "text_ru": "Шкаф упёрся в стену под потолком. Если залезть — видно дальше, может, что-то ценное.",
+    "choices": [
+      {
+        "id": "climb_lean",
+        "text_ru": "Залезть (лёгкая ноша)",
+        "requires": [{ "type": "max_weight_pct", "value": 0.6 }],
+        "outcomes": [{ "weight": 1, "loot": [{ "id": "cloth", "n": 2 }, { "id": "scrap", "n": 1 }] }]
+      },
+      {
+        "id": "climb_heavy",
+        "text_ru": "Залезть всё равно",
+        "outcomes": [
+          { "weight": 0.4, "loot": [{ "id": "cloth", "n": 1 }], "hp_delta": -8 },
+          { "weight": 0.6, "hp_delta": -5 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Не лезть", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+
+  {
+    "id": "old_man_at_barrel",
+    "category": "npc",
+    "zones": ["suburbs", "city"],
+    "text_ru": "У бочки греется старик. Не вооружён. Кивает на восток: «Ты тоже в Завод? Не ходи. Там собаки. Большие, дюжина.»",
+    "choices": [
+      { "id": "thank", "text_ru": "Спасибо", "outcomes": [{ "weight": 1, "trust_delta": 1, "lore_fragment": "factory_warning" }] },
+      { "id": "ignore", "text_ru": "Промолчать", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "trader_water",
+    "category": "npc",
+    "zones": ["forest", "suburbs", "city"],
+    "text_ru": "Бродяга у обочины. Показывает флягу: «Чистая. Меняю на патрон. Любой.»",
+    "choices": [
+      {
+        "id": "trade",
+        "text_ru": "Обменять (-1 патрон → +1 вода)",
+        "requires": [{ "type": "has_item", "id": "ammo_pistol" }],
+        "outcomes": [{ "weight": 1, "consume_item": "ammo_pistol", "loot": [{ "id": "food", "n": 1 }] }]
+      },
+      { "id": "refuse", "text_ru": "Отказать", "outcomes": [{ "weight": 1, "trust_delta": -1 }] }
+    ]
+  },
+  {
+    "id": "scout_signal",
+    "category": "npc",
+    "zones": ["forest", "school", "factory"],
+    "text_ru": "Из-за дерева — свист. Тень. Это разведчик другой группы. Не нападает. Показывает три пальца: «Трое впереди. Мы пройдём слева, ты — справа?»",
+    "choices": [
+      { "id": "agree", "text_ru": "Принять", "outcomes": [{ "weight": 1, "next_fight_enemy_count_delta": -1 }] },
+      { "id": "refuse", "text_ru": "Отказать", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "fanatic_preaching",
+    "category": "npc",
+    "zones": ["city", "metro"],
+    "text_ru": "На углу — фанатик. Орёт что-то про «истинных» и «дрожащих». Заметил тебя. Замолчал. Смотрит в упор.",
+    "choices": [
+      { "id": "pass", "text_ru": "Пройти быстро", "outcomes": [{ "weight": 1 }] },
+      { "id": "listen", "text_ru": "Постоять, послушать", "outcomes": [{ "weight": 1, "lore_fragment": "fanatic_doctrine" }] }
+    ]
+  },
+  {
+    "id": "mother_child",
+    "category": "npc",
+    "zones": ["suburbs", "city"],
+    "text_ru": "Женщина с ребёнком на руках. Шепчет: «У него жар. У вас нет аптечки?»",
+    "choices": [
+      {
+        "id": "give",
+        "text_ru": "Дать аптечку",
+        "requires": [{ "type": "has_item", "id": "medkit" }],
+        "outcomes": [{ "weight": 1, "consume_item": "medkit", "trust_delta": 2 }]
+      },
+      { "id": "refuse", "text_ru": "Нет", "outcomes": [{ "weight": 1, "trust_delta": -1 }] }
+    ]
+  },
+
+  {
+    "id": "stash_under_radiator",
+    "category": "resource_trade",
+    "zones": ["suburbs", "school"],
+    "text_ru": "Радиатор. За ним что-то спрятано. Просунуть руку — кожа сдерёт.",
+    "choices": [
+      {
+        "id": "reach",
+        "text_ru": "Просунуть руку",
+        "outcomes": [
+          { "weight": 0.65, "loot": [{ "id": "ammo_pistol", "n": 5 }], "hp_delta": -3 },
+          { "weight": 0.35, "hp_delta": -4 }
+        ]
+      },
+      { "id": "skip", "text_ru": "Не лезть", "outcomes": [{ "weight": 1 }] }
+    ]
+  },
+  {
+    "id": "fresh_grave",
+    "category": "lore",
+    "zones": ["forest", "suburbs"],
+    "text_ru": "Свежая могила. Крест из двух досок. Имя написано углём, но дождь почти смыл. Осталось одно «...ОЛЯ».",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "stand", "text_ru": "Постоять", "outcomes": [{ "weight": 1, "lore_fragment": "olya_grave" }] }
+    ]
+  },
+  {
+    "id": "broken_clock",
+    "category": "lore",
+    "zones": ["hospital", "school", "city"],
+    "text_ru": "Настенные часы. Стоят. Стрелки показывают 03:47. Время, когда всё началось.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "look", "text_ru": "Посмотреть", "outcomes": [{ "weight": 1, "lore_fragment": "03_47" }] }
+    ]
+  },
+  {
+    "id": "stray_cat",
+    "category": "lore",
+    "zones": ["suburbs", "city"],
+    "text_ru": "Кошка. Серая, тощая. Смотрит. Не убегает. Просто смотрит, пока ты идёшь мимо.",
+    "rarity": 0.5,
+    "choices": [
+      { "id": "pass", "text_ru": "Идти", "outcomes": [{ "weight": 1 }] }
+    ]
+  }
+]

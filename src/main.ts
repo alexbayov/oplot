@@ -6,6 +6,7 @@ import { CombatScene } from "./scenes/CombatScene";
 import { CraftScene } from "./scenes/CraftScene";
 import { InventoryScene } from "./scenes/InventoryScene";
 import { LootScene } from "./scenes/LootScene";
+import { EncounterScene } from "./scenes/EncounterScene";
 import { MapScene } from "./scenes/MapScene";
 import { LevelUpScene } from "./scenes/LevelUpScene";
 import { ProgressionScene } from "./scenes/ProgressionScene";
@@ -46,6 +47,7 @@ const config: Phaser.Types.Core.GameConfig = {
     SortieScene,
     CombatScene,
     LootScene,
+    EncounterScene,
     ReturnScene,
     InventoryScene,
     CraftScene,
