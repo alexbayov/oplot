@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
 import type { InventoryStack } from "../state/types";
 import { canAddItem, computeWeight } from "../systems/weight";
+import { pickEncounter } from "../systems/encounters";
 import {
   createButton,
   createPanel,
@@ -135,7 +136,7 @@ export class LootScene extends Phaser.Scene {
 
     if (hasMoreFights) {
       this.nextFightButton = createButton(this, btnY, "След. бой", () => {
-        this.scene.start("CombatScene");
+        this.proceedToNextFight();
       }, false, startX + (btnW + gap));
     }
 
@@ -176,5 +177,23 @@ export class LootScene extends Phaser.Scene {
   private endSortie(): void {
     if (!GameState.currentSortie) return;
     this.scene.start("ReturnScene");
+  }
+
+  private proceedToNextFight(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) {
+      this.scene.start("CombatScene");
+      return;
+    }
+    const allEncounters = GameState.data.encounters ?? [];
+    // 50% шанс на encounter между боями
+    if (allEncounters.length > 0 && Math.random() < 0.5) {
+      const enc = pickEncounter(allEncounters, sortie.zone_id);
+      if (enc) {
+        this.scene.start("EncounterScene", { encounter: enc, return_to: "CombatScene" });
+        return;
+      }
+    }
+    this.scene.start("CombatScene");
   }
 }

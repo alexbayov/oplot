@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
 import type { ContentData } from "../state/types";
 import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
+import type { Encounter } from "../types/encounter";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
 import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
@@ -55,6 +56,9 @@ export class BootScene extends Phaser.Scene {
 
   public preload(): void {
     this.load.image("hero", "assets/sprites/hero.png");
+    this.load.image("base_interior", "assets/backgrounds/base_interior_painted.jpg");
+    this.load.image("world_map", "assets/backgrounds/world_map_painted.jpg");
+    this.load.image("return_landscape", "assets/backgrounds/return_landscape_painted.jpg");
     for (const id of ZONE_BG_IDS) {
       this.load.image(`bg_${id}`, `assets/backgrounds/${id}.png`);
     }
@@ -82,13 +86,14 @@ export class BootScene extends Phaser.Scene {
   private async loadContent(): Promise<void> {
     try {
       // M3: radio.json loaded in parallel; failure or [] is fine (UI shows "Эфир пуст").
-      const [items, mobs, recipes, zones, radioSignals, perks] = await Promise.all([
+      const [items, mobs, recipes, zones, radioSignals, perks, encounters] = await Promise.all([
         loadJson<Item[]>("content/items.json"),
         loadJson<Mob[]>("content/mobs.json"),
         loadJson<Recipe[]>("content/recipes.json"),
         loadJson<Zone[]>("content/zones.json"),
         loadJson<RadioSignal[]>("content/radio.json").catch(() => [] as RadioSignal[]),
         loadJson<Perk[]>("content/perks.json").catch(() => [] as Perk[]),
+        loadJson<Encounter[]>("content/encounters.json").catch(() => [] as Encounter[]),
       ]);
       const data: ContentData = {
         items: indexBy(items),
@@ -97,6 +102,7 @@ export class BootScene extends Phaser.Scene {
         zones: indexBy(zones),
         radioSignals,
         perks,
+        encounters,
       };
       softWarnCounts(data);
       const recipeIssues = validateRecipeRefs(data);
