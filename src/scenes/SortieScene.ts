@@ -6,6 +6,8 @@ import type { InventoryStack, SortieState } from "../state/types";
 import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
 import { hideBanner } from "../systems/banner";
 import { CX, CY, W, H } from "../ui/layout";
+import { track } from "../systems/telemetry";
+import { computeWeight } from "../systems/weight";
 
 interface SortieInit {
   zoneId?: string;
@@ -122,6 +124,14 @@ export class SortieScene extends Phaser.Scene {
         cover_active: false,
       };
       GameState.currentSortie = sortie;
+
+      track("sortie_started", {
+        zone_id: sortie.zone_id,
+        depth: sortie.depth,
+        weight: computeWeight(GameState.player.backpack, GameState.data.items),
+        hp_pct: Math.round((GameState.player.hp / GameState.player.hp_max) * 100),
+      });
+
       GameState.player.backpack = this.takeConsumables();
       this.scene.start("CombatScene");
     });

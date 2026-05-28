@@ -8,6 +8,7 @@ import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
 import { loadFromCloud, applySnapshot } from "../systems/cloudSave";
+import { sessionStart } from "../systems/telemetry";
 import { CY } from "../ui/layout";
 
 const ITEM_ICON_IDS = [
@@ -122,6 +123,12 @@ export class BootScene extends Phaser.Scene {
       if (snapshot) {
         applySnapshot(snapshot);
       }
+
+      sessionStart({
+        level: GameState.player.level,
+        is_returning: snapshot !== null,
+        sorties_completed: Object.keys(GameState.progress.daily_completed).length,
+      });
 
       this.scene.start("BaseScene");
     } catch (err) {

@@ -21,6 +21,7 @@ import { generateMobLoot } from "../systems/loot";
 import { computeGasDamage } from "../systems/gasZone";
 import { gainXP } from "../systems/xp";
 import { tickRadioOnReturn } from "../systems/radio";
+import { track } from "../systems/telemetry";
 import {
   chooseMobActionV2,
   type MobRuntimeState,
@@ -454,6 +455,12 @@ export class CombatScene extends Phaser.Scene {
   private endCombatVictory(): void {
     this.state = "ended";
     const sortie = GameState.currentSortie;
+    track("combat_resolved", {
+      outcome: "won",
+      zone_id: sortie?.zone_id ?? "unknown",
+      depth: sortie?.depth ?? 0,
+      hp_pct: Math.round((GameState.player.hp / GameState.player.hp_max) * 100),
+    });
     if (!sortie) {
       this.scene.start("BaseScene");
       return;
@@ -554,6 +561,12 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private endSortie(reason: "retreat" | "defeat"): void {
+    track("combat_resolved", {
+      outcome: reason === "defeat" ? "died" : "fled",
+      zone_id: GameState.currentSortie?.zone_id ?? "unknown",
+      depth: GameState.currentSortie?.depth ?? 0,
+      hp_pct: Math.round((GameState.player.hp / GameState.player.hp_max) * 100),
+    });
     const player = GameState.player;
     const items = GameState.data.items;
     if (reason === "defeat") {
