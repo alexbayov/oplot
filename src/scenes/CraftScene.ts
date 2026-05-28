@@ -5,6 +5,7 @@ import { createButton, createPanel, createTitle, createSmallButton } from "./sce
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
 import { CX, H } from "../ui/layout";
+import { renderTierBadge } from "../ui/tierBadge";
 
 type CraftFilter = "all" | "craft" | "assemble";
 
@@ -86,7 +87,9 @@ export class CraftScene extends Phaser.Scene {
       // Icon
       const texKey = `item_${recipe.result_id}`;
       if (this.textures.exists(texKey)) {
-        this.add.image(leftX + 20, cardY, texKey).setScale(0.9);
+        this.add.image(leftX + 32, cardY, texKey).setScale(1.0);
+        // M11.1 — римская цифра в углу
+        renderTierBadge(this, leftX + 50, cardY - 18, recipe.tier);
       }
 
       // Title + (если сборка) счётчик деталей

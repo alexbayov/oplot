@@ -25,4 +25,6 @@ export interface Zone {
   daily_reset_hours?: number;
   // M5 GDD §9: gas damage per turn when inside a gas level without gas_mask.
   gas_damage_per_turn?: number;
+  /** M11.1 — диапазон тиров мобов и лута в зоне, например [1, 2] или [4, 5]. */
+  zone_tier_range?: [number, number];
 }
