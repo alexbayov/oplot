@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
+import { radioSenderName, zoneName } from "../systems/locale";
 import { activeSignals, resolveRadioChoice } from "../systems/radio";
 import { runTween } from "../systems/tweens";
 import type { RadioSignalOptionId } from "../types";
@@ -80,9 +81,9 @@ export class RadioScene extends Phaser.Scene {
       const yCenter = startY + row * (cardH + gapY);
 
       createPanel(this, xCenter, yCenter, cardW, cardH);
-      createSubtitle(this, yCenter - 36, `${sig.from} — ${sig.subject}`, xCenter);
+      createSubtitle(this, yCenter - 36, `${radioSenderName(sig.from)} — ${sig.subject}`, xCenter);
       this.add
-        .text(xCenter + cardW / 2 - 20, yCenter - 50, sig.zone_id, {
+        .text(xCenter + cardW / 2 - 20, yCenter - 50, `в зоне ${zoneName(sig.zone_id)}`, {
           color: "#8a8a70",
           fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "12px",
@@ -117,7 +118,7 @@ export class RadioScene extends Phaser.Scene {
     }
 
     createPanel(this, CX, 260, 800, 280);
-    createSubtitle(this, 150, `${sig.from} — ${sig.subject}`);
+    createSubtitle(this, 150, `${radioSenderName(sig.from)} — ${sig.subject}`);
     this.add
       .text(CX, 260, sig.body_ru, {
         align: "center",
