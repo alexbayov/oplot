@@ -57,6 +57,7 @@ export class BootScene extends Phaser.Scene {
     this.load.image("hero", "assets/sprites/hero.png");
     this.load.image("base_interior", "assets/backgrounds/base_interior_painted.jpg");
     this.load.image("world_map", "assets/backgrounds/world_map_painted.jpg");
+    this.load.image("return_landscape", "assets/backgrounds/return_landscape_painted.jpg");
     for (const id of ZONE_BG_IDS) {
       this.load.image(`bg_${id}`, `assets/backgrounds/${id}.png`);
     }
