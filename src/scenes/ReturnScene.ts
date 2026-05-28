@@ -20,6 +20,7 @@ import {
   createHpBar,
 } from "./sceneUi";
 import { CX, CY, H } from "../ui/layout";
+import { track } from "../systems/telemetry";
 
 export class ReturnScene extends Phaser.Scene {
   private progressFill?: Phaser.GameObjects.Rectangle;
@@ -43,6 +44,15 @@ export class ReturnScene extends Phaser.Scene {
       zoneMultiplier,
       mods.weight_penalty_multiplier,
     );
+
+    track("sortie_completed", {
+      zone_id: sortie?.zone_id ?? "unknown",
+      depth: sortie?.depth ?? 0,
+      loot_count: player.backpack.reduce((sum, s) => sum + s.count, 0),
+      hp_remaining: player.hp,
+      hp_pct: Math.round((player.hp / player.hp_max) * 100),
+      return_time_sec: Math.round(returnTimeS),
+    });
 
     createPanel(this, CX, 200, 600, 100);
     createSubtitle(this, 180, `Вес ${curWeight.toFixed(1)}/${player.max_weight_kg} кг`);
