@@ -128,7 +128,12 @@ const remapId = (oldId: string): string => {
 /** Утилита для тестов: применить ремап одной строки. */
 export const _testRemapId = remapId;
 
-/** v2 → v3 (M11.4): legacy perks[] → unlockedSkillNodes[] + bonus skillPoints для unmapped. */
+/**
+ * v2 → v3 (M11.4 + M12.0):
+ *   - M11.4: legacy perks[] → unlockedSkillNodes[] + bonus skillPoints для unmapped.
+ *   - M12.0: версия проставляется. WeaponInstance shape живёт в ItemRegistry runtime,
+ *     structural миграция инвентаря не требуется.
+ */
 const migrateV2ToV3 = (snap: VersionedSnapshot): VersionedSnapshot => {
   const unlocked: string[] = [];
   let bonus = 0;
