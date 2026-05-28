@@ -31,6 +31,7 @@ import type {
   StatusInstance,
   TurnContext,
 } from "./combatTypes";
+import { aggregateModEffects } from "./modEffects";
 
 const defaultRng: Rng = Math.random;
 
@@ -96,7 +97,25 @@ export class CombatEngine {
       case "retreat":
         return this.executeRetreat(actor);
       // Stubs для M12.0b+
-      case "reload":
+      case "reload": {
+        if (!actor.equipped || actor.magazineMax == null) {
+          return {
+            ok: false,
+            reasonRu: "Нечего перезаряжать",
+            logEntries: [],
+            rosterChanged: false,
+          };
+        }
+        actor.magazine = actor.magazineMax;
+        const entry: CombatLogEntry = {
+          turn: this.state.turn,
+          sourceId: "hero",
+          kind: "reload",
+          messageRu: `Перезарядка (${actor.magazineMax} патронов)`,
+        };
+        this.state.log.push(entry);
+        return { ok: true, logEntries: [entry], rosterChanged: false };
+      }
       case "ability":
       case "consumable":
       case "move":
@@ -131,7 +150,7 @@ export class CombatEngine {
         results.push({
           ok: true,
           logEntries: [
-            this.log(mob.id, undefined, "info", `${mob.nameRu} отступает`),
+            this.log(mob.id, undefined, "system", `${mob.nameRu} отступает`),
           ],
           rosterChanged: false,
         });
@@ -202,10 +221,27 @@ export class CombatEngine {
       hero.magazine -= 1;
     }
     const dmg = this.rollDamage(hero);
-    target.hp = Math.max(0, target.hp - dmg);
+    // M12.0b — apply mod effects to damage
+    const mods = aggregateModEffects(hero.equipped);
+    const damage = Math.max(0, dmg + mods.damageDelta);
+    target.hp = Math.max(0, target.hp - damage);
+
+    // M12.0b — durability tick
+    if (hero.equipped) {
+      hero.equipped.durability = Math.max(0, hero.equipped.durability - 1);
+      if (hero.equipped.durability === 0) {
+        this.state.log.push({
+          turn: this.state.turn,
+          sourceId: "hero",
+          kind: "weapon_break",
+          messageRu: `Оружие сломалось`,
+        });
+        hero.equipped = null;
+      }
+    }
 
     const entries: CombatLogEntry[] = [
-      this.log(hero.id, target.id, "attack", `${hero.nameRu} → ${target.nameRu}: ${dmg} урона`, dmg),
+      this.log(hero.id, target.id, "attack", `${hero.nameRu} → ${target.nameRu}: ${damage} урона`, damage),
     ];
     let rosterChanged = false;
     if (target.hp === 0) {
@@ -219,7 +255,7 @@ export class CombatEngine {
     return {
       ok: true,
       logEntries: [
-        this.log(actor.id, undefined, "info", `${actor.nameRu} ждёт`),
+        this.log(actor.id, undefined, "system", `${actor.nameRu} ждёт`),
       ],
       rosterChanged: false,
     };
@@ -229,7 +265,7 @@ export class CombatEngine {
     return {
       ok: true,
       logEntries: [
-        this.log(actor.id, undefined, "info", `${actor.nameRu} отступает`),
+        this.log(actor.id, undefined, "system", `${actor.nameRu} отступает`),
       ],
       rosterChanged: false,
     };
@@ -279,7 +315,7 @@ export class CombatEngine {
     if (actor.hp <= actor.maxHp * 0.5) {
       actor.phase = 2;
       this.state.log.push(
-        this.log(actor.id, undefined, "phase_shift", `${actor.nameRu} переходит в фазу 2`),
+        this.log(actor.id, undefined, "phase", `${actor.nameRu} переходит в фазу 2`),
       );
     }
   }
