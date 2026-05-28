@@ -2,6 +2,8 @@ import { GameState } from "../state/GameState";
 import type { InventoryStack, SettingsState } from "../state/types";
 import { getPlatform } from "./platform";
 import { t } from "./locale";
+import { SAVE_VERSION } from "../config";
+import { migrateSnapshot } from "../state/migrations";
 
 export const MIN_CLOUD_SAVE_INTERVAL_MS = 10_000;
 
@@ -16,6 +18,8 @@ export interface CloudSaveSnapshot {
   settings: { mute: boolean; volume: number };
   saved_at: string;
   gas?: number;
+  /** M11.0: version поля. v1 (legacy, no field) → v2 (M11.0a). */
+  version?: number;
   // Optional for backward-compat with saves predating the unlock-flag fix.
   // Missing keys are treated as false on load.
   progress_flags?: {
@@ -35,6 +39,7 @@ let lastSaveTime = 0;
 export function serializeGameState(): CloudSaveSnapshot {
   const { player, baseStash, progress, settings } = GameState;
   return {
+    version: SAVE_VERSION,
     level: player.level,
     xp: player.xp,
     perks: player.perks.map((p) => p.id),
@@ -90,8 +95,10 @@ export function deserializeSnapshot(
 }
 
 export function applySnapshot(snapshot: CloudSaveSnapshot): void {
+  // M11.0: migrate before apply. v1 saves (no version field) → v2.
+  const migrated = migrateSnapshot(snapshot) as CloudSaveSnapshot;
   const { level, xp, backpack, baseStash, settings, radio_trust } =
-    deserializeSnapshot(snapshot);
+    deserializeSnapshot(migrated);
 
   GameState.player.level = level;
   GameState.player.xp = xp;
@@ -100,7 +107,7 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.settings = settings;
   GameState.progress.radio_trust = radio_trust;
   // Restore unlock flags; missing keys default to false.
-  const flags = snapshot.progress_flags ?? {};
+  const flags = migrated.progress_flags ?? {};
   GameState.progress.forest_depth_2_completed = flags.forest_depth_2_completed ?? false;
   GameState.progress.any_warehouse_sortie_completed = flags.any_warehouse_sortie_completed ?? false;
   GameState.progress.any_forest_sortie_completed = flags.any_forest_sortie_completed ?? false;
@@ -109,12 +116,12 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.progress.factory_sortie_completed = flags.factory_sortie_completed ?? false;
   GameState.progress.city_boss_defeated = flags.city_boss_defeated ?? false;
   GameState.progress.metro_sortie_completed = flags.metro_sortie_completed ?? false;
-  if (snapshot.gas !== undefined) {
-    GameState.player.gas = snapshot.gas;
+  if (migrated.gas !== undefined) {
+    GameState.player.gas = migrated.gas;
   }
 
   for (const signal of GameState.data.radioSignals) {
-    if (snapshot.resolvedSignals.includes(signal.id)) {
+    if (migrated.resolvedSignals.includes(signal.id)) {
       signal.resolved = true;
     }
   }
