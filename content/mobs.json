@@ -15,9 +15,78 @@
     "description_ru": "Слабый человеческий противник. Низкий HP — убивается ножом за 3–4 удара. При HP ниже 30% переходит в flee: пропускает ход и теряет 5% инициативы на следующий раунд. В M1 melee-атакёром НЕ считается — vs_melee_bonus куртки против него не работает.",
     "flavor_ru": "«Сначала кричит про честный бой. Потом — про маму.»",
     "drop_table": [
-      { "item_id": "cloth", "chance": 0.60, "count_min": 1, "count_max": 2 },
-      { "item_id": "food", "chance": 0.40, "count_min": 1, "count_max": 1 },
-      { "item_id": "ammo_pistol", "chance": 0.15, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "cloth",
+        "chance": 0.6,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "food",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "ammo_pistol",
+        "chance": 0.15,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "scrap_metal",
+        "chance": 0.8,
+        "count": [
+          1,
+          3
+        ]
+      },
+      {
+        "id": "cloth",
+        "chance": 0.4,
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": "ammo_9x18",
+        "chance": 0.3,
+        "count": [
+          3,
+          8
+        ]
+      },
+      {
+        "id": "pm_magazine",
+        "chance": 0.08
+      },
+      {
+        "id": "craft_shiv",
+        "chance": 0.1
+      },
+      {
+        "id": "ammo_762x25",
+        "chance": 0.15,
+        "count": [
+          3,
+          6
+        ]
+      },
+      {
+        "id": "hunting_receiver",
+        "chance": 0.04
+      },
+      {
+        "id": "izh43_receiver",
+        "chance": 0.04
+      },
+      {
+        "id": "bekas_pump",
+        "chance": 0.03
+      }
     ]
   },
   {
@@ -36,8 +105,44 @@
     "description_ru": "Бывший городской пёс, теперь часть одичавшей стаи. Высокая инициатива — почти всегда ходит первым. Атакует укусом и когтями: единственный melee-атакёр M1, против которого vs_melee_bonus тканевой куртки даёт +1 к защите.",
     "flavor_ru": "«Кличку никто не помнит. Хозяев тоже.»",
     "drop_table": [
-      { "item_id": "leather", "chance": 0.70, "count_min": 1, "count_max": 1 },
-      { "item_id": "food", "chance": 0.20, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "leather",
+        "chance": 0.7,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "food",
+        "chance": 0.2,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "leather",
+        "chance": 0.85,
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": "raw_meat",
+        "chance": 0.6,
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": "bone",
+        "chance": 0.4,
+        "count": [
+          1,
+          2
+        ]
+      }
     ]
   },
   {
@@ -56,9 +161,46 @@
     "description_ru": "Медленный, толстый противник техногенного происхождения. Высокий HP и базовая защита, высокий разброс урона. Без особого AI — просто бьёт ближайшего; в группе с псом всегда додавливает вторым.",
     "flavor_ru": "«Под кожей звенит металл. Под металлом — мясо.»",
     "drop_table": [
-      { "item_id": "scrap", "chance": 0.50, "count_min": 1, "count_max": 2 },
-      { "item_id": "gunpowder", "chance": 0.30, "count_min": 1, "count_max": 1 },
-      { "item_id": "leather", "chance": 0.10, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "scrap",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "gunpowder",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "leather",
+        "chance": 0.1,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "raw_meat",
+        "chance": 0.7,
+        "count": [
+          1,
+          3
+        ]
+      },
+      {
+        "id": "mutated_gland",
+        "chance": 0.25
+      },
+      {
+        "id": "scrap_metal",
+        "chance": 0.3,
+        "count": [
+          1,
+          2
+        ]
+      }
     ]
   },
   {
@@ -78,10 +220,68 @@
     "description_ru": "Бывший охотник, окопавшийся среди стеллажей Склада. Стреляет издалека: на ranged-оружии бьёт полным уроном 9-13, а в ближнем бою с противником на ноже теряет половину урона — стрелять накоротке у него не получается. Высокий base_speed (95) обычно ставит его во второй половине раунда после быстрых животных, но раньше тяжёлой брони.",
     "flavor_ru": "«Слышишь сухой щелчок? Это он считает ваши шаги.»",
     "drop_table": [
-      { "item_id": "cloth", "chance": 0.50, "count_min": 1, "count_max": 2 },
-      { "item_id": "ammo_pistol", "chance": 0.40, "count_min": 1, "count_max": 2 },
-      { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
-      { "item_id": "ammo_rifle", "chance": 0.20, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "cloth",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "ammo_pistol",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "scrap",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "ammo_rifle",
+        "chance": 0.2,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "ammo_762x54r",
+        "chance": 0.7,
+        "count": [
+          3,
+          8
+        ]
+      },
+      {
+        "id": "svd_bolt",
+        "chance": 0.1
+      },
+      {
+        "id": "svd_magazine",
+        "chance": 0.15
+      },
+      {
+        "id": "mosin_bolt",
+        "chance": 0.12
+      },
+      {
+        "id": "mod_pso1",
+        "chance": 0.04
+      },
+      {
+        "id": "mosin_barrel",
+        "chance": 0.08
+      },
+      {
+        "id": "saiga_magazine",
+        "chance": 0.08
+      },
+      {
+        "id": "sks_bolt",
+        "chance": 0.06
+      }
     ]
   },
   {
@@ -101,10 +301,76 @@
     "description_ru": "Бывший корпоративный охранник в потрёпанном тактическом снаряжении. Бьёт скромно (7-10), но defense=4 пробивается долго. Каждый второй ход уходит в укрытие: пропускает атаку, но на следующую входящую защиту против него считается с COVER_DEFENSE_BONUS_PCT (+50% к base defense). Тактика — бить в окно атаки (нечётные ходы — он, чётные — ты).",
     "flavor_ru": "«Жетон выгорел, но рефлексы — нет. Спасибо тренировкам.»",
     "drop_table": [
-      { "item_id": "scrap", "chance": 0.70, "count_min": 1, "count_max": 2 },
-      { "item_id": "leather", "chance": 0.40, "count_min": 1, "count_max": 1 },
-      { "item_id": "electronics", "chance": 0.25, "count_min": 1, "count_max": 1 },
-      { "item_id": "gunpowder", "chance": 0.20, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "scrap",
+        "chance": 0.7,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "leather",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "electronics",
+        "chance": 0.25,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "gunpowder",
+        "chance": 0.2,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "ammo_545",
+        "chance": 0.6,
+        "count": [
+          8,
+          15
+        ]
+      },
+      {
+        "id": "ak74_magazine",
+        "chance": 0.2
+      },
+      {
+        "id": "ak74_stock",
+        "chance": 0.18
+      },
+      {
+        "id": "ak74_bolt",
+        "chance": 0.15
+      },
+      {
+        "id": "aks74u_barrel",
+        "chance": 0.1
+      },
+      {
+        "id": "armored_vest_part",
+        "chance": 0.1
+      },
+      {
+        "id": "aks74u_receiver",
+        "chance": 0.1
+      },
+      {
+        "id": "aks74u_bolt",
+        "chance": 0.1
+      },
+      {
+        "id": "aks74u_magazine",
+        "chance": 0.1
+      },
+      {
+        "id": "sks_receiver",
+        "chance": 0.08
+      }
     ]
   },
   {
@@ -124,10 +390,72 @@
     "description_ru": "Член культа «Последнего огня», обкуренный и фанатично злой. Атакует героя каждый ход. Когда его HP падает ниже 50% — однократно срабатывает берсерк: damage ×2 (8-12 → 16-24), но base_speed −30 (100 → 70, теряет инициативу). Анти-мародёр: тот при low HP убегает, этот — наоборот лезет в кучу.",
     "flavor_ru": "«Огонь всё очистит. Сначала — тебя.»",
     "drop_table": [
-      { "item_id": "cloth", "chance": 0.50, "count_min": 1, "count_max": 2 },
-      { "item_id": "medical_supplies", "chance": 0.35, "count_min": 1, "count_max": 1 },
-      { "item_id": "food", "chance": 0.20, "count_min": 1, "count_max": 1 },
-      { "item_id": "bandage", "chance": 0.15, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "cloth",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "medical_supplies",
+        "chance": 0.35,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "food",
+        "chance": 0.2,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "bandage",
+        "chance": 0.15,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "scrap_metal",
+        "chance": 0.7,
+        "count": [
+          2,
+          4
+        ]
+      },
+      {
+        "id": "ammo_762x25",
+        "chance": 0.35,
+        "count": [
+          4,
+          10
+        ]
+      },
+      {
+        "id": "tt_magazine",
+        "chance": 0.12
+      },
+      {
+        "id": "tt_slide",
+        "chance": 0.08
+      },
+      {
+        "id": "leather_jacket",
+        "chance": 0.05
+      },
+      {
+        "id": "ppsh_drum",
+        "chance": 0.05
+      },
+      {
+        "id": "akm_magazine",
+        "chance": 0.08
+      },
+      {
+        "id": "saiga_bolt",
+        "chance": 0.05
+      }
     ]
   },
   {
@@ -147,9 +475,50 @@
     "description_ru": "Гибрид крысы и чего-то похуже из городской канализации. По одной — неприятная, но не страшная (HP 15, dmg 6-9). В паре синхронизируется со второй живой `pack_rat`: damage ×1.5 обеим (9-13). Фокус-фаер по одной — обнуляет бафф остальных мгновенно.",
     "flavor_ru": "«Их запах знаешь по подвалу. Их зубы — узнаешь сейчас.»",
     "drop_table": [
-      { "item_id": "leather", "chance": 0.60, "count_min": 1, "count_max": 1 },
-      { "item_id": "food", "chance": 0.30, "count_min": 1, "count_max": 1 },
-      { "item_id": "circuitry", "chance": 0.10, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "leather",
+        "chance": 0.6,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "food",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "circuitry",
+        "chance": 0.1,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "leather",
+        "chance": 0.9,
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": "bone",
+        "chance": 0.6,
+        "count": [
+          1,
+          3
+        ]
+      },
+      {
+        "id": "raw_meat",
+        "chance": 0.4,
+        "count": [
+          1,
+          2
+        ]
+      }
     ]
   },
   {
@@ -169,10 +538,48 @@
     "description_ru": "Полуразряженный военный дрон-разведчик из довоенных запасов корпорации. Стреляет тонкими лазерными импульсами, которые игнорируют armor.defense при расчёте урона по герою (vs_melee_bonus тоже не применяется — `mech` не «animal»). Единственный mob-источник `electronics` / `circuitry` / `oil` помимо zone-loot — намеренный мост между Складом и Городом (см. GDD §5.4.5). В JSON `zone` указан как `warehouse`, но появляется в обеих зонах через `zones.json` enemies[].",
     "flavor_ru": "«Жужжит. Считывает. Прицеливается. Не торгуется.»",
     "drop_table": [
-      { "item_id": "electronics", "chance": 0.65, "count_min": 1, "count_max": 2 },
-      { "item_id": "circuitry", "chance": 0.40, "count_min": 1, "count_max": 2 },
-      { "item_id": "scrap", "chance": 0.30, "count_min": 1, "count_max": 1 },
-      { "item_id": "oil", "chance": 0.20, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "electronics",
+        "chance": 0.65,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "circuitry",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "scrap",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "oil",
+        "chance": 0.2,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "electronics",
+        "chance": 0.7,
+        "count": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": "microchip",
+        "chance": 0.4
+      },
+      {
+        "id": "drone_core",
+        "chance": 0.15
+      }
     ]
   },
   {
@@ -196,10 +603,56 @@
     "description_ru": "Вожак стаи мутантов Леса. Огромный, мощный, теряющий контроль при ранении. В phase 1 — berserker: при HP<50% damage ×2, base_speed −30. В phase 2 — pack_bonus_when_paired: проверяет наличие ≥2 живых мобов того же типа (в M5 всегда 1 босс → бонус ×1.0). Эффект berserker из phase 1 сохраняется.",
     "flavor_ru": "«Он не бежит. Он не сдаётся. Он просто становится хуже.»",
     "drop_table": [
-      { "item_id": "mutated_gland", "chance": 1.0, "count_min": 1, "count_max": 1 },
-      { "item_id": "leather", "chance": 0.5, "count_min": 1, "count_max": 2 },
-      { "item_id": "scrap", "chance": 0.4, "count_min": 1, "count_max": 2 },
-      { "item_id": "gunpowder", "chance": 0.3, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "mutated_gland",
+        "chance": 1.0,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "leather",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "scrap",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "gunpowder",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "raw_meat",
+        "chance": 1.0,
+        "count": [
+          3,
+          5
+        ]
+      },
+      {
+        "id": "mutated_gland",
+        "chance": 0.8
+      },
+      {
+        "id": "leather",
+        "chance": 0.9,
+        "count": [
+          2,
+          4
+        ]
+      },
+      {
+        "id": "alpha_pelt",
+        "chance": 0.3
+      }
     ]
   },
   {
@@ -223,10 +676,116 @@
     "description_ru": "Тяжёлый военный дрон из довоенных арсеналов, хранящийся на Складе. В phase 1 — armor_piercing_ranged: игнорирует armor.defense героя. В phase 2 — defensive_cover: каждый нечётный ход занимает укрытие (+50% defense), пропуская атаку. В phase 2 броня героя снова работает.",
     "flavor_ru": "«Его предки были разведчиками. Он — палач.»",
     "drop_table": [
-      { "item_id": "prime_circuit", "chance": 1.0, "count_min": 1, "count_max": 1 },
-      { "item_id": "electronics", "chance": 0.5, "count_min": 1, "count_max": 2 },
-      { "item_id": "scrap", "chance": 0.4, "count_min": 1, "count_max": 2 },
-      { "item_id": "oil", "chance": 0.3, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "prime_circuit",
+        "chance": 1.0,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "electronics",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "scrap",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "oil",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "drone_core",
+        "chance": 1.0
+      },
+      {
+        "id": "rpk_barrel",
+        "chance": 1.0
+      },
+      {
+        "id": "mod_pso1",
+        "chance": 0.4
+      },
+      {
+        "id": "ak74_receiver",
+        "chance": 0.5
+      },
+      {
+        "id": "saiga_receiver",
+        "chance": 0.3
+      },
+      {
+        "id": "saiga_barrel",
+        "chance": 0.25
+      },
+      {
+        "id": "ppsh_barrel",
+        "chance": 0.2
+      },
+      {
+        "id": "ppsh_receiver",
+        "chance": 0.2
+      },
+      {
+        "id": "ppsh_stock",
+        "chance": 0.2
+      },
+      {
+        "id": "sks_barrel",
+        "chance": 0.25
+      },
+      {
+        "id": "sks_stock",
+        "chance": 0.25
+      },
+      {
+        "id": "izh43_barrels",
+        "chance": 0.2
+      },
+      {
+        "id": "izh43_stock",
+        "chance": 0.2
+      },
+      {
+        "id": "mosin_receiver",
+        "chance": 0.2
+      },
+      {
+        "id": "mosin_stock",
+        "chance": 0.2
+      },
+      {
+        "id": "hunting_barrel",
+        "chance": 0.2
+      },
+      {
+        "id": "hunting_bolt",
+        "chance": 0.2
+      },
+      {
+        "id": "hunting_scope",
+        "chance": 0.15
+      },
+      {
+        "id": "bekas_receiver",
+        "chance": 0.2
+      },
+      {
+        "id": "bekas_barrel",
+        "chance": 0.2
+      },
+      {
+        "id": "bekas_stock",
+        "chance": 0.2
+      }
     ]
   },
   {
@@ -250,10 +809,100 @@
     "description_ru": "Последний командир корпоративной охраны, удерживающий периметр Города. В phase 1 — defensive_cover: каждый нечётный ход — укрытие, чётный — атака. В phase 2 — ranged_keep_distance: переключается на ranged; если у героя melee-оружие — damage ×0.5.",
     "flavor_ru": "«Жетон проржавел. Приказ — не отменён.»",
     "drop_table": [
-      { "item_id": "captain_insignia", "chance": 1.0, "count_min": 1, "count_max": 1 },
-      { "item_id": "medical_supplies", "chance": 0.5, "count_min": 1, "count_max": 1 },
-      { "item_id": "ammo_rifle", "chance": 0.4, "count_min": 1, "count_max": 2 },
-      { "item_id": "circuitry", "chance": 0.3, "count_min": 1, "count_max": 1 }
+      {
+        "item_id": "captain_insignia",
+        "chance": 1.0,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "medical_supplies",
+        "chance": 0.5,
+        "count_min": 1,
+        "count_max": 1
+      },
+      {
+        "item_id": "ammo_rifle",
+        "chance": 0.4,
+        "count_min": 1,
+        "count_max": 2
+      },
+      {
+        "item_id": "circuitry",
+        "chance": 0.3,
+        "count_min": 1,
+        "count_max": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "ammo_545",
+        "chance": 0.8,
+        "count": [
+          15,
+          30
+        ]
+      },
+      {
+        "id": "ak74_receiver",
+        "chance": 0.18
+      },
+      {
+        "id": "ak74_barrel",
+        "chance": 0.15
+      },
+      {
+        "id": "mod_pbs1",
+        "chance": 0.05
+      },
+      {
+        "id": "nr_43",
+        "chance": 0.08
+      },
+      {
+        "id": "aps_frame",
+        "chance": 0.15
+      },
+      {
+        "id": "aps_slide",
+        "chance": 0.12
+      },
+      {
+        "id": "aps_magazine",
+        "chance": 0.15
+      },
+      {
+        "id": "aps_stock",
+        "chance": 0.1
+      },
+      {
+        "id": "akm_receiver",
+        "chance": 0.1
+      },
+      {
+        "id": "akm_bolt",
+        "chance": 0.1
+      },
+      {
+        "id": "akm_barrel",
+        "chance": 0.08
+      },
+      {
+        "id": "rpk_receiver",
+        "chance": 0.05
+      },
+      {
+        "id": "rpk_bolt",
+        "chance": 0.05
+      },
+      {
+        "id": "rpk_magazine",
+        "chance": 0.06
+      },
+      {
+        "id": "rpk_bipod",
+        "chance": 0.04
+      }
     ]
   }
 ]
