@@ -17,6 +17,7 @@ import type {
   SettingsState,
   SortieState,
 } from "./types";
+import { loadContentItems } from "./ItemRegistry";
 
 const createDefaultPlayer = (): PlayerState => ({
   hp: HERO_HP_MAX,
@@ -120,6 +121,7 @@ export const GameState = {
 // Used by tests / callers that need to seed content without going through Boot.
 export const setContent = (data: ContentData): void => {
   state.data = data;
+  loadContentItems(data.items);
 };
 
 // Helper used by combat/loot to mutate the backpack atomically.
