@@ -10,8 +10,8 @@ export interface CountExpectations {
 
 export const M7_EXPECTED: CountExpectations = {
   zones: 9,
-  items: 80,
-  recipes: 42,
+  items: 187,
+  recipes: 71,
   mobs: 11,
   sfx: 10,
 };
