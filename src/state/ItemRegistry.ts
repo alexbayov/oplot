@@ -123,24 +123,36 @@ export const createWeaponInstance = (
   rng: () => number = Math.random,
 ): WeaponInstance | null => {
   const item = getItem(itemId);
-  if (!item || !isDropWeapon(item)) return null;
+  if (!item) return null;
 
-  // Проверка: все требуемые parts на месте.
-  const providedIds = parts.map((p) => p.id);
-  for (const requiredId of item.partIds) {
-    if (!providedIds.includes(requiredId)) return null;
+  // CraftWeapon — durability с item, нет parts/mods validation
+  if (isCraftWeapon(item)) {
+    return {
+      instanceId: generateInstanceId(rng),
+      itemId,
+      durability: item.durability,
+      maxDurability: item.durability,
+      mods: {},
+    };
   }
 
-  // maxDurability фиксирован тиром: 50 + tier * 25 (T2=100, T5=175).
-  const maxDurability = 50 + item.tier * 25;
+  // DropWeapon — нужны все required parts
+  if (isDropWeapon(item)) {
+    const providedIds = parts.map((p) => p.id);
+    for (const requiredId of item.partIds) {
+      if (!providedIds.includes(requiredId)) return null;
+    }
+    const maxDurability = 50 + item.tier * 25;
+    return {
+      instanceId: generateInstanceId(rng),
+      itemId,
+      durability: maxDurability,
+      maxDurability,
+      mods: {},
+    };
+  }
 
-  return {
-    instanceId: generateInstanceId(rng),
-    itemId,
-    durability: maxDurability,
-    maxDurability,
-    mods: {},
-  };
+  return null;
 };
 
 /**

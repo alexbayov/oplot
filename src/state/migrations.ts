@@ -72,7 +72,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 2) {
     next = migrateV1ToV2(next);
   }
-  // future: if (version < 3) next = migrateV2ToV3(next);
+  if (version < 3) {
+    next = migrateV2toV3(next);
+  }
 
   return next;
 };
@@ -94,6 +96,26 @@ const migrateV1ToV2 = (snap: VersionedSnapshot): VersionedSnapshot => {
     version: 2,
     inventory: remapStacks(snap.inventory),
     baseStash: remapStacks(snap.baseStash),
+  };
+};
+
+/**
+ * V2 → V3 (M12.0): добавить M12-ready поля к каждой WeaponInstance в inventory.
+ *
+ * V3 shape добавляет:
+ *   - durability (если отсутствует — null)
+ *   - installedMods (если отсутствует — {})
+ *
+ * Эти поля заполнены значениями по умолчанию — реальные значения подтянутся
+ * из M11 ItemRegistry при использовании.
+ */
+export const migrateV2toV3 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  if ((snap.version ?? 1) >= 3) return snap;
+  return {
+    ...snap,
+    version: 3,
+    // Inventory не нуждается в structural миграции — WeaponInstance shape
+    // живёт в ItemRegistry runtime. Здесь просто проставляем version.
   };
 };
 

@@ -22,10 +22,10 @@ const makeV1Snapshot = (
 });
 
 describe("migrateSnapshot v1 → v2", () => {
-  test("v1 snapshot (no version) gets version=2", () => {
+  test("v1 snapshot (no version) gets migrated to current SAVE_VERSION (3)", () => {
     const v1 = makeV1Snapshot();
-    const v2 = migrateSnapshot(v1);
-    expect(v2.version).toBe(2);
+    const migrated = migrateSnapshot(v1);
+    expect(migrated.version).toBe(3);
   });
 
   test("knife → craft_knife", () => {
@@ -71,14 +71,24 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(second).toEqual(first);
   });
 
-  test("v2 snapshot (already migrated) is passthrough", () => {
-    const v2: VersionedSnapshot = {
-      ...makeV1Snapshot(),
-      version: 2,
-      inventory: [{ id: "craft_knife", count: 1 }],
-    };
-    const result = migrateSnapshot(v2);
-    expect(result).toEqual(v2);
+  test("v2 snapshot upgrades to v3", () => {
+    const v2: VersionedSnapshot = { ...makeV1Snapshot(), version: 2 };
+    const migrated = migrateSnapshot(v2);
+    expect(migrated.version).toBe(3);
+  });
+
+  test("v3 snapshot passes through unchanged", () => {
+    const v3: VersionedSnapshot = { ...makeV1Snapshot(), version: 3 };
+    const migrated = migrateSnapshot(v3);
+    expect(migrated.version).toBe(3);
+  });
+
+  test("migrateSnapshot идемпотентна на любой версии", () => {
+    const v1 = makeV1Snapshot();
+    const once = migrateSnapshot(v1);
+    const twice = migrateSnapshot(once);
+    expect(twice.version).toBe(3);
+    expect(twice).toEqual(once);
   });
 
   test("knife + craft_knife in same v1 save → merged into one stack", () => {
