@@ -38,7 +38,7 @@ const createEmptyContent = (): ContentData => ({
   recipes: {},
   zones: {},
   radioSignals: [],
-  perks: [],
+  perks: {},
 });
 
 const createDefaultProgress = (): GameProgress => ({

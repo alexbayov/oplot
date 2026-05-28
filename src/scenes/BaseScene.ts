@@ -86,9 +86,9 @@ const HOTSPOTS: Hotspot[] = [
     y: 510,
     hw: 130,
     hh: 80,
-    label: "ОТДЫХ",
+    label: "НАВЫКИ",
     glow: 0x8aa86f,
-    action: (s) => s.showRestInfo(),
+    action: (s) => s.openSubscene("SkillTreeScene"),
   },
   {
     id: "door",

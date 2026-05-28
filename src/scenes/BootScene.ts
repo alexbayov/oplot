@@ -1,8 +1,9 @@
 import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
 import type { ContentData } from "../state/types";
-import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
+import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
 import type { Encounter } from "../types/encounter";
+import type { SkillNode } from "../types/skillNode";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
 import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
@@ -10,6 +11,7 @@ import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
 import { loadFromCloud, applySnapshot } from "../systems/cloudSave";
 import { sessionStart } from "../systems/telemetry";
+import { loadSkillNodes } from "../state/SkillTree";
 import { CY } from "../ui/layout";
 
 const ITEM_ICON_IDS = [
@@ -92,7 +94,7 @@ export class BootScene extends Phaser.Scene {
         loadJson<Recipe[]>("content/recipes.json"),
         loadJson<Zone[]>("content/zones.json"),
         loadJson<RadioSignal[]>("content/radio.json").catch(() => [] as RadioSignal[]),
-        loadJson<Perk[]>("content/perks.json").catch(() => [] as Perk[]),
+        loadJson<SkillNode[]>("content/perks.json").catch(() => [] as SkillNode[]),
         loadJson<Encounter[]>("content/encounters.json").catch(() => [] as Encounter[]),
       ]);
       const data: ContentData = {
@@ -101,7 +103,8 @@ export class BootScene extends Phaser.Scene {
         recipes: indexBy(recipes),
         zones: indexBy(zones),
         radioSignals,
-        perks,
+        perks: {},
+        skillNodes: perks,
         encounters,
       };
       softWarnCounts(data);
@@ -121,6 +124,9 @@ export class BootScene extends Phaser.Scene {
 
       GameState.reset();
       setContent(data);
+
+      // M11.4: загрузить SkillTree в реестр
+      loadSkillNodes(perks);
 
       const platform = await initPlatform();
       platform.sdk?.features?.LoadingAPI?.ready();
