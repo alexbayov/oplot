@@ -20,6 +20,7 @@ import {
   isDropWeapon,
   isWeaponMod,
   isWeaponPart,
+  type Ammo,
   type BrokenCraft,
   type Caliber,
   type CraftWeapon,
@@ -28,6 +29,7 @@ import {
   type M11Item,
   type ModSlot,
   type WeaponInstance,
+  type WeaponMod,
   type WeaponPart,
 } from "../types/items";
 import { GameState } from "./GameState";
@@ -257,20 +259,147 @@ export {
 /**
  * Адаптер: преобразовать legacy Item (старый items.json) в M11Item-shape.
  *
- * Это "shim", который работает в M11.0a–c пока Content Designer не
- * заменит items.json полностью. После этого адаптер становится no-op
- * (legacy items.json не используется).
+ * Поддерживает ДВА формата:
+ *   1. Чистый legacy (M9-M10): только `type`, `stats`, `name_ru`
+ *   2. Гибрид M11.0a (Devin content): legacy `type` + M11 поля
+ *      (`item_class`, `caliber`, `name_real_ru`, `name_generic_ru`,
+ *      `durability_max`, `mod_slot`, `fits_weapons`)
+ *
+ * Когда есть `item_class` — он приоритетнее heuristic'и над `type`.
+ * Это позволяет M11.0c content замещать legacy без переписывания адаптера.
  */
 export const adaptLegacyItem = (legacy: LegacyItem): M11Item => {
+  // Гибридный доступ к Devin'овским extra-полям (snake_case в JSON).
+  const ex = legacy as unknown as Record<string, unknown>;
+
+  const itemClassRaw = typeof ex.item_class === "string" ? ex.item_class : undefined;
+  const nameReal = typeof ex.name_real_ru === "string" ? ex.name_real_ru : legacy.name_ru;
+  const nameGeneric = typeof ex.name_generic_ru === "string" ? ex.name_generic_ru : legacy.name_ru;
+  const caliberRaw = typeof ex.caliber === "string" ? (ex.caliber as Caliber) : undefined;
+  const durabilityMax = typeof ex.durability_max === "number" ? ex.durability_max : 50;
+  const modSlotRaw = typeof ex.mod_slot === "string" ? (ex.mod_slot as ModSlot) : undefined;
+  // Devin использует `type` за пределами legacy enum для новых классов:
+  const typeRaw = typeof ex.type === "string" ? ex.type : legacy.type;
+
   const base = {
     id: legacy.id,
     tier: legacy.tier,
-    name_real_ru: legacy.name_ru,
-    name_generic_ru: legacy.name_ru, // legacy не имеет generic варианта
+    name_real_ru: nameReal,
+    name_generic_ru: nameGeneric,
     weight_kg: legacy.weight_kg,
     description_ru: legacy.description_ru,
   };
 
+  // === Гибрид M11: используем item_class явно ===
+  if (itemClassRaw === "craft") {
+    const stats = (legacy.stats ?? {}) as Record<string, unknown>;
+    const dmgMin = typeof stats.damage_min === "number" ? stats.damage_min : 1;
+    const dmgMax = typeof stats.damage_max === "number" ? stats.damage_max : 2;
+    const w: CraftWeapon = {
+      ...base,
+      itemClass: "craft",
+      damageMin: dmgMin,
+      damageMax: dmgMax,
+      noise: (typeof stats.noise === "string" ? stats.noise : "loud") as CraftWeapon["noise"],
+      durability: durabilityMax,
+      breaksInto: `broken_${legacy.id}`,
+      caliber: caliberRaw ?? "melee",
+    };
+    return w;
+  }
+
+  if (itemClassRaw === "drop") {
+    const stats = (legacy.stats ?? {}) as Record<string, unknown>;
+    const dmgMin = typeof stats.damage_min === "number" ? stats.damage_min : 1;
+    const dmgMax = typeof stats.damage_max === "number" ? stats.damage_max : 2;
+    const magSize = typeof ex.magazine_size === "number" ? ex.magazine_size : 8;
+    const w: DropWeapon = {
+      ...base,
+      itemClass: "drop",
+      damageMin: dmgMin,
+      damageMax: dmgMax,
+      noise: (typeof stats.noise === "string" ? stats.noise : "loud") as DropWeapon["noise"],
+      caliber: caliberRaw ?? "9x18",
+      magazineSize: magSize,
+      partIds: Array.isArray(ex.part_ids)
+        ? (ex.part_ids as string[])
+        : Array.isArray(ex.parts_required)
+          ? (ex.parts_required as string[])
+          : [],
+      modSlots: Array.isArray(ex.mod_slots)
+        ? (ex.mod_slots as ModSlot[])
+        : [],
+    };
+    return w;
+  }
+
+  if (itemClassRaw === "part" || typeRaw === "weapon_part") {
+    const p: WeaponPart = {
+      ...base,
+      itemClass: "part",
+      weaponId: typeof ex.weapon_id === "string"
+        ? ex.weapon_id
+        : typeof ex.part_of === "string"
+          ? ex.part_of
+          : "",
+      slot: typeof ex.slot === "string"
+        ? ex.slot
+        : typeof ex.part_kind === "string"
+          ? ex.part_kind
+          : "other",
+    };
+    return p;
+  }
+
+  if (itemClassRaw === "modification" || itemClassRaw === "mod" || typeRaw === "modification") {
+    const stats = (legacy.stats ?? {}) as Record<string, unknown>;
+    const effects: WeaponMod["effects"] = {};
+    if (typeof stats.damage_delta === "number") effects.damageDelta = stats.damage_delta;
+    if (typeof stats.magazine_delta === "number") effects.magazineDelta = stats.magazine_delta;
+    if (typeof stats.accuracy_delta === "number") effects.accuracyDelta = stats.accuracy_delta;
+    if (typeof stats.noise_set === "string") {
+      effects.noiseSet = stats.noise_set as WeaponMod["effects"]["noiseSet"];
+    }
+    const m: WeaponMod = {
+      ...base,
+      itemClass: "mod",
+      slot: modSlotRaw ?? "muzzle",
+      caliberWhitelist: Array.isArray(ex.caliber_whitelist)
+        ? (ex.caliber_whitelist as Caliber[])
+        : [],
+      effects,
+      removalBreakChance: typeof ex.removal_break_chance === "number"
+        ? ex.removal_break_chance
+        : 0.2,
+    };
+    return m;
+  }
+
+  if (itemClassRaw === "ammo" || typeRaw === "ammo") {
+    const a: Ammo = {
+      ...base,
+      itemClass: "ammo",
+      caliber: caliberRaw ?? "9x18",
+      stackSize: typeof ex.stack_size === "number" ? ex.stack_size : 100,
+    };
+    return a;
+  }
+
+  if (itemClassRaw === "broken_craft") {
+    const b: BrokenCraft = {
+      ...base,
+      itemClass: "broken_craft",
+      brokenFrom: typeof ex.broken_from === "string" ? ex.broken_from : legacy.id.replace(/^broken_/, ""),
+      disassembleRecipe: Array.isArray(ex.disassemble_recipe)
+        ? (ex.disassemble_recipe as { item_id: string; count: number }[])
+        : Array.isArray(ex.disassemble_yield)
+          ? (ex.disassemble_yield as { item_id: string; count: number }[])
+          : [],
+    };
+    return b;
+  }
+
+  // === Чистый legacy fallback (M9-M10 формат, без item_class) ===
   switch (legacy.type) {
     case "weapon_melee": {
       const w: CraftWeapon = {
@@ -279,7 +408,7 @@ export const adaptLegacyItem = (legacy: LegacyItem): M11Item => {
         damageMin: legacy.stats.damage_min,
         damageMax: legacy.stats.damage_max,
         noise: legacy.stats.noise as CraftWeapon["noise"],
-        durability: 50,
+        durability: durabilityMax,
         breaksInto: `broken_${legacy.id}`,
         caliber: "melee",
       };
@@ -292,11 +421,9 @@ export const adaptLegacyItem = (legacy: LegacyItem): M11Item => {
         damageMin: legacy.stats.damage_min,
         damageMax: legacy.stats.damage_max,
         noise: legacy.stats.noise as CraftWeapon["noise"],
-        durability: 50,
+        durability: durabilityMax,
         breaksInto: `broken_${legacy.id}`,
-        // Legacy не имеет каноники калибра — присваиваем по umol heuristic
-        // (имя содержит "rifle" → 7.62×39, иначе 9×18). В M11.0c всё переедет.
-        caliber: legacy.id.includes("rifle") ? "7.62x39" : "9x18",
+        caliber: caliberRaw ?? (legacy.id.includes("rifle") ? "7.62x39" : "9x18"),
       };
       return w;
     }
@@ -307,11 +434,23 @@ export const adaptLegacyItem = (legacy: LegacyItem): M11Item => {
       const cls: ItemClass =
         legacy.type === "consumable"
           ? "consumable"
-          : legacy.type === "armor"
-            ? "resource" // legacy armor попадает как "resource" пока не M11.0d
-            : "resource";
+          : "resource";
       return { ...base, itemClass: cls } as M11Item;
     }
+  }
+};
+
+/**
+ * Загрузить весь content (items из ContentData) в registry через адаптер.
+ *
+ * Вызывается из GameState.setContent. После этого `getItem(id)` возвращает
+ * M11Item shape для всех загруженных предметов.
+ */
+export const loadContentItems = (items: Record<string, LegacyItem>): void => {
+  registry.byId.clear();
+  for (const item of Object.values(items)) {
+    const adapted = adaptLegacyItem(item);
+    registry.byId.set(adapted.id, adapted);
   }
 };
 
