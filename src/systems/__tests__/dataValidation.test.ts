@@ -12,9 +12,9 @@ describe("dataValidation", () => {
       recipes: {},
       zones: {},
       radioSignals: [],
-      perks: [],
+      perks: {},
     };
-    softWarnCounts(data, { zones: 9, items: 80, recipes: 42, mobs: 11, sfx: 10 });
+    softWarnCounts(data, { zones: 9, items: 187, recipes: 71, mobs: 11, sfx: 10 });
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });
@@ -28,7 +28,7 @@ describe("dataValidation", () => {
       },
       zones: {},
       radioSignals: [],
-      perks: [],
+      perks: {},
     };
     expect(validateRecipeRefs(data)).toEqual([]);
   });
@@ -42,7 +42,7 @@ describe("dataValidation", () => {
       },
       zones: {},
       radioSignals: [],
-      perks: [],
+      perks: {},
     };
     const issues = validateRecipeRefs(data);
     expect(issues.length).toBeGreaterThanOrEqual(2);

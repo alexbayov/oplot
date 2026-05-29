@@ -8,6 +8,7 @@ import {
 import type { Zone } from "../types";
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
+import { renderZoneTierPlate } from "../ui/tierBadge";
 
 /**
  * MapScene (M10.1) — painted world map с интерактивными пинами вместо grid карточек.
@@ -146,6 +147,9 @@ export class MapScene extends Phaser.Scene {
       this.add.circle(startX + i * dotSpacing, dotsY, 2,
         filled ? 0xff6b6b : 0x4a3a30, 1).setDepth(5);
     }
+
+    // M11.1 — плашка тиров зоны (T1-2 / T3-4 / T4-5...)
+    renderZoneTierPlate(this, p.x + 30, p.y - 16, zone.zone_tier_range);
 
     // Zone name под рисками
     const label = this.add.text(p.x, dotsY + 12, zone.name_ru, {

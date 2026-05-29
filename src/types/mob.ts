@@ -13,6 +13,17 @@ export interface DropEntry {
   count_max?: number;
 }
 
+/**
+ * M11.0 — новый формат drops в content/mobs.json (после Devin M11.0a content PR).
+ * Параллелен legacy DropEntry. loot.generateMobLoot читает оба.
+ */
+export interface M11Drop {
+  id: string;
+  chance: number;
+  /** [min, max] inclusive. Если не задан — count=1. */
+  count?: [number, number];
+}
+
 export interface Mob {
   id: string;
   name_ru: string;
@@ -34,4 +45,6 @@ export interface Mob {
   description_ru: string;
   flavor_ru: string;
   drop_table: DropEntry[];
+  /** M11.0 — новый формат. Опционален, читается параллельно drop_table. */
+  drops?: M11Drop[];
 }

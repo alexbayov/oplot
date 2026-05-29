@@ -1,197 +1,17 @@
 [
   {
-    "id": "wood",
-    "name_ru": "Дерево",
-    "type": "resource",
+    "id": "ammo_9x18",
+    "name_ru": "Патрон 9×18 (ПМ)",
+    "type": "ammo",
     "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 2,
-    "description_ru": "Сухие доски и обрубленные ветки. Основа любой деревянной самоделки — от приклада до подпорки крыши.",
-    "flavor_ru": "«Не сосна — фанера от ящика. Сойдёт.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "scrap",
-    "name_ru": "Металлолом",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 3,
-    "description_ru": "Куски арматуры, листовое железо и горсть гаек. Самый тяжёлый ресурс на килограмм — без него не собрать ни ствол, ни патрон.",
-    "flavor_ru": "«В руке — три кило надежды. И ржавчины.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "cloth",
-    "name_ru": "Ткань",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 1,
-    "description_ru": "Обрывки одежды, тряпки от палаток, куски брезента. Универсальное мягкое сырьё для бинтов, аптечек и подбивки жилета.",
-    "flavor_ru": "«Чьё-то было. Теперь — твоё.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "food",
-    "name_ru": "Консервы",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 1,
-    "description_ru": "Жестяная банка с не пойми чем. В M1 — только лут с весом и опасностью; настоящее питание включат на следующей вехе.",
-    "flavor_ru": "«Дата производства не читается. Цвет — допустимый.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "water",
-    "name_ru": "Вода",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 1,
-    "description_ru": "Мутная вода из лесного ручья во фляге. В M1 — лут на вес; на M2 пригодится для базы и крафта.",
-    "flavor_ru": "«Кипятить. Дважды. Потом ещё раз.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "gunpowder",
-    "name_ru": "Порох",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 1,
-    "description_ru": "Серый порошок в бумажном пакете, обмотанном изолентой. Опасный, лёгкий, единственный источник пороховых рецептов.",
-    "flavor_ru": "«Курить — нельзя. Уронить — лучше тоже.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "leather",
-    "name_ru": "Кожа",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 2,
-    "description_ru": "Шкура дикого пса, грубо выделанная ножом на привале. Единственное сырьё для кожаного жилета — иначе ходишь в одной ткани.",
-    "flavor_ru": "«Пёс был быстрее. Ты — упорнее.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "rope",
-    "name_ru": "Верёвка",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "forest",
-    "weight_kg": 1,
-    "description_ru": "Старая верёвка в узлах и подпалинах. Стягивает жилет, помогает таскать тяжёлое — пока не порвётся в самом неудобном месте.",
-    "flavor_ru": "«Узлов больше, чем волокон.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "knife",
-    "name_ru": "Нож",
-    "type": "weapon_melee",
-    "tier": 1,
+    "item_class": "ammo",
     "zone_origin": "universal",
-    "weight_kg": 0.5,
-    "description_ru": "Стартовый клинок героя. Лёгкий, тихий, без расходников — но и урон скромный: мародёра дотачивает за 3–4 удара, мутанта — долго.",
-    "flavor_ru": "«Когда не слышно — иногда полезнее, чем когда больно.»",
+    "weight_kg": 0.01,
+    "caliber": "9x18",
+    "description_ru": "Патрон калибра 9x18. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {
-      "damage_min": 4,
-      "damage_max": 7,
-      "attack_speed": 100,
-      "noise": "low"
-    }
-  },
-  {
-    "id": "makeshift_pistol",
-    "name_ru": "Самодельный пистолет",
-    "type": "weapon_ranged",
-    "tier": 1,
-    "zone_origin": "universal",
-    "weight_kg": 1.5,
-    "description_ru": "Самосбор из обрезка трубы, пружины и обструганного приклада. Бьёт сильнее ножа и на дистанции, но требует патроны и шумит.",
-    "flavor_ru": "«Один выстрел — две молитвы. Иногда срабатывает.»",
-    "recipe_id": "recipe_pistol",
-    "stats": {
-      "damage_min": 9,
-      "damage_max": 14,
-      "attack_speed": 80,
-      "noise": "medium",
-      "ammo_id": "ammo_pistol",
-      "ammo_per_shot": 1
-    }
-  },
-  {
-    "id": "cloth_jacket",
-    "name_ru": "Тканевая куртка",
-    "type": "armor",
-    "tier": 1,
-    "zone_origin": "universal",
-    "weight_kg": 1,
-    "description_ru": "Стартовая куртка из плотной ткани. Слабая защита от прямого удара, но укусы и когти животных режут через неё хуже (vs_melee_bonus: +1 против wild_dog).",
-    "flavor_ru": "«Швы держат лучше, чем хозяин.»",
-    "recipe_id": null,
-    "stats": {
-      "defense": 1,
-      "vs_melee_bonus": 1
-    }
-  },
-  {
-    "id": "leather_vest",
-    "name_ru": "Кожаный жилет",
-    "type": "armor",
-    "tier": 1,
-    "zone_origin": "universal",
-    "weight_kg": 2.5,
-    "description_ru": "Жилет из выделанной собачьей кожи и тряпок, стянутый верёвкой. Втрое крепче куртки по базовой защите, но килограммом с лишним тяжелее.",
-    "flavor_ru": "«Натёрло плечи — значит, спина целая.»",
-    "recipe_id": "recipe_leather_vest",
-    "stats": {
-      "defense": 3,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "bandage",
-    "name_ru": "Бинт",
-    "type": "consumable",
-    "tier": 1,
-    "zone_origin": "universal",
-    "weight_kg": 0.3,
-    "description_ru": "Полоса чистой ткани, скрученная в рулон. Закрывает свежую рану и возвращает 15 HP — на большее не рассчитывай.",
-    "flavor_ru": "«Не лечит. Откладывает.»",
-    "recipe_id": "recipe_bandage",
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 15,
-      "charges": 1
-    }
-  },
-  {
-    "id": "medkit",
-    "name_ru": "Аптечка",
-    "type": "consumable",
-    "tier": 1,
-    "zone_origin": "universal",
-    "weight_kg": 0.5,
-    "description_ru": "Самодельный набор: два бинта, спирт, иголка. Восстанавливает 40 HP — заметно больше одного бинта, но и собрать дороже.",
-    "flavor_ru": "«После такой повязки два часа спишь стоя.»",
-    "recipe_id": "recipe_medkit",
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 40,
-      "charges": 1
-    }
+    "stats": {}
   },
   {
     "id": "ammo_pistol",
@@ -207,6 +27,246 @@
       "effect_type": "ammo_refill",
       "effect_value": 1,
       "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "bandage",
+    "name_ru": "Бинт",
+    "type": "consumable",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Полоса чистой ткани, скрученная в рулон. Закрывает свежую рану и возвращает 15 HP — на большее не рассчитывай.",
+    "flavor_ru": "«Не лечит. Откладывает.»",
+    "recipe_id": "recipe_bandage",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 15,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "broken_tablet",
+    "name_ru": "Разбитый планшет",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "school",
+    "weight_kg": 0.5,
+    "description_ru": "Разбитый планшет с обгоревшей платой. Непригоден для чтения, но редкие компоненты питания ещё можно выпаять.",
+    "flavor_ru": "«Экран погас. Батарея — нет.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "canned_food",
+    "name_ru": "Консервы",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Жестяная банка с не пойми чем. В M1 — только лут с весом и опасностью; настоящее питание включат на следующей вехе.",
+    "flavor_ru": "«Дата производства не читается. Цвет — допустимый.»",
+    "recipe_id": null,
+    "stats": {},
+    "_migrated_from": "food",
+    "item_class": "resource"
+  },
+  {
+    "id": "circuitry",
+    "name_ru": "Микросхемы",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "city",
+    "weight_kg": 0.5,
+    "description_ru": "Тонкие платы с впаянными чипами, выломанные из городской электроники. Zone-exclusive Города: иначе только дроп с relic_drone или pack_rat (очень редко).",
+    "flavor_ru": "«Тонкая работа. Не для пальцев.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "cloth",
+    "name_ru": "Ткань",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Обрывки одежды, тряпки от палаток, куски брезента. Универсальное мягкое сырьё для бинтов, аптечек и подбивки жилета.",
+    "flavor_ru": "«Чьё-то было. Теперь — твоё.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "cloth_jacket",
+    "name_ru": "Тканевая куртка",
+    "type": "armor",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 1,
+    "description_ru": "Стартовая куртка из плотной ткани. Слабая защита от прямого удара, но укусы и когти животных режут через неё хуже (vs_melee_bonus: +1 против wild_dog).",
+    "flavor_ru": "«Швы держат лучше, чем хозяин.»",
+    "recipe_id": null,
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 1
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "copper_coil",
+    "name_ru": "Медная катушка",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "power_plant",
+    "weight_kg": 1.5,
+    "description_ru": "Моток медной проволоки с трансформаторной будки. Гибкая, токопроводящая, нужна для брони и шлемов.",
+    "flavor_ru": "«Витки памяти. Витки защиты.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "craft_crowbar",
+    "name_ru": "Лом",
+    "name_real_ru": "Лом",
+    "name_generic_ru": "Лом",
+    "type": "weapon_melee",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 1.8,
+    "caliber": "melee",
+    "durability_max": 80,
+    "description_ru": "Гнутая металлическая палка. Открывает двери, ломает рёбра.",
+    "flavor_ru": "«Универсальный инструмент. Особенно если ты не сантехник.»",
+    "recipe_id": "recipe_craft_crowbar",
+    "stats": {
+      "damage_min": 5,
+      "damage_max": 9
+    }
+  },
+  {
+    "id": "craft_flare_gun",
+    "name_ru": "Хлопушка",
+    "name_real_ru": "Хлопушка",
+    "name_generic_ru": "Сигнальный пистолет",
+    "type": "weapon_ranged",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 0.6,
+    "caliber": "thrown",
+    "durability_max": 1,
+    "description_ru": "Сигнальная ракетница, перенастроенная на боевую. Один выстрел — и всё, корпус трескается. Зато ослепляет и поджигает.",
+    "flavor_ru": "«Прощальный жест.»",
+    "recipe_id": "recipe_craft_flare_gun",
+    "stats": {
+      "damage_min": 2,
+      "damage_max": 5
+    }
+  },
+  {
+    "id": "craft_knife",
+    "name_ru": "Нож",
+    "name_real_ru": "Нож",
+    "name_generic_ru": "Нож",
+    "type": "weapon_melee",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "caliber": "melee",
+    "durability_max": 30,
+    "description_ru": "Стартовый клинок. Лёгкий, тихий. Мародёра — за 3 удара, мутанта — долго.",
+    "flavor_ru": "«Когда не слышно — иногда полезнее, чем когда больно.»",
+    "recipe_id": "recipe_craft_knife",
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 7
+    }
+  },
+  {
+    "id": "craft_makeshift_pistol",
+    "name_ru": "Поджига",
+    "name_real_ru": "Поджига",
+    "name_generic_ru": "Поджига 9×18",
+    "type": "weapon_ranged",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 1.5,
+    "caliber": "9x18",
+    "durability_max": 6,
+    "description_ru": "Обрезок трубы, гвоздь-боёк, деревянная рукоять. Бьёт 9×18, после 6 выстрелов сваривается намертво — больше не разрядишь.",
+    "flavor_ru": "«Один выстрел — две молитвы. Иногда срабатывает.»",
+    "recipe_id": "recipe_craft_makeshift_pistol",
+    "stats": {
+      "damage_min": 5,
+      "damage_max": 8
+    }
+  },
+  {
+    "id": "craft_molotov",
+    "name_ru": "Молотов",
+    "name_real_ru": "Молотов",
+    "name_generic_ru": "Бутылка с зажигательной смесью",
+    "type": "consumable",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "caliber": "thrown",
+    "durability_max": 1,
+    "description_ru": "Бутылка с керосином, тряпка-фитиль. Бросок — лужа огня на 2 хода. Мутанты горят красиво.",
+    "flavor_ru": "«Окно — закрытое или открытое — больше не имеет значения.»",
+    "recipe_id": "recipe_craft_molotov",
+    "stats": {
+      "damage_min": 8,
+      "damage_max": 14
+    }
+  },
+  {
+    "id": "craft_shiv",
+    "name_ru": "Заточка",
+    "name_real_ru": "Заточка",
+    "name_generic_ru": "Заточка",
+    "type": "weapon_melee",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "caliber": "melee",
+    "durability_max": 8,
+    "description_ru": "Полоска заточенной арматуры с обмоткой. Дёшева, ломкая — после 8 ударов отлетает.",
+    "flavor_ru": "«Не оружие. Жест отчаяния, который иногда срабатывает.»",
+    "recipe_id": "recipe_craft_shiv",
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 6
+    }
+  },
+  {
+    "id": "craft_spear",
+    "name_ru": "Копьё",
+    "name_real_ru": "Копьё",
+    "name_generic_ru": "Копьё",
+    "type": "weapon_melee",
+    "tier": 1,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 1.5,
+    "caliber": "melee",
+    "durability_max": 15,
+    "description_ru": "Длинная палка с привязанным наконечником. Длина = дистанция = шанс.",
+    "flavor_ru": "«Когда враг — собака, метр становится километром.»",
+    "recipe_id": "recipe_craft_spear",
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 7
     }
   },
   {
@@ -219,10 +279,92 @@
     "description_ru": "Платы, конденсаторы, обрывки шлейфов — то, что осталось от уцелевшей складской автоматики. Zone-exclusive ресурс Склада: иначе только редкий дроп с relic_drone.",
     "flavor_ru": "«Тут было что-то умное. Теперь — лом и память.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "item_class": "resource"
   },
   {
-    "id": "oil",
+    "id": "garden_seed",
+    "name_ru": "Семена из грядки",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "suburbs",
+    "weight_kg": 0.5,
+    "description_ru": "Сухие семена из разорённой грядки. Сами по себе бесполезны, но алхимики из Оплота знают, как выжать из них целебную слизь.",
+    "flavor_ru": "«Росли для еды. Теперь — для мази.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "gunpowder",
+    "name_ru": "Порох",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Серый порошок в бумажном пакете, обмотанном изолентой. Опасный, лёгкий, единственный источник пороховых рецептов.",
+    "flavor_ru": "«Курить — нельзя. Уронить — лучше тоже.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "hospital_supply",
+    "name_ru": "Медицинский набор",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "hospital",
+    "weight_kg": 0.5,
+    "description_ru": "Остатки медицинских наборов из госпиталя: пинцеты, ножницы, пакеты с антисептиком. Основа для стимуляторов и электролитов.",
+    "flavor_ru": "«Врачи ушли. Инструменты — нет.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "industrial_cable",
+    "name_ru": "Кабель заводской",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "factory",
+    "weight_kg": 2.0,
+    "description_ru": "Толстый медный кабель с заводской разводки. Гибкий, прочный, годится для тетивы арбалета или обмотки бронежилета.",
+    "flavor_ru": "«Ток давно ушёл. Сила осталась.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "leather",
+    "name_ru": "Кожа",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 2,
+    "description_ru": "Шкура дикого пса, грубо выделанная ножом на привале. Единственное сырьё для кожаного жилета — иначе ходишь в одной ткани.",
+    "flavor_ru": "«Пёс был быстрее. Ты — упорнее.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "leather_vest",
+    "name_ru": "Кожаный жилет",
+    "type": "armor",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 2.5,
+    "description_ru": "Жилет из выделанной собачьей кожи и тряпок, стянутый верёвкой. Втрое крепче куртки по базовой защите, но килограммом с лишним тяжелее.",
+    "flavor_ru": "«Натёрло плечи — значит, спина целая.»",
+    "recipe_id": "recipe_leather_vest",
+    "stats": {
+      "defense": 3,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "machine_oil",
     "name_ru": "Машинное масло",
     "type": "resource",
     "tier": 1,
@@ -231,7 +373,22 @@
     "description_ru": "Полупрозрачная мутная жидкость в жестяной канистре. Смазывает затворы, помогает гасить вспышки и заводит ржавчину обратно во что-то рабочее. Zone-exclusive Склада.",
     "flavor_ru": "«Пахнет гаражом. И, кажется, надеждой.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "_migrated_from": "oil",
+    "item_class": "resource"
+  },
+  {
+    "id": "machine_part",
+    "name_ru": "Деталь станка",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "factory",
+    "weight_kg": 3.0,
+    "description_ru": "Шестерня, вал или редуктор с заводского станка. Тяжёлый металл, из которого собирают щиты и кувалды.",
+    "flavor_ru": "«Крутилось до конца света. Теперь — крутит тебя.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
   },
   {
     "id": "medical_supplies",
@@ -243,164 +400,235 @@
     "description_ru": "Блистеры, ампулы, шприцы без иголок — то, что не успели разграбить из городских аптек. Zone-exclusive Города: иначе только редкий дроп с fanatic_berserker.",
     "flavor_ru": "«Срок годности — пять лет назад. Лучше, чем ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "item_class": "resource"
   },
   {
-    "id": "circuitry",
-    "name_ru": "Микросхемы",
+    "id": "medkit",
+    "name_ru": "Аптечка",
+    "type": "consumable",
+    "tier": 1,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Самодельный набор: два бинта, спирт, иголка. Восстанавливает 40 HP — заметно больше одного бинта, но и собрать дороже.",
+    "flavor_ru": "«После такой повязки два часа спишь стоя.»",
+    "recipe_id": "recipe_medkit",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 40,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "metro_token",
+    "name_ru": "Жетон метро",
     "type": "resource",
     "tier": 1,
-    "zone_origin": "city",
-    "weight_kg": 0.5,
-    "description_ru": "Тонкие платы с впаянными чипами, выломанные из городской электроники. Zone-exclusive Города: иначе только дроп с relic_drone или pack_rat (очень редко).",
-    "flavor_ru": "«Тонкая работа. Не для пальцев.»",
+    "zone_origin": "metro",
+    "weight_kg": 0.1,
+    "description_ru": "Металлический жетон старой подземки. Сам по себе ничего не открывает, но в сочетании с порохом даёт ложную ракету.",
+    "flavor_ru": "«Проезд не оплачен. Ответный огонь — да.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "rail_shard",
+    "name_ru": "Осколок рельса",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "metro",
+    "weight_kg": 1.5,
+    "description_ru": "Осколок рельса из тоннеля. Тяжёлый, ржавый, идеален для болтов арбалета или осколков дымовой гранаты.",
+    "flavor_ru": "«Шли поезда. Теперь — стрелы.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "reactor_ash",
+    "name_ru": "Зола реактора",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "power_plant",
+    "weight_kg": 1.0,
+    "description_ru": "Серая пыль с разрушенного реактора. Токсичная, но при правильной обработке — мощный катализатор для химических стимуляторов.",
+    "flavor_ru": "«Горело тысячи лет. Сгорает ещё раз — в твоих руках.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "rope",
+    "name_ru": "Верёвка",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Старая верёвка в узлах и подпалинах. Стягивает жилет, помогает таскать тяжёлое — пока не порвётся в самом неудобном месте.",
+    "flavor_ru": "«Узлов больше, чем волокон.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "school_book",
+    "name_ru": "Учебник",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "school",
+    "weight_kg": 1.0,
+    "description_ru": "Учебник физики или химии с вырванными страницами. В переплёте — плотный картон, а в тексте — формулы, пригодные для самоделок.",
+    "flavor_ru": "«Знание — сила. Особенно если твёрдое.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "scrap_metal",
+    "name_ru": "Металлолом",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 3,
+    "description_ru": "Куски арматуры, листовое железо и горсть гаек. Самый тяжёлый ресурс на килограмм — без него не собрать ни ствол, ни патрон.",
+    "flavor_ru": "«В руке — три кило надежды. И ржавчины.»",
+    "recipe_id": null,
+    "stats": {},
+    "_migrated_from": "scrap",
+    "item_class": "resource"
+  },
+  {
+    "id": "sterile_wrap",
+    "name_ru": "Стерильная плёнка",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "hospital",
+    "weight_kg": 0.3,
+    "description_ru": "Рулон прозрачной плёнки для перевязок. Лёгкий, чистый, незаменим при сборке адреналиновых инъекций.",
+    "flavor_ru": "«Стерильность — роскошь. Но иногда — необходимость.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "suburban_scrap",
+    "name_ru": "Пригородный лом",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "suburbs",
+    "weight_kg": 2.0,
+    "description_ru": "Обломки заборов, ржавые велосипедные рамы и куски кровли из пригорода. Лёгкий лом, но в нужных руках — сырьё для ножа или мачете.",
+    "flavor_ru": "«Дом развалился. Железо осталось.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "water",
+    "name_ru": "Вода",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 1,
+    "description_ru": "Мутная вода из лесного ручья во фляге. В M1 — лут на вес; на M2 пригодится для базы и крафта.",
+    "flavor_ru": "«Кипятить. Дважды. Потом ещё раз.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "wood",
+    "name_ru": "Дерево",
+    "type": "resource",
+    "tier": 1,
+    "zone_origin": "forest",
+    "weight_kg": 2,
+    "description_ru": "Сухие доски и обрубленные ветки. Основа любой деревянной самоделки — от приклада до подпорки крыши.",
+    "flavor_ru": "«Не сосна — фанера от ящика. Сойдёт.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "adrenaline_shot",
+    "name_ru": "Адреналин",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Шприц с разбавленным адреналином и стимуляторами. Временно ускоряет реакции: +30 к скорости на один бой.",
+    "flavor_ru": "«Сердце бьётся в горле. Ты — быстрее пса.»",
+    "recipe_id": "recipe_adrenaline_shot",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 30,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "ammo_12ga",
+    "name_ru": "Патрон 12 калибра",
+    "type": "ammo",
+    "tier": 2,
+    "item_class": "ammo",
+    "zone_origin": "universal",
+    "weight_kg": 0.04,
+    "caliber": "12ga",
+    "description_ru": "Патрон калибра 12ga. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
     "stats": {}
   },
   {
-    "id": "pipe_rifle",
-    "name_ru": "Самопальная винтовка",
-    "type": "weapon_ranged",
+    "id": "ammo_762x25",
+    "name_ru": "Патрон 7.62×25 (ТТ/ППШ)",
+    "type": "ammo",
     "tier": 2,
+    "item_class": "ammo",
     "zone_origin": "universal",
-    "weight_kg": 2.5,
-    "description_ru": "Сваренный из обрезков труб длинный ствол с примитивным затвором. Бьёт сильнее и дальше самопального пистолета (14-20 vs 9-14), но медленнее, шумнее и тяжелее. Стреляет винтовочными патронами (`ammo_rifle`), которые с пистолетными несовместимы. Тактическая ниша — anti-tank против armored_guard и mutant.",
-    "flavor_ru": "«Один выстрел слышит весь Склад. Зато промахнуться — невозможно.»",
-    "recipe_id": "recipe_pipe_rifle",
-    "stats": {
-      "damage_min": 14,
-      "damage_max": 20,
-      "attack_speed": 70,
-      "noise": "high",
-      "ammo_id": "ammo_rifle",
-      "ammo_per_shot": 1
-    }
+    "weight_kg": 0.01,
+    "caliber": "7.62x25",
+    "description_ru": "Патрон калибра 7.62x25. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
-    "id": "crowbar",
-    "name_ru": "Монтировка",
-    "type": "weapon_melee",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 2.0,
-    "description_ru": "Тяжёлая стальная монтировка, подобранная на Складе. Бьёт сильнее ножа (7-11 vs 4-7), но медленнее (90 vs 100 attack_speed) и тяжелее. Тактическая ниша — против armored_guard: пробивает defense=4 надёжнее, чем нож, на бронированных целях окупает потерю скорости.",
-    "flavor_ru": "«Открывает ящики. И всё остальное.»",
-    "recipe_id": "recipe_crowbar",
-    "stats": {
-      "damage_min": 7,
-      "damage_max": 11,
-      "attack_speed": 90,
-      "noise": "low"
-    }
-  },
-  {
-    "id": "tactical_vest",
-    "name_ru": "Тактический жилет",
-    "type": "armor",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 3.0,
-    "description_ru": "Старый армейский жилет с керамическими пластинами в карманах. Сильнее кожаного (defense=4 vs 3), но тяжелее (3.0 vs 2.5). Основной T2-ап для слотa брони; требует electronics из Склада для крафта.",
-    "flavor_ru": "«Тяжелее, чем выглядит. Спина запомнит.»",
-    "recipe_id": "recipe_tactical_vest",
-    "stats": {
-      "defense": 4,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "helmet",
-    "name_ru": "Шлем",
-    "type": "armor",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 1.0,
-    "description_ru": "Лёгкий стальной шлем с потёртым подшлемником. На M3 — альтернативная T2-броня в общий armor-slot (отдельного head-slot ещё нет — это M5 модульность). Защищает слабее тактического жилета (defense=2), но в 3 раза легче (1.0 vs 3.0). Ниша — мобильные сборки.",
-    "flavor_ru": "«От пули не спасёт. От арматуры — иногда.»",
-    "recipe_id": "recipe_helmet",
-    "stats": {
-      "defense": 2,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "gas_mask",
-    "name_ru": "Противогаз",
-    "type": "armor",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.5,
-    "description_ru": "Резиновая маска с угольным фильтром и треснувшим стеклом. На M3 — самая слабая T2-броня (defense=1), но lore stub: в M5 появятся газовые зоны, где противогаз будет обязателен для входа. Сейчас — больше нарратив, чем защита.",
-    "flavor_ru": "«Дышишь сквозь резину. Шепчешь — никто не слышит.»",
-    "recipe_id": "recipe_gas_mask",
-    "stats": {
-      "defense": 1,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "large_medkit",
-    "name_ru": "Большая аптечка",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.8,
-    "description_ru": "Полноценный полевой комплект: жгуты, антисептики, обезбол. Восстанавливает 80 HP — вдвое больше обычной аптечки, но требует крафта из medkit + medical_supplies (city-exclusive).",
-    "flavor_ru": "«Хватит и на тебя, и на товарища. Если выберешь.»",
-    "recipe_id": "recipe_large_medkit",
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 80,
-      "charges": 1
-    }
-  },
-  {
-    "id": "energy_drink",
-    "name_ru": "Энергетик",
+    "id": "ammo_bolt",
+    "name_ru": "Болты",
     "type": "consumable",
     "tier": 2,
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Жестяная банка довоенного «бодрящего» напитка с истёкшим сроком. Даёт +20 к hero.base_speed на 1 бой (сбрасывается после endSortie) — единственный способ опередить быстрых мобов (wild_dog speed=120, pack_rat=110).",
-    "flavor_ru": "«Сахар. Кофеин. Что-то ещё, чего лучше не знать.»",
-    "recipe_id": "recipe_energy_drink",
+    "description_ru": "Самодельные арбалетные болты из обрезков рельса и гвоздей. Тяжёлые, кривоватые, но пробивают кожу насквозь.",
+    "flavor_ru": "«Тихий смертник.»",
+    "recipe_id": "recipe_ammo_bolt",
     "stats": {
-      "effect_type": "initiative_boost",
-      "effect_value": 20,
-      "charges": 1
-    }
-  },
-  {
-    "id": "emp_grenade",
-    "name_ru": "ЭМИ-граната",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.5,
-    "description_ru": "Самодельная гранатка с конденсаторами и контактным взрывателем. Применённая в бою на цели типа `mech` (на M3 — только relic_drone) выставляет ей `skip_next_turn=true` на 1 ход. На не-mech целях — no-op (расход charges впустую). Единственный механический counter к armor-piercing дрона.",
-    "flavor_ru": "«Жужжит. Щёлкает. Тишина. И снова жужжит — но уже не он.»",
-    "recipe_id": "recipe_emp_grenade",
-    "stats": {
-      "effect_type": "mech_disable",
+      "effect_type": "ammo_refill",
       "effect_value": 1,
       "charges": 1
-    }
+    },
+    "item_class": "consumable"
   },
   {
-    "id": "smoke_bomb",
-    "name_ru": "Дымовая шашка",
+    "id": "ammo_flare",
+    "name_ru": "Ракеты",
     "type": "consumable",
     "tier": 2,
     "zone_origin": "universal",
-    "weight_kg": 0.3,
-    "description_ru": "Самодельная шашка из пороха, ткани и масла. Применённая в бою активирует усиленное укрытие на 1 ход: COVER_DEFENSE_BONUS_PCT × 1.0 (вместо обычного 0.5) — двойное укрытие, дороже по ресурсам. Используется когда нужно пережить один сильный удар (например, raw damage от fanatic_berserker в берсерке).",
-    "flavor_ru": "«Их не видно. Тебя — тоже. Один из вас успеет дотянуться первым.»",
-    "recipe_id": "recipe_smoke_bomb",
+    "weight_kg": 0.4,
+    "description_ru": "Сигнальные ракеты, собранные из пороха и бумаги. Подходят только для ракетниц — ярко, шумно, больно.",
+    "flavor_ru": "«Свет в конце тоннеля. Ожоговый.»",
+    "recipe_id": "recipe_ammo_flare",
     "stats": {
-      "effect_type": "cover_boost",
-      "effect_value": 50,
+      "effect_type": "ammo_refill",
+      "effect_value": 1,
       "charges": 1
-    }
+    },
+    "item_class": "consumable"
   },
   {
     "id": "ammo_rifle",
@@ -416,6 +644,431 @@
       "effect_type": "ammo_refill",
       "effect_value": 1,
       "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "ballistic_vest",
+    "name_ru": "Бронежилет",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 3.5,
+    "description_ru": "Самодельный бронежилет с металлическими пластинами и кабельной обмоткой. Тяжёлый, но надёжный — пули отражает лучше ткани.",
+    "flavor_ru": "«Сердце под сталью. Жизнь — под вопросом.»",
+    "recipe_id": "recipe_ballistic_vest",
+    "stats": {
+      "defense": 5,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "captain_insignia",
+    "name_ru": "Знак отличия капитана",
+    "type": "resource",
+    "tier": 2,
+    "zone_origin": "city",
+    "weight_kg": 1,
+    "description_ru": "Металлический жетон командира корпоративной охраны с влитыми нанопластинами. Артефакт довоенной технологии — без него капитанская броня не соберётся.",
+    "flavor_ru": "«Не символ власти. Сама власть — в металле.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "cleaver",
+    "name_ru": "Тесак",
+    "type": "weapon_melee",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 1.2,
+    "description_ru": "Тяжёлый тесак с заводской кухни или мясорубки. Короткий, но рубящий удар пробивает слабую броню.",
+    "flavor_ru": "«Режет мясо. И не только.»",
+    "recipe_id": null,
+    "stats": {
+      "damage_min": 6,
+      "damage_max": 9,
+      "attack_speed": 95,
+      "noise": "low"
+    },
+    "item_class": "drop"
+  },
+  {
+    "id": "craft_crossbow",
+    "name_ru": "Арбалет",
+    "name_real_ru": "Арбалет",
+    "name_generic_ru": "Арбалет",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 2.0,
+    "caliber": "thrown",
+    "durability_max": 60,
+    "description_ru": "Самодельный арбалет: автомобильная рессора, лыжа от детских санок, тетива из жилы. Тихий, но взводится долго.",
+    "flavor_ru": "«Тихо — это не страшно. Страшно — это потом.»",
+    "recipe_id": "recipe_craft_crossbow",
+    "stats": {
+      "damage_min": 7,
+      "damage_max": 11
+    }
+  },
+  {
+    "id": "craft_machete",
+    "name_ru": "Мачете",
+    "name_real_ru": "Мачете",
+    "name_generic_ru": "Мачете",
+    "type": "weapon_melee",
+    "tier": 2,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 1.2,
+    "caliber": "melee",
+    "durability_max": 40,
+    "description_ru": "Длинный однолезвенный нож. Хорошо для зарослей и хрупких черепов.",
+    "flavor_ru": "«Раньше — для тростника. Теперь — для всего, что попадётся.»",
+    "recipe_id": "recipe_craft_machete",
+    "stats": {
+      "damage_min": 6,
+      "damage_max": 11
+    }
+  },
+  {
+    "id": "craft_pipe_rifle",
+    "name_ru": "Трубка",
+    "name_real_ru": "Трубка",
+    "name_generic_ru": "Трубка 7.62×39",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 3.0,
+    "caliber": "7.62x39",
+    "durability_max": 10,
+    "description_ru": "Длинная труба, импровизированный замок, приклад из обрубка. Бьёт 7.62×39 на ~15м. 10 выстрелов до разлёта замка.",
+    "flavor_ru": "«Главное — не держать у щеки.»",
+    "recipe_id": "recipe_craft_pipe_rifle",
+    "stats": {
+      "damage_min": 9,
+      "damage_max": 14
+    }
+  },
+  {
+    "id": "craft_sawed_off",
+    "name_ru": "Обрез",
+    "name_real_ru": "Обрез",
+    "name_generic_ru": "Обрез 12 калибра",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 2.5,
+    "caliber": "12ga",
+    "durability_max": 12,
+    "description_ru": "Самопальный двуствол из обрезанного ИЖ-43. 12 калибр, грохот на весь район, но снайпер с пятиметровки — всухую.",
+    "flavor_ru": "«В упор — Бог. На двадцати — мусор.»",
+    "recipe_id": "recipe_craft_sawed_off",
+    "stats": {
+      "damage_min": 14,
+      "damage_max": 22
+    }
+  },
+  {
+    "id": "craft_sledge",
+    "name_ru": "Кувалда",
+    "name_real_ru": "Кувалда",
+    "name_generic_ru": "Кувалда",
+    "type": "weapon_melee",
+    "tier": 2,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 4.0,
+    "caliber": "melee",
+    "durability_max": 50,
+    "description_ru": "Большая молоток-болванка на длинной рукояти. Замах долгий, но броню гнёт.",
+    "flavor_ru": "«Иногда — это всё что нужно.»",
+    "recipe_id": "recipe_craft_sledge",
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 16
+    }
+  },
+  {
+    "id": "decoy_flare",
+    "name_ru": "Ложная ракета",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Ложная ракета с метро-жетоном в головке. Запускается в небо, отвлекая врагов, и даёт время на укрытие (+30%).",
+    "flavor_ru": "«Смотри туда. Я — здесь.»",
+    "recipe_id": "recipe_decoy_flare",
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 30,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "electrolyte",
+    "name_ru": "Электролит",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "description_ru": "Раствор солей и минералов в пластиковой ампуле. Поддерживает мышцы в тонусе: +15 к скорости на бой.",
+    "flavor_ru": "«Вода с характером.»",
+    "recipe_id": "recipe_electrolyte",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 15,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "emp_grenade",
+    "name_ru": "ЭМИ-граната",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Самодельная гранатка с конденсаторами и контактным взрывателем. Применённая в бою на цели типа `mech` (на M3 — только relic_drone) выставляет ей `skip_next_turn=true` на 1 ход. На не-mech целях — no-op (расход charges впустую). Единственный механический counter к armor-piercing дрона.",
+    "flavor_ru": "«Жужжит. Щёлкает. Тишина. И снова жужжит — но уже не он.»",
+    "recipe_id": "recipe_emp_grenade",
+    "stats": {
+      "effect_type": "mech_disable",
+      "effect_value": 1,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "energy_drink",
+    "name_ru": "Энергетик",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Жестяная банка довоенного «бодрящего» напитка с истёкшим сроком. Даёт +20 к hero.base_speed на 1 бой (сбрасывается после endSortie) — единственный способ опередить быстрых мобов (wild_dog speed=120, pack_rat=110).",
+    "flavor_ru": "«Сахар. Кофеин. Что-то ещё, чего лучше не знать.»",
+    "recipe_id": "recipe_energy_drink",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 20,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "energy_gel",
+    "name_ru": "Энергогель",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "description_ru": "Прозрачная слизь из разбитого планшета и медикаментов. Странно пахнет, но даёт стабильный прилив энергии: +25 к скорости на бой.",
+    "flavor_ru": "«Не ешь. Не пей. Просто жми.»",
+    "recipe_id": "recipe_energy_gel",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 25,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "gas_mask",
+    "name_ru": "Противогаз",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Резиновая маска с угольным фильтром и треснувшим стеклом. На M3 — самая слабая T2-броня (defense=1), но lore stub: в M5 появятся газовые зоны, где противогаз будет обязателен для входа. Сейчас — больше нарратив, чем защита.",
+    "flavor_ru": "«Дышишь сквозь резину. Шепчешь — никто не слышит.»",
+    "recipe_id": "recipe_gas_mask",
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "heal_salve",
+    "name_ru": "Целительная мазь",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "description_ru": "Самодельная мазь из травяных отваров и жира. Не подходит для боя, но на привале залечивает мелкие раны и снимает воспаление.",
+    "flavor_ru": "«Пахнет болотом. Лечит — тоже.»",
+    "recipe_id": "recipe_heal_salve",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 30,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "healing_patch",
+    "name_ru": "Пластырь",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "description_ru": "Пластырь с антисептиком и кровоостанавливающим порошком. Лёгкий, компактный, залечивает 35 HP — средний вариант между бинтом и аптечкой.",
+    "flavor_ru": "«Наклей и забудь. Пока не отклеится.»",
+    "recipe_id": null,
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 35,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "helmet",
+    "name_ru": "Шлем",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 1.0,
+    "description_ru": "Лёгкий стальной шлем с потёртым подшлемником. На M3 — альтернативная T2-броня в общий armor-slot (отдельного head-slot ещё нет — это M5 модульность). Защищает слабее тактического жилета (defense=2), но в 3 раза легче (1.0 vs 3.0). Ниша — мобильные сборки.",
+    "flavor_ru": "«От пули не спасёт. От арматуры — иногда.»",
+    "recipe_id": "recipe_helmet",
+    "stats": {
+      "defense": 2,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "insulated_vest",
+    "name_ru": "Изолированный жилет",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 2.5,
+    "description_ru": "Жилет с медной обмоткой и плотной подкладкой. Защищает от ударов и мутантных когтей лучше кожаного, но уступает бронежилету.",
+    "flavor_ru": "«Провода внутри. Надежда — тоже.»",
+    "recipe_id": "recipe_insulated_vest",
+    "stats": {
+      "defense": 4,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "large_medkit",
+    "name_ru": "Большая аптечка",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.8,
+    "description_ru": "Полноценный полевой комплект: жгуты, антисептики, обезбол. Восстанавливает 80 HP — вдвое больше обычной аптечки, но требует крафта из medkit + medical_supplies (city-exclusive).",
+    "flavor_ru": "«Хватит и на тебя, и на товарища. Если выберешь.»",
+    "recipe_id": "recipe_large_medkit",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 80,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "makeshift_grenade",
+    "name_ru": "Самодельная граната",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "description_ru": "Банка с порохом и гвоздями, с детонатором из спичечной головки. Не слишком мощна, но даёт укрытие (+40%) на один ход.",
+    "flavor_ru": "«Хватишь — бросай. Не хватишь — беги.»",
+    "recipe_id": null,
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 40,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "medical_gown",
+    "name_ru": "Халат хирурга",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Выбеленный хирургический халат, пропитанный дезинфектантом. Лёгкий, почти не мешает движениям, но защита символическая.",
+    "flavor_ru": "«Чисто. Бел. Бесполезен.»",
+    "recipe_id": "recipe_medical_gown",
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "metal_helm",
+    "name_ru": "Стальной шлем",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 1.5,
+    "description_ru": "Старый строительный шлем, усиленный листовым металлом. Тяжеловат для головы, но от арматуры и осколков спасает.",
+    "flavor_ru": "«Думай. Думай быстрее — пока не ударили.»",
+    "recipe_id": "recipe_metal_helm",
+    "stats": {
+      "defense": 3,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "mod_bayonet",
+    "name_ru": "Штык-нож",
+    "type": "modification",
+    "tier": 2,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "mod_slot": "muzzle",
+    "fits_weapons": [
+      "akm",
+      "ak_74",
+      "sks",
+      "mosin"
+    ],
+    "description_ru": "Модификация (muzzle). +мили-удар когда враг в упор. Подходит к: akm, ak_74, sks, mosin.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_bayonet",
+    "stats": {
+      "mod_effect": "+мили-удар когда враг в упор"
+    }
+  },
+  {
+    "id": "mod_pbs_universal",
+    "name_ru": "Глушитель универсал",
+    "type": "modification",
+    "tier": 2,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "mod_slot": "muzzle",
+    "fits_weapons": [
+      "pm",
+      "tt",
+      "aps",
+      "ppsh"
+    ],
+    "description_ru": "Модификация (muzzle). -1 dmg, шум loud→quiet. Подходит к: pm, tt, aps, ppsh.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_pbs_universal",
+    "stats": {
+      "mod_effect": "-1 dmg, шум loud→quiet"
     }
   },
   {
@@ -427,6 +1080,87 @@
     "weight_kg": 1,
     "description_ru": "Пульсирующий орган, извлечённый из туши альфа-мутанта. Источник аномальной регенерации — единственный путь к созданию композитного клинка.",
     "flavor_ru": "«Бьётся в руке. Как будто просится обратно.»",
+    "recipe_id": null,
+    "stats": {},
+    "item_class": "resource"
+  },
+  {
+    "id": "padded_coat",
+    "name_ru": "Стёганка",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 2.0,
+    "description_ru": "Стёганая куртка с кожаными вставками и набивкой из тряпья. Сбалансированная T2-броня: не слишком тяжёлая, не слишком слабая.",
+    "flavor_ru": "«Тепло. Мягко. Иногда — спасает.»",
+    "recipe_id": "recipe_padded_coat",
+    "stats": {
+      "defense": 3,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "pm",
+    "name_ru": "ПМ",
+    "name_real_ru": "ПМ",
+    "name_generic_ru": "Пистолет 9×18",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 0.7,
+    "caliber": "9x18",
+    "mod_slots": 2,
+    "parts": [
+      "pm_frame",
+      "pm_slide",
+      "pm_magazine"
+    ],
+    "description_ru": "ПМ (пистолет, 9x18). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_pm",
+    "stats": {
+      "damage_min": 5,
+      "damage_max": 9
+    }
+  },
+  {
+    "id": "pm_frame",
+    "name_ru": "Рамка ПМ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Рамка пистолета Макарова. Чугун, штамп, тёртая краска.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "pm_magazine",
+    "name_ru": "Магазин ПМ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Восьмипатронный магазин 9×18.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "pm_slide",
+    "name_ru": "Затвор ПМ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Подвижная часть затвора. Сложно найти целым.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
     "stats": {}
   },
@@ -440,36 +1174,1167 @@
     "description_ru": "Военная процессорная плата из ядра прайм-дрона. Выдерживает перегрузки, которые превращают гражданскую электронику в шлак — ключевой компонент прайм-дробовика.",
     "flavor_ru": "«Последняя печать. С неё начинается оружие.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "item_class": "resource"
   },
   {
-    "id": "captain_insignia",
-    "name_ru": "Знак отличия капитана",
-    "type": "resource",
+    "id": "pulse_grenade",
+    "name_ru": "Импульсная граната",
+    "type": "consumable",
     "tier": 2,
-    "zone_origin": "city",
-    "weight_kg": 1,
-    "description_ru": "Металлический жетон командира корпоративной охраны с влитыми нанопластинами. Артефакт довоенной технологии — без него капитанская броня не соберётся.",
-    "flavor_ru": "«Не символ власти. Сама власть — в металле.»",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Самодельная ЭМИ-граната из заводской платы и конденсаторов. Отключает механических врагов на один ход — бесполезна против живых.",
+    "flavor_ru": "«Щёлк. Тишина. Жужжание прекратилось.»",
+    "recipe_id": "recipe_pulse_grenade",
+    "stats": {
+      "effect_type": "mech_disable",
+      "effect_value": 1,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "ration_bar",
+    "name_ru": "Сухпаёк",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "description_ru": "Сухой паёк из концентратов и ореховой пасты. Плотная, противная плитка, но восстанавливает 20 HP и глушит голод.",
+    "flavor_ru": "«Вкус — как картон. Жизнь — как картон.»",
+    "recipe_id": null,
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 20,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "reinforced_gloves",
+    "name_ru": "Усиленные перчатки",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Перчатки с металлическими накладками на костяшках. Лёгкие, незаметные, добавляют уверенности в драке с псами.",
+    "flavor_ru": "«Пожми руку. Или челюсть.»",
+    "recipe_id": null,
+    "stats": {
+      "defense": 1,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "riot_shield",
+    "name_ru": "Щит полицейский",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 4.0,
+    "description_ru": "Тяжёлый полицейский щит, выдранный из рук погибшего ОМОНовца. Самая высокая защита среди T2, но вес сковывает движения.",
+    "flavor_ru": "«Иди ко мне. Я подожд.»",
+    "recipe_id": "recipe_riot_shield",
+    "stats": {
+      "defense": 6,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "scout_mask",
+    "name_ru": "Маска разведчика",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Лёгкая маска из плотной ткани и пластиковых вставок. Почти не весит, но защита минимальна — лучше, чем ничего.",
+    "flavor_ru": "«Видишь всё. Почти всё.»",
+    "recipe_id": "recipe_scout_mask",
+    "stats": {
+      "defense": 0,
+      "vs_melee_bonus": 1
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "smoke_bomb",
+    "name_ru": "Дымовая шашка",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Самодельная шашка из пороха, ткани и масла. Применённая в бою активирует усиленное укрытие на 1 ход: COVER_DEFENSE_BONUS_PCT × 1.0 (вместо обычного 0.5) — двойное укрытие, дороже по ресурсам. Используется когда нужно пережить один сильный удар (например, raw damage от fanatic_berserker в берсерке).",
+    "flavor_ru": "«Их не видно. Тебя — тоже. Один из вас успеет дотянуться первым.»",
+    "recipe_id": "recipe_smoke_bomb",
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 50,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "smoke_grenade",
+    "name_ru": "Дымовая граната",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "description_ru": "Дымовая граната с рельсовым осколком в корпусе. Плотная завеса даёт укрытие на уровне брони (+60% бонуса) на один ход.",
+    "flavor_ru": "«Исчезни. Передохни. Ударь.»",
+    "recipe_id": "recipe_smoke_grenade",
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 60,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "speed_drug",
+    "name_ru": "Ускоритель",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "description_ru": "Концентрированный стимулятор из медикаментов и реакторной золы. Невероятный прилив скорости: +45 на один бой, но мир после — в сплошном тумане.",
+    "flavor_ru": "«Беги, пока не упал. Потом — упади.»",
+    "recipe_id": "recipe_speed_drug",
+    "stats": {
+      "effect_type": "initiative_boost",
+      "effect_value": 45,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "stimpack",
+    "name_ru": "Стимулятор",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.6,
+    "description_ru": "Инъекция коктейля анаболиков и анальгетиков из госпитальных запасов. Восстанавливает 65 HP мгновенно — но организм платит потом.",
+    "flavor_ru": "«Укол в вену. Жизнь — обратно.»",
+    "recipe_id": "recipe_stimpack",
+    "stats": {
+      "effect_type": "heal",
+      "effect_value": 65,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "tactical_pants",
+    "name_ru": "Тактические штаны",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 1.2,
+    "description_ru": "Усиленные штаны с наколенниками и карманами для обвеса. Не заменят жилет, но ноги тоже бьют реже.",
+    "flavor_ru": "«Беги. Ползи. Выживай.»",
+    "recipe_id": null,
+    "stats": {
+      "defense": 2,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "tactical_vest",
+    "name_ru": "Тактический жилет",
+    "type": "armor",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 3.0,
+    "description_ru": "Старый армейский жилет с керамическими пластинами в карманах. Сильнее кожаного (defense=4 vs 3), но тяжелее (3.0 vs 2.5). Основной T2-ап для слотa брони; требует electronics из Склада для крафта.",
+    "flavor_ru": "«Тяжелее, чем выглядит. Спина запомнит.»",
+    "recipe_id": "recipe_tactical_vest",
+    "stats": {
+      "defense": 4,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "tear_gas",
+    "name_ru": "Слезоточивый газ",
+    "type": "consumable",
+    "tier": 2,
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "description_ru": "Граната со слезоточивой смесью из пороха и химикатов. Создаёт плотный дымовой заслон, дающий двойное укрытие (+75% бонуса) на один ход.",
+    "flavor_ru": "«Плачь. Но живи.»",
+    "recipe_id": "recipe_tear_gas",
+    "stats": {
+      "effect_type": "cover_boost",
+      "effect_value": 75,
+      "charges": 1
+    },
+    "item_class": "consumable"
+  },
+  {
+    "id": "tt",
+    "name_ru": "ТТ",
+    "name_real_ru": "ТТ",
+    "name_generic_ru": "Пистолет 7.62×25",
+    "type": "weapon_ranged",
+    "tier": 2,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 0.85,
+    "caliber": "7.62x25",
+    "mod_slots": 2,
+    "parts": [
+      "tt_frame",
+      "tt_slide",
+      "tt_magazine"
+    ],
+    "description_ru": "ТТ (пистолет, 7.62x25). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_tt",
+    "stats": {
+      "damage_min": 7,
+      "damage_max": 11
+    }
+  },
+  {
+    "id": "tt_frame",
+    "name_ru": "Рамка ТТ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Стальная рамка пистолета Токарева.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
     "stats": {}
   },
   {
-    "id": "composite_blade",
-    "name_ru": "Композитный клинок",
-    "type": "weapon_melee",
+    "id": "tt_magazine",
+    "name_ru": "Магазин ТТ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Восьмипатронный магазин 7.62×25.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "tt_slide",
+    "name_ru": "Затвор ТТ",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Подвижная часть затвора ТТ.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "akm",
+    "name_ru": "АКМ",
+    "name_real_ru": "АКМ",
+    "name_generic_ru": "Автомат 7.62×39",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.6,
+    "caliber": "7.62x39",
+    "mod_slots": 4,
+    "parts": [
+      "akm_barrel",
+      "akm_receiver",
+      "akm_bolt",
+      "akm_magazine"
+    ],
+    "description_ru": "АКМ (автомат, 7.62x39). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_akm",
+    "stats": {
+      "damage_min": 13,
+      "damage_max": 19
+    }
+  },
+  {
+    "id": "akm_barrel",
+    "name_ru": "Ствол АКМ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Нарезной ствол под 7.62×39.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "akm_bolt",
+    "name_ru": "Затворная рама АКМ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Затворная рама АКМ.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "akm_magazine",
+    "name_ru": "Магазин АКМ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Тридцатипатронный 7.62×39.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "akm_receiver",
+    "name_ru": "Ствольная коробка АКМ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Штампованная стальная коробка.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aks74u_barrel",
+    "name_ru": "Ствол АКС-74У",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Укороченный ствол.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aks74u_bolt",
+    "name_ru": "Затворная рама АКС-74У",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Затворная рама АКС-74У.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aks74u_magazine",
+    "name_ru": "Магазин АКС-74У",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Тридцатипатронный.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aks74u_receiver",
+    "name_ru": "Ствольная коробка АКС-74У",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Ствольная коробка АКС-74У.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aks_74u",
+    "name_ru": "АКС-74У",
+    "name_real_ru": "АКС-74У",
+    "name_generic_ru": "Укорочённый автомат 5.45×39",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 2.7,
+    "caliber": "5.45x39",
+    "mod_slots": 3,
+    "parts": [
+      "aks74u_barrel",
+      "aks74u_receiver",
+      "aks74u_bolt",
+      "aks74u_magazine"
+    ],
+    "description_ru": "АКС-74У (автомат, 5.45x39). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_aks_74u",
+    "stats": {
+      "damage_min": 11,
+      "damage_max": 16
+    }
+  },
+  {
+    "id": "alpha_pelt",
+    "name_ru": "Шкура альфы",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Шкура альфы. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ammo_308",
+    "name_ru": "Патрон .308 Win.",
+    "type": "ammo",
+    "tier": 3,
+    "item_class": "ammo",
+    "zone_origin": "universal",
+    "weight_kg": 0.025,
+    "caliber": ".308",
+    "description_ru": "Патрон калибра .308. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ammo_545",
+    "name_ru": "Патрон 5.45×39 (АК-74)",
+    "type": "ammo",
+    "tier": 3,
+    "item_class": "ammo",
+    "zone_origin": "universal",
+    "weight_kg": 0.012,
+    "caliber": "5.45x39",
+    "description_ru": "Патрон калибра 5.45x39. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ammo_762x39",
+    "name_ru": "Патрон 7.62×39 (СКС/АКМ)",
+    "type": "ammo",
+    "tier": 3,
+    "item_class": "ammo",
+    "zone_origin": "universal",
+    "weight_kg": 0.015,
+    "caliber": "7.62x39",
+    "description_ru": "Патрон калибра 7.62x39. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aps",
+    "name_ru": "АПС",
+    "name_real_ru": "АПС",
+    "name_generic_ru": "Автоматический пистолет 9×18",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 1.0,
+    "caliber": "9x18",
+    "mod_slots": 3,
+    "parts": [
+      "aps_frame",
+      "aps_slide",
+      "aps_magazine",
+      "aps_stock"
+    ],
+    "description_ru": "АПС (пистолет, 9x18). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_aps",
+    "stats": {
+      "damage_min": 6,
+      "damage_max": 10
+    }
+  },
+  {
+    "id": "aps_frame",
+    "name_ru": "Рамка АПС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Рамка автоматического пистолета Стечкина.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aps_magazine",
+    "name_ru": "Магазин АПС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Двадцатипатронный магазин.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aps_slide",
+    "name_ru": "Затвор АПС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Подвижная часть АПС.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "aps_stock",
+    "name_ru": "Кобура-приклад АПС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Деревянная кобура для стрельбы с упора.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "armored_vest_part",
+    "name_ru": "Часть бронежилета",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Часть бронежилета. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "armored_vest_recipe",
+    "name_ru": "Чертёж: бронежилет",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Чертёж: бронежилет. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "bekas",
+    "name_ru": "Бекас-12М",
+    "name_real_ru": "Бекас-12М",
+    "name_generic_ru": "Помповое ружьё 12 кал.",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.4,
+    "caliber": "12ga",
+    "mod_slots": 2,
+    "parts": [
+      "bekas_receiver",
+      "bekas_barrel",
+      "bekas_pump",
+      "bekas_stock"
+    ],
+    "description_ru": "Бекас-12М (помповое ружьё, 12ga). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_bekas",
+    "stats": {
+      "damage_min": 13,
+      "damage_max": 19
+    }
+  },
+  {
+    "id": "bekas_barrel",
+    "name_ru": "Ствол Бекаса",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Гладкий ствол 12 калибра.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "bekas_pump",
+    "name_ru": "Цевьё-помпа Бекаса",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Подвижное цевьё.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "bekas_receiver",
+    "name_ru": "Ствольная коробка Бекаса",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Помповый затвор.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "bekas_stock",
+    "name_ru": "Приклад Бекаса",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Деревянный или резиновый.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "bone",
+    "name_ru": "Кость",
+    "type": "resource",
+    "tier": 1,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Кость. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "captain_armor",
+    "name_ru": "Броня капитана",
+    "type": "armor",
     "tier": 3,
     "zone_origin": "universal",
-    "weight_kg": 3,
-    "description_ru": "Лезвие из сплава мутантной железы и металлолома, заточенное до молекулярного края. Лучший melee в игре: 24-32 damage, но тяжёлый (3 кг) и чуть медленнее монтировки (attack_speed 85 vs 90). Один удар ≈ 25% HP мутанта.",
-    "flavor_ru": "«Режет воздух. И всё, что за ним.»",
-    "recipe_id": "recipe_composite_blade",
+    "weight_kg": 5,
+    "description_ru": "Тяжёлая корпоративная броня с нанопластинами из знака капитана. Лучшая броня в игре: defense=12 (×3 от тактического жилета), но 5 кг. Значительно снижает урон боссов и обычных мобов.",
+    "flavor_ru": "«Носит тот, кто пережил. Пока носит.»",
+    "recipe_id": "recipe_captain_armor",
     "stats": {
-      "damage_min": 24,
-      "damage_max": 32,
-      "attack_speed": 85,
-      "noise": "low"
+      "defense": 12,
+      "vs_melee_bonus": 0
+    },
+    "item_class": "armor"
+  },
+  {
+    "id": "combat_machete",
+    "name_ru": "Боевое мачете",
+    "name_real_ru": "Боевое мачете",
+    "name_generic_ru": "Боевое мачете",
+    "type": "weapon_melee",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 1.0,
+    "caliber": "melee",
+    "description_ru": "Жёсткий клинок 35 см. Рубит ветки, мутантов и тонкие ребра.",
+    "flavor_ru": "«Сталь с историей.»",
+    "recipe_id": null,
+    "stats": {
+      "damage_min": 9,
+      "damage_max": 14
     }
+  },
+  {
+    "id": "craft_composite_blade",
+    "name_ru": "Сборный клинок",
+    "name_real_ru": "Сборный клинок",
+    "name_generic_ru": "Сборный клинок",
+    "type": "weapon_melee",
+    "tier": 3,
+    "item_class": "craft",
+    "zone_origin": "universal",
+    "weight_kg": 1.5,
+    "caliber": "melee",
+    "durability_max": 60,
+    "description_ru": "Лезвие сваренное из автомобильной рессоры, рукоять из плотного дерева. Прочнее ножа, тяжелее.",
+    "flavor_ru": "«Хорошая сталь помнит руки кузнеца.»",
+    "recipe_id": "recipe_craft_composite_blade",
+    "stats": {
+      "damage_min": 9,
+      "damage_max": 14
+    }
+  },
+  {
+    "id": "drone_core",
+    "name_ru": "Ядро дрона",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Ядро дрона. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "hunting_barrel",
+    "name_ru": "Ствол Тигра",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Нарезной ствол под .308.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "hunting_bolt",
+    "name_ru": "Затвор Тигра",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Затвор Тигра.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "hunting_receiver",
+    "name_ru": "Ствольная коробка Тигра",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Гражданская винтовка на базе СВД.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "hunting_scope",
+    "name_ru": "Прицельная планка Тигра",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Крепление под оптику.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "iz_43",
+    "name_ru": "ИЖ-43",
+    "name_real_ru": "ИЖ-43",
+    "name_generic_ru": "Двустволка 12 кал.",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.2,
+    "caliber": "12ga",
+    "mod_slots": 1,
+    "parts": [
+      "izh43_receiver",
+      "izh43_barrels",
+      "izh43_stock"
+    ],
+    "description_ru": "ИЖ-43 (ружьё, 12ga). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_iz_43",
+    "stats": {
+      "damage_min": 14,
+      "damage_max": 21
+    }
+  },
+  {
+    "id": "izh43_barrels",
+    "name_ru": "Стволы ИЖ-43",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Спаренные гладкие стволы.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "izh43_receiver",
+    "name_ru": "Замок ИЖ-43",
+    "type": "weapon_part",
+    "tier": 2,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Двойной замок с откидыванием.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "izh43_stock",
+    "name_ru": "Приклад ИЖ-43",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Деревянная ложа.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "leather_jacket",
+    "name_ru": "Кожаная куртка",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Кожаная куртка. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "microchip",
+    "name_ru": "Микрочип",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Микрочип. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "mod_ext_mag_545",
+    "name_ru": "Расширенный магазин 5.45",
+    "type": "modification",
+    "tier": 3,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "mod_slot": "mag",
+    "fits_weapons": [
+      "aks_74u",
+      "ak_74",
+      "rpk"
+    ],
+    "description_ru": "Модификация (mag). +50% ёмкость. Подходит к: aks_74u, ak_74, rpk.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_ext_mag_545",
+    "stats": {
+      "mod_effect": "+50% ёмкость"
+    }
+  },
+  {
+    "id": "mod_ext_mag_9x18",
+    "name_ru": "Расширенный магазин 9×18",
+    "type": "modification",
+    "tier": 3,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "mod_slot": "mag",
+    "fits_weapons": [
+      "pm",
+      "aps"
+    ],
+    "description_ru": "Модификация (mag). +50% ёмкость. Подходит к: pm, aps.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_ext_mag_9x18",
+    "stats": {
+      "mod_effect": "+50% ёмкость"
+    }
+  },
+  {
+    "id": "mod_optic_4x",
+    "name_ru": "Оптика 4×",
+    "type": "modification",
+    "tier": 3,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.6,
+    "mod_slot": "optic",
+    "fits_weapons": [
+      "sks",
+      "mosin",
+      "rifle_t3_hunting"
+    ],
+    "description_ru": "Модификация (optic). +15% точность, -1 ёмкость. Подходит к: sks, mosin, rifle_t3_hunting.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_optic_4x",
+    "stats": {
+      "mod_effect": "+15% точность, -1 ёмкость"
+    }
+  },
+  {
+    "id": "mod_pbs1",
+    "name_ru": "Глушитель ПБС-1",
+    "type": "modification",
+    "tier": 3,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "mod_slot": "muzzle",
+    "fits_weapons": [
+      "akm",
+      "aks_74u",
+      "ak_74"
+    ],
+    "description_ru": "Модификация (muzzle). -1 dmg, шум loud→quiet. Подходит к: akm, aks_74u, ak_74.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_pbs1",
+    "stats": {
+      "mod_effect": "-1 dmg, шум loud→quiet"
+    }
+  },
+  {
+    "id": "mod_tac_grip",
+    "name_ru": "Тактическая рукоять",
+    "type": "modification",
+    "tier": 3,
+    "item_class": "modification",
+    "zone_origin": "universal",
+    "weight_kg": 0.2,
+    "mod_slot": "grip",
+    "fits_weapons": [
+      "akm",
+      "ak_74",
+      "saiga_12",
+      "rpk"
+    ],
+    "description_ru": "Модификация (grip). +10% точность вблизи. Подходит к: akm, ak_74, saiga_12, rpk.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_tac_grip",
+    "stats": {
+      "mod_effect": "+10% точность вблизи"
+    }
+  },
+  {
+    "id": "mosin",
+    "name_ru": "Мосина",
+    "name_real_ru": "Мосина",
+    "name_generic_ru": "Винтовка 7.62×54R",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 4.0,
+    "caliber": "7.62x54R",
+    "mod_slots": 2,
+    "parts": [
+      "mosin_receiver",
+      "mosin_barrel",
+      "mosin_bolt",
+      "mosin_stock"
+    ],
+    "description_ru": "Мосина (винтовка, 7.62x54R). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_mosin",
+    "stats": {
+      "damage_min": 15,
+      "damage_max": 22
+    }
+  },
+  {
+    "id": "mosin_barrel",
+    "name_ru": "Ствол Мосина",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Длинный нарезной ствол.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "mosin_bolt",
+    "name_ru": "Затвор Мосина",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Поворотный затвор.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "mosin_receiver",
+    "name_ru": "Ствольная коробка Мосина",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Старая, но крепкая.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "mosin_stock",
+    "name_ru": "Ложе Мосина",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Тяжёлое деревянное ложе.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "nr_43",
+    "name_ru": "НР-43",
+    "name_real_ru": "НР-43",
+    "name_generic_ru": "Армейский нож",
+    "type": "weapon_melee",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 0.4,
+    "caliber": "melee",
+    "description_ru": "Армейский разведывательный нож. Стальное лезвие, гарда, ножны. Безотказный.",
+    "flavor_ru": "«Сталь с историей.»",
+    "recipe_id": null,
+    "stats": {
+      "damage_min": 8,
+      "damage_max": 12
+    }
+  },
+  {
+    "id": "ppsh",
+    "name_ru": "ППШ",
+    "name_real_ru": "ППШ",
+    "name_generic_ru": "ПП 7.62×25",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.5,
+    "caliber": "7.62x25",
+    "mod_slots": 2,
+    "parts": [
+      "ppsh_receiver",
+      "ppsh_barrel",
+      "ppsh_drum",
+      "ppsh_stock"
+    ],
+    "description_ru": "ППШ (пистолет-пулемёт, 7.62x25). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_ppsh",
+    "stats": {
+      "damage_min": 8,
+      "damage_max": 13
+    }
+  },
+  {
+    "id": "ppsh_barrel",
+    "name_ru": "Ствол ППШ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Длинный нарезной ствол.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ppsh_drum",
+    "name_ru": "Барабан ППШ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Дисковый магазин на 71 патрон.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ppsh_receiver",
+    "name_ru": "Ствольная коробка ППШ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Штампованная стальная коробка.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ppsh_stock",
+    "name_ru": "Приклад ППШ",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Деревянный приклад.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
     "id": "prime_shotgun",
@@ -488,701 +2353,631 @@
       "noise": "high",
       "ammo_id": "ammo_rifle",
       "ammo_per_shot": 1
-    }
+    },
+    "item_class": "drop"
   },
   {
-    "id": "captain_armor",
-    "name_ru": "Броня капитана",
-    "type": "armor",
+    "id": "rare_meds_recipe",
+    "name_ru": "Чертёж: редкие медикаменты",
+    "type": "resource",
     "tier": 3,
+    "item_class": "resource",
     "zone_origin": "universal",
-    "weight_kg": 5,
-    "description_ru": "Тяжёлая корпоративная броня с нанопластинами из знака капитана. Лучшая броня в игре: defense=12 (×3 от тактического жилета), но 5 кг. Значительно снижает урон боссов и обычных мобов.",
-    "flavor_ru": "«Носит тот, кто пережил. Пока носит.»",
-    "recipe_id": "recipe_captain_armor",
-    "stats": {
-      "defense": 12,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "suburban_scrap",
-    "name_ru": "Пригородный лом",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "suburbs",
-    "weight_kg": 2.0,
-    "description_ru": "Обломки заборов, ржавые велосипедные рамы и куски кровли из пригорода. Лёгкий лом, но в нужных руках — сырьё для ножа или мачете.",
-    "flavor_ru": "«Дом развалился. Железо осталось.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "garden_seed",
-    "name_ru": "Семена из грядки",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "suburbs",
     "weight_kg": 0.5,
-    "description_ru": "Сухие семена из разорённой грядки. Сами по себе бесполезны, но алхимики из Оплота знают, как выжать из них целебную слизь.",
-    "flavor_ru": "«Росли для еды. Теперь — для мази.»",
+    "description_ru": "Чертёж: редкие медикаменты. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
     "recipe_id": null,
     "stats": {}
   },
   {
-    "id": "school_book",
-    "name_ru": "Учебник",
+    "id": "raw_meat",
+    "name_ru": "Сырое мясо",
     "type": "resource",
     "tier": 1,
-    "zone_origin": "school",
-    "weight_kg": 1.0,
-    "description_ru": "Учебник физики или химии с вырванными страницами. В переплёте — плотный картон, а в тексте — формулы, пригодные для самоделок.",
-    "flavor_ru": "«Знание — сила. Особенно если твёрдое.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "broken_tablet",
-    "name_ru": "Разбитый планшет",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "school",
+    "item_class": "resource",
+    "zone_origin": "universal",
     "weight_kg": 0.5,
-    "description_ru": "Разбитый планшет с обгоревшей платой. Непригоден для чтения, но редкие компоненты питания ещё можно выпаять.",
-    "flavor_ru": "«Экран погас. Батарея — нет.»",
+    "description_ru": "Сырое мясо. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
     "recipe_id": null,
     "stats": {}
   },
   {
-    "id": "machine_part",
-    "name_ru": "Деталь станка",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "factory",
-    "weight_kg": 3.0,
-    "description_ru": "Шестерня, вал или редуктор с заводского станка. Тяжёлый металл, из которого собирают щиты и кувалды.",
-    "flavor_ru": "«Крутилось до конца света. Теперь — крутит тебя.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "industrial_cable",
-    "name_ru": "Кабель заводской",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "factory",
-    "weight_kg": 2.0,
-    "description_ru": "Толстый медный кабель с заводской разводки. Гибкий, прочный, годится для тетивы арбалета или обмотки бронежилета.",
-    "flavor_ru": "«Ток давно ушёл. Сила осталась.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "hospital_supply",
-    "name_ru": "Медицинский набор",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "hospital",
-    "weight_kg": 0.5,
-    "description_ru": "Остатки медицинских наборов из госпиталя: пинцеты, ножницы, пакеты с антисептиком. Основа для стимуляторов и электролитов.",
-    "flavor_ru": "«Врачи ушли. Инструменты — нет.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "sterile_wrap",
-    "name_ru": "Стерильная плёнка",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "hospital",
-    "weight_kg": 0.3,
-    "description_ru": "Рулон прозрачной плёнки для перевязок. Лёгкий, чистый, незаменим при сборке адреналиновых инъекций.",
-    "flavor_ru": "«Стерильность — роскошь. Но иногда — необходимость.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "metro_token",
-    "name_ru": "Жетон метро",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "metro",
-    "weight_kg": 0.1,
-    "description_ru": "Металлический жетон старой подземки. Сам по себе ничего не открывает, но в сочетании с порохом даёт ложную ракету.",
-    "flavor_ru": "«Проезд не оплачен. Ответный огонь — да.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "rail_shard",
-    "name_ru": "Осколок рельса",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "metro",
-    "weight_kg": 1.5,
-    "description_ru": "Осколок рельса из тоннеля. Тяжёлый, ржавый, идеален для болтов арбалета или осколков дымовой гранаты.",
-    "flavor_ru": "«Шли поезда. Теперь — стрелы.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "reactor_ash",
-    "name_ru": "Зола реактора",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "power_plant",
-    "weight_kg": 1.0,
-    "description_ru": "Серая пыль с разрушенного реактора. Токсичная, но при правильной обработке — мощный катализатор для химических стимуляторов.",
-    "flavor_ru": "«Горело тысячи лет. Сгорает ещё раз — в твоих руках.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "copper_coil",
-    "name_ru": "Медная катушка",
-    "type": "resource",
-    "tier": 1,
-    "zone_origin": "power_plant",
-    "weight_kg": 1.5,
-    "description_ru": "Моток медной проволоки с трансформаторной будки. Гибкая, токопроводящая, нужна для брони и шлемов.",
-    "flavor_ru": "«Витки памяти. Витки защиты.»",
-    "recipe_id": null,
-    "stats": {}
-  },
-  {
-    "id": "shiv",
-    "name_ru": "Заточка",
-    "type": "weapon_melee",
-    "tier": 2,
+    "id": "rgd5",
+    "name_ru": "РГД-5",
+    "name_real_ru": "РГД-5",
+    "name_generic_ru": "Наступательная граната",
+    "type": "consumable",
+    "tier": 3,
+    "item_class": "drop",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Заточенный кусок пригородного лома, обмотанный тряпкой. Самое лёгкое T2-оружие — почти не влияет на вес, но урон скромен.",
-    "flavor_ru": "«Тихо. Близко. Лично.»",
-    "recipe_id": "recipe_shiv",
-    "stats": {
-      "damage_min": 3,
-      "damage_max": 6,
-      "attack_speed": 110,
-      "noise": "low"
-    }
-  },
-  {
-    "id": "machete",
-    "name_ru": "Мачете",
-    "type": "weapon_melee",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 1.5,
-    "description_ru": "Тяжёлое лезвие, выкованное из лома и довоенного полотна. Средний баланс урона и скорости — лучший выбор для чистки зарослей и мародёров.",
-    "flavor_ru": "«Кусты рубит. Шеи тоже.»",
-    "recipe_id": "recipe_machete",
-    "stats": {
-      "damage_min": 5,
-      "damage_max": 9,
-      "attack_speed": 95,
-      "noise": "low"
-    }
-  },
-  {
-    "id": "sledgehammer",
-    "name_ru": "Кувалда",
-    "type": "weapon_melee",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 3.5,
-    "description_ru": "Заводской молот на длинном древке. Тяжелейшее T2-меле: медленный замах компенсируется сокрушительной силой.",
-    "flavor_ru": "«Один удар — один ящик. Или один череп.»",
-    "recipe_id": "recipe_sledgehammer",
-    "stats": {
-      "damage_min": 9,
-      "damage_max": 14,
-      "attack_speed": 75,
-      "noise": "medium"
-    }
-  },
-  {
-    "id": "spear",
-    "name_ru": "Копьё",
-    "type": "weapon_melee",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 2.0,
-    "description_ru": "Заострённый металлический прут, подобранный на Складе. Длинная дистанция и приемлемый вес — редкий лут для дальнобойного ближнего боя.",
-    "flavor_ru": "«Держи врага на расстоянии вытянутой руки.»",
+    "caliber": "thrown",
+    "description_ru": "Лёгкая наступательная граната. Меньше осколков — безопаснее для своих.",
+    "flavor_ru": "«Один бросок — один шанс.»",
     "recipe_id": null,
     "stats": {
-      "damage_min": 6,
-      "damage_max": 10,
-      "attack_speed": 90,
-      "noise": "low"
+      "damage_min": 12,
+      "damage_max": 20,
+      "effect_type": "explosive_thrown"
     }
   },
   {
-    "id": "cleaver",
-    "name_ru": "Тесак",
+    "id": "rifle_t3_hunting",
+    "name_ru": "Тигр",
+    "name_real_ru": "Тигр",
+    "name_generic_ru": "Охотничий карабин .308",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.3,
+    "caliber": ".308",
+    "mod_slots": 3,
+    "parts": [
+      "hunting_receiver",
+      "hunting_barrel",
+      "hunting_bolt",
+      "hunting_scope"
+    ],
+    "description_ru": "Тигр (карабин, .308). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_rifle_t3_hunting",
+    "stats": {
+      "damage_min": 13,
+      "damage_max": 19
+    }
+  },
+  {
+    "id": "rubber",
+    "name_ru": "Резина",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Резина. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "sks",
+    "name_ru": "СКС",
+    "name_real_ru": "СКС",
+    "name_generic_ru": "Карабин 7.62×39",
+    "type": "weapon_ranged",
+    "tier": 3,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.8,
+    "caliber": "7.62x39",
+    "mod_slots": 3,
+    "parts": [
+      "sks_receiver",
+      "sks_barrel",
+      "sks_bolt",
+      "sks_stock"
+    ],
+    "description_ru": "СКС (карабин, 7.62x39). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_sks",
+    "stats": {
+      "damage_min": 12,
+      "damage_max": 17
+    }
+  },
+  {
+    "id": "sks_barrel",
+    "name_ru": "Ствол СКС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Нарезной ствол под 7.62×39.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "sks_bolt",
+    "name_ru": "Затвор СКС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Газоотводная система.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "sks_receiver",
+    "name_ru": "Ствольная коробка СКС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Фрезерованная коробка.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "sks_stock",
+    "name_ru": "Приклад СКС",
+    "type": "weapon_part",
+    "tier": 3,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Деревянный приклад с шейкой.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "unique_svd_blueprint",
+    "name_ru": "Чертёж: уникальная СВД",
+    "type": "resource",
+    "tier": 3,
+    "item_class": "resource",
+    "zone_origin": "universal",
+    "weight_kg": 0.5,
+    "description_ru": "Чертёж: уникальная СВД. Появится с дропа боссов или редких мобов.",
+    "flavor_ru": "«Из-за чего-то такого люди готовы убивать.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak74_barrel",
+    "name_ru": "Ствол АК-74",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Чёрный ствол с щелевым ДТК. Редкая деталь.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak74_bolt",
+    "name_ru": "Затворная рама АК-74",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Подвижная группа с затвором.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak74_magazine",
+    "name_ru": "Магазин АК-74",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Тридцатипатронный 5.45×39.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak74_receiver",
+    "name_ru": "Ствольная коробка АК-74",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Фрезерованная стальная коробка.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak74_stock",
+    "name_ru": "Приклад АК-74",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Складной приклад.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "ak_74",
+    "name_ru": "АК-74",
+    "name_real_ru": "АК-74",
+    "name_generic_ru": "Автомат 5.45×39",
+    "type": "weapon_ranged",
+    "tier": 4,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.3,
+    "caliber": "5.45x39",
+    "mod_slots": 4,
+    "parts": [
+      "ak74_barrel",
+      "ak74_receiver",
+      "ak74_bolt",
+      "ak74_magazine",
+      "ak74_stock"
+    ],
+    "description_ru": "АК-74 (автомат, 5.45x39). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_ak_74",
+    "stats": {
+      "damage_min": 14,
+      "damage_max": 20
+    }
+  },
+  {
+    "id": "ammo_762x54r",
+    "name_ru": "Патрон 7.62×54R (Мосина/СВД)",
+    "type": "ammo",
+    "tier": 3,
+    "item_class": "ammo",
+    "zone_origin": "universal",
+    "weight_kg": 0.02,
+    "caliber": "7.62x54R",
+    "description_ru": "Патрон калибра 7.62x54R. Складируется в инвентаре стеками.",
+    "flavor_ru": "«Маленький, но решает многое.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "f1",
+    "name_ru": "Ф-1",
+    "name_real_ru": "Ф-1",
+    "name_generic_ru": "Оборонительная граната",
+    "type": "consumable",
+    "tier": 4,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 0.6,
+    "caliber": "thrown",
+    "description_ru": "Тяжёлая оборонительная граната. Радиус осколков шире чем бросок — кидать только из-за угла.",
+    "flavor_ru": "«Один бросок — один шанс.»",
+    "recipe_id": null,
+    "stats": {
+      "damage_min": 18,
+      "damage_max": 28,
+      "effect_type": "explosive_thrown"
+    }
+  },
+  {
+    "id": "kukri",
+    "name_ru": "Кукри",
+    "name_real_ru": "Кукри",
+    "name_generic_ru": "Кукри",
     "type": "weapon_melee",
-    "tier": 2,
+    "tier": 4,
+    "item_class": "drop",
     "zone_origin": "universal",
-    "weight_kg": 1.2,
-    "description_ru": "Тяжёлый тесак с заводской кухни или мясорубки. Короткий, но рубящий удар пробивает слабую броню.",
-    "flavor_ru": "«Режет мясо. И не только.»",
-    "recipe_id": null,
-    "stats": {
-      "damage_min": 6,
-      "damage_max": 9,
-      "attack_speed": 95,
-      "noise": "low"
-    }
-  },
-  {
-    "id": "crossbow",
-    "name_ru": "Арбалет",
-    "type": "weapon_ranged",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 2.0,
-    "description_ru": "Самодельный арбалет из станинного кабеля и фанерного лука. Тихий, точный, стреляет самодельными болтами. Идеален для скрытных убийств.",
-    "flavor_ru": "«Щёлк — и тишина.»",
-    "recipe_id": "recipe_crossbow",
-    "stats": {
-      "damage_min": 10,
-      "damage_max": 16,
-      "attack_speed": 80,
-      "noise": "low",
-      "ammo_id": "ammo_bolt",
-      "ammo_per_shot": 1
-    }
-  },
-  {
-    "id": "hunting_rifle",
-    "name_ru": "Охотничья винтовка",
-    "type": "weapon_ranged",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 3.0,
-    "description_ru": "Восстановленная охотничья винтовка с примитивным прицелом. Мощнее самопальной винтовки, но тяжелее и медленнее. Стреляет винтовочными патронами.",
-    "flavor_ru": "«Охотился на оленей. Теперь — на мутантов.»",
-    "recipe_id": "recipe_hunting_rifle",
-    "stats": {
-      "damage_min": 16,
-      "damage_max": 24,
-      "attack_speed": 60,
-      "noise": "high",
-      "ammo_id": "ammo_rifle",
-      "ammo_per_shot": 1
-    }
-  },
-  {
-    "id": "flare_pistol",
-    "name_ru": "Ракетница",
-    "type": "weapon_ranged",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 1.0,
-    "description_ru": "Сигнальная ракетница, переделанная под боевые ракеты. Не слишком точна, но оглушает вспышкой и жаром.",
-    "flavor_ru": "«Свети. Жги. Убегай.»",
-    "recipe_id": null,
-    "stats": {
-      "damage_min": 4,
-      "damage_max": 8,
-      "attack_speed": 90,
-      "noise": "medium",
-      "ammo_id": "ammo_flare",
-      "ammo_per_shot": 1
-    }
-  },
-  {
-    "id": "sawed_off",
-    "name_ru": "Обрез",
-    "type": "weapon_ranged",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 2.0,
-    "description_ru": "Укороченное самодельное ружьё с двумя стволами. Разброс огромен, но на близкой дистанции пробивает броню. Стреляет винтовочными патронами.",
-    "flavor_ru": "«Два выстрела. Два трупа. Или один точный.»",
+    "weight_kg": 0.8,
+    "caliber": "melee",
+    "description_ru": "Изогнутое непальское лезвие. Один удар — и противник вспоминает географию.",
+    "flavor_ru": "«Сталь с историей.»",
     "recipe_id": null,
     "stats": {
       "damage_min": 11,
-      "damage_max": 17,
-      "attack_speed": 75,
-      "noise": "high",
-      "ammo_id": "ammo_rifle",
-      "ammo_per_shot": 1
+      "damage_max": 17
     }
   },
   {
-    "id": "riot_shield",
-    "name_ru": "Щит полицейский",
-    "type": "armor",
-    "tier": 2,
+    "id": "mod_pso1",
+    "name_ru": "Оптика ПСО-1",
+    "type": "modification",
+    "tier": 4,
+    "item_class": "modification",
     "zone_origin": "universal",
-    "weight_kg": 4.0,
-    "description_ru": "Тяжёлый полицейский щит, выдранный из рук погибшего ОМОНовца. Самая высокая защита среди T2, но вес сковывает движения.",
-    "flavor_ru": "«Иди ко мне. Я подожд.»",
-    "recipe_id": "recipe_riot_shield",
+    "weight_kg": 0.8,
+    "mod_slot": "optic",
+    "fits_weapons": [
+      "svd",
+      "akm",
+      "ak_74"
+    ],
+    "description_ru": "Модификация (optic). +20% точность на дистанции. Подходит к: svd, akm, ak_74.",
+    "flavor_ru": "«Маленькая деталь — большая разница.»",
+    "recipe_id": "recipe_mod_pso1",
     "stats": {
-      "defense": 6,
-      "vs_melee_bonus": 0
+      "mod_effect": "+20% точность на дистанции"
     }
   },
   {
-    "id": "scout_mask",
-    "name_ru": "Маска разведчика",
-    "type": "armor",
-    "tier": 2,
+    "id": "rpk",
+    "name_ru": "РПК",
+    "name_real_ru": "РПК",
+    "name_generic_ru": "Ручной пулемёт 5.45×39",
+    "type": "weapon_ranged",
+    "tier": 4,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 4.8,
+    "caliber": "5.45x39",
+    "mod_slots": 3,
+    "parts": [
+      "rpk_barrel",
+      "rpk_receiver",
+      "rpk_bolt",
+      "rpk_magazine",
+      "rpk_bipod"
+    ],
+    "description_ru": "РПК (пулемёт, 5.45x39). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_rpk",
+    "stats": {
+      "damage_min": 15,
+      "damage_max": 22
+    }
+  },
+  {
+    "id": "rpk_barrel",
+    "name_ru": "Ствол РПК",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Лёгкая маска из плотной ткани и пластиковых вставок. Почти не весит, но защита минимальна — лучше, чем ничего.",
-    "flavor_ru": "«Видишь всё. Почти всё.»",
-    "recipe_id": "recipe_scout_mask",
-    "stats": {
-      "defense": 0,
-      "vs_melee_bonus": 1
-    }
+    "description_ru": "Утяжелённый удлинённый ствол.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
-    "id": "padded_coat",
-    "name_ru": "Стёганка",
-    "type": "armor",
-    "tier": 2,
+    "id": "rpk_bipod",
+    "name_ru": "Сошки РПК",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
     "zone_origin": "universal",
-    "weight_kg": 2.0,
-    "description_ru": "Стёганая куртка с кожаными вставками и набивкой из тряпья. Сбалансированная T2-броня: не слишком тяжёлая, не слишком слабая.",
-    "flavor_ru": "«Тепло. Мягко. Иногда — спасает.»",
-    "recipe_id": "recipe_padded_coat",
-    "stats": {
-      "defense": 3,
-      "vs_melee_bonus": 0
-    }
+    "weight_kg": 0.3,
+    "description_ru": "Складные сошки для стрельбы с упора.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
-    "id": "ballistic_vest",
-    "name_ru": "Бронежилет",
-    "type": "armor",
-    "tier": 2,
+    "id": "rpk_bolt",
+    "name_ru": "Затворная рама РПК",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
     "zone_origin": "universal",
-    "weight_kg": 3.5,
-    "description_ru": "Самодельный бронежилет с металлическими пластинами и кабельной обмоткой. Тяжёлый, но надёжный — пули отражает лучше ткани.",
-    "flavor_ru": "«Сердце под сталью. Жизнь — под вопросом.»",
-    "recipe_id": "recipe_ballistic_vest",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Затворная рама РПК.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "rpk_magazine",
+    "name_ru": "Магазин РПК",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Сорокапятипатронный или барабан.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "rpk_receiver",
+    "name_ru": "Ствольная коробка РПК",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Ствольная коробка РПК.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "saiga_12",
+    "name_ru": "Сайга-12",
+    "name_real_ru": "Сайга-12",
+    "name_generic_ru": "Полуавтомат 12 кал.",
+    "type": "weapon_ranged",
+    "tier": 4,
+    "item_class": "drop",
+    "zone_origin": "universal",
+    "weight_kg": 3.8,
+    "caliber": "12ga",
+    "mod_slots": 3,
+    "parts": [
+      "saiga_barrel",
+      "saiga_receiver",
+      "saiga_bolt",
+      "saiga_magazine"
+    ],
+    "description_ru": "Сайга-12 (дробовик, 12ga). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_saiga_12",
     "stats": {
-      "defense": 5,
-      "vs_melee_bonus": 0
+      "damage_min": 16,
+      "damage_max": 24
     }
   },
   {
-    "id": "medical_gown",
-    "name_ru": "Халат хирурга",
-    "type": "armor",
-    "tier": 2,
+    "id": "saiga_barrel",
+    "name_ru": "Ствол Сайги-12",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Гладкий ствол 12 калибра.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "saiga_bolt",
+    "name_ru": "Затворная рама Сайги-12",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Затворная рама Сайги-12.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "saiga_magazine",
+    "name_ru": "Магазин Сайги-12",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Восьмипатронный.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "saiga_receiver",
+    "name_ru": "Ствольная коробка Сайги-12",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
+    "zone_origin": "universal",
+    "weight_kg": 0.3,
+    "description_ru": "Часть для сборки оружия. Ствольная коробка Сайги-12.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
+  },
+  {
+    "id": "rgo",
+    "name_ru": "РГО",
+    "name_real_ru": "РГО",
+    "name_generic_ru": "Граната с дистанционным взрывателем",
+    "type": "consumable",
+    "tier": 5,
+    "item_class": "drop",
     "zone_origin": "universal",
     "weight_kg": 0.5,
-    "description_ru": "Выбеленный хирургический халат, пропитанный дезинфектантом. Лёгкий, почти не мешает движениям, но защита символическая.",
-    "flavor_ru": "«Чисто. Бел. Бесполезен.»",
-    "recipe_id": "recipe_medical_gown",
+    "caliber": "thrown",
+    "description_ru": "Граната с двойным взрывателем — рвёт по контакту или через 3 секунды. Армейский эксклюзив.",
+    "flavor_ru": "«Один бросок — один шанс.»",
+    "recipe_id": null,
     "stats": {
-      "defense": 1,
-      "vs_melee_bonus": 0
+      "damage_min": 22,
+      "damage_max": 32,
+      "effect_type": "explosive_thrown"
     }
   },
   {
-    "id": "insulated_vest",
-    "name_ru": "Изолированный жилет",
-    "type": "armor",
-    "tier": 2,
+    "id": "svd",
+    "name_ru": "СВД",
+    "name_real_ru": "СВД",
+    "name_generic_ru": "Снайперская винтовка 7.62×54R",
+    "type": "weapon_ranged",
+    "tier": 5,
+    "item_class": "drop",
     "zone_origin": "universal",
-    "weight_kg": 2.5,
-    "description_ru": "Жилет с медной обмоткой и плотной подкладкой. Защищает от ударов и мутантных когтей лучше кожаного, но уступает бронежилету.",
-    "flavor_ru": "«Провода внутри. Надежда — тоже.»",
-    "recipe_id": "recipe_insulated_vest",
+    "weight_kg": 4.3,
+    "caliber": "7.62x54R",
+    "mod_slots": 4,
+    "parts": [
+      "svd_barrel",
+      "svd_receiver",
+      "svd_bolt",
+      "svd_magazine",
+      "svd_stock"
+    ],
+    "description_ru": "СВД (снайперка, 7.62x54R). Сборный из деталей или гарантированно с боссов.",
+    "flavor_ru": "«Настоящее железо. С прошлой жизни.»",
+    "recipe_id": "recipe_assemble_svd",
     "stats": {
-      "defense": 4,
-      "vs_melee_bonus": 0
+      "damage_min": 22,
+      "damage_max": 32
     }
   },
   {
-    "id": "metal_helm",
-    "name_ru": "Стальной шлем",
-    "type": "armor",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 1.5,
-    "description_ru": "Старый строительный шлем, усиленный листовым металлом. Тяжеловат для головы, но от арматуры и осколков спасает.",
-    "flavor_ru": "«Думай. Думай быстрее — пока не ударили.»",
-    "recipe_id": "recipe_metal_helm",
-    "stats": {
-      "defense": 3,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "reinforced_gloves",
-    "name_ru": "Усиленные перчатки",
-    "type": "armor",
-    "tier": 2,
+    "id": "svd_barrel",
+    "name_ru": "Ствол СВД",
+    "type": "weapon_part",
+    "tier": 5,
+    "item_class": "part",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Перчатки с металлическими накладками на костяшках. Лёгкие, незаметные, добавляют уверенности в драке с псами.",
-    "flavor_ru": "«Пожми руку. Или челюсть.»",
+    "description_ru": "Длинный точный ствол. Финал-парт.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {
-      "defense": 1,
-      "vs_melee_bonus": 0
-    }
+    "stats": {}
   },
   {
-    "id": "tactical_pants",
-    "name_ru": "Тактические штаны",
-    "type": "armor",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 1.2,
-    "description_ru": "Усиленные штаны с наколенниками и карманами для обвеса. Не заменят жилет, но ноги тоже бьют реже.",
-    "flavor_ru": "«Беги. Ползи. Выживай.»",
-    "recipe_id": null,
-    "stats": {
-      "defense": 2,
-      "vs_melee_bonus": 0
-    }
-  },
-  {
-    "id": "heal_salve",
-    "name_ru": "Целительная мазь",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Самодельная мазь из травяных отваров и жира. Не подходит для боя, но на привале залечивает мелкие раны и снимает воспаление.",
-    "flavor_ru": "«Пахнет болотом. Лечит — тоже.»",
-    "recipe_id": "recipe_heal_salve",
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 30,
-      "charges": 1
-    }
-  },
-  {
-    "id": "stimpack",
-    "name_ru": "Стимулятор",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.6,
-    "description_ru": "Инъекция коктейля анаболиков и анальгетиков из госпитальных запасов. Восстанавливает 65 HP мгновенно — но организм платит потом.",
-    "flavor_ru": "«Укол в вену. Жизнь — обратно.»",
-    "recipe_id": "recipe_stimpack",
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 65,
-      "charges": 1
-    }
-  },
-  {
-    "id": "adrenaline_shot",
-    "name_ru": "Адреналин",
-    "type": "consumable",
-    "tier": 2,
+    "id": "svd_bolt",
+    "name_ru": "Затвор СВД",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Шприц с разбавленным адреналином и стимуляторами. Временно ускоряет реакции: +30 к скорости на один бой.",
-    "flavor_ru": "«Сердце бьётся в горле. Ты — быстрее пса.»",
-    "recipe_id": "recipe_adrenaline_shot",
-    "stats": {
-      "effect_type": "initiative_boost",
-      "effect_value": 30,
-      "charges": 1
-    }
+    "description_ru": "Газоотводная система.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
-    "id": "tear_gas",
-    "name_ru": "Слезоточивый газ",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Граната со слезоточивой смесью из пороха и химикатов. Создаёт плотный дымовой заслон, дающий двойное укрытие (+75% бонуса) на один ход.",
-    "flavor_ru": "«Плачь. Но живи.»",
-    "recipe_id": "recipe_tear_gas",
-    "stats": {
-      "effect_type": "cover_boost",
-      "effect_value": 75,
-      "charges": 1
-    }
-  },
-  {
-    "id": "ammo_bolt",
-    "name_ru": "Болты",
-    "type": "consumable",
-    "tier": 2,
+    "id": "svd_magazine",
+    "name_ru": "Магазин СВД",
+    "type": "weapon_part",
+    "tier": 4,
+    "item_class": "part",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Самодельные арбалетные болты из обрезков рельса и гвоздей. Тяжёлые, кривоватые, но пробивают кожу насквозь.",
-    "flavor_ru": "«Тихий смертник.»",
-    "recipe_id": "recipe_ammo_bolt",
-    "stats": {
-      "effect_type": "ammo_refill",
-      "effect_value": 1,
-      "charges": 1
-    }
+    "description_ru": "Десятипатронный 7.62×54R.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
+    "recipe_id": null,
+    "stats": {}
   },
   {
-    "id": "ammo_flare",
-    "name_ru": "Ракеты",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Сигнальные ракеты, собранные из пороха и бумаги. Подходят только для ракетниц — ярко, шумно, больно.",
-    "flavor_ru": "«Свет в конце тоннеля. Ожоговый.»",
-    "recipe_id": "recipe_ammo_flare",
-    "stats": {
-      "effect_type": "ammo_refill",
-      "effect_value": 1,
-      "charges": 1
-    }
-  },
-  {
-    "id": "electrolyte",
-    "name_ru": "Электролит",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.2,
-    "description_ru": "Раствор солей и минералов в пластиковой ампуле. Поддерживает мышцы в тонусе: +15 к скорости на бой.",
-    "flavor_ru": "«Вода с характером.»",
-    "recipe_id": "recipe_electrolyte",
-    "stats": {
-      "effect_type": "initiative_boost",
-      "effect_value": 15,
-      "charges": 1
-    }
-  },
-  {
-    "id": "speed_drug",
-    "name_ru": "Ускоритель",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Концентрированный стимулятор из медикаментов и реакторной золы. Невероятный прилив скорости: +45 на один бой, но мир после — в сплошном тумане.",
-    "flavor_ru": "«Беги, пока не упал. Потом — упади.»",
-    "recipe_id": "recipe_speed_drug",
-    "stats": {
-      "effect_type": "initiative_boost",
-      "effect_value": 45,
-      "charges": 1
-    }
-  },
-  {
-    "id": "decoy_flare",
-    "name_ru": "Ложная ракета",
-    "type": "consumable",
-    "tier": 2,
+    "id": "svd_receiver",
+    "name_ru": "Ствольная коробка СВД",
+    "type": "weapon_part",
+    "tier": 5,
+    "item_class": "part",
     "zone_origin": "universal",
     "weight_kg": 0.3,
-    "description_ru": "Ложная ракета с метро-жетоном в головке. Запускается в небо, отвлекая врагов, и даёт время на укрытие (+30%).",
-    "flavor_ru": "«Смотри туда. Я — здесь.»",
-    "recipe_id": "recipe_decoy_flare",
-    "stats": {
-      "effect_type": "cover_boost",
-      "effect_value": 30,
-      "charges": 1
-    }
-  },
-  {
-    "id": "pulse_grenade",
-    "name_ru": "Импульсная граната",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.5,
-    "description_ru": "Самодельная ЭМИ-граната из заводской платы и конденсаторов. Отключает механических врагов на один ход — бесполезна против живых.",
-    "flavor_ru": "«Щёлк. Тишина. Жужжание прекратилось.»",
-    "recipe_id": "recipe_pulse_grenade",
-    "stats": {
-      "effect_type": "mech_disable",
-      "effect_value": 1,
-      "charges": 1
-    }
-  },
-  {
-    "id": "smoke_grenade",
-    "name_ru": "Дымовая граната",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Дымовая граната с рельсовым осколком в корпусе. Плотная завеса даёт укрытие на уровне брони (+60% бонуса) на один ход.",
-    "flavor_ru": "«Исчезни. Передохни. Ударь.»",
-    "recipe_id": "recipe_smoke_grenade",
-    "stats": {
-      "effect_type": "cover_boost",
-      "effect_value": 60,
-      "charges": 1
-    }
-  },
-  {
-    "id": "energy_gel",
-    "name_ru": "Энергогель",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.2,
-    "description_ru": "Прозрачная слизь из разбитого планшета и медикаментов. Странно пахнет, но даёт стабильный прилив энергии: +25 к скорости на бой.",
-    "flavor_ru": "«Не ешь. Не пей. Просто жми.»",
-    "recipe_id": "recipe_energy_gel",
-    "stats": {
-      "effect_type": "initiative_boost",
-      "effect_value": 25,
-      "charges": 1
-    }
-  },
-  {
-    "id": "ration_bar",
-    "name_ru": "Сухпаёк",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.2,
-    "description_ru": "Сухой паёк из концентратов и ореховой пасты. Плотная, противная плитка, но восстанавливает 20 HP и глушит голод.",
-    "flavor_ru": "«Вкус — как картон. Жизнь — как картон.»",
+    "description_ru": "Фрезерованная коробка.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 20,
-      "charges": 1
-    }
+    "stats": {}
   },
   {
-    "id": "healing_patch",
-    "name_ru": "Пластырь",
-    "type": "consumable",
-    "tier": 2,
+    "id": "svd_stock",
+    "name_ru": "Приклад СВД",
+    "type": "weapon_part",
+    "tier": 5,
+    "item_class": "part",
     "zone_origin": "universal",
-    "weight_kg": 0.2,
-    "description_ru": "Пластырь с антисептиком и кровоостанавливающим порошком. Лёгкий, компактный, залечивает 35 HP — средний вариант между бинтом и аптечкой.",
-    "flavor_ru": "«Наклей и забудь. Пока не отклеится.»",
+    "weight_kg": 0.3,
+    "description_ru": "Скелетный приклад с щекой.",
+    "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {
-      "effect_type": "heal",
-      "effect_value": 35,
-      "charges": 1
-    }
-  },
-  {
-    "id": "makeshift_grenade",
-    "name_ru": "Самодельная граната",
-    "type": "consumable",
-    "tier": 2,
-    "zone_origin": "universal",
-    "weight_kg": 0.4,
-    "description_ru": "Банка с порохом и гвоздями, с детонатором из спичечной головки. Не слишком мощна, но даёт укрытие (+40%) на один ход.",
-    "flavor_ru": "«Хватишь — бросай. Не хватишь — беги.»",
-    "recipe_id": null,
-    "stats": {
-      "effect_type": "cover_boost",
-      "effect_value": 40,
-      "charges": 1
-    }
+    "stats": {}
   }
 ]

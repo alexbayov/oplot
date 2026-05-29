@@ -13,6 +13,7 @@ import { ProgressionScene } from "./scenes/ProgressionScene";
 import { RadioScene } from "./scenes/RadioScene";
 import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
+import { SkillTreeScene } from "./scenes/SkillTreeScene";
 import { initPlatform } from "./systems/platform";
 import { startCloudSave } from "./systems/cloudSave";
 import { initIap, checkUnprocessedPurchases, registerConsumable } from "./systems/iap";
@@ -53,6 +54,7 @@ const config: Phaser.Types.Core.GameConfig = {
     CraftScene,
     RadioScene,
     ProgressionScene,
+    SkillTreeScene,
     LevelUpScene,
   ],
   scale: {

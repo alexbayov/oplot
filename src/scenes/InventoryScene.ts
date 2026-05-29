@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameState } from "../state/GameState";
+import { renderTierBadge } from "../ui/tierBadge";
 import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
 import { showBanner } from "../systems/banner";
@@ -221,6 +222,8 @@ export class InventoryScene extends Phaser.Scene {
         if (this.textures.exists(texKey)) {
           this.add.image(x, y - 6, texKey).setScale(0.85);
         }
+        // M11.1 — римская цифра в верхнем-правом углу slot'а
+        renderTierBadge(this, x + inv.cellSize / 2 - 10, y - inv.cellSize / 2 + 8, tier);
 
         this.add.text(x, y + 22, `x${s.count}`, {
           color: "#C8C0B0",
@@ -304,6 +307,8 @@ export class InventoryScene extends Phaser.Scene {
         }
         // ESLint-quiet uses
         void icon;
+        // M11.1 — римская цифра в углу экипировки
+        renderTierBadge(this, panelCenterX + 32, iconY - 32, tier, { size: 16 });
       }
       createSmallButton(this, panelCenterX, yBase + 162, btnLabel, 200, btnAction);
     };

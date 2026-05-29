@@ -6,7 +6,6 @@ import {
   removeFromStack,
 } from "../state/GameState";
 import { COVER_DEFENSE_BONUS_PCT } from "../state/balance";
-import { PERKS_PER_LEVEL_UP } from "../state/balance";
 import type { InventoryStack } from "../state/types";
 import {
   applyAttack,
@@ -16,7 +15,7 @@ import {
   getMeleeWeaponStats,
   getRangedWeaponStats,
 } from "../systems/combat";
-import { computePerkModifiers, pickRandomPerks } from "../systems/perks";
+import { computePerkModifiers } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
 import { computeGasDamage } from "../systems/gasZone";
 import { gainXP } from "../systems/xp";
@@ -512,14 +511,10 @@ export class CombatScene extends Phaser.Scene {
     sortie.fights_completed += 1;
 
     if (xpResult.levelled_up) {
-      const candidates = pickRandomPerks(
-        GameState.data.perks,
-        player.perks,
-        PERKS_PER_LEVEL_UP,
-      );
+      // M11.4: вместо случайных перков — +1 skill point и приглашение в дерево.
+      player.skillPoints = (player.skillPoints ?? 0) + 1;
       this.scene.start("LootScene");
       this.scene.launch("LevelUpScene", {
-        perks: candidates,
         levelBefore: xpResult.level_before,
         levelAfter: xpResult.level_after,
       });

@@ -41,6 +41,38 @@ describe("generateMobLoot", () => {
     const loot = generateMobLoot(m, rng);
     expect(loot).toEqual([{ item_id: "leather", count: 3 }]);
   });
+
+  test("M11 drops format с count tuple [min, max]", () => {
+    const m = mob("test_mob", {
+      drop_table: [],
+      drops: [{ id: "ammo_9x18", chance: 1.0, count: [4, 8] }],
+    });
+    const loot = generateMobLoot(m, () => 0.5);
+    expect(loot).toHaveLength(1);
+    expect(loot[0]?.item_id).toBe("ammo_9x18");
+    expect(loot[0]?.count).toBeGreaterThanOrEqual(4);
+    expect(loot[0]?.count).toBeLessThanOrEqual(8);
+  });
+
+  test("M11 drops с chance < rng → не падает", () => {
+    const m = mob("test_mob", {
+      drop_table: [],
+      drops: [{ id: "rare_part", chance: 0.05 }],
+    });
+    const loot = generateMobLoot(m, () => 0.5);
+    expect(loot).toHaveLength(0);
+  });
+
+  test("оба формата (drop_table + drops) мерджатся", () => {
+    const m = mob("test_mob", {
+      drop_table: [{ item_id: "scrap_metal", chance: 1.0, count_min: 1, count_max: 1 }],
+      drops: [{ id: "ammo_9x18", chance: 1.0, count: [2, 2] }],
+    });
+    const loot = generateMobLoot(m, () => 0.5);
+    expect(loot).toHaveLength(2);
+    const ids = loot.map((x) => x.item_id).sort();
+    expect(ids).toEqual(["ammo_9x18", "scrap_metal"]);
+  });
 });
 
 describe("generateZoneLoot", () => {

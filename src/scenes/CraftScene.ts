@@ -5,19 +5,24 @@ import { createButton, createPanel, createTitle, createSmallButton } from "./sce
 import { saveToCloud } from "../systems/cloudSave";
 import { showBanner } from "../systems/banner";
 import { CX, H } from "../ui/layout";
+import { renderTierBadge } from "../ui/tierBadge";
+
+type CraftFilter = "all" | "craft" | "assemble";
 
 export class CraftScene extends Phaser.Scene {
   public constructor() {
     super("CraftScene");
   }
 
-  public init(data?: { lastCrafted?: string; page?: number }): void {
+  public init(data?: { lastCrafted?: string; page?: number; filter?: CraftFilter }): void {
     this.lastCrafted = data?.lastCrafted ?? null;
     this.page = data?.page ?? 0;
+    this.filter = data?.filter ?? "all";
   }
 
   private lastCrafted: string | null = null;
   private page = 0;
+  private filter: CraftFilter = "all";
 
   public create(): void {
     createTitle(this, "Мастерская");
@@ -27,8 +32,19 @@ export class CraftScene extends Phaser.Scene {
       this.showToast(this.lastCrafted);
     }
 
-    const recipes = Object.values(GameState.data.recipes);
+    const allRecipes = Object.values(GameState.data.recipes);
+    const craftCount = allRecipes.filter((r) => (r.recipe_type ?? "craft") === "craft").length;
+    const assembleCount = allRecipes.filter((r) => r.recipe_type === "assemble").length;
+    const recipes = allRecipes.filter((r) => {
+      const t = r.recipe_type ?? "craft";
+      if (this.filter === "craft") return t === "craft";
+      if (this.filter === "assemble") return t === "assemble";
+      return true;
+    });
     const items = GameState.data.items;
+
+    // Filter tabs (M11.0c)
+    this.renderFilterTabs(craftCount, assembleCount, allRecipes.length);
 
     // Pagination: 2 колонки × 5 строк = 10 на страницу (landscape)
     const itemsPerPage = 10;
@@ -43,7 +59,7 @@ export class CraftScene extends Phaser.Scene {
     const gapY = 12;
     const gridW = cols * cardW + (cols - 1) * gapX;
     const startX = (1280 - gridW) / 2 + cardW / 2;
-    const startY = 140;
+    const startY = 180;
 
     pageRecipes.forEach((recipe, idx) => {
       const col = idx % cols;
@@ -57,6 +73,13 @@ export class CraftScene extends Phaser.Scene {
         ? canCraftWithBossDrop(recipe, GameState.baseStash)
         : canCraft(recipe, GameState.baseStash);
 
+      const isAssemble = recipe.recipe_type === "assemble";
+      const haveCount = recipe.ingredients.filter((ing) => {
+        const have = GameState.baseStash.find((s) => s.item_id === ing.item_id)?.count ?? 0;
+        return have >= ing.count;
+      }).length;
+      const totalCount = recipe.ingredients.length;
+
       createPanel(this, cardX, cardY, cardW, cardH);
 
       const leftX = cardX - cardW / 2 + 20;
@@ -64,12 +87,17 @@ export class CraftScene extends Phaser.Scene {
       // Icon
       const texKey = `item_${recipe.result_id}`;
       if (this.textures.exists(texKey)) {
-        this.add.image(leftX + 20, cardY, texKey).setScale(0.9);
+        this.add.image(leftX + 32, cardY, texKey).setScale(1.0);
+        // M11.1 — римская цифра в углу
+        renderTierBadge(this, leftX + 50, cardY - 18, recipe.tier);
       }
 
-      // Title Text
-      this.add.text(leftX + 60, cardY - 28, resultName, {
-        color: "#D4C5A0",
+      // Title + (если сборка) счётчик деталей
+      const titleText = isAssemble
+        ? `${resultName}  [${haveCount}/${totalCount}]`
+        : resultName;
+      this.add.text(leftX + 60, cardY - 28, titleText, {
+        color: isAssemble ? "#E8B547" : "#D4C5A0",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "14px",
         fontStyle: "bold",
@@ -103,7 +131,10 @@ export class CraftScene extends Phaser.Scene {
         });
       };
 
-      const craftBtn = createSmallButton(this, cardX + cardW / 2 - 65, cardY, check.ok ? "Создать" : "Нехватка", 110, onClick, check.ok);
+      const btnLabel = isAssemble
+        ? (check.ok ? "Собрать" : "Нехватка")
+        : (check.ok ? "Создать" : "Нехватка");
+      const craftBtn = createSmallButton(this, cardX + cardW / 2 - 65, cardY, btnLabel, 110, onClick, check.ok);
       if (!check.ok) craftBtn.setAlpha(0.5);
     });
 
@@ -126,6 +157,37 @@ export class CraftScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     createButton(this, H - 50, "Назад", () => this.scene.start("BaseScene"));
+  }
+
+  private renderFilterTabs(craftCount: number, assembleCount: number, totalCount: number): void {
+    const tabY = 110;
+    const tabs: { label: string; value: CraftFilter }[] = [
+      { label: `Всё (${totalCount})`, value: "all" },
+      { label: `🔨 Крафт (${craftCount})`, value: "craft" },
+      { label: `🎯 Сборка (${assembleCount})`, value: "assemble" },
+    ];
+    const tabW = 200;
+    const tabGap = 16;
+    const totalW = tabs.length * tabW + (tabs.length - 1) * tabGap;
+    const startTabX = (1280 - totalW) / 2 + tabW / 2;
+    tabs.forEach((tab, idx) => {
+      const x = startTabX + idx * (tabW + tabGap);
+      const isActive = this.filter === tab.value;
+      const bg = this.add.rectangle(x, tabY, tabW, 36, isActive ? 0x3a2e1a : 0x1f1c17, 1);
+      bg.setStrokeStyle(2, isActive ? 0xc5a267 : 0x4a4035);
+      bg.setInteractive({ useHandCursor: true });
+      bg.on("pointerup", () => {
+        if (this.filter !== tab.value) {
+          this.scene.start("CraftScene", { filter: tab.value, page: 0 });
+        }
+      });
+      this.add.text(x, tabY, tab.label, {
+        color: isActive ? "#E8B547" : "#8A8070",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "14px",
+        fontStyle: isActive ? "bold" : "normal",
+      }).setOrigin(0.5);
+    });
   }
 
   private showToast(itemName: string): void {

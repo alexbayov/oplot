@@ -19,7 +19,7 @@
 
 ## Скоуп текущей версии GDD
 
-Исторически этот документ начинался как MVP-спека (M1–M2). По состоянию на 2026-05 он расширен заглушками и описаниями систем, **фактически выпущенных в `main` вплоть до M10** (зоны, перки, боссы, радио, платформа, монетизация — см. §7–§13). Системы вех **M11/M12 (оружейная система, тиры, дерево навыков, combat overhaul) в `main` НЕ вмёржены** — они существуют только в integration-ветках (см. `staff/CONTEXT.md`, раздел «Незавершённое / висящее»). Любая фича вне описанных секций — scope creep, который блокирует QA.
+Исторически этот документ начинался как MVP-спека (M1–M2). По состоянию на 2026-05 он расширен заглушками и описаниями систем, **фактически выпущенных в `main` вплоть до M10** (зоны, перки, боссы, радио, платформа, монетизация — см. §7–§13). Системы вех **M11/M12 (оружейная система, тиры, дерево навыков, combat overhaul) в `main` вмёржены gate-close-слиянием (combat overhaul требует QA-финализации)**. Любая фича вне описанных секций — scope creep, который блокирует QA.
 
 ---
 
@@ -2266,3 +2266,107 @@ Warning: consumePurchase удаляет покупку безвозвратно.
 - **NO UI redesign** — только монетизационные кнопки/текст поверх существующих сцен.
 - **NO third-party libs** кроме Yandex SDK.
 - **M8a §13a не модифицируется** — platform/cloudSave/locale/audioUnlock/viewport untouched.
+
+---
+
+# M11 Addendum (2026-05-28)
+
+> Сохранены оригинальные секции M1-M10 выше. Новые правила/модели M11 описаны здесь.
+> Когда секция выше противоречит этой — приоритет у этого Addendum'а.
+
+## §M11.1 Item Model — Three Classes
+
+После M11.0a items.json расширен с 80 до 187 предметов. Введён `item_class`:
+
+- **craft** — самоделы (8 шт): Заточка, Поджига, Трубка, Обрез, Копьё, Арбалет, Хлопушка, Молотов. Всегда работают, низкий тир (T1-T2), деградируют по `durability`.
+- **drop** — реальные стволы (15 шт): ПМ, ТТ, АПС, ППШ, СКС, АКС-74У, АКМ, АК-74, РПК, Тигр, Мосина, СВД, ИЖ-43, Сайга, Бекас + 3 ножа + 3 гранаты. Нужны парты + ammo. Средний-высокий тир (T2-T5).
+- **modification** — моды (8 шт): ПБС-1, ПСО-1, прицелы, расш. магазины, штык-нож, тактическая рукоятка. Прицепляются к drop оружию.
+- **part** — части drop-оружия (60 шт): pm_frame, ak74_barrel, svd_bolt и т.д. Нужны для сборки. Дропаются с мобов.
+- **broken_craft** — сломанный craft, разбирается на верстаке (30% возврат материалов).
+
+Новые поля на Item (см. `src/types/items.ts`):
+- `caliber` — для drop weapons, привязка к ammo: "9x18", "7.62x25", "5.45x39", "7.62x39", "7.62x54R", "12ga", ".308"
+- `magazineSize` — ёмкость магазина (drop weapons)
+- `durability` — для craft (5-60 шотов до поломки)
+- `parts` — `string[]` ID-партов нужных для сборки (drop weapons)
+- `fits_weapons` — `string[]` для модов и партов (к каким стволам подходит)
+- `name_real_ru` / `name_generic_ru` — парные имена ствола («ПМ» / «компактный пистолет 9мм»)
+- `recipe_type` — "craft" | "assemble" (для UI фильтра в CraftScene)
+- `is_mod` — true если рецепт даёт модификацию
+
+См. полный ADR: [`docs/decisions/ADR-001-three-class-items.md`](decisions/ADR-001-three-class-items.md).
+
+## §M11.2 Combat (минорные правки до M12)
+
+Боёвка по сути M3-9 пока сохраняется. M12 «Combat Overhaul» введёт:
+- Action points (3 AP/turn)
+- Statuses (Кровотечение, Оглушён, Подавлен, Отравлен, Горящий, Слепой)
+- Active abilities (manual trigger из skill tree)
+- Position layer (Открыто / Укрытие / Между)
+
+Полная спецификация: [`docs/redesign/M12-COMBAT-OVERHAUL.md`](redesign/M12-COMBAT-OVERHAUL.md).
+
+В M11 единственное изменение боёвки — расход ammo по `caliber` для drop weapons.
+
+## §M11.3 Crafting — Два режима
+
+UI CraftScene (M11.0c) теперь имеет фильтр-табы:
+- **🔨 Крафт** (56 рецептов) — самоделы из ресурсов. `recipe_type: "craft"` или legacy (35 без поля).
+- **🎯 Сборка** (15 рецептов) — реальные стволы из партов. `recipe_type: "assemble"`. Счётчик деталей `[3/5]`.
+- **Всё** (71) — оба режима, default tab.
+
+**Разбор broken_craft** (планируется M11.0d или M12.0):
+- Игрок может на верстаке разобрать broken_craft → 30% возврат материалов от рецепта
+- Возврат округляется вниз, минимум 1
+
+## §M11.4 Loot — Двойной формат mob.drops
+
+После M11.0e (PR #99) каждый моб может иметь:
+- `drop_table` (legacy M3 формат — string IDs со weighted random)
+- `drops` (новый M11 формат — `{id, chance, count?: [min,max]}[]`)
+
+Bridge в `src/systems/loot.ts:generateMobLoot` читает оба формата и мерджит. Один моб может использовать оба одновременно.
+
+11 мобов:
+- 4 базовых (T1-T2): marauder, wild_dog, mutant, pack_rat
+- 5 спец (T2-T4): fanatic_berserker, looter_sniper, armored_guard, relic_drone, city_guard_captain
+- 2 альфа (T4): forest_alpha_mutant, warehouse_drone_prime
+
+3 босса для M11.3 (TBD): boss_factory_brigadier, boss_metro_warden, boss_hospital_chief.
+
+## §M11.5 Progression — Skill Tree
+
+Старая система (M3, 8 случайных перков из dropping) **deprecated**.
+
+После M11.4 (PR #109):
+- Древо 3 ветки × 8 узлов = 24 узла
+- **Боец** (красный): Меткость I/II, Крит I/II, Урон в укрытии, Быстрая перезарядка + 2 active (Прицельный, Двойной выстрел)
+- **Выживальщик** (зелёный): HP I/II, Регенерация в укрытии, Эффективность брони, Бонус мед, Иммунитет к кровотечению, Iron Will + 1 active (Последний вздох)
+- **Ремесленник** (оранжевый): 8 пассив (Скорость крафта, Доп лут, Бонус разбора, и др.)
+
+**Очки навыков:** +1 за каждый level-up. Тратить в SkillTreeScene (hotspot «НАВЫКИ» на лежанке в Оплоте).
+
+**Save migration v2→v3:** 8 legacy perk IDs мигрируют через `PERK_MIGRATION_MAP` (см. `src/state/SkillTree.ts`). Неизвестные перки конвертируются в bonus skill points (по 1 за каждый).
+
+## §M11.6 Tiers
+
+T1-T5 — система rarity и силы предметов. Цвета рамок в UI:
+- T1 — серый (`#808080`)
+- T2 — белый (`#d4c5a0`)
+- T3 — синий (`#4a7bc8`)
+- T4 — фиолетовый (`#8a4ac8`)
+- T5 — золотой (`#c5a267`)
+
+Привязка к зонам (после M11.1):
+- T1 → forest, suburbs (первые зоны)
+- T2 → warehouse, school
+- T3 → city, hospital, factory
+- T4 → metro, power_plant
+- T5 → дроп с боссов M11.3
+
+Точная балансировка по тирам — в [`balance.md`](balance.md) и в M11.1 spec.
+
+**Известные balance flags** (M11.5 review, см. [`staff/handoff/M11.5-GD-rebalance-flags.md`](../staff/handoff/M11.5-GD-rebalance-flags.md)):
+- F1: prime_shotgun T3 — урон выше T5 (исправить в M11.1)
+- F2: aps T3 — урон ниже соседних T3 (исправить в M11.1)
+- F3: kukri T4 — урон ниже T3 ranged (исправить в M11.1)

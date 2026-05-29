@@ -1,5 +1,6 @@
 import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
 import type { Encounter } from "../types/encounter";
+import type { SkillNode } from "../types/skillNode";
 
 export interface InventoryStack {
   item_id: string;
@@ -35,6 +36,10 @@ export interface PlayerState {
   equipped_weapon_id: string;
   equipped_armor_id: string;
   perks: Perk[];
+  /** M11.4: ID открытых узлов skill tree (заменяет flat perks). Legacy perks остаются для backward compat в combat.ts. */
+  unlockedSkillNodes?: string[];
+  /** M11.4: непотраченные очки навыков (1 на уровень). */
+  skillPoints?: number;
   backpack: InventoryStack[];
   gas: number;
 }
@@ -66,9 +71,10 @@ export interface ContentData {
   // M3 GDD §10.M3: radio signals loaded from content/radio.json at boot.
   // Empty array when the file is missing or content count mismatches (soft-warn).
   radioSignals: RadioSignal[];
-  perks: Perk[];
+  perks: Record<string, Perk>;
   // M10.2: encounters between fights — loaded from content/encounters.json.
   encounters?: Encounter[];
+  skillNodes?: SkillNode[];
 }
 
 export interface GameStateShape {
