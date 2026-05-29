@@ -1,7 +1,7 @@
 # Оплот — Survival RPG для Яндекс Игр
 
 > **Жанр:** Survival RPG с глубоким крафтом, пошаговым боем и механикой веса/жадности
-> **Платформа:** Яндекс.Игры (HTML5, mobile-first)
+> **Платформа:** Яндекс.Игры (HTML5, mobile-first, landscape 1280×720)
 > **Стек:** Phaser 3 + TypeScript + Vite + Yandex Games SDK
 
 ## High Concept
@@ -46,7 +46,7 @@ oplot/
 
 См. [`staff/PROCESS.md`](staff/PROCESS.md) — полный цикл вехи.
 См. [`staff/ORCHESTRATION.md`](staff/ORCHESTRATION.md) — playbook PM.
-См. [`staff/PLAN.md`](staff/PLAN.md) — вехи M0–M9.
+См. [`staff/PLAN.md`](staff/PLAN.md) — вехи M0–M10 (DONE) + M11 (планирование).
 
 ## Быстрый старт (для разработчика)
 

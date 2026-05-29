@@ -15,7 +15,9 @@
 | Что | Файл |
 |---|---|
 | Процесс и роли | `staff/TEAM.md`, `staff/PROCESS.md`, `staff/ORCHESTRATION.md` |
-| Текущий gate (M8a — kickoff) | `staff/status/M8a.md`, `staff/handoff/M7-SUMMARY.md` |
+| Текущее состояние (M10 done, M11 planning) | `staff/CONTEXT.md` (этот файл, раздел «Текущий snapshot»), `staff/PLAN.md` |
+| План M10 (закрыт) | `docs/redesign/M10-LIVING-REFUGE.md` |
+| Конкурирующие планы M11 | `docs/redesign/M11-CORE-LOOP.md`, `docs/redesign/M11-NARRATIVE-PROGRESSION.md` |
 | Завершённая веха M7 | `staff/status/M7.md`, `staff/handoff/M7-SUMMARY.md` |
 | Завершённая веха M6 | `staff/status/M6.md`, `staff/handoff/M6-SUMMARY.md` |
 | Завершённая веха M5 | `staff/status/M5.md`, `staff/handoff/M5-SUMMARY.md` |
@@ -38,21 +40,30 @@
 - QA всегда отдельная сессия от той роли, которую проверяет.
 - PR не self-merge. Мерджит PM после нужного gate.
 
-## Текущий snapshot (M8b — kickoff)
+## Текущий snapshot (2026-05-29 — M10 закрыта, M11 в планировании)
 
-_Last reconciled with GitHub: 2026-05-25 (`main` HEAD `c88f395` after M8a gate-close PR #71; M8b kickoff branch `pm/m8b-kickoff`)._
+_Last reconciled with GitHub: 2026-05-29 (`main` HEAD `723fd13`)._
 
-- **Веха M8b — Монетизация:** rewarded video (×4 triggers: ×2 loot, second chance, daily reset, gas refill), interstitial (×1 placement: post-sortie), sticky banner (bottom, scene-aware), IAP (3 products: disable_ads, starter_pack, gas_pack + unprocessed-check §1.13.1), ads-remover logic. Yandex SDK API research complete — all API signatures documented.
-- **Активная ветка:** PM kickoff `pm/m8b-kickoff → main`. После merge — `m8b-integration` (long-lived до M8b gate-close).
-- **Следующие шаги (PM):** merge PM kickoff PR в `main` → создать `m8b-integration` → GD §13b amendment по `staff/kickoff/M8b-GD.md`.
-- **Текущий gate:** `M8b_PM_KICKOFF_PR_OPEN → after-merge → GD_IN_PROGRESS`.
-- Owners M8b: Engineer + QA + GD (Content/Artist не участвуют).
-- Скоуп/anti-scope/DoD — `staff/status/M8b.md`. Anti-scope: no leaderboards/achievements, no server-side IAP, no telemetry, no new content/mechanics, no UI redesign.
-- **M8a (Платформа и персистентность) — DONE.** gate-close PR #71. platform.ts/cloudSave.ts/locale.ts/audioUnlock.ts готовы. SDK singleton доступен.
+- **Ориентация: landscape 1280×720** (`Scale.FIT`, `src/config.ts`). Зафиксировано редизайн-вехой (PR #84). Портретный таргет из ранних GDD/handoff-доков **устарел** — не использовать как источник правды.
+- **Что выпущено в `main`:** M0–M9 + Redesign (landscape + painted) + **M10 «Living Refuge» (DONE)**. Контент на `main`: 80 предметов, 42 рецепта, 11 мобов, 9 зон, 8 перков, 6 радиосигналов, 31 encounter.
+- **Веха M11 — в планировании, НЕ закрыта.** В `main` лежат **два конкурирующих плана**:
+  - `docs/redesign/M11-CORE-LOOP.md` — тиры + дерево навыков + сборка оружия из частей (нарратив отложен).
+  - `docs/redesign/M11-NARRATIVE-PROGRESSION.md` — сюжет, цель, личность героя сейчас.
+  - **Открытое решение владельца: что есть M11.** До решения не стартовать реализацию.
+- **Открытый issue:** #79 (UI/UX redesign, Priority 1). Владелец считает работу фактически сделанной (painted-сцены/тултипы выпущены) — **issue нужно верифицировать и закрыть либо переоткрыть с остатком**.
+- **Release-hardening не закрыт:** сжатие/lazy-load painted-фонов (bundle), проверка cloud save / ads / IAP на реальном Yandex Draft, `npm run lint` (был красный — 6 ошибок в `encounters.ts`).
+
+## Незавершённое / висящее (важно для новых сессий)
+
+- **⚠️ Реализация M11/M12 НЕ в `main`.** PR #94–#113 (оружейная система, +107 предметов, тиры, дерево навыков на 24 узла, combat-движок `m12.0a/0b`, мастер-план «Combat Overhaul») мёржились в ветки `m11-integration` / `m12-integration`. Эти ветки **удалены с origin и не влиты в `main`**. На `main` нет weapon/tier/skill-систем. Перед продолжением M11/M12 — решить: восстанавливать ли стрэндед-ветки (через закрытые PR-рефы на GitHub) или переделывать с нуля.
+- **`docs/IDEAS.md`** (если присутствует в стрэндед-ветках) — бэклог концептов, не план.
 
 ## Закрытые вехи
 
-- **M8a — Платформа и персистентность:** закрыта 2026-05-25 gate-close PR #71 (`m8a-integration → main`, merged). Итоги: platform.ts (4 fail-soft modes), cloudSave.ts (7 triggers, throttle 10s), locale.ts t(), audioUnlock.ts, mobile-first viewport, 193/193 vitest, JS 1.49 MB.
+- **M10 — Living Refuge:** закрыта 2026-05-27 (PR #90 foundation + #91 full implementation, merged в `main`). Telemetry, sceneStack, painted world map (9 пинов), база как painted-сцена (6 хотспотов), encounter-система (31 событие), return-ритуал. Полный план — `docs/redesign/M10-LIVING-REFUGE.md`.
+- **Redesign (landscape + painted):** закрыт 2026-05-27. Landscape 1280×720 (PR #84), painted-фоны/иконки 88 шт (PR #85), painted UI-хелперы (PR #87), rich-тултипы инвентаря (PR #88), fix unlock-условий 9 зон (PR #86).
+- **M9 — Визуальный прогон + сабмит:** закрыта 2026-05-26 gate-close PR #78. 9 zone backgrounds, 80 item icons, hero/mob sprites, Pillow generator, 716 KB assets, 213 vitest.
+- **M8b — Монетизация:** закрыта 2026-05-26 gate-close PR #77. Rewarded ×4 / interstitial ×1 / sticky banner / IAP 3 products + ads-remover + unprocessed-check §1.13.1. 213 vitest, JS 1.5 MB.
 - **M7 — Полировка и баланс:** закрыта 2026-05-25 gate-close PR #65 (`m7-integration → main`, merged Alex'ом). Полный summary — `staff/handoff/M7-SUMMARY.md`. Итоги: 9 zones, 80 items, 42 recipes, 10 SFX, 16 tween events, 176/176 vitest, JS 1.49 MB, project assets 524 KB.
 - **M6 — Радио и доверие:** закрыта 2026-05-25 gate-close PR #57 (`m6-integration → main`, PM merge по делегации Alex'а). Полный summary — `staff/handoff/M6-SUMMARY.md`. Итоги: 6 radio signals, `radio_trust [-5,+5]`, RadioScene M6 + ambush, 164/164 vitest, 456 KB assets.
 - **M5 — Боссы и инстансы:** закрыта 2026-05-25 gate-close PR #47 (`m5-integration → main`, PM merge по делегации Alex'а). Полный summary — `staff/handoff/M5-SUMMARY.md`. Итоги: 3 босса, boss drops, T3 craft, daily instances, gas zones, MobRole runtime, 152 vitest, 1.48 MB build, 412 KB assets.
