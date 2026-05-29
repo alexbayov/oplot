@@ -6,3 +6,7 @@ dist/
 .env
 .env.local
 bun.lock
+
+# Build artifacts / distributables (never commit — use Yandex Draft uploads instead)
+*.zip
+oplot_m*.zip
