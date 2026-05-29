@@ -210,7 +210,7 @@ describe("CombatEngine — endTurn phases & status", () => {
 
     engine.endTurn();
     expect(mob.phase).toBe(2);
-    expect(state.log.some((e) => e.kind === "phase_shift")).toBe(true);
+    expect(state.log.some((e) => e.kind === "phase")).toBe(true);
   });
 
   test("tickStatuses уменьшает remaining и снимает истёкшие", () => {
@@ -260,10 +260,90 @@ describe("CombatEngine — stub actions", () => {
     const engine = new CombatEngine(state, () => 0.5);
     engine.startTurn();
 
-    for (const kind of ["ability", "reload", "consumable", "move", "cover"] as const) {
+    for (const kind of ["ability", "consumable", "move", "cover"] as const) {
       const r = engine.resolveHeroAction({ actorId: "h", kind });
       expect(r.ok).toBe(false);
       expect(r.reasonRu).toContain("M12");
     }
+  });
+
+  test("durability decrements on attack", () => {
+    const inst = createWeaponInstance("pistol_t2_pm", pmParts, () => 0.5);
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100, equipped: inst, magazineMax: 8 });
+    hero.magazine = 8;
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    const before = hero.equipped?.durability ?? 0;
+    eng.resolveHeroAction({ actorId: "h", kind: "attack", targetId: "m" });
+    expect(hero.equipped?.durability).toBe(before - 1);
+  });
+
+  test("weapon breaks when durability hits 0", () => {
+    const inst = createWeaponInstance("pistol_t2_pm", pmParts, () => 0.5);
+    if (inst) inst.durability = 1;
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100, equipped: inst, magazineMax: 8 });
+    hero.magazine = 8;
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    eng.resolveHeroAction({ actorId: "h", kind: "attack", targetId: "m" });
+    expect(hero.equipped).toBeNull();
+    expect(state.log.some((e) => e.kind === "weapon_break")).toBe(true);
+  });
+
+  test("broken weapon — атака без оружия наносит fallback damage", () => {
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100, equipped: null });
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    eng.resolveHeroAction({ actorId: "h", kind: "attack", targetId: "m" });
+    expect(mob.hp).toBeLessThan(20);
+  });
+
+  test("reload восполняет magazine до max", () => {
+    const inst = createWeaponInstance("pistol_t2_pm", pmParts, () => 0.5);
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100, equipped: inst, magazineMax: 8 });
+    hero.magazine = 0;
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    const result = eng.resolveHeroAction({ actorId: "h", kind: "reload" });
+    expect(result.ok).toBe(true);
+    expect(hero.magazine).toBe(8);
+    expect(state.log.some((e) => e.kind === "reload")).toBe(true);
+  });
+
+  test("reload без оружия → ok:false", () => {
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100, equipped: null });
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    const result = eng.resolveHeroAction({ actorId: "h", kind: "reload" });
+    expect(result.ok).toBe(false);
+    expect(result.reasonRu).toContain("Нечего");
+  });
+
+  test("endTurn → status durations decrement, expired removed; cooldowns decrement", () => {
+    const hero = createActor({ id: "h", kind: "hero", nameRu: "H", maxHp: 100 });
+    hero.statuses = [
+      { id: "bleed", remaining: 1, stacks: 1, source: "test" },
+      { id: "frenzy", remaining: 3, stacks: 1, source: "test" },
+    ];
+    hero.cooldowns = { knife_strike: 2, scope_aim: 1 };
+    const mob = createActor({ id: "m", kind: "mob", nameRu: "M", maxHp: 20 });
+    const state = createState({ zoneId: "f", scenario: "test", actors: [hero, mob] });
+    const eng = new CombatEngine(state, () => 0.5);
+    eng.startTurn();
+    eng.endTurn();
+    expect(hero.statuses.map((s) => s.id)).toEqual(["frenzy"]);
+    expect(hero.statuses[0]?.remaining).toBe(2);
+    // tickCooldowns drops entries that reach 0; scope_aim:1 → removed.
+    expect(hero.cooldowns).toEqual({ knife_strike: 1 });
   });
 });

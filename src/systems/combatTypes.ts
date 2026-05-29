@@ -118,18 +118,19 @@ export interface EnvObject {
 
 export type LogKind =
   | "attack"
-  | "ability"
-  | "consumable"
+  | "damage"
+  | "miss"
+  | "kill"
+  | "cover"
+  | "heal"
+  | "flee"
+  | "telegraph"
+  | "phase"
   | "status_apply"
   | "status_tick"
-  | "status_expire"
-  | "phase_shift"
-  | "cooldown_tick"
-  | "magazine"
-  | "durability"
-  | "kill"
-  | "miss"
-  | "info";
+  | "weapon_break"
+  | "reload"
+  | "system";
 
 export interface CombatLogEntry {
   turn: number;
