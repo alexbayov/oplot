@@ -1,9 +1,0 @@
-version: 1
-connection: local
-
-data_source:
-  name: oplot_main
-  connection:
-    type: duckdb
-  sql_query: |
-    SELECT 1 as id, 'test' as name

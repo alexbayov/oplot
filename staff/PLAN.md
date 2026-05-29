@@ -62,6 +62,15 @@
 | **M8a** | Платформа и персистентность | Yandex Games SDK init + cloud save + mobile-first viewport + locale RU lock + перенос M7 settings | Engineer + QA | **DONE 2026-05-25** (gate-close PR #71; 193 vitest, JS 1.49 MB, platform/cloudSave/locale/audioUnlock) |
 | **M8b** | Монетизация | Ads (rewarded ×4 triggers + interstitial ×1 + sticky banner), IAP (3 products + ads-remover + unprocessed-check §1.13.1) | Engineer + QA (+ GD для §13b) | **DONE 2026-05-26** (gate-close PR #77; 213 vitest, JS 1.5 MB, ads/banner/iap ready) |
 | **M9** | Визуальный прогон + сабмит | Military Graphic Novel sprites: 9 zone backgrounds, 80 item icons, hero + mob sprites in scenes, Pillow generator | Artist + Engineer | **DONE 2026-05-26** (gate-close PR #78; 716 KB assets, 213 vitest, JS 1.5 MB) |
+| **Redesign** | Landscape + painted pass | Переход на **landscape 1280×720** (PR #84), painted-фоны/иконки (88 шт, PR #85), painted UI-хелперы (PR #87), rich-тултипы инвентаря (PR #88), fix unlock-условий 9 зон (PR #86) | Engineer + Artist | **DONE 2026-05-27** (merged в `main`) |
+| **M10** | Living Refuge | Telemetry + sceneStack + baseline (PR #90), painted world map (9 пинов), база как painted-сцена (6 хотспотов), encounter-система (31 событие), return-ритуал | Engineer + Artist + Content | **DONE 2026-05-27** (PR #90, #91 merged в `main`; см. `docs/redesign/M10-LIVING-REFUGE.md`) |
+| **M11** | *(планирование — НЕ закрыта)* | Два конкурирующих плана в `main`: `docs/redesign/M11-CORE-LOOP.md` (тиры + дерево навыков + сборка оружия) и `docs/redesign/M11-NARRATIVE-PROGRESSION.md` (сюжет/цель/личность). **Требуется решение владельца: что есть M11.** | PM + GD | **PLANNING** (PR #92, #93 — только документы) |
+
+> ### ⚠️ Текущее состояние `main` (reconciled 2026-05-29)
+> - **Ориентация: landscape 1280×720** (`Scale.FIT`). Решение зафиксировано редизайн-вехой (PR #84). Портретный таргет из ранних GDD/handoff-доков устарел.
+> - **`main` HEAD `723fd13`** содержит: M0–M9 + Redesign + **M10 (DONE)** + **планы M11 (две конкурирующие версии)**.
+> - **⚠️ Висящая работа:** реализация M11/M12 (оружейная система, +107 предметов, тиры, дерево навыков на 24 узла, combat-движок, «Combat Overhaul») мёржилась в ветки `m11-integration` / `m12-integration` (PR #94–#113). Эти ветки **удалены с origin и НЕ влиты в `main`**. На `main` по-прежнему 80 предметов и нет weapon/tier/skill-систем. Прежде чем продолжать M11/M12 — решить: восстанавливать стрэндед-ветки или переделывать.
+> - **Приоритет перед любым новым контентом:** release-hardening (см. ниже M10-release pass) + закрытие/верификация issue #79.
 
 ## 4. Что НЕ делаем до релиза (Anti-scope)
 
@@ -72,7 +81,9 @@
 - **Фэнтези-элементы** (магия, драконы) — запрещено.
 - **Реальные ТМ** (АК-47, M4A1) — запрещено, используем обобщённые названия.
 
-QA имеет право вето на любую попытку вставить эти фичи до M9.
+QA имеет право вето на любую попытку вставить эти фичи на любой вехе (anti-scope действует постоянно, не только до M9).
+
+> **Прецедент (2026-05-29):** в корне репозитория обнаружен `aquarium.html` — 3D-аквариум на Three.js, нарушавший правило «нет 3D» и ломавший `npm run dev` (импорт неустановленного `three`). Удалён при чистке (ветка `chore/docs-sync-and-dev-fix`).
 
 ## 5. Definition of Done — общий для каждой вехи
 
