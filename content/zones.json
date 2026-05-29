@@ -100,6 +100,10 @@
         ],
         "min_player_level": 5
       }
+    ],
+    "zone_tier_range": [
+      1,
+      2
     ]
   },
   {
@@ -204,6 +208,10 @@
         "min_player_level": 5,
         "is_gas": true
       }
+    ],
+    "zone_tier_range": [
+      2,
+      3
     ]
   },
   {
@@ -307,6 +315,10 @@
         "min_player_level": 5,
         "is_gas": true
       }
+    ],
+    "zone_tier_range": [
+      3,
+      4
     ]
   },
   {
@@ -408,6 +420,10 @@
         ],
         "min_player_level": 3
       }
+    ],
+    "zone_tier_range": [
+      1,
+      2
     ]
   },
   {
@@ -509,6 +525,10 @@
         ],
         "min_player_level": 3
       }
+    ],
+    "zone_tier_range": [
+      1,
+      2
     ]
   },
   {
@@ -608,6 +628,10 @@
         ],
         "min_player_level": 4
       }
+    ],
+    "zone_tier_range": [
+      3,
+      4
     ]
   },
   {
@@ -707,6 +731,10 @@
         ],
         "min_player_level": 4
       }
+    ],
+    "zone_tier_range": [
+      3,
+      4
     ]
   },
   {
@@ -808,6 +836,10 @@
         ],
         "min_player_level": 5
       }
+    ],
+    "zone_tier_range": [
+      3,
+      4
     ]
   },
   {
@@ -907,6 +939,10 @@
         ],
         "min_player_level": 6
       }
+    ],
+    "zone_tier_range": [
+      4,
+      5
     ]
   }
 ]

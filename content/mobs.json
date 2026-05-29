@@ -87,7 +87,8 @@
         "id": "bekas_pump",
         "chance": 0.03
       }
-    ]
+    ],
+    "mob_tier": 1
   },
   {
     "id": "wild_dog",
@@ -143,7 +144,8 @@
           2
         ]
       }
-    ]
+    ],
+    "mob_tier": 1
   },
   {
     "id": "mutant",
@@ -201,7 +203,8 @@
           2
         ]
       }
-    ]
+    ],
+    "mob_tier": 2
   },
   {
     "id": "looter_sniper",
@@ -282,7 +285,8 @@
         "id": "sks_bolt",
         "chance": 0.06
       }
-    ]
+    ],
+    "mob_tier": 3
   },
   {
     "id": "armored_guard",
@@ -371,7 +375,8 @@
         "id": "sks_receiver",
         "chance": 0.08
       }
-    ]
+    ],
+    "mob_tier": 3
   },
   {
     "id": "fanatic_berserker",
@@ -456,7 +461,8 @@
         "id": "saiga_bolt",
         "chance": 0.05
       }
-    ]
+    ],
+    "mob_tier": 3
   },
   {
     "id": "pack_rat",
@@ -519,7 +525,8 @@
           2
         ]
       }
-    ]
+    ],
+    "mob_tier": 2
   },
   {
     "id": "relic_drone",
@@ -580,7 +587,8 @@
         "id": "drone_core",
         "chance": 0.15
       }
-    ]
+    ],
+    "mob_tier": 3
   },
   {
     "id": "forest_alpha_mutant",
@@ -653,7 +661,8 @@
         "id": "alpha_pelt",
         "chance": 0.3
       }
-    ]
+    ],
+    "mob_tier": 3
   },
   {
     "id": "warehouse_drone_prime",
@@ -786,7 +795,8 @@
         "id": "bekas_stock",
         "chance": 0.2
       }
-    ]
+    ],
+    "mob_tier": 4
   },
   {
     "id": "city_guard_captain",
@@ -903,6 +913,7 @@
         "id": "rpk_bipod",
         "chance": 0.04
       }
-    ]
+    ],
+    "mob_tier": 4
   }
 ]
