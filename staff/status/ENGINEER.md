@@ -1,8 +1,16 @@
 # Status: Engineer
 
-**Текущая веха:** M8b (Monetization)
-**Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-26 (M8b)
+## Current status (2026-05-30)
+
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** support QA with engineering triage, keep release gates green, and fix confirmed blockers without changing gameplay scope or balance unless explicitly approved.
+- **Immediate next actions:**
+  1. Be ready to investigate Combat Overhaul regressions found by QA.
+  2. Verify platform-sensitive flows on Yandex Draft with QA: SDK init, cloud save, ads, IAP, LoadingAPI/orientation.
+  3. Keep `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` green after any fix.
+- **Blockers / risks:** acceptance issues in combat state/durability/statuses may block release readiness; bundle-size warning remains a non-blocking hardening item.
+
+## Archive / history below
 
 ## Что сделано (M8b)
 

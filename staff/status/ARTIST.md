@@ -1,9 +1,16 @@
 # Status: Artist
 
-**Текущая веха:** M7 — Полировка и баланс (Audio SFX)
-**Статус:** READY_FOR_REVIEW (10 M7 SFX generated, M7 ARTIST DoD met)
-**Ветка:** `m7/audio` (base = `m7-integration`)
-**Последнее обновление:** 2026-05-25
+## Current status (2026-05-30)
+
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** support release readiness with visual/UI asset triage only: missing icons, unreadable combat/status presentation, and Yandex-friendly landscape presentation.
+- **Immediate next actions:**
+  1. Be ready to provide or adjust status/ability/telegraph visual assets only if QA marks them as release blockers.
+  2. Verify combat/readability issues reported by QA in landscape 1280×720.
+  3. Do not start new art scope, new styles, or new content packs during QA hardening.
+- **Blockers / risks:** unreadable Combat Overhaul UI/status visuals can block product acceptance; bundle-size pressure remains a release-hardening risk.
+
+## Archive / history below
 
 ## Recovery block (для будущих сессий)
 

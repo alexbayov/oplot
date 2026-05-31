@@ -90,24 +90,45 @@ export const allItems = (): M11Item[] => {
  *
  * Для craft / drop / part / mod / ammo:
  *   "real"    → name_real_ru
- *   "generic" → name_generic_ru (если есть, иначе name_real_ru)
+ *   "generic" → name_generic_ru; если поле отсутствует в старом/битом
+ *               контенте, используем безопасный generic fallback без реальных ТМ.
  *
  * Для прочего — name_real_ru (resource / consumable не маскируются).
  */
 export const itemName = (item: M11Item): string => {
   if (WEAPON_NAMING_MODE === "generic") {
     const cls = item.itemClass;
-    if (
-      cls === "craft" ||
-      cls === "drop" ||
-      cls === "part" ||
-      cls === "mod" ||
-      cls === "ammo"
-    ) {
-      return item.name_generic_ru || item.name_real_ru;
+    if (isWeaponNamingSensitiveClass(cls)) {
+      return item.name_generic_ru || releaseSafeFallbackName(item);
     }
   }
   return item.name_real_ru;
+};
+
+const isWeaponNamingSensitiveClass = (cls: ItemClass): boolean => {
+  return (
+    cls === "craft" ||
+    cls === "drop" ||
+    cls === "part" ||
+    cls === "mod" ||
+    cls === "ammo"
+  );
+};
+
+const releaseSafeFallbackName = (item: M11Item): string => {
+  switch (item.itemClass) {
+    case "ammo":
+      return `Патрон ${item.caliber}`;
+    case "part":
+      return `Деталь оружия T${item.tier}`;
+    case "mod":
+      return `Модификация оружия T${item.tier}`;
+    case "craft":
+    case "drop":
+      return `Оружие T${item.tier}`;
+    default:
+      return `Предмет T${item.tier}`;
+  }
 };
 
 /** Получить имя по ID (удобный shortcut). */
@@ -286,7 +307,7 @@ export const adaptLegacyItem = (legacy: LegacyItem): M11Item => {
 
   const itemClassRaw = typeof ex.item_class === "string" ? ex.item_class : undefined;
   const nameReal = typeof ex.name_real_ru === "string" ? ex.name_real_ru : legacy.name_ru;
-  const nameGeneric = typeof ex.name_generic_ru === "string" ? ex.name_generic_ru : legacy.name_ru;
+  const nameGeneric = typeof ex.name_generic_ru === "string" ? ex.name_generic_ru : "";
   const caliberRaw = typeof ex.caliber === "string" ? (ex.caliber as Caliber) : undefined;
   const durabilityMax = typeof ex.durability_max === "number" ? ex.durability_max : 50;
   const modSlotRaw = typeof ex.mod_slot === "string" ? (ex.mod_slot as ModSlot) : undefined;

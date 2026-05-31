@@ -1,9 +1,17 @@
 # Status: PM
 
-**Текущая веха:** M7 — Полировка и баланс (PM kickoff)
-**Статус:** `m7-integration` создана от `main` HEAD `859a652` (M6 gate-close PR #57). PM branch `pm/m7-kickoff` готовит M7 dashboard + 6 kickoff + 6 handoff + dashboard updates.
-**Последнее обновление:** 2026-05-25 (M7 kickoff / Variant B Full PLAN §3)
-**Текущий gate:** `M7_PREPARED_PENDING_KICKOFF_MERGE → GD_IN_PROGRESS`
+## Current status (2026-05-30)
+
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** own the next gate, keep `staff/status/M11-M12.md` canonical, coordinate QA acceptance, and prevent release announcement before QA passes.
+- **Immediate next actions:**
+  1. Confirm QA acceptance scope for Combat Overhaul in `staff/status/M11-M12.md`.
+  2. Sequence QA hardening → Yandex Draft checks → release-readiness sign-off.
+  3. Keep merged-vs-accepted wording consistent in status artifacts.
+- **Blockers / risks:** Combat Overhaul acceptance is pending; release announcement is blocked until QA passes; Yandex Draft flows (cloud save / ads / IAP / SDK lifecycle) still need verification.
+- **Next gate:** `M11_M12_IMPLEMENTATION_MERGED → QA_HARDENING → QA_ACCEPTED → RELEASE_READY`.
+
+## Archive / history below
 
 ## История
 

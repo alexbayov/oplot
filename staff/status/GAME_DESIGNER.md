@@ -1,10 +1,16 @@
 # Status: Game Designer
 
-**Текущая веха:** M8b (Monetization)
-**Статус:** DONE_PENDING_REVIEW
-**Последнее обновление:** 2026-05-26 (M8b GD-amendment)
+## Current status (2026-05-30)
 
----
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** support QA with combat-design expected behavior, validate that M11/M12 mechanics match intended player-facing rules, and identify balance/design blockers without opening new feature scope.
+- **Immediate next actions:**
+  1. Provide expected outcomes for Combat Overhaul acceptance cases: statuses, durability, tiers, abilities, enemy phases, rewards.
+  2. Review QA findings for design-vs-bug classification.
+  3. Defer new narrative/core-loop expansion until M11/M12 acceptance is resolved.
+- **Blockers / risks:** M11 docs still have competing Core Loop vs Narrative plans; do not treat that conflict as permission to add new scope during QA hardening.
+
+## Archive / history below
 
 ## M8b GD-amendment (ветка `m8b/gd-amendment`, PR TBD → `m8b-integration`)
 

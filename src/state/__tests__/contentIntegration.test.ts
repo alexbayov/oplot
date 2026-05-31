@@ -106,4 +106,23 @@ describe("Content integration — real items.json parses through ItemRegistry", 
     expect(m11).toBeDefined();
     expect(typeof itemName(m11 ?? (() => { throw new Error("expected m11"); })())).toBe("string");
   });
+
+  test("default itemName does not expose real weapon trademarks", () => {
+    const items = loadRealItems();
+    loadContentItems(items);
+    const sensitiveClasses = new Set(["craft", "drop", "part", "mod", "ammo"]);
+    const realNameMarkers = [
+      "ПМ", "ТТ", "АКМ", "АКС", "АК-74", "ППШ", "СВД", "РПК", "ПБС",
+      "АПС", "Бекас", "Тигр", "ИЖ", "Мосин", "СКС", "Сайга", "ПСО",
+    ];
+
+    for (const id of Object.keys(items)) {
+      const m11 = getItem(id);
+      if (!m11 || !sensitiveClasses.has(m11.itemClass)) continue;
+      const displayName = itemName(m11);
+      for (const marker of realNameMarkers) {
+        expect(displayName, `${id} should not expose ${marker}`).not.toContain(marker);
+      }
+    }
+  });
 });

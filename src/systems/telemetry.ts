@@ -7,7 +7,7 @@
  * Реализация:
  * - На Яндекс.Играх — отправляем через Yandex Metrica (ym counter)
  *   если global `ym` функция доступна
- * - Off-platform (dev/local) — console.log с префиксом [tel]
+ * - Off-platform (dev/local) — console.log с префиксом [tel] только в development
  * - Никаких личных данных, никаких user-id (Яндекс сам анонимизирует)
  *
  * НЕ делаем в M10.0:
@@ -16,7 +16,7 @@
  * - A/B testing (не нужен пока)
  *
  * Метрика-counter ID берётся из переменной окружения VITE_YM_COUNTER_ID
- * на этапе билда. Если не задан — события только в console.
+ * на этапе билда. Если не задан — в production события молча пропускаются.
  */
 
 import { getPlatform } from "./platform";
@@ -70,12 +70,13 @@ export const track = (event: string, params: EventParams = {}): void => {
     if (platform.available && counterId && ym) {
       ym(counterId, "reachGoal", event, params);
     } else {
-      if (counterId === null && !warnedNoCounter && import.meta.env?.MODE !== "test") {
+      const isDev = import.meta.env?.MODE === "development";
+      if (counterId === null && !warnedNoCounter && isDev) {
         warnedNoCounter = true;
-        // single warning — не спамим в dev
-        console.info("[tel] VITE_YM_COUNTER_ID not set — events only in console");
+        // single warning — не спамим в dev; production молчит.
+        console.info("[tel] VITE_YM_COUNTER_ID not set — events only in dev console");
       }
-      if (import.meta.env?.MODE !== "test") {
+      if (isDev) {
         console.log(`[tel] ${event}`, params);
       }
     }

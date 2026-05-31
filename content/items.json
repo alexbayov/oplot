@@ -11,7 +11,8 @@
     "description_ru": "Патрон калибра 9x18. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 9×18"
   },
   {
     "id": "ammo_pistol",
@@ -580,7 +581,8 @@
     "description_ru": "Патрон калибра 12ga. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 12 калибра"
   },
   {
     "id": "ammo_762x25",
@@ -594,7 +596,8 @@
     "description_ru": "Патрон калибра 7.62x25. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 7.62×25"
   },
   {
     "id": "ammo_bolt",
@@ -692,7 +695,8 @@
       "attack_speed": 95,
       "noise": "low"
     },
-    "item_class": "drop"
+    "item_class": "drop",
+    "name_generic_ru": "Тесак"
   },
   {
     "id": "craft_crossbow",
@@ -1047,7 +1051,8 @@
     "recipe_id": "recipe_mod_bayonet",
     "stats": {
       "mod_effect": "+мили-удар когда враг в упор"
-    }
+    },
+    "name_generic_ru": "Штык-нож"
   },
   {
     "id": "mod_pbs_universal",
@@ -1069,7 +1074,8 @@
     "recipe_id": "recipe_mod_pbs_universal",
     "stats": {
       "mod_effect": "-1 dmg, шум loud→quiet"
-    }
+    },
+    "name_generic_ru": "Глушитель универсальный"
   },
   {
     "id": "mutated_gland",
@@ -1136,7 +1142,8 @@
     "description_ru": "Рамка пистолета Макарова. Чугун, штамп, тёртая краска.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Рамка пистолета 9×18"
   },
   {
     "id": "pm_magazine",
@@ -1149,7 +1156,8 @@
     "description_ru": "Восьмипатронный магазин 9×18.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин пистолета 9×18"
   },
   {
     "id": "pm_slide",
@@ -1162,7 +1170,8 @@
     "description_ru": "Подвижная часть затвора. Сложно найти целым.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор пистолета 9×18"
   },
   {
     "id": "prime_circuit",
@@ -1412,7 +1421,8 @@
     "description_ru": "Стальная рамка пистолета Токарева.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Рамка пистолета 7.62×25"
   },
   {
     "id": "tt_magazine",
@@ -1425,7 +1435,8 @@
     "description_ru": "Восьмипатронный магазин 7.62×25.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин пистолета 7.62×25"
   },
   {
     "id": "tt_slide",
@@ -1438,7 +1449,8 @@
     "description_ru": "Подвижная часть затвора ТТ.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор пистолета 7.62×25"
   },
   {
     "id": "akm",
@@ -1477,7 +1489,8 @@
     "description_ru": "Нарезной ствол под 7.62×39.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол автомата 7.62×39"
   },
   {
     "id": "akm_bolt",
@@ -1490,7 +1503,8 @@
     "description_ru": "Часть для сборки оружия. Затворная рама АКМ.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затворная рама автомата 7.62×39"
   },
   {
     "id": "akm_magazine",
@@ -1503,7 +1517,8 @@
     "description_ru": "Тридцатипатронный 7.62×39.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин автомата 7.62×39"
   },
   {
     "id": "akm_receiver",
@@ -1516,7 +1531,8 @@
     "description_ru": "Штампованная стальная коробка.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка автомата 7.62×39"
   },
   {
     "id": "aks74u_barrel",
@@ -1529,7 +1545,8 @@
     "description_ru": "Укороченный ствол.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол укороченного автомата 5.45×39"
   },
   {
     "id": "aks74u_bolt",
@@ -1542,7 +1559,8 @@
     "description_ru": "Часть для сборки оружия. Затворная рама АКС-74У.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затворная рама укороченного автомата 5.45×39"
   },
   {
     "id": "aks74u_magazine",
@@ -1555,7 +1573,8 @@
     "description_ru": "Тридцатипатронный.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин укороченного автомата 5.45×39"
   },
   {
     "id": "aks74u_receiver",
@@ -1568,7 +1587,8 @@
     "description_ru": "Часть для сборки оружия. Ствольная коробка АКС-74У.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка укороченного автомата 5.45×39"
   },
   {
     "id": "aks_74u",
@@ -1621,7 +1641,8 @@
     "description_ru": "Патрон калибра .308. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон .308"
   },
   {
     "id": "ammo_545",
@@ -1635,7 +1656,8 @@
     "description_ru": "Патрон калибра 5.45x39. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 5.45×39"
   },
   {
     "id": "ammo_762x39",
@@ -1649,7 +1671,8 @@
     "description_ru": "Патрон калибра 7.62x39. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 7.62×39"
   },
   {
     "id": "aps",
@@ -1688,7 +1711,8 @@
     "description_ru": "Рамка автоматического пистолета Стечкина.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Рамка автоматического пистолета 9×18"
   },
   {
     "id": "aps_magazine",
@@ -1701,7 +1725,8 @@
     "description_ru": "Двадцатипатронный магазин.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин автоматического пистолета 9×18"
   },
   {
     "id": "aps_slide",
@@ -1714,7 +1739,8 @@
     "description_ru": "Подвижная часть АПС.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор автоматического пистолета 9×18"
   },
   {
     "id": "aps_stock",
@@ -1727,7 +1753,8 @@
     "description_ru": "Деревянная кобура для стрельбы с упора.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Кобура-приклад автоматического пистолета 9×18"
   },
   {
     "id": "armored_vest_part",
@@ -1792,7 +1819,8 @@
     "description_ru": "Гладкий ствол 12 калибра.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол помпового ружья 12 калибра"
   },
   {
     "id": "bekas_pump",
@@ -1805,7 +1833,8 @@
     "description_ru": "Подвижное цевьё.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Цевьё-помпа ружья 12 калибра"
   },
   {
     "id": "bekas_receiver",
@@ -1818,7 +1847,8 @@
     "description_ru": "Помповый затвор.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка помпового ружья 12 калибра"
   },
   {
     "id": "bekas_stock",
@@ -1831,7 +1861,8 @@
     "description_ru": "Деревянный или резиновый.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад помпового ружья 12 калибра"
   },
   {
     "id": "bone",
@@ -1925,7 +1956,8 @@
     "description_ru": "Нарезной ствол под .308.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол охотничьего карабина .308"
   },
   {
     "id": "hunting_bolt",
@@ -1938,7 +1970,8 @@
     "description_ru": "Часть для сборки оружия. Затвор Тигра.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор охотничьего карабина .308"
   },
   {
     "id": "hunting_receiver",
@@ -1951,7 +1984,8 @@
     "description_ru": "Гражданская винтовка на базе СВД.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка охотничьего карабина .308"
   },
   {
     "id": "hunting_scope",
@@ -1964,7 +1998,8 @@
     "description_ru": "Крепление под оптику.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Прицельная планка охотничьего карабина .308"
   },
   {
     "id": "iz_43",
@@ -2002,7 +2037,8 @@
     "description_ru": "Спаренные гладкие стволы.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Стволы двустволки 12 калибра"
   },
   {
     "id": "izh43_receiver",
@@ -2015,7 +2051,8 @@
     "description_ru": "Двойной замок с откидыванием.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Замок двустволки 12 калибра"
   },
   {
     "id": "izh43_stock",
@@ -2028,7 +2065,8 @@
     "description_ru": "Деревянная ложа.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад двустволки 12 калибра"
   },
   {
     "id": "leather_jacket",
@@ -2075,7 +2113,8 @@
     "recipe_id": "recipe_mod_ext_mag_545",
     "stats": {
       "mod_effect": "+50% ёмкость"
-    }
+    },
+    "name_generic_ru": "Расширенный магазин 5.45"
   },
   {
     "id": "mod_ext_mag_9x18",
@@ -2095,7 +2134,8 @@
     "recipe_id": "recipe_mod_ext_mag_9x18",
     "stats": {
       "mod_effect": "+50% ёмкость"
-    }
+    },
+    "name_generic_ru": "Расширенный магазин 9×18"
   },
   {
     "id": "mod_optic_4x",
@@ -2116,7 +2156,8 @@
     "recipe_id": "recipe_mod_optic_4x",
     "stats": {
       "mod_effect": "+15% точность, -1 ёмкость"
-    }
+    },
+    "name_generic_ru": "Оптика 4×"
   },
   {
     "id": "mod_pbs1",
@@ -2137,7 +2178,8 @@
     "recipe_id": "recipe_mod_pbs1",
     "stats": {
       "mod_effect": "-1 dmg, шум loud→quiet"
-    }
+    },
+    "name_generic_ru": "Глушитель"
   },
   {
     "id": "mod_tac_grip",
@@ -2159,7 +2201,8 @@
     "recipe_id": "recipe_mod_tac_grip",
     "stats": {
       "mod_effect": "+10% точность вблизи"
-    }
+    },
+    "name_generic_ru": "Тактическая рукоять"
   },
   {
     "id": "mosin",
@@ -2198,7 +2241,8 @@
     "description_ru": "Длинный нарезной ствол.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол винтовки 7.62×54R"
   },
   {
     "id": "mosin_bolt",
@@ -2211,7 +2255,8 @@
     "description_ru": "Поворотный затвор.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор винтовки 7.62×54R"
   },
   {
     "id": "mosin_receiver",
@@ -2224,7 +2269,8 @@
     "description_ru": "Старая, но крепкая.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка винтовки 7.62×54R"
   },
   {
     "id": "mosin_stock",
@@ -2237,7 +2283,8 @@
     "description_ru": "Тяжёлое деревянное ложе.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ложе винтовки 7.62×54R"
   },
   {
     "id": "nr_43",
@@ -2295,7 +2342,8 @@
     "description_ru": "Длинный нарезной ствол.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол пистолета-пулемёта 7.62×25"
   },
   {
     "id": "ppsh_drum",
@@ -2308,7 +2356,8 @@
     "description_ru": "Дисковый магазин на 71 патрон.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Барабан пистолета-пулемёта 7.62×25"
   },
   {
     "id": "ppsh_receiver",
@@ -2321,7 +2370,8 @@
     "description_ru": "Штампованная стальная коробка.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка пистолета-пулемёта 7.62×25"
   },
   {
     "id": "ppsh_stock",
@@ -2334,7 +2384,8 @@
     "description_ru": "Деревянный приклад.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад пистолета-пулемёта 7.62×25"
   },
   {
     "id": "prime_shotgun",
@@ -2354,7 +2405,8 @@
       "ammo_id": "ammo_rifle",
       "ammo_per_shot": 1
     },
-    "item_class": "drop"
+    "item_class": "drop",
+    "name_generic_ru": "Усиленное ружьё 12 калибра"
   },
   {
     "id": "rare_meds_recipe",
@@ -2478,7 +2530,8 @@
     "description_ru": "Нарезной ствол под 7.62×39.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол карабина 7.62×39"
   },
   {
     "id": "sks_bolt",
@@ -2491,7 +2544,8 @@
     "description_ru": "Газоотводная система.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор карабина 7.62×39"
   },
   {
     "id": "sks_receiver",
@@ -2504,7 +2558,8 @@
     "description_ru": "Фрезерованная коробка.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка карабина 7.62×39"
   },
   {
     "id": "sks_stock",
@@ -2517,7 +2572,8 @@
     "description_ru": "Деревянный приклад с шейкой.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад карабина 7.62×39"
   },
   {
     "id": "unique_svd_blueprint",
@@ -2543,7 +2599,8 @@
     "description_ru": "Чёрный ствол с щелевым ДТК. Редкая деталь.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол автомата 5.45×39"
   },
   {
     "id": "ak74_bolt",
@@ -2556,7 +2613,8 @@
     "description_ru": "Подвижная группа с затвором.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затворная рама автомата 5.45×39"
   },
   {
     "id": "ak74_magazine",
@@ -2569,7 +2627,8 @@
     "description_ru": "Тридцатипатронный 5.45×39.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин автомата 5.45×39"
   },
   {
     "id": "ak74_receiver",
@@ -2582,7 +2641,8 @@
     "description_ru": "Фрезерованная стальная коробка.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка автомата 5.45×39"
   },
   {
     "id": "ak74_stock",
@@ -2595,7 +2655,8 @@
     "description_ru": "Складной приклад.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад автомата 5.45×39"
   },
   {
     "id": "ak_74",
@@ -2636,7 +2697,8 @@
     "description_ru": "Патрон калибра 7.62x54R. Складируется в инвентаре стеками.",
     "flavor_ru": "«Маленький, но решает многое.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Патрон 7.62×54R"
   },
   {
     "id": "f1",
@@ -2696,7 +2758,8 @@
     "recipe_id": "recipe_mod_pso1",
     "stats": {
       "mod_effect": "+20% точность на дистанции"
-    }
+    },
+    "name_generic_ru": "Оптика 4×"
   },
   {
     "id": "rpk",
@@ -2736,7 +2799,8 @@
     "description_ru": "Утяжелённый удлинённый ствол.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол ручного пулемёта 5.45×39"
   },
   {
     "id": "rpk_bipod",
@@ -2749,7 +2813,8 @@
     "description_ru": "Складные сошки для стрельбы с упора.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Сошки ручного пулемёта 5.45×39"
   },
   {
     "id": "rpk_bolt",
@@ -2762,7 +2827,8 @@
     "description_ru": "Часть для сборки оружия. Затворная рама РПК.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затворная рама ручного пулемёта 5.45×39"
   },
   {
     "id": "rpk_magazine",
@@ -2775,7 +2841,8 @@
     "description_ru": "Сорокапятипатронный или барабан.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин ручного пулемёта 5.45×39"
   },
   {
     "id": "rpk_receiver",
@@ -2788,7 +2855,8 @@
     "description_ru": "Часть для сборки оружия. Ствольная коробка РПК.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка ручного пулемёта 5.45×39"
   },
   {
     "id": "saiga_12",
@@ -2827,7 +2895,8 @@
     "description_ru": "Гладкий ствол 12 калибра.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол полуавтомата 12 калибра"
   },
   {
     "id": "saiga_bolt",
@@ -2840,7 +2909,8 @@
     "description_ru": "Часть для сборки оружия. Затворная рама Сайги-12.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затворная рама полуавтомата 12 калибра"
   },
   {
     "id": "saiga_magazine",
@@ -2853,7 +2923,8 @@
     "description_ru": "Восьмипатронный.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин полуавтомата 12 калибра"
   },
   {
     "id": "saiga_receiver",
@@ -2866,7 +2937,8 @@
     "description_ru": "Часть для сборки оружия. Ствольная коробка Сайги-12.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка полуавтомата 12 калибра"
   },
   {
     "id": "rgo",
@@ -2926,7 +2998,8 @@
     "description_ru": "Длинный точный ствол. Финал-парт.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствол снайперской винтовки 7.62×54R"
   },
   {
     "id": "svd_bolt",
@@ -2939,7 +3012,8 @@
     "description_ru": "Газоотводная система.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Затвор снайперской винтовки 7.62×54R"
   },
   {
     "id": "svd_magazine",
@@ -2952,7 +3026,8 @@
     "description_ru": "Десятипатронный 7.62×54R.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Магазин снайперской винтовки 7.62×54R"
   },
   {
     "id": "svd_receiver",
@@ -2965,7 +3040,8 @@
     "description_ru": "Фрезерованная коробка.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Ствольная коробка снайперской винтовки 7.62×54R"
   },
   {
     "id": "svd_stock",
@@ -2978,6 +3054,7 @@
     "description_ru": "Скелетный приклад с щекой.",
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "recipe_id": null,
-    "stats": {}
+    "stats": {},
+    "name_generic_ru": "Приклад снайперской винтовки 7.62×54R"
   }
 ]

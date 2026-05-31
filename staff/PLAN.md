@@ -14,7 +14,7 @@
   - **XP через бой** — Lineage-стиль, каждый моб = опыт + шанс дропа.
   - **Зоноспецифичные ресурсы** — мотивация исследовать разные зоны.
 - **Визуальный стиль:** "Military Graphic Novel" — Darkest Dungeon meets Modern Military. Контрастные тени, bold линии, painted style.
-- **Платформа:** Яндекс.Игры, HTML5, mobile-first.
+- **Платформа:** Яндекс.Игры, HTML5, текущий runtime target — landscape 1280×720.
 - **Стек:** Phaser 3 + TypeScript + Vite + Yandex Games SDK.
 
 ## 1. Главное правило
@@ -64,12 +64,15 @@
 | **M9** | Визуальный прогон + сабмит | Military Graphic Novel sprites: 9 zone backgrounds, 80 item icons, hero + mob sprites in scenes, Pillow generator | Artist + Engineer | **DONE 2026-05-26** (gate-close PR #78; 716 KB assets, 213 vitest, JS 1.5 MB) |
 | **Redesign** | Landscape + painted pass | Переход на **landscape 1280×720** (PR #84), painted-фоны/иконки (88 шт, PR #85), painted UI-хелперы (PR #87), rich-тултипы инвентаря (PR #88), fix unlock-условий 9 зон (PR #86) | Engineer + Artist | **DONE 2026-05-27** (merged в `main`) |
 | **M10** | Living Refuge | Telemetry + sceneStack + baseline (PR #90), painted world map (9 пинов), база как painted-сцена (6 хотспотов), encounter-система (31 событие), return-ритуал | Engineer + Artist + Content | **DONE 2026-05-27** (PR #90, #91 merged в `main`; см. `docs/redesign/M10-LIVING-REFUGE.md`) |
-| **M11** | *(планирование — НЕ закрыта)* | Два конкурирующих плана в `main`: `docs/redesign/M11-CORE-LOOP.md` (тиры + дерево навыков + сборка оружия) и `docs/redesign/M11-NARRATIVE-PROGRESSION.md` (сюжет/цель/личность). **Требуется решение владельца: что есть M11.** | PM + GD | **PLANNING** (PR #92, #93 — только документы) |
+| **M11** | Core Loop / progression implementation | Тиры T1–T5, дерево навыков, модульное оружие, save migration v3. Реализация в `main`; продуктовая приёмка ещё не закрыта. | Engineer + GD + Content + QA | **IMPLEMENTATION MERGED / PRODUCT ACCEPTANCE PENDING** |
+| **M12** | Combat Overhaul | Новый combat engine, durability, статусы/позиционирование/abilities. Реализация в `main`; acceptance testing обязателен перед player-facing complete. | Engineer + QA + GD | **IMPLEMENTATION MERGED / QA ACCEPTANCE PENDING** |
 
-> ### ⚠️ Текущее состояние `main` (reconciled 2026-05-29)
-> - **Ориентация: landscape 1280×720** (`Scale.FIT`). Решение зафиксировано редизайн-вехой (PR #84). Портретный таргет из ранних GDD/handoff-доков устарел.
-> - **`main`** содержит: M0–M9 + Redesign + **M10 (DONE)** + **реализация M11/M12 (влита gate-close-слиянием 2026-05-29)**.
-> - **✅ Работа M11/M12 в `main`:** combat-движок (`combatEngine.ts`, `durability.ts`), тиры T1–T5, дерево навыков на 24 узла, 187 предметов, save-миграция v3 — всё из веток `m11-integration`/`m12-integration` влито в `main`. **Combat Overhaul требует QA-финализации перед анонсом игрокам.** Открытый вопрос вехи: выбрать один из двух планов M11 (Core Loop vs Narrative).
+> ### ⚠️ Каноническое состояние `main` (reconciled 2026-05-30)
+> - **Closed:** M0–M10 and Redesign.
+> - **Implementation merged:** M11/M12 work is present in `main` (visible in repo history as merge PR #115 and follow-up docs sync), including combat engine/durability, tiers T1–T5, 24-node skill tree, 187 items, and save migration v3.
+> - **Not product-accepted yet:** M11/M12 are not player-facing complete until QA finalization. Combat Overhaul must pass acceptance testing before announcement.
+> - **Current phase / next step:** **M11/M12 QA hardening + release readiness** — run acceptance checks, verify Yandex Draft platform flows (cloud save / ads / IAP), and keep release gates green.
+> - **Orientation canon:** landscape 1280×720 (`Scale.FIT`). Older portrait/mobile-first target docs are historical/obsolete for runtime decisions.
 
 ## 4. Что НЕ делаем до релиза (Anti-scope)
 
@@ -82,7 +85,7 @@
 
 QA имеет право вето на любую попытку вставить эти фичи на любой вехе (anti-scope действует постоянно, не только до M9).
 
-> **Прецедент (2026-05-29):** в корне репозитория обнаружен `aquarium.html` — 3D-аквариум на Three.js, нарушавший правило «нет 3D» и ломавший `npm run dev` (импорт неустановленного `three`). Удалён при чистке (ветка `chore/docs-sync-and-dev-fix`).
+> **Release policy (2026-05-29):** реальные/узнаваемые названия оружия в контенте допускаются только как внутренние `name_real_ru`; runtime-показ игроку на Яндекс.Играх должен идти через `WEAPON_NAMING_MODE=generic`.
 
 ## 5. Definition of Done — общий для каждой вехи
 

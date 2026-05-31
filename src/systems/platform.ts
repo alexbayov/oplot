@@ -78,13 +78,50 @@ let cachedResult: PlatformResult = {
 
 let initPromise: Promise<PlatformResult> | null = null;
 
-export function initPlatform(): Promise<PlatformResult> {
+interface InitPlatformOptions {
+  /**
+   * How long to wait for the async Yandex Games SDK script to define
+   * globalThis.YaGames before falling back to off-platform mode.
+   */
+  sdkWaitMs?: number;
+  pollIntervalMs?: number;
+}
+
+interface YaGamesGlobal {
+  init: () => Promise<unknown>;
+}
+
+const getYaGames = (): YaGamesGlobal | undefined => {
+  return (globalThis as { YaGames?: YaGamesGlobal }).YaGames;
+};
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function waitForYaGames(
+  timeoutMs: number,
+  pollIntervalMs: number,
+): Promise<YaGamesGlobal | undefined> {
+  const immediate = getYaGames();
+  if (immediate || timeoutMs <= 0) return immediate;
+
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    await delay(pollIntervalMs);
+    const yaGames = getYaGames();
+    if (yaGames) return yaGames;
+  }
+
+  return getYaGames();
+}
+
+export function initPlatform(options: InitPlatformOptions = {}): Promise<PlatformResult> {
   if (initPromise) return initPromise;
 
+  const defaultSdkWaitMs = import.meta.env?.MODE === "test" ? 0 : 1500;
+  const { sdkWaitMs = defaultSdkWaitMs, pollIntervalMs = 50 } = options;
+
   initPromise = (async (): Promise<PlatformResult> => {
-    const yaGames = (
-      globalThis as { YaGames?: { init: () => Promise<unknown> } }
-    ).YaGames;
+    const yaGames = await waitForYaGames(sdkWaitMs, pollIntervalMs);
 
     if (!yaGames) {
       console.warn("[platform] YaGames not available");

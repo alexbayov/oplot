@@ -74,8 +74,9 @@ export function pickEncounter(
       return e;
     }
   }
-  // Fallback (numerical edge)
-  const last = pool[pool.length - 1]!;
+  // Fallback (numerical edge). pool is non-empty after the guards above.
+  const last = pool.at(-1);
+  if (!last) return null;
   pushCooldown(last.id);
   return last;
 }
@@ -125,7 +126,7 @@ export function rollOutcome(
     return { weight: 1 };
   }
   if (choice.outcomes.length === 1) {
-    return choice.outcomes[0]!;
+    return choice.outcomes[0] ?? { weight: 1 };
   }
   const total = choice.outcomes.reduce((s, o) => s + o.weight, 0);
   let roll = rng() * total;
@@ -133,5 +134,6 @@ export function rollOutcome(
     roll -= o.weight;
     if (roll <= 0) return o;
   }
-  return choice.outcomes[choice.outcomes.length - 1]!;
+  const lastOutcome = choice.outcomes.at(-1);
+  return lastOutcome ?? { weight: 1 };
 }

@@ -9,7 +9,7 @@ describe("platform", () => {
   test("fail-soft when YaGames undefined", async () => {
     vi.stubGlobal("YaGames", undefined);
     const { initPlatform, getPlatform } = await import("../platform");
-    const result = await initPlatform();
+    const result = await initPlatform({ sdkWaitMs: 0 });
     expect(result.available).toBe(false);
     expect(result.sdk).toBeNull();
     expect(result.player).toBeNull();
@@ -25,6 +25,25 @@ describe("platform", () => {
     expect(result.available).toBe(false);
     expect(result.sdk).toBeNull();
     expect(result.player).toBeNull();
+    expect(getPlatform()).toBe(result);
+  });
+
+  test("waits for async SDK script before initializing", async () => {
+    const mockSdk = {
+      features: {},
+      getPlayer: vi.fn().mockResolvedValue(null),
+    };
+    setTimeout(() => {
+      vi.stubGlobal("YaGames", {
+        init: vi.fn().mockResolvedValue(mockSdk),
+      });
+    }, 10);
+
+    const { initPlatform, getPlatform } = await import("../platform");
+    const result = await initPlatform({ sdkWaitMs: 100, pollIntervalMs: 5 });
+
+    expect(result.available).toBe(true);
+    expect(result.sdk).toBe(mockSdk);
     expect(getPlatform()).toBe(result);
   });
 

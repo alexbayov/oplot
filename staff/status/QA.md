@@ -1,12 +1,23 @@
 # Status: QA
 
-**Текущая веха:** M8b — Monetization
-**Последнее действие:** M8b Spec Review → APPROVE (2026-05-26)
-**Статус:** APPROVED (M8b Spec)
-**Дата:** 2026-05-19
-**Текущий шаг:** done (ready for PM merge)
+## Current status (2026-05-30)
 
-## Текущий gate
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** own Combat Overhaul acceptance and release-readiness veto; verify that implementation merged to `main` is actually product-acceptable.
+- **Immediate next actions:**
+  1. Execute the Combat Overhaul checklist in `staff/status/M11-M12.md`.
+  2. Run regression coverage for sortie → combat → loot → return → craft/base after M11/M12 changes.
+  3. Verify Yandex Draft platform flows: SDK init, cloud save, rewarded/interstitial/banner ads, IAP/unprocessed purchases, LoadingAPI/orientation.
+  4. Report PASS/REWORK with exact blockers; do not approve release announcement until checklist passes.
+- **Blockers / risks:** M12 Combat Overhaul is not accepted yet; any critical combat regression blocks release announcement.
+
+## Combat Overhaul acceptance checklist
+
+See canonical milestone artifact: `staff/status/M11-M12.md`.
+
+## Archive / history below
+
+## Архив: M2/M8 QA reports
 
 QA Acceptance по M2 выполняется на ветке `qa/m2-acceptance` от `m2-integration`.
 

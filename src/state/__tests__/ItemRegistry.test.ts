@@ -96,9 +96,15 @@ describe("ItemRegistry", () => {
     expect(getItem("nonexistent")).toBeNull();
   });
 
-  test("itemName respects WEAPON_NAMING_MODE", async () => {
-    // Default is "real"
-    expect(itemName(samplePM)).toBe("Пистолет Макарова");
+  test("itemName uses generic release-safe name by default", async () => {
+    // Release default is generic to avoid real TM names on Yandex Games.
+    expect(itemName(samplePM)).toBe("9-мм пистолет");
+  });
+
+  test("itemName falls back to safe generic text when generic name is missing", () => {
+    const missingGeneric = { ...samplePM, name_generic_ru: "" };
+    expect(itemName(missingGeneric)).toBe("Оружие T2");
+    expect(itemName(missingGeneric)).not.toContain("Пистолет Макарова");
   });
 
   test("createWeaponInstance requires all parts", () => {
@@ -162,6 +168,29 @@ describe("ItemRegistry", () => {
     expect(stats?.damageMin).toBe(4); // 5 - 1
     expect(stats?.damageMax).toBe(5); // 6 - 1
     expect(stats?.noise).toBe("silent");
+  });
+
+  test("adapted legacy weapon without generic name uses safe fallback", () => {
+    const legacy: LegacyItem = {
+      id: "legacy_pm",
+      name_ru: "ПМ",
+      type: "weapon_melee",
+      tier: 2,
+      zone_origin: "forest",
+      weight_kg: 0.7,
+      description_ru: "Legacy weapon without name_generic_ru.",
+      flavor_ru: "",
+      recipe_id: null,
+      stats: {
+        damage_min: 4,
+        damage_max: 6,
+        attack_speed: 1,
+        noise: "high",
+      },
+    };
+    const adapted = adaptLegacyItem(legacy);
+    expect(itemName(adapted)).toBe("Оружие T2");
+    expect(itemName(adapted)).not.toContain("ПМ");
   });
 
   test("adaptLegacyItem converts legacy weapon to CraftWeapon", () => {

@@ -7,13 +7,16 @@ export const MAX_LEVEL = 5;
 /**
  * M11.0 — Weapon Naming Mode.
  *
- * "real"    — реалистичные названия («Пистолет Макарова», «АК-74»).
- * "generic" — обобщённые («9-мм пистолет», «5.45 автомат»).
+ * "generic" — release/Yandex-safe default: обобщённые названия
+ *             без реальных торговых марок («9-мм пистолет», «5.45 автомат»).
+ * "real"    — optional dev/internal mode для реалистичных названий
+ *             («Пистолет Макарова», «АК-74»); включать только если владелец
+ *             проекта явно разрешил player-facing реальные названия.
  *
- * Используется ItemRegistry.itemName(). На случай если Яндекс.Игры
- * заблокирует реалистичные названия — флипаем без правок контента.
+ * Используется ItemRegistry.itemName(). Для релиза на Яндекс.Играх
+ * default обязан оставаться "generic".
  */
-export const WEAPON_NAMING_MODE: "real" | "generic" = "real";
+export const WEAPON_NAMING_MODE: "real" | "generic" = "generic";
 
 /**
  * M11.0 — Текущая версия save-snapshot. Используется migrations.

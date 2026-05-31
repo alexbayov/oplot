@@ -37,9 +37,9 @@ describe("pickEncounter", () => {
   test("filters by zone", () => {
     const all = [E("a", ["forest"]), E("b", ["city"]), E("c", ["*"])];
     const picked = pickEncounter(all, "forest", () => 0.99);
-    expect(picked).not.toBeNull();
+    expect(picked?.id).toBeDefined();
     // Should be either 'a' or 'c' (forest or universal), not 'b' (city only)
-    expect(["a", "c"]).toContain(picked!.id);
+    expect(["a", "c"]).toContain(picked?.id);
   });
 
   test("returns same encounter when only one matches", () => {
@@ -51,11 +51,13 @@ describe("pickEncounter", () => {
   test("cooldown skips recently shown encounter", () => {
     const all = [E("a"), E("b"), E("c")];
     // Pick deterministically: with rng=0, picks first
-    const first = pickEncounter(all, "*", () => 0)!;
-    expect(getRecentEncounterIds()).toContain(first.id);
+    const first = pickEncounter(all, "*", () => 0);
+    expect(first).not.toBeNull();
+    expect(getRecentEncounterIds()).toContain(first?.id);
     // Next pick should NOT be the same
-    const second = pickEncounter(all, "*", () => 0)!;
-    expect(second.id).not.toBe(first.id);
+    const second = pickEncounter(all, "*", () => 0);
+    expect(second).not.toBeNull();
+    expect(second?.id).not.toBe(first?.id);
   });
 
   test("cooldown ignored when pool exhausted", () => {

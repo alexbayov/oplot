@@ -1,4 +1,18 @@
-# Content Status — M7
+# Status: Content
+
+## Current status (2026-05-30)
+
+- **Current phase:** M11/M12 QA hardening + release readiness.
+- **Role responsibility:** support QA by validating content data used by M11/M12 runtime: item names/classes, tiers, drops, mobs, encounters, recipes, and release-safe generic display names.
+- **Immediate next actions:**
+  1. Check QA-reported missing/invalid content IDs in items, mobs, recipes, zones, encounters.
+  2. Verify M11/M12 item/content counts and naming are consistent with release-safe Yandex requirements.
+  3. Avoid adding new content until QA acceptance blockers are resolved.
+- **Blockers / risks:** invalid content references can block combat/loot acceptance; real/recognizable weapon names must stay hidden from runtime release display.
+
+## Archive / history below
+
+## Архив: M7 content work
 
 Branch: `m7/content`
 Base: `m7-integration`
