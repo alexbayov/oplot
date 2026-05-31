@@ -36,10 +36,19 @@ describe("combatAp", () => {
     expect(formatCombatActionDisabledReason("no_valid_target")).toBe("нет цели");
   });
 
-  test("reports unavailable actions without mutating AP state", () => {
+  test("reports unavailable preview actions without mutating AP state", () => {
     const ap = createCombatApState();
 
+    expect(getCombatActionDisabledReason({ action: "attack", currentAp: ap.current, available: false })).toBe(
+      "action_unavailable",
+    );
+    expect(getCombatActionDisabledReason({ action: "cover", currentAp: ap.current, available: false })).toBe(
+      "action_unavailable",
+    );
     expect(getCombatActionDisabledReason({ action: "heal", currentAp: ap.current, available: false })).toBe(
+      "action_unavailable",
+    );
+    expect(getCombatActionDisabledReason({ action: "retreat", currentAp: ap.current, available: false })).toBe(
       "action_unavailable",
     );
     expect(formatCombatActionDisabledReason("action_unavailable")).toBe("действие недоступно");
