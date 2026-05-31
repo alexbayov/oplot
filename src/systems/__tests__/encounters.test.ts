@@ -38,8 +38,9 @@ describe("pickEncounter", () => {
     const all = [E("a", ["forest"]), E("b", ["city"]), E("c", ["*"])];
     const picked = pickEncounter(all, "forest", () => 0.99);
     expect(picked).not.toBeNull();
+    if (!picked) throw new Error("expected a zone-matching encounter");
     // Should be either 'a' or 'c' (forest or universal), not 'b' (city only)
-    expect(["a", "c"]).toContain(picked!.id);
+    expect(["a", "c"]).toContain(picked.id);
   });
 
   test("returns same encounter when only one matches", () => {
@@ -51,10 +52,14 @@ describe("pickEncounter", () => {
   test("cooldown skips recently shown encounter", () => {
     const all = [E("a"), E("b"), E("c")];
     // Pick deterministically: with rng=0, picks first
-    const first = pickEncounter(all, "*", () => 0)!;
+    const first = pickEncounter(all, "*", () => 0);
+    expect(first).not.toBeNull();
+    if (!first) throw new Error("expected first encounter");
     expect(getRecentEncounterIds()).toContain(first.id);
     // Next pick should NOT be the same
-    const second = pickEncounter(all, "*", () => 0)!;
+    const second = pickEncounter(all, "*", () => 0);
+    expect(second).not.toBeNull();
+    if (!second) throw new Error("expected second encounter");
     expect(second.id).not.toBe(first.id);
   });
 
