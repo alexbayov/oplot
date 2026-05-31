@@ -18,6 +18,12 @@ import {
 import { computePerkModifiers } from "../systems/perks";
 import { generateMobLoot } from "../systems/loot";
 import { computeGasDamage } from "../systems/gasZone";
+import {
+  DEFAULT_PLAYER_AP,
+  formatCombatActionDisabledReason,
+  getCombatActionCost,
+  getCombatActionDisabledReason,
+} from "../systems/combatAp";
 import { gainXP } from "../systems/xp";
 import { tickRadioOnReturn } from "../systems/radio";
 import { track } from "../systems/telemetry";
@@ -76,6 +82,9 @@ export class CombatScene extends Phaser.Scene {
   private enemyPanel?: Phaser.GameObjects.Text;
   private buttonsContainer: Phaser.GameObjects.Container[] = [];
   private phaseLabel?: Phaser.GameObjects.Text;
+  private currentAp = DEFAULT_PLAYER_AP;
+  private apLabel?: Phaser.GameObjects.Text;
+  private actionPreviewLabel?: Phaser.GameObjects.Text;
 
   public constructor() {
     super("CombatScene");
@@ -95,6 +104,9 @@ export class CombatScene extends Phaser.Scene {
     this.heroPanel = undefined;
     this.enemyPanel = undefined;
     this.logText = undefined;
+    this.currentAp = DEFAULT_PLAYER_AP;
+    this.apLabel = undefined;
+    this.actionPreviewLabel = undefined;
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
@@ -167,12 +179,30 @@ export class CombatScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
+    const actionY = combat.actionBarY;
+
     // Static panels for hero/enemy info (heroPanel uses createSubtitle, so created with text only)
     this.heroPanel = createSubtitle(this, 600, "", 180);
     this.enemyPanel = createSubtitle(this, 600, "", W - 180);
+    this.apLabel = this.add
+      .text(CX, actionY - 52, "", {
+        align: "center",
+        color: "#E8D8A8",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "15px",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    this.actionPreviewLabel = this.add
+      .text(CX, actionY - 28, "", {
+        align: "center",
+        color: "#C8C0B0",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+      })
+      .setOrigin(0.5);
 
     // ── Action bar (bottom, 4 buttons in row) ───────────────────
-    const actionY = combat.actionBarY;
     const btnW = 200;
     const gap = 18;
     const actions = 4;
@@ -243,6 +273,7 @@ export class CombatScene extends Phaser.Scene {
       const sortie = GameState.currentSortie;
       if (sortie) sortie.cover_active = false;
       this.state = "awaiting_hero";
+      this.currentAp = DEFAULT_PLAYER_AP;
       this.updateDisplay();
       return;
     }
@@ -678,6 +709,58 @@ export class CombatScene extends Phaser.Scene {
     if (bossInst && this.phaseLabel) {
       this.phaseLabel.setText(`Фаза ${bossInst.state.phase}`);
     }
+
+    this.updateActionPreview();
+  }
+
+  private updateActionPreview(): void {
+    if (!this.apLabel || !this.actionPreviewLabel) return;
+    const apPips = "●".repeat(this.currentAp).padEnd(DEFAULT_PLAYER_AP, "○");
+    this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
+
+    const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
+    const player = GameState.player;
+    const items = GameState.data.items;
+    const weaponItem = items[player.equipped_weapon_id];
+    const isHeroAwaiting = this.state === "awaiting_hero";
+    const hasMedkit = player.backpack.some((stack) => {
+      const item = items[stack.item_id];
+      return Boolean(item && item.type === "consumable" && item.stats.effect_type === "heal" && stack.count > 0);
+    });
+
+    const previewAction = (
+      label: string,
+      action: "attack" | "cover" | "heal" | "retreat",
+      reason = getCombatActionDisabledReason({ action, currentAp: this.currentAp, available: isHeroAwaiting }),
+      readyText = "готово",
+    ): string => {
+      const cost = getCombatActionCost(action);
+      const suffix = reason ? formatCombatActionDisabledReason(reason) : readyText;
+      return `${label} ${cost} AP: ${suffix}`;
+    };
+
+    const attackReason = getCombatActionDisabledReason({
+      action: "attack",
+      currentAp: this.currentAp,
+      hasValidTarget: Boolean(firstAlive),
+      available: isHeroAwaiting && Boolean(weaponItem),
+    });
+    const healReason = getCombatActionDisabledReason({
+      action: "heal",
+      currentAp: this.currentAp,
+      hasMedkit,
+      available: isHeroAwaiting,
+    });
+    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}`;
+
+    this.actionPreviewLabel.setText(
+      [
+        previewAction("Атака", "attack", attackReason, attackReady),
+        previewAction("Укрытие", "cover"),
+        previewAction("Аптечка", "heal", healReason),
+        previewAction("Отступ", "retreat"),
+      ].join(" · "),
+    );
   }
 
   private log(message: string): void {
