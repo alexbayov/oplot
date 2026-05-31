@@ -720,23 +720,46 @@ export class CombatScene extends Phaser.Scene {
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     const player = GameState.player;
-    const weaponItem = GameState.data.items[player.equipped_weapon_id];
+    const items = GameState.data.items;
+    const weaponItem = items[player.equipped_weapon_id];
+    const isHeroAwaiting = this.state === "awaiting_hero";
+    const hasMedkit = player.backpack.some((stack) => {
+      const item = items[stack.item_id];
+      return Boolean(item && item.type === "consumable" && item.stats.effect_type === "heal" && stack.count > 0);
+    });
+
+    const previewAction = (
+      label: string,
+      action: "attack" | "cover" | "heal" | "retreat",
+      reason = getCombatActionDisabledReason({ action, currentAp: this.currentAp, available: isHeroAwaiting }),
+      readyText = "готово",
+    ): string => {
+      const cost = getCombatActionCost(action);
+      const suffix = reason ? formatCombatActionDisabledReason(reason) : readyText;
+      return `${label} ${cost} AP: ${suffix}`;
+    };
+
     const attackReason = getCombatActionDisabledReason({
       action: "attack",
       currentAp: this.currentAp,
       hasValidTarget: Boolean(firstAlive),
-      available: this.state === "awaiting_hero" && Boolean(weaponItem),
+      available: isHeroAwaiting && Boolean(weaponItem),
     });
-    const attackCost = getCombatActionCost("attack");
-    const coverCost = getCombatActionCost("cover");
-    const healCost = getCombatActionCost("heal");
-    const retreatCost = getCombatActionCost("retreat");
-    const attackText = attackReason
-      ? `Атака ${attackCost} AP: ${formatCombatActionDisabledReason(attackReason)}`
-      : `Атака ${attackCost} AP: цель ${firstAlive?.mob.name_ru ?? "—"}`;
+    const healReason = getCombatActionDisabledReason({
+      action: "heal",
+      currentAp: this.currentAp,
+      hasMedkit,
+      available: isHeroAwaiting,
+    });
+    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}`;
 
     this.actionPreviewLabel.setText(
-      `${attackText} · Укрытие ${coverCost} · Аптечка ${healCost} · Отступ ${retreatCost}`,
+      [
+        previewAction("Атака", "attack", attackReason, attackReady),
+        previewAction("Укрытие", "cover"),
+        previewAction("Аптечка", "heal", healReason),
+        previewAction("Отступ", "retreat"),
+      ].join(" · "),
     );
   }
 

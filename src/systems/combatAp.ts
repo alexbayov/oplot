@@ -2,7 +2,7 @@ export const DEFAULT_PLAYER_AP = 3;
 
 export type CombatActionId = "attack" | "aimed_shot" | "cover" | "heal" | "retreat" | "reload";
 
-export type CombatActionDisabledReason = "not_enough_ap" | "no_valid_target" | "action_unavailable";
+export type CombatActionDisabledReason = "not_enough_ap" | "no_valid_target" | "action_unavailable" | "no_medkit";
 
 const ACTION_COSTS: Record<CombatActionId, number> = {
   attack: 1,
@@ -22,6 +22,7 @@ export interface CombatActionAvailabilityInput {
   readonly action: CombatActionId;
   readonly currentAp: number;
   readonly hasValidTarget?: boolean;
+  readonly hasMedkit?: boolean;
   readonly available?: boolean;
 }
 
@@ -38,10 +39,12 @@ export const getCombatActionDisabledReason = ({
   action,
   currentAp,
   hasValidTarget = true,
+  hasMedkit = true,
   available = true,
 }: CombatActionAvailabilityInput): CombatActionDisabledReason | null => {
   if (!available) return "action_unavailable";
   if ((action === "attack" || action === "aimed_shot") && !hasValidTarget) return "no_valid_target";
+  if (action === "heal" && !hasMedkit) return "no_medkit";
   if (currentAp < getCombatActionCost(action)) return "not_enough_ap";
   return null;
 };
@@ -54,5 +57,7 @@ export const formatCombatActionDisabledReason = (reason: CombatActionDisabledRea
       return "нет цели";
     case "action_unavailable":
       return "действие недоступно";
+    case "no_medkit":
+      return "нет аптечки";
   }
 };

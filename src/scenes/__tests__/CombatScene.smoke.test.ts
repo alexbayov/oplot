@@ -418,6 +418,8 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "ОТСТУП")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
   });
 
   test("renders AP preview shell without changing seeded combat state", () => {
@@ -430,9 +432,10 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.mobs[0]?.state.hp).toBe(20);
     expect(harness.internals.logLines).toEqual([]);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
-    expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1"))).toBe(true);
-    expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1"))).toBe(true);
-    expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1 AP: нет аптечки"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1 AP: готово"))).toBe(false);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
   });
 
   test("hero attack path damages the current target and queues turn resolution", () => {

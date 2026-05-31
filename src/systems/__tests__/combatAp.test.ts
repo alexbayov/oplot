@@ -45,4 +45,9 @@ describe("combatAp", () => {
     expect(formatCombatActionDisabledReason("action_unavailable")).toBe("действие недоступно");
     expect(ap).toEqual({ current: 3, max: 3 });
   });
+
+  test("reports missing medkit for heal preview", () => {
+    expect(getCombatActionDisabledReason({ action: "heal", currentAp: 3, hasMedkit: false })).toBe("no_medkit");
+    expect(formatCombatActionDisabledReason("no_medkit")).toBe("нет аптечки");
+  });
 });
