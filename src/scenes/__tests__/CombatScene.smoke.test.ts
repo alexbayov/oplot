@@ -416,6 +416,23 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "УКРЫТИЕ")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "АПТЕЧКА")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "ОТСТУП")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
+  });
+
+  test("renders AP preview shell without changing seeded combat state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    expect(GameState.player.hp).toBe(80);
+    expect(GameState.player.backpack).toEqual([]);
+    expect(GameState.currentSortie?.cover_active).toBe(false);
+    expect(harness.internals.mobs[0]?.state.hp).toBe(20);
+    expect(harness.internals.logLines).toEqual([]);
+    expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2"))).toBe(true);
   });
 
   test("hero attack path damages the current target and queues turn resolution", () => {
