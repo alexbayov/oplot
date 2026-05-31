@@ -197,6 +197,7 @@ interface CombatSceneInternals {
   onHeroHeal: () => void;
   onHeroRetreat: () => void;
   checkEnd: () => boolean;
+  updateActionPreview: () => void;
   mobs: { state: { hp: number }; mob: Mob }[];
   state: string;
   logLines: string[];
@@ -436,6 +437,19 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1 AP: нет аптечки"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1 AP: готово"))).toBe(false);
     expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
+  });
+
+  test("marks preview actions unavailable outside the hero input state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.state = "resolving_mobs";
+    harness.internals.updateActionPreview();
+
+    expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: действие недоступно"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: действие недоступно"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Аптечка 1 AP: действие недоступно"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: действие недоступно"))).toBe(true);
   });
 
   test("hero attack path damages the current target and queues turn resolution", () => {
