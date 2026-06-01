@@ -380,3 +380,22 @@ export const computeReloadPlan = (input: ReloadPlanInput): ReloadPlanResult => {
     fallbackReason: specResult.spec.fallbackReason,
   };
 };
+
+export const getAmmoDisabledReasonLabel = (reason: AmmoDisabledReason): string => {
+  switch (reason) {
+    case "no_ammo_id":
+      return "нет данных о патроне";
+    case "no_reserve_ammo":
+      return "нет патронов в запасе";
+    case "magazine_full":
+      return "магазин полон";
+    case "invalid_capacity":
+      return "неизвестна ёмкость магазина";
+    case "not_ranged_weapon":
+      return "не огнестрельное оружие";
+    case "unsupported_weapon_metadata":
+      return "неполные данные";
+    default:
+      return "неизвестная ошибка";
+  }
+};

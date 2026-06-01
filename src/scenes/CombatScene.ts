@@ -38,6 +38,13 @@ import { applyLootLoss, computeWeight } from "../systems/weight";
 import { saveToCloud } from "../systems/cloudSave";
 import { showRewardedVideo } from "../systems/ads";
 import { hideBanner } from "../systems/banner";
+import {
+  getWeaponAmmoSpec,
+  getReserveAmmoCount,
+  computeAmmoDisabledReason,
+  getAmmoDisabledReasonLabel,
+  type AmmoWeaponLike,
+} from "../systems/combatAmmo";
 import type { ConsumableItem, Mob } from "../types";
 import {
   createButton,
@@ -86,6 +93,7 @@ export class CombatScene extends Phaser.Scene {
   private currentAp = DEFAULT_PLAYER_AP;
   private apLabel?: Phaser.GameObjects.Text;
   private actionPreviewLabel?: Phaser.GameObjects.Text;
+  private ammoPreviewLabel?: Phaser.GameObjects.Text;
 
   public constructor() {
     super("CombatScene");
@@ -108,6 +116,7 @@ export class CombatScene extends Phaser.Scene {
     this.currentAp = DEFAULT_PLAYER_AP;
     this.apLabel = undefined;
     this.actionPreviewLabel = undefined;
+    this.ammoPreviewLabel = undefined;
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
@@ -198,6 +207,14 @@ export class CombatScene extends Phaser.Scene {
       .text(CX, actionY - 28, "", {
         align: "center",
         color: "#C8C0B0",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+      })
+      .setOrigin(0.5);
+    this.ammoPreviewLabel = this.add
+      .text(CX, actionY - 70, "", {
+        align: "center",
+        color: "#A8B8C8",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
       })
@@ -763,6 +780,51 @@ export class CombatScene extends Phaser.Scene {
         previewAction("Отступ", "retreat"),
       ].join(" · "),
     );
+
+    if (this.ammoPreviewLabel) {
+      if (!weaponItem) {
+        this.ammoPreviewLabel.setText("Оружие ближнего боя · Перезарядка: не огнестрельное оружие");
+      } else {
+        const specResult = getWeaponAmmoSpec(weaponItem as unknown as AmmoWeaponLike);
+        if (!specResult.ok) {
+          const reasonLabel = getAmmoDisabledReasonLabel(specResult.reason);
+          if (specResult.reason === "not_ranged_weapon") {
+            this.ammoPreviewLabel.setText(`Оружие ближнего боя · Перезарядка: ${reasonLabel}`);
+          } else {
+            this.ammoPreviewLabel.setText(`Магазин: не подключён · Перезарядка: ${reasonLabel}`);
+          }
+        } else {
+          const spec = specResult.spec;
+          const ammoItem = items[spec.ammoId];
+          const ammoName = ammoItem?.name_ru ?? spec.ammoId;
+          const reserve = getReserveAmmoCount(player.backpack, spec.ammoId);
+          
+          const disabledReason = computeAmmoDisabledReason({
+            weapon: weaponItem as unknown as AmmoWeaponLike,
+            backpack: player.backpack,
+            currentMagazine: 0,
+            magazineCapacity: spec.magazineCapacity,
+          });
+
+          const capacityStr = spec.magazineCapacity !== null ? String(spec.magazineCapacity) : "неизвестна";
+          const magazinePreview = `Магазин: не подключён · Ёмкость: ${capacityStr}`;
+          
+          let reloadStatus: string;
+          if (disabledReason) {
+            reloadStatus = getAmmoDisabledReasonLabel(disabledReason);
+          } else {
+            reloadStatus = "предпросмотр";
+          }
+          if (spec.fallbackReason === "unsupported_weapon_metadata") {
+            reloadStatus += " (неполные данные)";
+          }
+
+          this.ammoPreviewLabel.setText(
+            `${magazinePreview} · Патроны: ${ammoName} · Запас: ${reserve} · Перезарядка: ${reloadStatus}`
+          );
+        }
+      }
+    }
   }
 
   private log(message: string): void {

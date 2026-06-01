@@ -7,6 +7,7 @@ import {
   getReserveAmmoCount,
   getWeaponAmmoSpec,
   normalizeCaliberAmmoId,
+  getAmmoDisabledReasonLabel,
   type AmmoStackLike,
   type AmmoWeaponLike,
 } from "../combatAmmo";
@@ -538,6 +539,17 @@ describe("combatAmmo", () => {
       ok: true,
       spec: { magazineCapacity: 10 },
     });
+  });
+
+  test("getAmmoDisabledReasonLabel maps reasons to honest Russian labels", () => {
+    expect(getAmmoDisabledReasonLabel("no_ammo_id")).toBe("нет данных о патроне");
+    expect(getAmmoDisabledReasonLabel("no_reserve_ammo")).toBe("нет патронов в запасе");
+    expect(getAmmoDisabledReasonLabel("magazine_full")).toBe("магазин полон");
+    expect(getAmmoDisabledReasonLabel("invalid_capacity")).toBe("неизвестна ёмкость магазина");
+    expect(getAmmoDisabledReasonLabel("not_ranged_weapon")).toBe("не огнестрельное оружие");
+    expect(getAmmoDisabledReasonLabel("unsupported_weapon_metadata")).toBe("неполные данные");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(getAmmoDisabledReasonLabel("unknown" as any)).toBe("неизвестная ошибка");
   });
 });
 
