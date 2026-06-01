@@ -91,10 +91,20 @@ const readString = (value: unknown): string | null => {
 
 const hasStringField = (value: unknown): boolean => typeof value === "string";
 
+const KNOWN_CALIBER_AMMO_IDS: Record<string, string> = {
+  "9x18": "ammo_9x18",
+  "12g": "ammo_12g",
+  "7.62x39": "ammo_762x39",
+  "5.45x39": "ammo_545",
+  "7.62x54r": "ammo_762x54r",
+  ".308": "ammo_308",
+};
+
 export const normalizeCaliberAmmoId = (caliber: unknown): string | null => {
-  const value = readString(caliber);
+  const value = readString(caliber)?.toLowerCase();
   if (!value) return null;
-  return value.startsWith("ammo_") ? value : `ammo_${value}`;
+  if (value.startsWith("ammo_")) return value;
+  return KNOWN_CALIBER_AMMO_IDS[value] ?? null;
 };
 
 const readMagazineCapacity = (weapon: AmmoWeaponLike): number | null =>

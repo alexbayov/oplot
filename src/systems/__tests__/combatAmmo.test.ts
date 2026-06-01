@@ -95,11 +95,48 @@ describe("combatAmmo", () => {
     });
   });
 
-  test("normalizes caliber strings into backpack ammo ids conservatively", () => {
+  test("normalizes known caliber strings into backpack ammo ids conservatively", () => {
     expect(normalizeCaliberAmmoId("9x18")).toBe("ammo_9x18");
     expect(normalizeCaliberAmmoId("12g")).toBe("ammo_12g");
+    expect(normalizeCaliberAmmoId("7.62x39")).toBe("ammo_762x39");
+    expect(normalizeCaliberAmmoId("5.45x39")).toBe("ammo_545");
+    expect(normalizeCaliberAmmoId("7.62x54R")).toBe("ammo_762x54r");
+    expect(normalizeCaliberAmmoId(".308")).toBe("ammo_308");
+    expect(normalizeCaliberAmmoId(" 7.62x54r ")).toBe("ammo_762x54r");
     expect(normalizeCaliberAmmoId("ammo_9x18")).toBe("ammo_9x18");
-    expect(normalizeCaliberAmmoId(" 9x18 ")).toBe("ammo_9x18");
+    expect(normalizeCaliberAmmoId("AMMO_762X39")).toBe("ammo_762x39");
+    expect(normalizeCaliberAmmoId("unknown_caliber")).toBeNull();
+  });
+
+  test("computes reload for M11-shaped mapped caliber without naive ammo id fallback", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "m11_drop_rifle",
+      itemClass: "drop",
+      caliber: "7.62x39",
+      magazineSize: 30,
+    };
+
+    expect(computeReloadPlan({ weapon, backpack: backpack(20, "ammo_762x39"), currentMagazine: 10 })).toMatchObject({
+      ok: true,
+      ammoId: "ammo_762x39",
+      reloadAmount: 20,
+      reserveAmmoConsumed: 20,
+      resultingMagazine: 30,
+      magazineCapacity: 30,
+    });
+  });
+
+  test("unknown M11 caliber returns no ammo id instead of false no-reserve result", () => {
+    const weapon: AmmoWeaponLike = {
+      itemClass: "drop",
+      caliber: "4.6x30",
+      magazineSize: 20,
+    };
+
+    expect(getWeaponAmmoSpec(weapon)).toEqual({ ok: false, reason: "no_ammo_id" });
+    expect(computeAmmoDisabledReason({ weapon, backpack: backpack(20, "ammo_4.6x30"), currentMagazine: 0 })).toBe(
+      "no_ammo_id",
+    );
   });
 
   test("blank caliber metadata still reports missing ammo id for ranged-like weapons", () => {
