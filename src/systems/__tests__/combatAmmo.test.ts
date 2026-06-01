@@ -8,6 +8,7 @@ import {
   getWeaponAmmoSpec,
   normalizeCaliberAmmoId,
   getAmmoDisabledReasonLabel,
+  computeMagazineShotPlan,
   type AmmoStackLike,
   type AmmoWeaponLike,
 } from "../combatAmmo";
@@ -550,6 +551,137 @@ describe("combatAmmo", () => {
     expect(getAmmoDisabledReasonLabel("unsupported_weapon_metadata")).toBe("неполные данные");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect(getAmmoDisabledReasonLabel("unknown" as any)).toBe("неизвестная ошибка");
+  });
+
+  test("computeMagazineShotPlan maps valid shot plans correctly", () => {
+    const weapon = rangedWeapon();
+    const plan = computeMagazineShotPlan({ weapon, currentMagazine: 8 });
+    expect(plan).toEqual({
+      ok: true,
+      ammoCost: 1,
+      resultingMagazine: 7,
+    });
+  });
+
+  test("computeMagazineShotPlan exactly equal capacity resulting in zero", () => {
+    const weapon = rangedWeapon({ stats: { ammo_id: "ammo_9x18", ammo_per_shot: 2, magazine_size: 8 } });
+    const plan = computeMagazineShotPlan({ weapon, currentMagazine: 2 });
+    expect(plan).toEqual({
+      ok: true,
+      ammoCost: 2,
+      resultingMagazine: 0,
+    });
+  });
+
+  test("computeMagazineShotPlan empty magazine logs reason", () => {
+    const weapon = rangedWeapon();
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 0 })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: -3 })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+  });
+
+  test("computeMagazineShotPlan insufficient ammo returns reason", () => {
+    const weapon = rangedWeapon({ stats: { ammo_id: "ammo_9x18", ammo_per_shot: 3, magazine_size: 8 } });
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 2 })).toEqual({
+      ok: false,
+      reason: "insufficient_magazine_ammo",
+      ammoCost: 3,
+    });
+  });
+
+  test("computeMagazineShotPlan invalid currentMagazine inputs are handled fail-safe", () => {
+    const weapon = rangedWeapon();
+    
+    // Fractional values
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 1.5 })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+
+    // NaN
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: NaN })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+
+    // Infinity
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: Infinity })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+
+    // Non-number types (e.g. string, object)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: "5" as any })).toEqual({
+      ok: false,
+      reason: "empty_magazine",
+      ammoCost: 1,
+    });
+  });
+
+  test("computeMagazineShotPlan melee weapon returns not_ranged_weapon", () => {
+    const melee: AmmoWeaponLike = { id: "knife", type: "weapon_melee" };
+    expect(computeMagazineShotPlan({ weapon: melee, currentMagazine: 5 })).toEqual({
+      ok: false,
+      reason: "not_ranged_weapon",
+    });
+  });
+
+  test("computeMagazineShotPlan ranged weapon with missing ammo metadata returns no_ammo_id", () => {
+    // Explicit ranged signal, but no caliber or stats.ammo_id
+    const weapon: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      stats: {
+        ammo_per_shot: 1,
+        magazine_size: 8,
+      },
+    };
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 5 })).toEqual({
+      ok: false,
+      reason: "no_ammo_id",
+    });
+  });
+
+  test("computeMagazineShotPlan invalid capacity returns invalid_capacity", () => {
+    const weapon = rangedWeapon({ stats: { ammo_id: "ammo_9x18", ammo_per_shot: 1, magazine_size: 0 } });
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 5 })).toEqual({
+      ok: false,
+      reason: "invalid_capacity",
+    });
+  });
+
+  test("computeMagazineShotPlan respects explicit ammo_per_shot > 1", () => {
+    const weapon = rangedWeapon({ stats: { ammo_id: "ammo_9x18", ammo_per_shot: 3, magazine_size: 10 } });
+    expect(computeMagazineShotPlan({ weapon, currentMagazine: 5 })).toEqual({
+      ok: true,
+      ammoCost: 3,
+      resultingMagazine: 2,
+    });
+  });
+
+  test("computeMagazineShotPlan does not mutate the weapon input object", () => {
+    const statsObj = { ammo_id: "ammo_9x18", ammo_per_shot: 1, magazine_size: 8 };
+    const weapon = rangedWeapon({ stats: statsObj });
+    const originalString = JSON.stringify(weapon);
+
+    computeMagazineShotPlan({ weapon, currentMagazine: 5 });
+
+    expect(JSON.stringify(weapon)).toBe(originalString);
+  });
+
+  test("labels for new reasons are correct", () => {
+    expect(getAmmoDisabledReasonLabel("empty_magazine")).toBe("магазин пуст");
+    expect(getAmmoDisabledReasonLabel("insufficient_magazine_ammo")).toBe("не хватает патронов в магазине");
   });
 });
 
