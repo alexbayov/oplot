@@ -233,6 +233,40 @@ const knife = makeItem({
   },
 });
 
+const pmPistol = makeItem({
+  id: "pm",
+  name_ru: "Пистолет ПМ",
+  type: "weapon_ranged",
+  tier: 2,
+  zone_origin: "test",
+  weight_kg: 0.8,
+  description_ru: "Пистолет Макарова",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {
+    damage_min: 5,
+    damage_max: 7,
+    attack_speed: 80,
+    noise: "high",
+    ammo_id: "ammo_9x18",
+    ammo_per_shot: 1,
+    magazine_size: 8,
+  },
+} as unknown as Item);
+
+const ammo9x18 = makeItem({
+  id: "ammo_9x18",
+  name_ru: "Патроны 9x18",
+  type: "resource",
+  tier: 1,
+  zone_origin: "test",
+  weight_kg: 0.01,
+  description_ru: "Патроны 9x18мм",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {},
+});
+
 const armor = makeItem({
   id: "jacket",
   name_ru: "Куртка",
@@ -309,6 +343,8 @@ const seedGameState = (backpack: InventoryStack[] = []): void => {
       [knife.id]: knife,
       [armor.id]: armor,
       [bandage.id]: bandage,
+      [pmPistol.id]: pmPistol,
+      [ammo9x18.id]: ammo9x18,
     },
     mobs: { marauder: testMob() },
     zones: { forest: zone },
@@ -567,5 +603,38 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "Второй шанс (реклама)")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "Сдаться")).toBe(true);
     expect(harness.starts).toEqual([]);
+  });
+
+  test("renders melee weapon ammo preview and reload status correctly", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Оружие ближнего боя · Перезарядка: не огнестрельное оружие";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("renders ranged weapon with reserve ammo preview correctly", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "pm";
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: предпросмотр";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("renders ranged weapon with no reserve ammo preview correctly", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "pm";
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: нет патронов в запасе";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 });
