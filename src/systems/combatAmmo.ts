@@ -4,7 +4,9 @@ export type AmmoDisabledReason =
   | "magazine_full"
   | "invalid_capacity"
   | "not_ranged_weapon"
-  | "unsupported_weapon_metadata";
+  | "unsupported_weapon_metadata"
+  | "empty_magazine"
+  | "insufficient_magazine_ammo";
 
 export interface AmmoStackLike {
   readonly item_id: string;
@@ -395,7 +397,66 @@ export const getAmmoDisabledReasonLabel = (reason: AmmoDisabledReason): string =
       return "не огнестрельное оружие";
     case "unsupported_weapon_metadata":
       return "неполные данные";
+    case "empty_magazine":
+      return "магазин пуст";
+    case "insufficient_magazine_ammo":
+      return "не хватает патронов в магазине";
     default:
       return "неизвестная ошибка";
   }
+};
+
+export interface MagazineShotPlanInput {
+  readonly weapon: AmmoWeaponLike | null | undefined;
+  readonly currentMagazine: number;
+}
+
+export type MagazineShotPlanResult =
+  | {
+      readonly ok: true;
+      readonly ammoCost: number;
+      readonly resultingMagazine: number;
+    }
+  | {
+      readonly ok: false;
+      readonly reason: AmmoDisabledReason;
+      readonly ammoCost?: number;
+    };
+
+export const computeMagazineShotPlan = (input: MagazineShotPlanInput): MagazineShotPlanResult => {
+  const specResult = getWeaponAmmoSpec(input.weapon);
+  if (!specResult.ok) {
+    return { ok: false, reason: specResult.reason };
+  }
+
+  const spec = specResult.spec;
+  const capacity = spec.magazineCapacity;
+  if (capacity === null || capacity <= 0 || !Number.isFinite(capacity) || capacity % 1 !== 0) {
+    return { ok: false, reason: "invalid_capacity" };
+  }
+
+  const ammoCost = spec.ammoPerShot;
+
+  const currentMagazine = input.currentMagazine;
+  if (
+    typeof currentMagazine !== "number" ||
+    !Number.isFinite(currentMagazine) ||
+    currentMagazine % 1 !== 0
+  ) {
+    return { ok: false, reason: "empty_magazine", ammoCost };
+  }
+
+  if (currentMagazine <= 0) {
+    return { ok: false, reason: "empty_magazine", ammoCost };
+  }
+
+  if (currentMagazine < ammoCost) {
+    return { ok: false, reason: "insufficient_magazine_ammo", ammoCost };
+  }
+
+  return {
+    ok: true,
+    ammoCost,
+    resultingMagazine: currentMagazine - ammoCost,
+  };
 };
