@@ -483,7 +483,11 @@ const createSceneHarness = (): SceneHarness => {
         return obj;
       },
       graphics: (): FakeGameObject => push(new FakeGameObject()),
-      container: (x: number, y: number): FakeGameObject => push(new FakeGameObject(x, y)),
+      container: (x: number, y: number, children?: any[]): FakeGameObject => {
+        const obj = push(new FakeGameObject(x, y));
+        (obj as any).list = children || [];
+        return obj;
+      },
       particles: (): FakeGameObject => push(new FakeGameObject()),
     },
     children: { list: objects },
@@ -703,7 +707,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: предпросмотр";
+    const expected = "Магазин: 0/8 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: готово";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 
@@ -715,7 +719,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: нет патронов в запасе";
+    const expected = "Магазин: 0/8 · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: нет патронов в запасе";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 
@@ -751,7 +755,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    const expected = "Магазин: не подключён · Ёмкость: неизвестна · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: неизвестна ёмкость магазина";
+    const expected = "Магазин: 0/неизвестна · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: неизвестна ёмкость магазина";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 
@@ -763,7 +767,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: ammo_unknown · Запас: 0 · Перезарядка: нет патронов в запасе";
+    const expected = "Магазин: 0/8 · Патроны: ammo_unknown · Запас: 0 · Перезарядка: нет патронов в запасе";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 
@@ -775,7 +779,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    const expected = "Магазин: не подключён · Ёмкость: 20 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: предпросмотр (неполные данные)";
+    const expected = "Магазин: 0/20 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: готово (неполные данные)";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 
@@ -817,39 +821,192 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.state).toBe("awaiting_hero");
   });
 
-  test("clicking reload with reserve ammo logs preview-only message and does not mutate backpack or AP or state", () => {
-    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+  test("reload PM with backpack ammo_9x18 x3 -> backpack 0, magazine 3", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const harness = createSceneHarness();
     harness.scene.create();
-    const backpackBefore = JSON.stringify(GameState.player.backpack);
-    const apBefore = harness.internals.currentAp;
 
     harness.internals.onHeroReload();
 
-    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
-    expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
-    expect(harness.internals.currentAp).toBe(apBefore);
-    expect(harness.internals.state).toBe("awaiting_hero");
+    expect(GameState.player.backpack).toEqual([]);
+    const magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 3 });
   });
 
-  test("after reload click, ranged attack behavior remains legacy and consumes backpack ammo directly", () => {
-    seedGameState([{ item_id: "ammo_9x18", count: 1 }]);
+  test("attack after reload -> backpack remains 0, magazine 2", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const harness = createSceneHarness();
     harness.scene.create();
 
-    // Click reload first
     harness.internals.onHeroReload();
-    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
-    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 1 }]);
-
-    // Now trigger ranged attack which consumes the 1 ammo directly from backpack, leaving it empty
     harness.internals.onHeroAttack();
 
-    expect(GameState.player.backpack).toEqual([]); // Zero-count stack removed
+    expect(GameState.player.backpack).toEqual([]);
+    const magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 2 });
+  });
+
+  test("attack without reload -> backpack remains 3, weak fallback", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroAttack();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+    const magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry?.count ?? 0).toBe(0);
+    expect(harness.internals.logLines).toContain("Нет патронов — удар прикладом.");
+  });
+
+  test("retreat after reload x3 -> backpack refunded to 3, magazine map cleared", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.onHeroRetreat();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+    expect((harness.scene as any).currentMagazineByWeaponId.size).toBe(0);
+  });
+
+  test("retreat after reload x3 + one attack -> backpack refunded to 2", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.onHeroAttack();
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroRetreat();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+  });
+
+  test("direct retreat path to SortieScene refunds", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.onHeroRetreat();
+
+    expect(harness.starts).toContain("SortieScene");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+  });
+
+  test("endSortie path refunds before merge/transition", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    if (GameState.currentSortie) {
+      GameState.currentSortie.fights_completed = 2;
+    }
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroReload();
+    harness.internals.onHeroRetreat();
+
+    const stashEntry = GameState.baseStash.find(s => s.item_id === "ammo_9x18");
+    expect(stashEntry?.count).toBe(3);
+    expect(GameState.player.backpack).toEqual([]);
+  });
+
+  test("victory path refunds before transition", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.mobs[0]!.state.hp = 0;
+    harness.internals.checkEnd();
+
+    expect(harness.starts).toContain("LootScene");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+  });
+
+  test("defeat/surrender path refunds if reachable in smoke harness", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    GameState.player.hp = 0;
+    harness.internals.checkEnd();
+
+    const surrenderBtn = (harness.scene as any).children.list.find((o: any) => {
+      return o.events.has("pointerup") && o.list && o.list.some((child: any) => child.text === "Сдаться");
+    });
+    expect(surrenderBtn).toBeDefined();
+    surrenderBtn.events.get("pointerup")();
+    harness.delayed.forEach(cb => cb());
+
+    const stashEntry = GameState.baseStash.find(s => s.item_id === "ammo_9x18");
+    expect(stashEntry).toBeDefined();
+    expect(stashEntry!.count).toBeGreaterThan(0);
+  });
+
+  test("refund idempotent: double call does not duplicate ammo", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    (harness.scene as any).refundRuntimeMagazinesToBackpack();
+    (harness.scene as any).refundRuntimeMagazinesToBackpack();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+  });
+
+  test("invalid reload/no reserve/full magazine does not mutate backpack/magazine", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "knife";
+    const harness1 = createSceneHarness();
+    harness1.scene.create();
+    harness1.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+    expect((harness1.scene as any).currentMagazineByWeaponId.size).toBe(0);
+
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness2 = createSceneHarness();
+    harness2.scene.create();
+    harness2.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([]);
+    expect((harness2.scene as any).currentMagazineByWeaponId.size).toBe(0);
+
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness3 = createSceneHarness();
+    harness3.scene.create();
+    harness3.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 4 }]);
+    expect((harness3.scene as any).currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 8 });
+    harness3.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 4 }]);
+    expect((harness3.scene as any).currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 8 });
+  });
+
+  test("melee attack unchanged", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "knife";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const hpBefore = harness.internals.mobs[0]!.state.hp;
+    harness.internals.onHeroAttack();
+    expect(harness.internals.mobs[0]!.state.hp).toBeLessThan(hpBefore);
     expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
-    expect(harness.internals.state).toBe("resolving_mobs");
   });
 
   test("clicking reload with invalid capacity logs invalid_capacity reason and does not mutate backpack or AP or state", () => {
