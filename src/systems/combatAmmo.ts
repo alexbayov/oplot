@@ -127,16 +127,28 @@ export const getAmmoCostForShot = (weapon: AmmoWeaponLike | null | undefined): n
   return readPositiveAmmoCost(weapon.ammo_per_shot) ?? readPositiveAmmoCost(weapon.stats?.ammo_per_shot) ?? 1;
 };
 
+const getFallbackCapacity = (ammoId: string): number | null => {
+  const id = ammoId.toLowerCase();
+  if (id.includes("9x18")) return 8;
+  if (id.includes("762x25") || id.includes("7.62x25")) return 8;
+  if (id.includes("762x39") || id.includes("7.62x39")) return 30;
+  if (id.includes("545") || id.includes("5.45")) return 30;
+  if (id.includes("12ga") || id.includes("12g")) return 5;
+  if (id.includes("762x54r") || id.includes("7.62x54")) return 5;
+  if (id.includes("308")) return 5;
+  return null;
+};
+
 export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): WeaponAmmoSpecResult => {
   if (!weapon) {
     return { ok: false, reason: "not_ranged_weapon" };
   }
 
-  const magazineCapacity = readMagazineCapacity(weapon);
+  const explicitCapacity = readMagazineCapacity(weapon);
   const hasAmmoField = hasStringField(weapon.ammo_id) || hasStringField(weapon.stats?.ammo_id);
   const hasCaliberField = hasStringField(weapon.caliber) || hasStringField(weapon.stats?.caliber);
   const hasLegacyRangedType = weapon.type === "weapon_ranged";
-  const hasRangedPlanningMetadata = magazineCapacity !== null && (hasAmmoField || hasCaliberField);
+  const hasRangedPlanningMetadata = hasAmmoField || hasCaliberField;
 
   if (!hasLegacyRangedType && !hasRangedPlanningMetadata) {
     return { ok: false, reason: "not_ranged_weapon" };
@@ -151,7 +163,28 @@ export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): We
 
   const rawAmmoPerShot = readPositiveAmmoCost(weapon.ammo_per_shot) ?? readPositiveAmmoCost(weapon.stats?.ammo_per_shot);
   const ammoPerShot = rawAmmoPerShot ?? 1;
-  const fallbackReason: AmmoDisabledReason | null = rawAmmoPerShot ? null : "unsupported_weapon_metadata";
+
+  const hasCapacityField =
+    (weapon.magazineCapacity !== undefined && weapon.magazineCapacity !== null) ||
+    (weapon.magazineSize !== undefined && weapon.magazineSize !== null) ||
+    (weapon.magazine_size !== undefined && weapon.magazine_size !== null) ||
+    (weapon.stats?.magazineCapacity !== undefined && weapon.stats?.magazineCapacity !== null) ||
+    (weapon.stats?.magazineSize !== undefined && weapon.stats?.magazineSize !== null) ||
+    (weapon.stats?.magazine_size !== undefined && weapon.stats?.magazine_size !== null);
+
+  let magazineCapacity = explicitCapacity;
+  if (magazineCapacity === null && !hasCapacityField) {
+    const fallbackVal = getFallbackCapacity(ammoId);
+    if (fallbackVal !== null) {
+      magazineCapacity = fallbackVal;
+    }
+  }
+
+  const hasCapacityFallback = explicitCapacity === null && magazineCapacity !== null;
+  const hasAmmoPerShotFallback = rawAmmoPerShot === null;
+  const fallbackReason: AmmoDisabledReason | null = (hasCapacityFallback || hasAmmoPerShotFallback)
+    ? "unsupported_weapon_metadata"
+    : null;
 
   return {
     ok: true,

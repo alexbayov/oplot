@@ -293,4 +293,77 @@ describe("combatAmmo", () => {
       },
     });
   });
+
+  test("legacy ranged PM-like weapon with no magazine_size can compute reload with fallback capacity 8", () => {
+    const weapon: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      ammo_id: "ammo_9x18",
+      stats: { ammo_per_shot: 1 },
+    };
+
+    const plan = computeReloadPlan({ weapon, backpack: backpack(10, "ammo_9x18"), currentMagazine: 2 });
+    expect(plan).toMatchObject({
+      ok: true,
+      ammoId: "ammo_9x18",
+      reloadAmount: 6,
+      resultingMagazine: 8,
+      magazineCapacity: 8,
+      fallbackReason: "unsupported_weapon_metadata",
+    });
+  });
+
+  test("legacy ranged AKM-like weapon with no magazine_size can compute reload with fallback capacity 30", () => {
+    const weapon: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      caliber: "7.62x39",
+    };
+
+    const plan = computeReloadPlan({ weapon, backpack: backpack(40, "ammo_762x39"), currentMagazine: 5 });
+    expect(plan).toMatchObject({
+      ok: true,
+      ammoId: "ammo_762x39",
+      reloadAmount: 25,
+      resultingMagazine: 30,
+      magazineCapacity: 30,
+      fallbackReason: "unsupported_weapon_metadata",
+    });
+  });
+
+  test("explicit magazineSize wins over fallback capacity", () => {
+    const weaponWithAmmoPerShot: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      ammo_id: "ammo_9x18",
+      magazineSize: 12,
+      ammo_per_shot: 1,
+    };
+    expect(getWeaponAmmoSpec(weaponWithAmmoPerShot)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 12,
+        fallbackReason: null,
+      },
+    });
+  });
+
+  test("unknown ranged caliber with no capacity returns no_ammo_id or invalid_capacity", () => {
+    const weaponUnknownCaliber: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      caliber: "unknown_caliber_999",
+    };
+    expect(getWeaponAmmoSpec(weaponUnknownCaliber)).toEqual({ ok: false, reason: "no_ammo_id" });
+
+    const weaponNoCapacity: AmmoWeaponLike = {
+      type: "weapon_ranged",
+      ammo_id: "ammo_unknown_without_fallback",
+      ammo_per_shot: 1,
+    };
+    const spec = getWeaponAmmoSpec(weaponNoCapacity);
+    expect(spec).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: null,
+      },
+    });
+    expect(computeAmmoDisabledReason({ weapon: weaponNoCapacity, backpack: backpack(10, "ammo_unknown_without_fallback"), currentMagazine: 0 })).toBe("invalid_capacity");
+  });
 });
