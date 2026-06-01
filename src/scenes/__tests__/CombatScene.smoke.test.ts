@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("phaser", () => ({
@@ -344,6 +344,27 @@ const apsFallbackPistol = makeItem({
   },
 } as unknown as Item);
 
+const heavyRangedWeapon = makeItem({
+  id: "heavy_ranged",
+  name_ru: "Тяжелый огнестрел",
+  type: "weapon_ranged",
+  tier: 3,
+  zone_origin: "test",
+  weight_kg: 2.0,
+  description_ru: "Heavy Ranged Weapon",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {
+    damage_min: 15,
+    damage_max: 20,
+    attack_speed: 60,
+    noise: "high",
+    ammo_id: "ammo_9x18",
+    ammo_per_shot: 2,
+    magazine_size: 8,
+  },
+} as unknown as Item);
+
 const armor = makeItem({
   id: "jacket",
   name_ru: "Куртка",
@@ -426,6 +447,7 @@ const seedGameState = (backpack: InventoryStack[] = []): void => {
       [invalidCapacityPistol.id]: invalidCapacityPistol,
       [unknownAmmoPistol.id]: unknownAmmoPistol,
       [apsFallbackPistol.id]: apsFallbackPistol,
+      [heavyRangedWeapon.id]: heavyRangedWeapon,
     },
     mobs: { marauder: testMob() },
     zones: { forest: zone },
@@ -967,6 +989,7 @@ describe("CombatScene M12.5 safety harness", () => {
     (harness.scene as any).refundRuntimeMagazinesToBackpack();
 
     expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 3 }]);
+    expect((harness.scene as any).currentMagazineByWeaponId.size).toBe(0);
   });
 
   test("invalid reload/no reserve/full magazine does not mutate backpack/magazine", () => {
@@ -1007,6 +1030,7 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.internals.onHeroAttack();
     expect(harness.internals.mobs[0]!.state.hp).toBeLessThan(hpBefore);
     expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
+    expect((harness.scene as any).currentMagazineByWeaponId.has("knife")).toBe(false);
   });
 
   test("clicking reload with invalid capacity logs invalid_capacity reason and does not mutate backpack or AP or state", () => {
@@ -1023,5 +1047,120 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
     expect(harness.internals.currentAp).toBe(apBefore);
     expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("magazine preview updates correctly after reload and attack", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.updateDisplay();
+
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Магазин: 3/8") && text.includes("Запас: 0"))).toBe(true);
+
+    harness.internals.onHeroAttack();
+    harness.internals.updateDisplay();
+
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Магазин: 2/8"))).toBe(true);
+  });
+
+  test("reload after partial magazine fills correct amount without duplication or loss", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 5 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([]);
+    let magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 5 });
+
+    harness.internals.onHeroAttack();
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroAttack();
+    magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 3 });
+
+    GameState.player.backpack = [{ item_id: "ammo_9x18", count: 10 }];
+
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroReload();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 5 }]);
+    magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 8 });
+  });
+
+  test("clicking reload on full magazine logs disabled reason and does not mutate backpack or magazine", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 4 }]);
+    let magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 8 });
+
+    harness.internals.onHeroReload();
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка: магазин полон.");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 4 }]);
+    magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("pm");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 8 });
+  });
+
+  test("insufficient magazine for ammo_per_shot > 1 uses weak fallback and does not consume reserve or magazine", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 10 }]);
+    GameState.player.equipped_weapon_id = "heavy_ranged";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+    let magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("heavy_ranged");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 8 });
+
+    (harness.scene as any).currentMagazineByWeaponId.set("heavy_ranged", { ammoId: "ammo_9x18", count: 1 });
+
+    harness.internals.onHeroAttack();
+
+    expect(harness.internals.logLines).toContain("Нет патронов — удар прикладом.");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+    magazineEntry = (harness.scene as any).currentMagazineByWeaponId.get("heavy_ranged");
+    expect(magazineEntry).toEqual({ ammoId: "ammo_9x18", count: 1 });
+  });
+
+  test("ranged attack does not consume backpack ammo directly", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 10 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+
+    harness.internals.onHeroAttack();
+
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+  });
+
+  test("reload does not change AP or advance turn, but attack does", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroReload();
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+
+    harness.internals.onHeroAttack();
+    expect(harness.internals.state).toBe("resolving_mobs");
   });
 });
