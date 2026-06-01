@@ -31,6 +31,12 @@ export interface AmmoWeaponLike {
   readonly magazineCapacity?: unknown;
   readonly caliber?: unknown;
   readonly stats?: AmmoWeaponStatsLike;
+  readonly weaponKind?: unknown;
+  readonly kind?: unknown;
+  readonly class?: unknown;
+  readonly category?: unknown;
+  readonly slot?: unknown;
+  readonly equipSlot?: unknown;
 }
 
 export interface WeaponAmmoSpec {
@@ -89,8 +95,6 @@ const readString = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
-const hasStringField = (value: unknown): boolean => typeof value === "string";
-
 const KNOWN_CALIBER_AMMO_IDS: Record<string, string> = {
   "9x18": "ammo_9x18",
   "12g": "ammo_12g",
@@ -139,20 +143,77 @@ const getFallbackCapacity = (ammoId: string): number | null => {
   return null;
 };
 
+const isNonRangedSignal = (weapon: AmmoWeaponLike): boolean => {
+  const checkValue = (val: unknown): boolean => {
+    if (typeof val !== "string") return false;
+    const lower = val.toLowerCase();
+    const nonRangedWords = [
+      "melee",
+      "material",
+      "consumable",
+      "armor",
+      "mod",
+      "part",
+      "ammo",
+      "resource",
+      "quest",
+      "broken_craft"
+    ];
+    return nonRangedWords.some((word) => lower.includes(word));
+  };
+
+  if (checkValue(weapon.type)) return true;
+  if (checkValue(weapon.itemClass)) return true;
+  if (checkValue(weapon.category)) return true;
+  if (checkValue(weapon.kind)) return true;
+  if (checkValue(weapon.class)) return true;
+
+  const caliberVal = weapon.caliber ?? weapon.stats?.caliber;
+  if (typeof caliberVal === "string") {
+    const lowerCal = caliberVal.toLowerCase();
+    if (lowerCal === "melee" || lowerCal === "thrown") {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const hasRangedSignal = (weapon: AmmoWeaponLike): boolean => {
+  const checkValue = (val: unknown): boolean => {
+    if (typeof val !== "string") return false;
+    const lower = val.toLowerCase();
+    return lower.includes("ranged") || lower.includes("gun") || lower.includes("firearm");
+  };
+
+  if (checkValue(weapon.type)) return true;
+  if (checkValue(weapon.weaponKind)) return true;
+  if (checkValue(weapon.kind)) return true;
+  if (checkValue(weapon.class)) return true;
+  if (checkValue(weapon.category)) return true;
+  if (checkValue(weapon.slot)) return true;
+  if (checkValue(weapon.equipSlot)) return true;
+
+  return false;
+};
+
+const isReloadCapableRanged = (weapon: AmmoWeaponLike): boolean => {
+  if (isNonRangedSignal(weapon)) {
+    return false;
+  }
+  return hasRangedSignal(weapon);
+};
+
 export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): WeaponAmmoSpecResult => {
   if (!weapon) {
     return { ok: false, reason: "not_ranged_weapon" };
   }
 
-  const explicitCapacity = readMagazineCapacity(weapon);
-  const hasAmmoField = hasStringField(weapon.ammo_id) || hasStringField(weapon.stats?.ammo_id);
-  const hasCaliberField = hasStringField(weapon.caliber) || hasStringField(weapon.stats?.caliber);
-  const hasLegacyRangedType = weapon.type === "weapon_ranged";
-  const hasRangedPlanningMetadata = hasAmmoField || hasCaliberField;
-
-  if (!hasLegacyRangedType && !hasRangedPlanningMetadata) {
+  if (!isReloadCapableRanged(weapon)) {
     return { ok: false, reason: "not_ranged_weapon" };
   }
+
+  const explicitCapacity = readMagazineCapacity(weapon);
 
   const explicitAmmoId = readString(weapon.ammo_id) ?? readString(weapon.stats?.ammo_id);
   const ammoId =

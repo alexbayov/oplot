@@ -59,6 +59,7 @@ describe("combatAmmo", () => {
     const weapon: AmmoWeaponLike = {
       id: "m11_drop_pistol",
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "9x18",
       magazineSize: 8,
     };
@@ -116,6 +117,7 @@ describe("combatAmmo", () => {
     const weapon: AmmoWeaponLike = {
       id: "m11_drop_rifle",
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "7.62x39",
       magazineSize: 30,
     };
@@ -135,6 +137,7 @@ describe("combatAmmo", () => {
     const weapon: AmmoWeaponLike = {
       id: "m11_drop_shotgun",
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "12ga",
       magazineSize: 5,
     };
@@ -153,6 +156,7 @@ describe("combatAmmo", () => {
     const weapon: AmmoWeaponLike = {
       id: "m11_drop_sidearm",
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "7.62x25",
       magazineSize: 8,
     };
@@ -170,6 +174,7 @@ describe("combatAmmo", () => {
   test("unknown M11 caliber returns no ammo id instead of false no-reserve result", () => {
     const weapon: AmmoWeaponLike = {
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "4.6x30",
       magazineSize: 20,
     };
@@ -183,6 +188,7 @@ describe("combatAmmo", () => {
   test("blank caliber metadata still reports missing ammo id for ranged-like weapons", () => {
     const weapon: AmmoWeaponLike = {
       itemClass: "drop",
+      weaponKind: "ranged",
       caliber: "   ",
       magazineSize: 8,
     };
@@ -365,5 +371,36 @@ describe("combatAmmo", () => {
       },
     });
     expect(computeAmmoDisabledReason({ weapon: weaponNoCapacity, backpack: backpack(10, "ammo_unknown_without_fallback"), currentMagazine: 0 })).toBe("invalid_capacity");
+  });
+
+  test("item with itemClass: drop, caliber: 9x18, magazineSize: 8 but no ranged signal returns not_ranged_weapon", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "no_ranged_signal_item",
+      itemClass: "drop",
+      caliber: "9x18",
+      magazineSize: 8,
+    };
+    expect(getWeaponAmmoSpec(weapon)).toEqual({ ok: false, reason: "not_ranged_weapon" });
+  });
+
+  test("cleaver-like item with melee signal + caliber/magazine metadata returns not_ranged_weapon", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "cleaver",
+      type: "weapon_melee",
+      caliber: "melee",
+      magazineSize: 1,
+    };
+    expect(getWeaponAmmoSpec(weapon)).toEqual({ ok: false, reason: "not_ranged_weapon" });
+  });
+
+  test("if both melee and ranged-ish metadata exist, melee/non-ranged explicit signal wins and returns not_ranged_weapon", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "conflicting_item",
+      type: "weapon_melee",
+      weaponKind: "ranged",
+      caliber: "9x18",
+      magazineSize: 8,
+    };
+    expect(getWeaponAmmoSpec(weapon)).toEqual({ ok: false, reason: "not_ranged_weapon" });
   });
 });
