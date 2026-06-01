@@ -195,6 +195,7 @@ interface CombatSceneInternals {
   onHeroAttack: () => void;
   onHeroCover: () => void;
   onHeroHeal: () => void;
+  onHeroReload: () => void;
   onHeroRetreat: () => void;
   checkEnd: () => boolean;
   updateActionPreview: () => void;
@@ -202,6 +203,7 @@ interface CombatSceneInternals {
   mobs: { state: { hp: number; fled?: boolean }; mob: Mob }[];
   state: string;
   logLines: string[];
+  currentAp: number;
 }
 
 interface SceneHarness {
@@ -775,5 +777,78 @@ describe("CombatScene M12.5 safety harness", () => {
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     const expected = "Магазин: не подключён · Ёмкость: 20 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: предпросмотр (неполные данные)";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("reload button renders in the action bar", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    expect(harness.textObjects.some((obj) => obj.text === "ПЕРЕЗАРЯДКА")).toBe(true);
+  });
+
+  test("clicking reload with melee weapon logs non-ranged reason and does not mutate backpack or AP or state", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "knife";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const backpackBefore = JSON.stringify(GameState.player.backpack);
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroReload();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка: не огнестрельное оружие.");
+    expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("clicking reload with no reserve ammo logs no reserve and does not mutate backpack or AP or state", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const backpackBefore = JSON.stringify(GameState.player.backpack);
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroReload();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка: нет патронов в запасе.");
+    expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("clicking reload with reserve ammo logs preview-only message and does not mutate backpack or AP or state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const backpackBefore = JSON.stringify(GameState.player.backpack);
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroReload();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
+    expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("after reload click, ranged attack behavior remains legacy and consumes backpack ammo directly", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 1 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    // Click reload first
+    harness.internals.onHeroReload();
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 1 }]);
+
+    // Now trigger ranged attack which consumes the 1 ammo directly from backpack, leaving it empty
+    harness.internals.onHeroAttack();
+
+    expect(GameState.player.backpack).toEqual([]); // Zero-count stack removed
+    expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
+    expect(harness.internals.state).toBe("resolving_mobs");
   });
 });

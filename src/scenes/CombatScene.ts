@@ -220,10 +220,10 @@ export class CombatScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // ── Action bar (bottom, 4 buttons in row) ───────────────────
-    const btnW = 200;
-    const gap = 18;
-    const actions = 4;
+    // ── Action bar (bottom, 5 buttons in row) ───────────────────
+    const btnW = 160;
+    const gap = 12;
+    const actions = 5;
     const totalW = actions * btnW + (actions - 1) * gap;
     const startX = CX - totalW / 2 + btnW / 2;
 
@@ -231,7 +231,8 @@ export class CombatScene extends Phaser.Scene {
       createSmallButton(this, startX, actionY, "АТАКА", btnW, () => this.onHeroAttack(), true),
       createSmallButton(this, startX + (btnW + gap), actionY, "УКРЫТИЕ", btnW, () => this.onHeroCover()),
       createSmallButton(this, startX + (btnW + gap) * 2, actionY, "АПТЕЧКА", btnW, () => this.onHeroHeal()),
-      createSmallButton(this, startX + (btnW + gap) * 3, actionY, "ОТСТУП", btnW, () => this.onHeroRetreat()),
+      createSmallButton(this, startX + (btnW + gap) * 3, actionY, "ПЕРЕЗАРЯДКА", btnW, () => this.onHeroReload()),
+      createSmallButton(this, startX + (btnW + gap) * 4, actionY, "ОТСТУП", btnW, () => this.onHeroRetreat()),
     );
 
     this.updateDisplay();
@@ -481,6 +482,37 @@ export class CombatScene extends Phaser.Scene {
       return;
     }
     this.endSortie("retreat");
+  }
+
+  private onHeroReload(): void {
+    if (this.state !== "awaiting_hero") return;
+    const player = GameState.player;
+    const weaponItem = GameState.data.items[player.equipped_weapon_id];
+    
+    if (!weaponItem) {
+      this.log("Перезарядка: не огнестрельное оружие.");
+      return;
+    }
+
+    const specResult = getWeaponAmmoSpec(weaponItem as unknown as AmmoWeaponLike);
+    if (!specResult.ok) {
+      if (specResult.reason === "not_ranged_weapon") {
+        this.log("Перезарядка: не огнестрельное оружие.");
+      } else {
+        const reasonLabel = getAmmoDisabledReasonLabel(specResult.reason);
+        this.log(`Перезарядка: ${reasonLabel}.`);
+      }
+      return;
+    }
+
+    const spec = specResult.spec;
+    const reserve = getReserveAmmoCount(player.backpack, spec.ammoId);
+    if (reserve <= 0) {
+      this.log("Перезарядка: нет патронов в запасе.");
+      return;
+    }
+
+    this.log("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
   }
 
   // ---------- end conditions ----------
