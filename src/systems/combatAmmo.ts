@@ -94,6 +94,8 @@ const hasStringField = (value: unknown): boolean => typeof value === "string";
 const KNOWN_CALIBER_AMMO_IDS: Record<string, string> = {
   "9x18": "ammo_9x18",
   "12g": "ammo_12g",
+  "12ga": "ammo_12ga",
+  "7.62x25": "ammo_762x25",
   "7.62x39": "ammo_762x39",
   "5.45x39": "ammo_545",
   "7.62x54r": "ammo_762x54r",

@@ -98,6 +98,10 @@ describe("combatAmmo", () => {
   test("normalizes known caliber strings into backpack ammo ids conservatively", () => {
     expect(normalizeCaliberAmmoId("9x18")).toBe("ammo_9x18");
     expect(normalizeCaliberAmmoId("12g")).toBe("ammo_12g");
+    expect(normalizeCaliberAmmoId("12ga")).toBe("ammo_12ga");
+    expect(normalizeCaliberAmmoId(" 12GA ")).toBe("ammo_12ga");
+    expect(normalizeCaliberAmmoId("7.62x25")).toBe("ammo_762x25");
+    expect(normalizeCaliberAmmoId("7.62X25")).toBe("ammo_762x25");
     expect(normalizeCaliberAmmoId("7.62x39")).toBe("ammo_762x39");
     expect(normalizeCaliberAmmoId("5.45x39")).toBe("ammo_545");
     expect(normalizeCaliberAmmoId("7.62x54R")).toBe("ammo_762x54r");
@@ -123,6 +127,43 @@ describe("combatAmmo", () => {
       reserveAmmoConsumed: 20,
       resultingMagazine: 30,
       magazineCapacity: 30,
+    });
+  });
+
+
+  test("computes reload for M11-shaped shotgun caliber", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "m11_drop_shotgun",
+      itemClass: "drop",
+      caliber: "12ga",
+      magazineSize: 5,
+    };
+
+    expect(computeReloadPlan({ weapon, backpack: backpack(4, "ammo_12ga"), currentMagazine: 1 })).toMatchObject({
+      ok: true,
+      ammoId: "ammo_12ga",
+      reloadAmount: 4,
+      reserveAmmoConsumed: 4,
+      resultingMagazine: 5,
+      magazineCapacity: 5,
+    });
+  });
+
+  test("computes reload for M11-shaped 7.62x25 sidearm caliber", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "m11_drop_sidearm",
+      itemClass: "drop",
+      caliber: "7.62x25",
+      magazineSize: 8,
+    };
+
+    expect(computeReloadPlan({ weapon, backpack: backpack(6, "ammo_762x25"), currentMagazine: 2 })).toMatchObject({
+      ok: true,
+      ammoId: "ammo_762x25",
+      reloadAmount: 6,
+      reserveAmmoConsumed: 6,
+      resultingMagazine: 8,
+      magazineCapacity: 8,
     });
   });
 
