@@ -31,6 +31,7 @@ import {
   chooseMobActionV2,
   type MobRuntimeState,
 } from "../systems/mobAI";
+import { deriveVisibleEnemyIntent } from "../systems/combatIntents";
 import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
@@ -661,7 +662,8 @@ export class CombatScene extends Phaser.Scene {
     this.mobs.forEach((inst) => {
       if (inst.state.fled || inst.state.hp <= 0) return;
 
-      this.add.text(enemyBarX, enemyY, `${inst.mob.name_ru}`, {
+      const intent = deriveVisibleEnemyIntent(inst.mob, inst.state);
+      this.add.text(enemyBarX, enemyY, `${inst.mob.name_ru} [Намерение: ${intent.labelRu}]`, {
         color: "#C8C0B0",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
