@@ -84,7 +84,7 @@ describe("combatIntents pure adapter", () => {
     expect(result2.labelRu).toBe("укрытие");
   });
 
-  test("berserker_low_hp maps dynamically to attack or special", () => {
+  test("berserker_low_hp stays an attack intent with empowered copy at low HP", () => {
     const mob = makeTestMob({ behavior_id: "berserker_low_hp" });
     const state = createMobRuntimeState(mob);
 
@@ -93,12 +93,12 @@ describe("combatIntents pure adapter", () => {
     expect(result1.intent).toBe("attack");
     expect(result1.labelRu).toBe("атака");
 
-    // Low HP (< 50%) -> special (rage)
+    // Low HP (< 50%) -> attack preview with empowered attack copy, not a separate non-attack action.
     state.hp = 9; // 9/20 < 0.5
     const result2 = deriveVisibleEnemyIntent(mob, state);
-    expect(result2.intent).toBe("special");
-    expect(result2.labelRu).toBe("ярость");
-    expect(result2.detailRu).toBe("атака усилена"); // asserts it does not imply a non-attack mechanic
+    expect(result2.intent).toBe("attack");
+    expect(result2.labelRu).toBe("атака усилена");
+    expect(result2.detailRu).toBe("ярость");
   });
 
   test("fled state maps to flee", () => {
@@ -147,6 +147,21 @@ describe("combatIntents pure adapter", () => {
     expect(result.intent).toBe("attack");
     expect(result.labelRu).toBe("атака");
     expect(result.confidence).toBe("fallback");
+  });
+
+  test("defensive_cover prediction remains non-mutating", () => {
+    const mob = makeTestMob({ behavior: "defensive", behavior_id: "defensive_cover" });
+    const state = createMobRuntimeState(mob);
+    state.turn_count = 1;
+    state.cover_active = false;
+
+    const mobClone = JSON.parse(JSON.stringify(mob));
+    const stateClone = JSON.parse(JSON.stringify(state));
+    const result = deriveVisibleEnemyIntent(mob, state);
+
+    expect(result.intent).toBe("guard_cover");
+    expect(mob).toEqual(mobClone);
+    expect(state).toEqual(stateClone);
   });
 
   test("does not mutate inputs", () => {

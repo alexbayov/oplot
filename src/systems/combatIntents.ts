@@ -103,14 +103,14 @@ export const deriveVisibleEnemyIntent = (
     };
   }
 
-  // 7. berserker_low_hp -> attack / special
+  // 7. berserker_low_hp remains an attack preview; the warning copy says it is empowered.
   if (behaviorId === "berserker_low_hp") {
     const isBerserk = state.berserk_triggered || (state.hp_max > 0 && state.hp / state.hp_max < 0.5);
     if (isBerserk) {
       return {
-        intent: "special",
-        labelRu: "ярость",
-        detailRu: "атака усилена",
+        intent: "attack",
+        labelRu: "атака усилена",
+        detailRu: "ярость",
         confidence: "known",
       };
     } else {

@@ -198,7 +198,8 @@ interface CombatSceneInternals {
   onHeroRetreat: () => void;
   checkEnd: () => boolean;
   updateActionPreview: () => void;
-  mobs: { state: { hp: number }; mob: Mob }[];
+  updateDisplay: () => void;
+  mobs: { state: { hp: number; fled?: boolean }; mob: Mob }[];
   state: string;
   logLines: string[];
 }
@@ -422,6 +423,30 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+  });
+
+
+  test("does not render enemy intent for dead mobs skipped by current scene", () => {
+    GameState.data.mobs.marauder = testMob({ hp: 0 });
+    const harness = createSceneHarness();
+
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Намерение"))).toBe(false);
+  });
+
+  test("does not keep active enemy intent for fled mobs skipped by current scene", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const target = harness.internals.mobs[0];
+    if (!target) throw new Error("expected seeded mob");
+
+    target.state.fled = true;
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Намерение"))).toBe(false);
   });
 
   test("renders AP preview shell without changing seeded combat state", () => {
