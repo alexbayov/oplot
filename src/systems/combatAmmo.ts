@@ -22,6 +22,7 @@ export interface AmmoWeaponStatsLike {
 
 export interface AmmoWeaponLike {
   readonly id?: string;
+  readonly itemClass?: unknown;
   readonly type?: unknown;
   readonly ammo_id?: unknown;
   readonly ammo_per_shot?: unknown;
@@ -88,6 +89,14 @@ const readString = (value: unknown): string | null => {
   return trimmed.length > 0 ? trimmed : null;
 };
 
+const hasStringField = (value: unknown): boolean => typeof value === "string";
+
+export const normalizeCaliberAmmoId = (caliber: unknown): string | null => {
+  const value = readString(caliber);
+  if (!value) return null;
+  return value.startsWith("ammo_") ? value : `ammo_${value}`;
+};
+
 const readMagazineCapacity = (weapon: AmmoWeaponLike): number | null =>
   readPositiveInteger(weapon.magazineCapacity) ??
   readPositiveInteger(weapon.magazineSize) ??
@@ -107,11 +116,23 @@ export const getAmmoCostForShot = (weapon: AmmoWeaponLike | null | undefined): n
 };
 
 export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): WeaponAmmoSpecResult => {
-  if (!weapon || weapon.type !== "weapon_ranged") {
+  if (!weapon) {
     return { ok: false, reason: "not_ranged_weapon" };
   }
 
-  const ammoId = readString(weapon.ammo_id) ?? readString(weapon.stats?.ammo_id) ?? readString(weapon.caliber) ?? readString(weapon.stats?.caliber);
+  const magazineCapacity = readMagazineCapacity(weapon);
+  const hasAmmoField = hasStringField(weapon.ammo_id) || hasStringField(weapon.stats?.ammo_id);
+  const hasCaliberField = hasStringField(weapon.caliber) || hasStringField(weapon.stats?.caliber);
+  const hasLegacyRangedType = weapon.type === "weapon_ranged";
+  const hasRangedPlanningMetadata = magazineCapacity !== null && (hasAmmoField || hasCaliberField);
+
+  if (!hasLegacyRangedType && !hasRangedPlanningMetadata) {
+    return { ok: false, reason: "not_ranged_weapon" };
+  }
+
+  const explicitAmmoId = readString(weapon.ammo_id) ?? readString(weapon.stats?.ammo_id);
+  const ammoId =
+    explicitAmmoId ?? normalizeCaliberAmmoId(weapon.caliber) ?? normalizeCaliberAmmoId(weapon.stats?.caliber);
   if (!ammoId) {
     return { ok: false, reason: "no_ammo_id" };
   }
@@ -125,7 +146,7 @@ export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): We
     spec: {
       ammoId,
       ammoPerShot,
-      magazineCapacity: readMagazineCapacity(weapon),
+      magazineCapacity,
       fallbackReason,
     },
   };
