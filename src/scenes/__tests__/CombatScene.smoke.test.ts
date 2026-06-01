@@ -267,6 +267,81 @@ const ammo9x18 = makeItem({
   stats: {},
 });
 
+const brokenRangedPistol = makeItem({
+  id: "broken_ranged_pistol",
+  name_ru: "Сломанный огнестрел",
+  type: "weapon_ranged",
+  tier: 2,
+  zone_origin: "test",
+  weight_kg: 0.8,
+  description_ru: "Сломанный огнестрел",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {},
+} as unknown as Item);
+
+const invalidCapacityPistol = makeItem({
+  id: "invalid_capacity_pistol",
+  name_ru: "Пистолет без магазина",
+  type: "weapon_ranged",
+  tier: 2,
+  zone_origin: "test",
+  weight_kg: 0.8,
+  description_ru: "Пистолет с дефектом магазина",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {
+    damage_min: 5,
+    damage_max: 7,
+    attack_speed: 80,
+    noise: "high",
+    ammo_id: "ammo_9x18",
+    ammo_per_shot: 1,
+    magazine_size: 0,
+  },
+} as unknown as Item);
+
+const unknownAmmoPistol = makeItem({
+  id: "unknown_ammo_pistol",
+  name_ru: "Странный пистолет",
+  type: "weapon_ranged",
+  tier: 2,
+  zone_origin: "test",
+  weight_kg: 0.8,
+  description_ru: "Странный пистолет",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {
+    damage_min: 5,
+    damage_max: 7,
+    attack_speed: 80,
+    noise: "high",
+    ammo_id: "ammo_unknown",
+    ammo_per_shot: 1,
+    magazine_size: 8,
+  },
+} as unknown as Item);
+
+const apsFallbackPistol = makeItem({
+  id: "aps",
+  name_ru: "Стечкин АПС",
+  type: "weapon_ranged",
+  tier: 3,
+  zone_origin: "test",
+  weight_kg: 1.0,
+  description_ru: "Пистолет Стечкина",
+  flavor_ru: "",
+  recipe_id: null,
+  stats: {
+    damage_min: 6,
+    damage_max: 8,
+    attack_speed: 90,
+    noise: "high",
+    ammo_id: "ammo_9x18",
+    ammo_per_shot: 1,
+  },
+} as unknown as Item);
+
 const armor = makeItem({
   id: "jacket",
   name_ru: "Куртка",
@@ -345,6 +420,10 @@ const seedGameState = (backpack: InventoryStack[] = []): void => {
       [bandage.id]: bandage,
       [pmPistol.id]: pmPistol,
       [ammo9x18.id]: ammo9x18,
+      [brokenRangedPistol.id]: brokenRangedPistol,
+      [invalidCapacityPistol.id]: invalidCapacityPistol,
+      [unknownAmmoPistol.id]: unknownAmmoPistol,
+      [apsFallbackPistol.id]: apsFallbackPistol,
     },
     mobs: { marauder: testMob() },
     zones: { forest: zone },
@@ -635,6 +714,66 @@ describe("CombatScene M12.5 safety harness", () => {
 
     const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: нет патронов в запасе";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("no equipped weapon does not crash and renders default not_ranged_weapon message", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = ""; // Empty string
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Оружие ближнего боя · Перезарядка: не огнестрельное оружие";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("ranged weapon with no ammo_id and no usable caliber shows нет данных о патроне", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "broken_ranged_pistol";
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Перезарядка: нет данных о патроне";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("ranged weapon with unknown capacity shows неизвестна ёмкость магазина", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "invalid_capacity_pistol";
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Ёмкость: неизвестна · Патроны: Патроны 9x18 · Запас: 0 · Перезарядка: неизвестна ёмкость магазина";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("ranged weapon with unknown ammo item name shows ammoId safely without crash", () => {
+    seedGameState([]);
+    GameState.player.equipped_weapon_id = "unknown_ammo_pistol";
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Ёмкость: 8 · Патроны: ammo_unknown · Запас: 0 · Перезарядка: нет патронов в запасе";
+    expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
+  });
+
+  test("ranged weapon with fallbackReason shows (неполные данные) caution", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "aps"; // aps has no magazine_size defined
+
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const expected = "Магазин: не подключён · Ёмкость: 20 · Патроны: Патроны 9x18 · Запас: 12 · Перезарядка: предпросмотр (неполные данные)";
     expect(activeTexts.some((text) => text.includes(expected))).toBe(true);
   });
 });
