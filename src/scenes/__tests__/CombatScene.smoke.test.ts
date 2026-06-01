@@ -851,4 +851,20 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
     expect(harness.internals.state).toBe("resolving_mobs");
   });
+
+  test("clicking reload with invalid capacity logs invalid_capacity reason and does not mutate backpack or AP or state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 12 }]);
+    GameState.player.equipped_weapon_id = "invalid_capacity_pistol";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const backpackBefore = JSON.stringify(GameState.player.backpack);
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroReload();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Перезарядка: неизвестна ёмкость магазина.");
+    expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
 });

@@ -506,9 +506,16 @@ export class CombatScene extends Phaser.Scene {
     }
 
     const spec = specResult.spec;
-    const reserve = getReserveAmmoCount(player.backpack, spec.ammoId);
-    if (reserve <= 0) {
-      this.log("Перезарядка: нет патронов в запасе.");
+    const disabledReason = computeAmmoDisabledReason({
+      weapon: weaponItem as unknown as AmmoWeaponLike,
+      backpack: player.backpack,
+      currentMagazine: 0,
+      magazineCapacity: spec.magazineCapacity,
+    });
+
+    if (disabledReason !== null) {
+      const reasonLabel = getAmmoDisabledReasonLabel(disabledReason);
+      this.log(`Перезарядка: ${reasonLabel}.`);
       return;
     }
 
