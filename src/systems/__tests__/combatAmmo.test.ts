@@ -403,4 +403,141 @@ describe("combatAmmo", () => {
     };
     expect(getWeaponAmmoSpec(weapon)).toEqual({ ok: false, reason: "not_ranged_weapon" });
   });
+
+  test("explicit magazineSize wins over weapon-specific fallback", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "aps",
+      type: "weapon_ranged",
+      magazineSize: 12,
+      ammo_id: "ammo_9x18",
+      ammo_per_shot: 1,
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 12,
+        fallbackReason: null,
+      },
+    });
+  });
+
+  test("aps with no magazine_size resolves capacity 20, not ammo_9x18 fallback 8", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "aps",
+      type: "weapon_ranged",
+      ammo_id: "ammo_9x18",
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 20,
+        fallbackReason: "unsupported_weapon_metadata",
+      },
+    });
+  });
+
+  test("ppsh with no magazine_size resolves capacity 35, not ammo_762x25 fallback 8", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "ppsh",
+      type: "weapon_ranged",
+      ammo_id: "ammo_762x25",
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 35,
+        fallbackReason: "unsupported_weapon_metadata",
+      },
+    });
+  });
+
+  test("sks with no magazine_size resolves capacity 10, not ammo_762x39 fallback 30", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "sks",
+      type: "weapon_ranged",
+      ammo_id: "ammo_762x39",
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 10,
+        fallbackReason: "unsupported_weapon_metadata",
+      },
+    });
+  });
+
+  test("saiga_12 with no magazine_size resolves capacity 8, not ammo_12ga fallback 5", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "saiga_12",
+      type: "weapon_ranged",
+      ammo_id: "ammo_12ga",
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 8,
+        fallbackReason: "unsupported_weapon_metadata",
+      },
+    });
+  });
+
+  test("unknown weapon id with known ammo still uses ammo fallback", () => {
+    const weapon: AmmoWeaponLike = {
+      id: "unknown_weapon_999",
+      type: "weapon_ranged",
+      ammo_id: "ammo_9x18",
+    };
+    expect(getWeaponAmmoSpec(weapon)).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: 8,
+        fallbackReason: "unsupported_weapon_metadata",
+      },
+    });
+  });
+
+  test("unknown weapon id with unknown ammo/caliber returns invalid_capacity or no_ammo_id according to current logic", () => {
+    const weaponNoAmmo: AmmoWeaponLike = {
+      id: "unknown_weapon_999",
+      type: "weapon_ranged",
+    };
+    expect(getWeaponAmmoSpec(weaponNoAmmo)).toEqual({ ok: false, reason: "no_ammo_id" });
+
+    const weaponUnknownAmmo: AmmoWeaponLike = {
+      id: "unknown_weapon_999",
+      type: "weapon_ranged",
+      ammo_id: "ammo_unknown",
+    };
+    const spec = getWeaponAmmoSpec(weaponUnknownAmmo);
+    expect(spec).toMatchObject({
+      ok: true,
+      spec: {
+        magazineCapacity: null,
+      },
+    });
+    expect(computeAmmoDisabledReason({ weapon: weaponUnknownAmmo, backpack: backpack(10, "ammo_unknown"), currentMagazine: 0 })).toBe("invalid_capacity");
+  });
+
+  test("supports alternative weapon ID fields", () => {
+    const weaponItemId: AmmoWeaponLike = {
+      item_id: "aps",
+      type: "weapon_ranged",
+      ammo_id: "ammo_9x18",
+    };
+    expect(getWeaponAmmoSpec(weaponItemId)).toMatchObject({
+      ok: true,
+      spec: { magazineCapacity: 20 },
+    });
+
+    const weaponBaseId: AmmoWeaponLike = {
+      baseId: "SKS", // test case insensitivity/normalization
+      type: "weapon_ranged",
+      ammo_id: "ammo_762x39",
+    };
+    expect(getWeaponAmmoSpec(weaponBaseId)).toMatchObject({
+      ok: true,
+      spec: { magazineCapacity: 10 },
+    });
+  });
 });
+

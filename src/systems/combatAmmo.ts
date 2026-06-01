@@ -22,6 +22,10 @@ export interface AmmoWeaponStatsLike {
 
 export interface AmmoWeaponLike {
   readonly id?: string;
+  readonly item_id?: unknown;
+  readonly itemId?: unknown;
+  readonly weaponId?: unknown;
+  readonly baseId?: unknown;
   readonly itemClass?: unknown;
   readonly type?: unknown;
   readonly ammo_id?: unknown;
@@ -143,6 +147,42 @@ const getFallbackCapacity = (ammoId: string): number | null => {
   return null;
 };
 
+const WEAPON_FALLBACK_CAPACITIES: Record<string, number> = {
+  pm: 8,
+  aps: 20,
+  tt: 8,
+  ppsh: 35,
+  akm: 30,
+  sks: 10,
+  saiga_12: 8,
+  saiga: 8,
+  svd: 10,
+  aks_74u: 30,
+  aks74u: 30,
+  ak_74: 30,
+  ak74: 30,
+  rpk: 45,
+  mosin: 5,
+  iz_43: 2,
+  iz43: 2,
+  bekas: 4,
+  rifle_t3_hunting: 5,
+};
+
+const getWeaponSpecificFallbackCapacity = (weaponId: string): number | null => {
+  return WEAPON_FALLBACK_CAPACITIES[weaponId] ?? null;
+};
+
+const getWeaponId = (weapon: AmmoWeaponLike): string | null => {
+  const idVal =
+    readString(weapon.id) ??
+    readString(weapon.item_id) ??
+    readString(weapon.itemId) ??
+    readString(weapon.weaponId) ??
+    readString(weapon.baseId);
+  return idVal ? idVal.toLowerCase() : null;
+};
+
 const isNonRangedSignal = (weapon: AmmoWeaponLike): boolean => {
   const checkValue = (val: unknown): boolean => {
     if (typeof val !== "string") return false;
@@ -235,9 +275,15 @@ export const getWeaponAmmoSpec = (weapon: AmmoWeaponLike | null | undefined): We
 
   let magazineCapacity = explicitCapacity;
   if (magazineCapacity === null && !hasCapacityField) {
-    const fallbackVal = getFallbackCapacity(ammoId);
-    if (fallbackVal !== null) {
-      magazineCapacity = fallbackVal;
+    const weaponId = getWeaponId(weapon);
+    const weaponFallback = weaponId ? getWeaponSpecificFallbackCapacity(weaponId) : null;
+    if (weaponFallback !== null) {
+      magazineCapacity = weaponFallback;
+    } else {
+      const ammoFallbackVal = getFallbackCapacity(ammoId);
+      if (ammoFallbackVal !== null) {
+        magazineCapacity = ammoFallbackVal;
+      }
     }
   }
 
