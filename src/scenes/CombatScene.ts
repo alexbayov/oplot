@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import {
   GameState,
   addToStack,
-  countInStacks,
   removeFromStack,
 } from "../state/GameState";
 import { COVER_DEFENSE_BONUS_PCT } from "../state/balance";
@@ -43,6 +42,8 @@ import {
   getReserveAmmoCount,
   computeAmmoDisabledReason,
   getAmmoDisabledReasonLabel,
+  computeMagazineShotPlan,
+  computeReloadPlan,
   type AmmoWeaponLike,
 } from "../systems/combatAmmo";
 import type { ConsumableItem, Mob } from "../types";
@@ -94,6 +95,7 @@ export class CombatScene extends Phaser.Scene {
   private apLabel?: Phaser.GameObjects.Text;
   private actionPreviewLabel?: Phaser.GameObjects.Text;
   private ammoPreviewLabel?: Phaser.GameObjects.Text;
+  private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
 
   public constructor() {
     super("CombatScene");
@@ -117,6 +119,7 @@ export class CombatScene extends Phaser.Scene {
     this.apLabel = undefined;
     this.actionPreviewLabel = undefined;
     this.ammoPreviewLabel = undefined;
+    this.currentMagazineByWeaponId.clear();
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
@@ -124,7 +127,10 @@ export class CombatScene extends Phaser.Scene {
     addVignette(this);
     addDustParticles(this);
       createSubtitle(this, CY, "Вылазка не активна.");
-      createButton(this, H - 80, "В Оплот", () => this.scene.start("BaseScene"));
+      createButton(this, H - 80, "В Оплот", () => {
+        this.refundRuntimeMagazinesToBackpack();
+        this.scene.start("BaseScene");
+      });
       return;
     }
     const enemyIds = sortie.encounters[sortie.fights_completed] ?? [];
@@ -379,9 +385,22 @@ export class CombatScene extends Phaser.Scene {
     if (melee) {
       weaponStats = melee;
     } else if (ranged) {
-      const ammoHave = countInStacks(player.backpack, ranged.ammo_id);
-      if (ammoHave >= ranged.ammo_per_shot) {
-        player.backpack = removeFromStack(player.backpack, ranged.ammo_id, ranged.ammo_per_shot);
+      const existingEntry = this.getCurrentMagazineEntryForEquippedWeapon();
+      const currentMagazine = existingEntry?.count ?? 0;
+      const plan = computeMagazineShotPlan({
+        weapon: weaponItem as unknown as AmmoWeaponLike,
+        currentMagazine,
+      });
+      if (plan.ok) {
+        let ammoId = existingEntry?.ammoId;
+        if (!ammoId) {
+          const specResult = getWeaponAmmoSpec(weaponItem as unknown as AmmoWeaponLike);
+          ammoId = specResult.ok ? specResult.spec.ammoId : "unknown";
+        }
+        this.currentMagazineByWeaponId.set(player.equipped_weapon_id, {
+          ammoId,
+          count: plan.resultingMagazine,
+        });
         weaponStats = ranged;
       } else {
         this.log("Нет патронов — удар прикладом.");
@@ -474,6 +493,7 @@ export class CombatScene extends Phaser.Scene {
 
   private onHeroRetreat(): void {
     if (this.state !== "awaiting_hero") return;
+    this.refundRuntimeMagazinesToBackpack();
     this.state = "ended";
     const sortie = GameState.currentSortie;
     if (sortie && sortie.fights_completed < sortie.fights_total) {
@@ -506,20 +526,42 @@ export class CombatScene extends Phaser.Scene {
     }
 
     const spec = specResult.spec;
-    const disabledReason = computeAmmoDisabledReason({
+    const currentMagazine = this.currentMagazineByWeaponId.get(player.equipped_weapon_id)?.count ?? 0;
+    const plan = computeReloadPlan({
       weapon: weaponItem as unknown as AmmoWeaponLike,
       backpack: player.backpack,
-      currentMagazine: 0,
+      currentMagazine,
       magazineCapacity: spec.magazineCapacity,
     });
 
-    if (disabledReason !== null) {
-      const reasonLabel = getAmmoDisabledReasonLabel(disabledReason);
+    if (!plan.ok) {
+      const reasonLabel = getAmmoDisabledReasonLabel(plan.disabledReason);
       this.log(`Перезарядка: ${reasonLabel}.`);
       return;
     }
 
-    this.log("Перезарядка пока в предпросмотре: выстрелы ещё используют старую модель патронов.");
+    player.backpack = removeFromStack(player.backpack, plan.ammoId, plan.reserveAmmoConsumed);
+    this.currentMagazineByWeaponId.set(player.equipped_weapon_id, {
+      ammoId: plan.ammoId,
+      count: plan.resultingMagazine,
+    });
+    this.log(`Перезарядка: +${plan.reloadAmount} патр.`);
+    this.updateDisplay();
+  }
+
+  private refundRuntimeMagazinesToBackpack(): void {
+    const player = GameState.player;
+    for (const [, entry] of this.currentMagazineByWeaponId.entries()) {
+      if (entry.count > 0) {
+        player.backpack = addToStack(player.backpack, entry.ammoId, entry.count);
+      }
+    }
+    this.currentMagazineByWeaponId.clear();
+  }
+
+  private getCurrentMagazineEntryForEquippedWeapon(): { ammoId: string; count: number } | undefined {
+    const player = GameState.player;
+    return this.currentMagazineByWeaponId.get(player.equipped_weapon_id);
   }
 
   // ---------- end conditions ----------
@@ -540,6 +582,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private endCombatVictory(): void {
+    this.refundRuntimeMagazinesToBackpack();
     this.state = "ended";
     const sortie = GameState.currentSortie;
     track("combat_resolved", {
@@ -635,6 +678,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private proceedToDefeatEnd(): void {
+    this.refundRuntimeMagazinesToBackpack();
     const overlay = this.add.rectangle(CX, CY, W, H, 0x000000, 0).setAlpha(0).setDepth(200);
     runTween(this, "tween_defeat_fade", overlay);
     this.time.delayedCall(500, () => {
@@ -644,6 +688,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private endSortie(reason: "retreat" | "defeat"): void {
+    this.refundRuntimeMagazinesToBackpack();
     track("combat_resolved", {
       outcome: reason === "defeat" ? "died" : "fled",
       zone_id: GameState.currentSortie?.zone_id ?? "unknown",
@@ -838,21 +883,22 @@ export class CombatScene extends Phaser.Scene {
           const ammoName = ammoItem?.name_ru ?? spec.ammoId;
           const reserve = getReserveAmmoCount(player.backpack, spec.ammoId);
           
+          const currentMagazine = this.currentMagazineByWeaponId.get(player.equipped_weapon_id)?.count ?? 0;
           const disabledReason = computeAmmoDisabledReason({
             weapon: weaponItem as unknown as AmmoWeaponLike,
             backpack: player.backpack,
-            currentMagazine: 0,
+            currentMagazine,
             magazineCapacity: spec.magazineCapacity,
           });
 
           const capacityStr = spec.magazineCapacity !== null ? String(spec.magazineCapacity) : "неизвестна";
-          const magazinePreview = `Магазин: не подключён · Ёмкость: ${capacityStr}`;
+          const magazinePreview = `Магазин: ${currentMagazine}/${capacityStr}`;
           
           let reloadStatus: string;
           if (disabledReason) {
             reloadStatus = getAmmoDisabledReasonLabel(disabledReason);
           } else {
-            reloadStatus = "предпросмотр";
+            reloadStatus = "готово";
           }
           if (spec.fallbackReason === "unsupported_weapon_metadata") {
             reloadStatus += " (неполные данные)";
