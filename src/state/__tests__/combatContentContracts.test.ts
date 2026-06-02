@@ -1,9 +1,52 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, test, beforeEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { clearRegistry, getItem, loadContentItems } from "../ItemRegistry";
 import { isCraftWeapon, isDropWeapon } from "../../types/items";
 import type { Item, Mob } from "../../types";
+import { getWeaponAmmoSpec, computeMagazineShotPlan, computeReloadPlan } from "../../systems/combatAmmo";
+
+const isRangedWeapon = (item: any): boolean => {
+  const checkValueNonRanged = (val: unknown): boolean => {
+    if (typeof val !== "string") return false;
+    const lower = val.toLowerCase();
+    return ["melee", "material", "consumable", "armor", "mod", "part", "ammo", "resource", "quest", "broken_craft"].some(w => lower.includes(w));
+  };
+
+  const checkValueRanged = (val: unknown): boolean => {
+    if (typeof val !== "string") return false;
+    const lower = val.toLowerCase();
+    return lower.includes("ranged") || lower.includes("gun") || lower.includes("firearm");
+  };
+
+  const nonRanged =
+    checkValueNonRanged(item.type) ||
+    checkValueNonRanged(item.item_class) ||
+    checkValueNonRanged(item.itemClass) ||
+    checkValueNonRanged(item.category) ||
+    checkValueNonRanged(item.kind) ||
+    checkValueNonRanged(item.class) ||
+    (typeof item.caliber === "string" && (item.caliber.toLowerCase() === "melee" || item.caliber.toLowerCase() === "thrown"));
+
+  if (nonRanged) return false;
+
+  const ranged =
+    checkValueRanged(item.type) ||
+    checkValueRanged(item.weaponKind) ||
+    checkValueRanged(item.kind) ||
+    checkValueRanged(item.class) ||
+    checkValueRanged(item.category) ||
+    checkValueRanged(item.slot) ||
+    checkValueRanged(item.equipSlot) ||
+    item.type === "weapon_ranged";
+
+  return Boolean(ranged);
+};
+
+const knownMagazineContractBlockers: Record<string, string> = {
+  prime_shotgun: "missing magazine capacity for ammo_rifle / no fallback capacity",
+};
 
 type RawItem = Item & Record<string, unknown>;
 
@@ -136,6 +179,98 @@ describe("M12.5 combat content contracts", () => {
 
       const displayName = m11.name_generic_ru || m11.name_real_ru;
       expect(displayName.trim(), `${item.id} display name`).not.toBe("");
+    }
+  });
+
+  test("all non-blocked shipped ranged weapons satisfy magazine reload and attack contracts", () => {
+    const items = loadItems();
+    const ids = new Set(items.map((item) => item.id));
+    loadContentItems(itemMap(items));
+
+    for (const item of items) {
+      if (!isRangedWeapon(item)) continue;
+
+      // Filter via knownMagazineContractBlockers with TODO for future content resolution
+      if (item.id in knownMagazineContractBlockers) continue;
+
+      const adapted = getItem(item.id);
+      expect(adapted, `${item.id} should adapt into ItemRegistry`).toBeDefined();
+
+      const specResult = getWeaponAmmoSpec(item as any);
+      expect(specResult.ok, `${item.id} should return ok from getWeaponAmmoSpec. Reason: ${!specResult.ok ? (specResult as any).reason : ""}`).toBe(true);
+
+      if (specResult.ok) {
+        const spec = specResult.spec;
+        expect(ids.has(spec.ammoId), `${item.id} ammoId ${spec.ammoId} should exist in items.json`).toBe(true);
+
+        const ammoItem = getItem(spec.ammoId);
+        expect(ammoItem, `${item.id} ammoId ${spec.ammoId} should load successfully`).toBeDefined();
+        if (ammoItem) {
+          const isAmmoOrConsumable = ammoItem.itemClass === "ammo" || ammoItem.itemClass === "consumable";
+          expect(isAmmoOrConsumable, `${item.id} ammo ${spec.ammoId} should have itemClass ammo or consumable`).toBe(true);
+        }
+
+        expect(spec.ammoPerShot, `${item.id} ammoPerShot`).toBeGreaterThan(0);
+        expect(Number.isInteger(spec.ammoPerShot), `${item.id} ammoPerShot should be integer`).toBe(true);
+
+        const capacity = spec.magazineCapacity;
+        expect(capacity, `${item.id} magazineCapacity`).not.toBeNull();
+        if (capacity === null) return;
+
+        expect(capacity, `${item.id} magazineCapacity`).toBeGreaterThan(0);
+        expect(Number.isInteger(capacity), `${item.id} magazineCapacity should be integer`).toBe(true);
+
+        const shotPlan = computeMagazineShotPlan({
+          weapon: item as any,
+          currentMagazine: capacity,
+        });
+        expect(shotPlan.ok, `${item.id} computeMagazineShotPlan failed. Reason: ${!shotPlan.ok ? (shotPlan as any).reason : ""}`).toBe(true);
+
+        const backpack = [{ item_id: spec.ammoId, count: capacity }];
+        const reloadPlan = computeReloadPlan({
+          weapon: item as any,
+          backpack,
+          currentMagazine: 0,
+          magazineCapacity: capacity,
+        });
+        expect(reloadPlan.ok, `${item.id} computeReloadPlan failed. Reason: ${!reloadPlan.ok ? (reloadPlan as any).disabledReason : ""}`).toBe(true);
+      }
+    }
+  });
+
+  test("known shipped ranged magazine blockers are explicit and reviewable", () => {
+    const items = loadItems();
+    loadContentItems(itemMap(items));
+
+    const blockerIds = Object.keys(knownMagazineContractBlockers);
+    expect(blockerIds).toEqual(["prime_shotgun"]);
+
+    for (const id of blockerIds) {
+      const rawItem = items.find((i) => i.id === id);
+      expect(rawItem, `blocker item ${id} should exist in items.json`).toBeDefined();
+      if (rawItem) {
+        const specResult = getWeaponAmmoSpec(rawItem as any);
+        if (specResult.ok) {
+          expect(specResult.spec.magazineCapacity).toBeNull();
+        } else {
+          expect(specResult.ok).toBe(false);
+        }
+      }
+    }
+  });
+
+  test("negative controls return not_ranged_weapon from getWeaponAmmoSpec", () => {
+    const items = loadItems();
+    loadContentItems(itemMap(items));
+
+    for (const item of items) {
+      if (isRangedWeapon(item)) continue;
+
+      const specResult = getWeaponAmmoSpec(item as any);
+      expect(specResult.ok, `item ${item.id} should not be classified as ranged`).toBe(false);
+      if (!specResult.ok) {
+        expect(specResult.reason, `item ${item.id} classification reason`).toBe("not_ranged_weapon");
+      }
     }
   });
 });
