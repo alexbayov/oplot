@@ -68,6 +68,7 @@ interface MobInstance {
 }
 
 type CombatState = "awaiting_hero" | "resolving_mobs" | "ended";
+type DistanceBand = "close" | "medium" | "far";
 
 interface TurnOrderEntry {
   kind: "hero" | "mob";
@@ -95,6 +96,8 @@ export class CombatScene extends Phaser.Scene {
   private apLabel?: Phaser.GameObjects.Text;
   private actionPreviewLabel?: Phaser.GameObjects.Text;
   private ammoPreviewLabel?: Phaser.GameObjects.Text;
+  private distanceLabel?: Phaser.GameObjects.Text;
+  private distanceBand: DistanceBand = "medium";
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
 
   public constructor() {
@@ -119,6 +122,8 @@ export class CombatScene extends Phaser.Scene {
     this.apLabel = undefined;
     this.actionPreviewLabel = undefined;
     this.ammoPreviewLabel = undefined;
+    this.distanceLabel = undefined;
+    this.distanceBand = "medium";
     this.currentMagazineByWeaponId.clear();
 
     const sortie = GameState.currentSortie;
@@ -223,6 +228,15 @@ export class CombatScene extends Phaser.Scene {
         color: "#A8B8C8",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
+      })
+      .setOrigin(0.5);
+    this.distanceLabel = this.add
+      .text(CX, actionY - 90, "", {
+        align: "center",
+        color: "#C5A267",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
 
@@ -816,10 +830,22 @@ export class CombatScene extends Phaser.Scene {
     this.updateActionPreview();
   }
 
+  private distanceBandLabel(): string {
+    switch (this.distanceBand) {
+      case "close":
+        return "близко";
+      case "medium":
+        return "средне";
+      case "far":
+        return "далеко";
+    }
+  }
+
   private updateActionPreview(): void {
     if (!this.apLabel || !this.actionPreviewLabel) return;
     const apPips = "●".repeat(this.currentAp).padEnd(DEFAULT_PLAYER_AP, "○");
     this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
+    this.distanceLabel?.setText(`Дистанция: ${this.distanceBandLabel()}`);
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     const player = GameState.player;
