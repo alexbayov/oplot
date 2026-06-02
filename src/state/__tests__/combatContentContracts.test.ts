@@ -44,6 +44,10 @@ const isRangedWeapon = (item: any): boolean => {
   return Boolean(ranged);
 };
 
+const knownMagazineContractBlockers: Record<string, string> = {
+  prime_shotgun: "missing magazine capacity for ammo_rifle / no fallback capacity",
+};
+
 type RawItem = Item & Record<string, unknown>;
 
 type RawMob = Mob & Record<string, unknown>;
@@ -178,7 +182,7 @@ describe("M12.5 combat content contracts", () => {
     }
   });
 
-  test("all shipped ranged weapons satisfy the magazine reload and attack contracts", () => {
+  test("all non-blocked shipped ranged weapons satisfy magazine reload and attack contracts", () => {
     const items = loadItems();
     const ids = new Set(items.map((item) => item.id));
     loadContentItems(itemMap(items));
@@ -186,8 +190,8 @@ describe("M12.5 combat content contracts", () => {
     for (const item of items) {
       if (!isRangedWeapon(item)) continue;
 
-      // prime_shotgun lacks magazine capacity metadata in items.json (fails the contract)
-      if (item.id === "prime_shotgun") continue;
+      // Filter via knownMagazineContractBlockers with TODO for future content resolution
+      if (item.id in knownMagazineContractBlockers) continue;
 
       const adapted = getItem(item.id);
       expect(adapted, `${item.id} should adapt into ItemRegistry`).toBeDefined();
@@ -230,6 +234,27 @@ describe("M12.5 combat content contracts", () => {
           magazineCapacity: capacity,
         });
         expect(reloadPlan.ok, `${item.id} computeReloadPlan failed. Reason: ${!reloadPlan.ok ? (reloadPlan as any).disabledReason : ""}`).toBe(true);
+      }
+    }
+  });
+
+  test("known shipped ranged magazine blockers are explicit and reviewable", () => {
+    const items = loadItems();
+    loadContentItems(itemMap(items));
+
+    const blockerIds = Object.keys(knownMagazineContractBlockers);
+    expect(blockerIds).toEqual(["prime_shotgun"]);
+
+    for (const id of blockerIds) {
+      const rawItem = items.find((i) => i.id === id);
+      expect(rawItem, `blocker item ${id} should exist in items.json`).toBeDefined();
+      if (rawItem) {
+        const specResult = getWeaponAmmoSpec(rawItem as any);
+        if (specResult.ok) {
+          expect(specResult.spec.magazineCapacity).toBeNull();
+        } else {
+          expect(specResult.ok).toBe(false);
+        }
       }
     }
   });
