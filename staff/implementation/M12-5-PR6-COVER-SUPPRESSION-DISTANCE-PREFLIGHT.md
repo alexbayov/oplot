@@ -46,6 +46,8 @@ Keep PR6 small and reversible:
 - Do not change loot, return, save, cloud save, Yandex/platform, ads/IAP, or scene exit flows.
 - Do not change ammo/reload/magazine mutation behavior.
 - Only mention distance/suppression in ammo/action preview if the copy is truthful and does not change magazine rules.
+- PR6a display-only distance chips have no AP effect and must not mutate AP.
+- PR6b real movement must either consume `1 AP` through the existing AP model with tests, or remain preview-only until AP consumption is approved.
 - Keep existing PR5 reload/refund tests green before and after any future PR6 runtime work.
 
 ## 4. Distance bands proposal
@@ -66,10 +68,10 @@ Default initial band should be `medium` unless a later pre-approved content cont
 
 Future PR6 may add two small actions or preview-only affordances:
 
-- **Move closer** — shifts `far → medium` or `medium → close`; disabled at `close`.
-- **Move away** — shifts `close → medium` or `medium → far`; disabled at `far`.
+- **Move closer** — costs `1 AP` once real, changes exactly one band (`far → medium` or `medium → close`), and is disabled at `close`.
+- **Move away** — costs `1 AP` once real, changes exactly one band (`close → medium` or `medium → far`), and is disabled at `far`.
 
-These actions must not require pathfinding or geometry. They should only update scene-local band state.
+These actions must not require pathfinding or geometry. They should only update scene-local band state. If AP consumption is not safely integrated yet, PR6b must keep movement display-only / preview-only rather than shipping real free repositioning.
 
 ### Weapon archetype interaction
 
@@ -227,8 +229,13 @@ Recommended layout approach:
 Future PR6 runtime implementation should add tests for:
 
 - default distance is `medium`;
-- move closer updates `far → medium → close` and disables at `close`;
-- move away updates `close → medium → far` and disables at `far`;
+- move closer displays `1 AP` cost;
+- move away displays `1 AP` cost;
+- insufficient AP disables movement;
+- real move closer updates exactly one band (`far → medium` or `medium → close`) and disables at `close`;
+- real move away updates exactly one band (`close → medium` or `medium → far`) and disables at `far`;
+- real movement cannot bypass AP once implemented;
+- display-only PR6a distance chip does not mutate AP;
 - cover/guard state applies and clears predictably;
 - exposed state applies and clears predictably if introduced;
 - suppression state applies and clears predictably if introduced;
@@ -266,7 +273,8 @@ Stop implementation if PR6 requires any of the following:
 - changes that break ammo/reload/refund tests;
 - UI that cannot fit in 1280×720 with readable AP/ammo/intent/action controls;
 - tactical state that tests cannot isolate from victory/defeat/retreat lifecycle;
-- suppression UI/tests that require a non-existent shipped enemy suppression intent source.
+- suppression UI/tests that require a non-existent shipped enemy suppression intent source;
+- real distance movement shipped as a free action instead of costing `1 AP` or staying preview-only.
 
 ## 12. Anti-scope
 
