@@ -97,6 +97,7 @@ export class CombatScene extends Phaser.Scene {
   private actionPreviewLabel?: Phaser.GameObjects.Text;
   private ammoPreviewLabel?: Phaser.GameObjects.Text;
   private distanceLabel?: Phaser.GameObjects.Text;
+  private coverStatusLabel?: Phaser.GameObjects.Text;
   private distanceBand: DistanceBand = "medium";
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
 
@@ -123,6 +124,7 @@ export class CombatScene extends Phaser.Scene {
     this.actionPreviewLabel = undefined;
     this.ammoPreviewLabel = undefined;
     this.distanceLabel = undefined;
+    this.coverStatusLabel = undefined;
     this.distanceBand = "medium";
     this.currentMagazineByWeaponId.clear();
 
@@ -234,6 +236,15 @@ export class CombatScene extends Phaser.Scene {
       .text(CX, actionY - 90, "", {
         align: "center",
         color: "#C5A267",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    this.coverStatusLabel = this.add
+      .text(CX - 190, actionY - 90, "", {
+        align: "center",
+        color: "#8FD18F",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
         fontStyle: "bold",
@@ -471,6 +482,7 @@ export class CombatScene extends Phaser.Scene {
     const sortie = GameState.currentSortie;
     if (sortie) sortie.cover_active = true;
     this.log("Герой в укрытии (+50% защиты).");
+    this.updateActionPreview();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
   }
@@ -861,6 +873,7 @@ export class CombatScene extends Phaser.Scene {
     const apPips = "●".repeat(this.currentAp).padEnd(DEFAULT_PLAYER_AP, "○");
     this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
     this.distanceLabel?.setText(`Дистанция: ${this.distanceBandLabel()}`);
+    this.coverStatusLabel?.setText(GameState.currentSortie?.cover_active ? "Укрытие" : "");
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     const player = GameState.player;
