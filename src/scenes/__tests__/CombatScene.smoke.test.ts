@@ -654,6 +654,52 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(activeTexts.some((text) => text.includes("перемещение готово"))).toBe(false);
   });
 
+  test("movement preview affordances survive display and preview refreshes", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "БЛИЖЕ")).toBe(true);
+    expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
+  });
+
+  test("movement buttons do not replace core combat actions or previews", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const expectedButtonLabels = ["АТАКА", "УКРЫТИЕ", "АПТЕЧКА", "ПЕРЕЗАРЯДКА", "БЛИЖЕ", "ДАЛЬШЕ", "ОТСТУП"];
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+
+    for (const label of expectedButtonLabels) {
+      expect(activeTexts.filter((text) => text === label)).toHaveLength(1);
+    }
+    expect(activeTexts.some((text) => text === "AP ●●● 3/3")).toBe(true);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+  });
+
+  test("movement preview copy never claims real movement happened", () => {
+    const misleadingCopy = ["перемещение выполнено", "дистанция изменена", "подошли", "отошли"];
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text.toLowerCase());
+
+    for (const copy of misleadingCopy) {
+      expect(activeTexts.some((text) => text.includes(copy))).toBe(false);
+    }
+    expect(activeTexts.some((text) => text.includes("ближе 1 ap: готово"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("дальше 1 ap: готово"))).toBe(false);
+  });
+
   test("movement affordance clicks are preview-only and do not mutate combat resources", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
@@ -683,6 +729,26 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(GameState.player.backpack).toEqual(backpackBefore);
     expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
     expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("movement affordance after attack state guard does not append logs or mutate state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroAttack();
+
+    expect(harness.internals.state).toBe("resolving_mobs");
+    const logBefore = [...harness.internals.logLines];
+    const apBefore = harness.internals.currentAp;
+    const distanceBefore = harness.internals.distanceBand;
+
+    harness.internals.onHeroMoveCloser();
+    harness.internals.onHeroMoveAway();
+
+    expect(harness.internals.logLines).toEqual(logBefore);
+    expect(harness.internals.state).toBe("resolving_mobs");
+    expect(harness.internals.distanceBand).toBe(distanceBefore);
+    expect(harness.internals.currentAp).toBe(apBefore);
   });
 
   test("movement affordance does not log or mutate outside the hero input state", () => {
