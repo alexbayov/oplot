@@ -2352,7 +2352,8 @@
       "attack_speed": 65,
       "noise": "high",
       "ammo_id": "ammo_rifle",
-      "ammo_per_shot": 1
+      "ammo_per_shot": 1,
+      "magazine_size": 1
     },
     "item_class": "drop"
   },

@@ -44,9 +44,7 @@ const isRangedWeapon = (item: any): boolean => {
   return Boolean(ranged);
 };
 
-const knownMagazineContractBlockers: Record<string, string> = {
-  prime_shotgun: "missing magazine capacity for ammo_rifle / no fallback capacity",
-};
+const knownMagazineContractBlockers: Record<string, string> = {};
 
 type RawItem = Item & Record<string, unknown>;
 
@@ -243,7 +241,7 @@ describe("M12.5 combat content contracts", () => {
     loadContentItems(itemMap(items));
 
     const blockerIds = Object.keys(knownMagazineContractBlockers);
-    expect(blockerIds).toEqual(["prime_shotgun"]);
+    expect(blockerIds).toEqual([]);
 
     for (const id of blockerIds) {
       const rawItem = items.find((i) => i.id === id);
