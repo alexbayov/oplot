@@ -589,6 +589,67 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
   });
 
+  test("keeps distance chip stable across display and preview refreshes", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
+  });
+
+  test("keeps attack flow unchanged while distance chip remains display-only", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    expect(harness.internals.state).toBe("awaiting_hero");
+    expect(harness.internals.distanceBand).toBe("medium");
+
+    harness.internals.onHeroAttack();
+
+    expect(harness.internals.state).toBe("resolving_mobs");
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Дистанция: средне")).toBe(true);
+  });
+
+  test("keeps reload magazine flow unchanged while distance stays medium", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+
+    expect(GameState.player.backpack).toEqual([]);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Дистанция: средне")).toBe(true);
+  });
+
+  test("does not render hidden movement action labels", () => {
+    const forbiddenMovementLabels = ["БЛИЖЕ", "ДАЛЬШЕ", "ПОДОЙТИ", "ОТОЙТИ", "MOVE"];
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    const activeTexts = harness.textObjects
+      .filter((obj) => !obj.destroyed)
+      .map((obj) => obj.text.toUpperCase());
+
+    for (const label of forbiddenMovementLabels) {
+      expect(activeTexts.some((text) => text.includes(label))).toBe(false);
+    }
+  });
+
   test("does not render enemy intent for dead mobs skipped by current scene", () => {
     GameState.data.mobs.marauder = testMob({ hp: 0 });
     const harness = createSceneHarness();
