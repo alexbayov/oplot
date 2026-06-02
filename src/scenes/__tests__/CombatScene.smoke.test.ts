@@ -204,6 +204,8 @@ interface CombatSceneInternals {
   state: string;
   logLines: string[];
   currentAp: number;
+  distanceBand: "close" | "medium" | "far";
+  currentMagazineByWeaponId: Map<string, { ammoId: string; count: number }>;
 }
 
 interface SceneHarness {
@@ -562,12 +564,30 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "АПТЕЧКА")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "ОТСТУП")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
   });
 
+  test("renders display-only default distance chip without mutating AP or inventory state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+
+    harness.scene.create();
+
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
+    expect(harness.internals.currentAp).toBe(3);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
+    expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Магазин: 0/8"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+  });
 
   test("does not render enemy intent for dead mobs skipped by current scene", () => {
     GameState.data.mobs.marauder = testMob({ hp: 0 });
