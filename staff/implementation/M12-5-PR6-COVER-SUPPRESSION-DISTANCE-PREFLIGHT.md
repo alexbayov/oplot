@@ -18,6 +18,7 @@ PR5 ammo/reload is considered closed for implementation planning purposes:
 - Current cover behavior exists as legacy/simple cover through the existing cover action.
 - There are no player-facing distance bands yet.
 - There is no suppression mechanic yet.
+- Current intent adapter output does not emit `suppress` for shipped content; no shipped mob/content path currently produces enemy suppression.
 - `CombatEngine` is still not the runtime authority for player-facing combat; `CombatScene` remains authoritative.
 
 ## 2. PR6 goal
@@ -157,7 +158,7 @@ Prefer keeping the current cover button as the same action for PR6. It may be re
 
 ### First version only
 
-Suppression should start narrow:
+Suppression should start narrow. Suppression is a future PR6+ capability, not something currently produced by shipped enemy intents:
 
 - visible temporary state;
 - short duration;
@@ -166,12 +167,14 @@ Suppression should start narrow:
 - no AI rewrite;
 - no new content requirement.
 
+Current reality: `deriveVisibleEnemyIntent` does not emit suppression for shipped content today. If enemy suppression is desired later, it requires a separate intent adapter/content mapping PR with tests before any UI or smoke test depends on that source.
+
 ### Possible triggers
 
 Future PR6 runtime split may consider:
 
 - player suppress action if enough magazine ammo is available;
-- enemy suppress intent already visible through intent adapter if behavior can map safely;
+- future enemy suppress intent only after explicit intent adapter/content mapping; do not assume it exists in PR6a/PR6b;
 - automatic/SMG-style weapons later, only if current content supports it without mass edits.
 
 ### Safe first implementation options
@@ -248,6 +251,7 @@ Do not rely on exact pixel layout assertions. Prefer text/chip existence, state 
 - Scope creep into grid tactics/pathfinding would exceed PR6.
 - Ammo/refund behavior can regress if suppression/fire actions bypass PR5 magazine helpers.
 - Enemy intent determinism can break if PR6 re-runs mutating `mobAI` logic for preview.
+- Suppression UI/tests can become misleading if wired to a non-existent enemy intent source.
 - Save persistence temptation can expand a small tactical PR into schema/cloud risk.
 
 ## 11. No-go conditions
@@ -261,7 +265,8 @@ Stop implementation if PR6 requires any of the following:
 - grid tactics, tile coordinates, terrain geometry, or pathfinding;
 - changes that break ammo/reload/refund tests;
 - UI that cannot fit in 1280×720 with readable AP/ammo/intent/action controls;
-- tactical state that tests cannot isolate from victory/defeat/retreat lifecycle.
+- tactical state that tests cannot isolate from victory/defeat/retreat lifecycle;
+- suppression UI/tests that require a non-existent shipped enemy suppression intent source.
 
 ## 12. Anti-scope
 
