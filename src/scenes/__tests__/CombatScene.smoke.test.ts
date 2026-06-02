@@ -202,7 +202,7 @@ interface CombatSceneInternals {
   checkEnd: () => boolean;
   updateActionPreview: () => void;
   updateDisplay: () => void;
-  mobs: { state: { hp: number; fled?: boolean }; mob: Mob }[];
+  mobs: { state: { hp: number; fled?: boolean; cover_active?: boolean }; mob: Mob }[];
   state: string;
   logLines: string[];
   currentAp: number;
@@ -587,12 +587,28 @@ describe("CombatScene M12.5 safety harness", () => {
 
     expect(harness.internals.distanceBand).toBe("medium");
     expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "Укрытие")).toBe(false);
     expect(harness.internals.currentAp).toBe(3);
     expect(GameState.player.backpack).toEqual(backpackBefore);
     expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Магазин: 0/8"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+  });
+
+  test("does not render hero cover chip from enemy mob cover state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const target = harness.internals.mobs[0];
+    if (!target) throw new Error("expected seeded mob");
+
+    target.state.cover_active = true;
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.currentSortie?.cover_active).toBe(false);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(false);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
   });
 
   test("keeps distance chip stable across display and preview refreshes", () => {
@@ -832,13 +848,22 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.delayed).toHaveLength(1);
   });
 
-  test("cover path sets sortie cover and queues turn resolution", () => {
+  test("cover path sets sortie cover, renders chip, and queues turn resolution", () => {
     const harness = createSceneHarness();
     harness.scene.create();
+    const apBefore = harness.internals.currentAp;
 
     harness.internals.onHeroCover();
 
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     expect(GameState.currentSortie?.cover_active).toBe(true);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text === "БЛИЖЕ")).toBe(true);
+    expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Магазин:")) || activeTexts.some((text) => text.includes("Перезарядка:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+    expect(harness.internals.currentAp).toBe(apBefore);
     expect(harness.internals.logLines.at(-1)).toContain("Герой в укрытии");
     expect(harness.internals.state).toBe("resolving_mobs");
     expect(harness.delayed).toHaveLength(1);
