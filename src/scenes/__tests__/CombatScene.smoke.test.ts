@@ -611,6 +611,56 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
   });
 
+  test("cover chip survives display and preview refreshes while hero cover flag is active", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroCover();
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.currentSortie?.cover_active).toBe(true);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+  });
+
+  test("cover chip clears when existing hero cover flag clears", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroCover();
+    if (GameState.currentSortie) {
+      GameState.currentSortie.cover_active = false;
+    }
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.currentSortie?.cover_active).toBe(false);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(false);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+  });
+
+  test("cover chip refresh alone does not create or mutate hero cover state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.currentSortie?.cover_active).toBe(false);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(false);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
+  });
+
   test("keeps distance chip stable across display and preview refreshes", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
@@ -867,6 +917,81 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.logLines.at(-1)).toContain("Герой в укрытии");
     expect(harness.internals.state).toBe("resolving_mobs");
     expect(harness.delayed).toHaveLength(1);
+  });
+
+  test("cover chip visibility follows hero cover flag without affecting reload or magazine attack", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+
+    expect(GameState.player.backpack).toEqual([]);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+    expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Укрытие")).toBe(false);
+
+    if (GameState.currentSortie) {
+      GameState.currentSortie.cover_active = true;
+    }
+    harness.internals.updateDisplay();
+
+    expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Укрытие")).toBe(true);
+
+    harness.internals.onHeroAttack();
+
+    expect(GameState.player.backpack).toEqual([]);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
+    expect(harness.internals.state).toBe("resolving_mobs");
+  });
+
+  test("cover chip does not affect movement preview affordances", () => {
+    const previewMessage = "Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    if (GameState.currentSortie) {
+      GameState.currentSortie.cover_active = true;
+    }
+    harness.internals.updateDisplay();
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroMoveCloser();
+    harness.internals.onHeroMoveAway();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(activeTexts.some((text) => text === "БЛИЖЕ")).toBe(true);
+    expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("cover chip layout keeps core combat previews visible and future states hidden", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const expectedButtonLabels = ["АТАКА", "УКРЫТИЕ", "АПТЕЧКА", "ПЕРЕЗАРЯДКА", "БЛИЖЕ", "ДАЛЬШЕ", "ОТСТУП"];
+    const forbiddenFutureStates = ["Готовность", "Открыт", "Подавлен", "Без укрытия"];
+    const harness = createSceneHarness();
+    harness.scene.create();
+    if (GameState.currentSortie) {
+      GameState.currentSortie.cover_active = true;
+    }
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    for (const label of expectedButtonLabels) {
+      expect(activeTexts.filter((text) => text === label)).toHaveLength(1);
+    }
+    expect(activeTexts.some((text) => text === "AP ●●● 3/3")).toBe(true);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+    for (const copy of forbiddenFutureStates) {
+      expect(activeTexts.some((text) => text.includes(copy))).toBe(false);
+    }
   });
 
   test("heal path reports missing medkit without advancing turn", () => {
