@@ -240,10 +240,10 @@ export class CombatScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
 
-    // ── Action bar (bottom, 5 buttons in row) ───────────────────
-    const btnW = 160;
-    const gap = 12;
-    const actions = 5;
+    // ── Action bar (bottom, 7 compact buttons in row) ─────────────
+    const btnW = 132;
+    const gap = 8;
+    const actions = 7;
     const totalW = actions * btnW + (actions - 1) * gap;
     const startX = CX - totalW / 2 + btnW / 2;
 
@@ -252,7 +252,9 @@ export class CombatScene extends Phaser.Scene {
       createSmallButton(this, startX + (btnW + gap), actionY, "УКРЫТИЕ", btnW, () => this.onHeroCover()),
       createSmallButton(this, startX + (btnW + gap) * 2, actionY, "АПТЕЧКА", btnW, () => this.onHeroHeal()),
       createSmallButton(this, startX + (btnW + gap) * 3, actionY, "ПЕРЕЗАРЯДКА", btnW, () => this.onHeroReload()),
-      createSmallButton(this, startX + (btnW + gap) * 4, actionY, "ОТСТУП", btnW, () => this.onHeroRetreat()),
+      createSmallButton(this, startX + (btnW + gap) * 4, actionY, "БЛИЖЕ", btnW, () => this.onHeroMoveCloser()),
+      createSmallButton(this, startX + (btnW + gap) * 5, actionY, "ДАЛЬШЕ", btnW, () => this.onHeroMoveAway()),
+      createSmallButton(this, startX + (btnW + gap) * 6, actionY, "ОТСТУП", btnW, () => this.onHeroRetreat()),
     );
 
     this.updateDisplay();
@@ -503,6 +505,19 @@ export class CombatScene extends Phaser.Scene {
     this.updateDisplay();
     this.state = "resolving_mobs";
     this.time.delayedCall(250, () => this.advanceTurn());
+  }
+
+  private onHeroMoveCloser(): void {
+    this.onHeroMovePreview();
+  }
+
+  private onHeroMoveAway(): void {
+    this.onHeroMovePreview();
+  }
+
+  private onHeroMovePreview(): void {
+    if (this.state !== "awaiting_hero") return;
+    this.log("Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.");
   }
 
   private onHeroRetreat(): void {
@@ -884,11 +899,14 @@ export class CombatScene extends Phaser.Scene {
 
     this.actionPreviewLabel.setText(
       [
-        previewAction("Атака", "attack", attackReason, attackReady),
-        previewAction("Укрытие", "cover"),
-        previewAction("Аптечка", "heal", healReason),
-        previewAction("Отступ", "retreat"),
-      ].join(" · "),
+        [
+          previewAction("Атака", "attack", attackReason, attackReady),
+          previewAction("Укрытие", "cover"),
+          previewAction("Аптечка", "heal", healReason),
+          previewAction("Отступ", "retreat"),
+        ].join(" · "),
+        "Ближе 1 AP: предпросмотр · Дальше 1 AP: предпросмотр",
+      ].join("\n"),
     );
 
     if (this.ammoPreviewLabel) {

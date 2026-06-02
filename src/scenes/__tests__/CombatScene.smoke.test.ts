@@ -196,6 +196,8 @@ interface CombatSceneInternals {
   onHeroCover: () => void;
   onHeroHeal: () => void;
   onHeroReload: () => void;
+  onHeroMoveCloser: () => void;
+  onHeroMoveAway: () => void;
   onHeroRetreat: () => void;
   checkEnd: () => boolean;
   updateActionPreview: () => void;
@@ -563,11 +565,15 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "УКРЫТИЕ")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "АПТЕЧКА")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "ОТСТУП")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "БЛИЖЕ")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "ДАЛЬШЕ")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
   });
 
@@ -636,18 +642,63 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Дистанция: средне")).toBe(true);
   });
 
-  test("does not render hidden movement action labels", () => {
-    const forbiddenMovementLabels = ["БЛИЖЕ", "ДАЛЬШЕ", "ПОДОЙТИ", "ОТОЙТИ", "MOVE"];
+  test("renders movement affordances as preview-only labels", () => {
     const harness = createSceneHarness();
     harness.scene.create();
 
-    const activeTexts = harness.textObjects
-      .filter((obj) => !obj.destroyed)
-      .map((obj) => obj.text.toUpperCase());
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "БЛИЖЕ")).toBe(true);
+    expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("перемещение готово"))).toBe(false);
+  });
 
-    for (const label of forbiddenMovementLabels) {
-      expect(activeTexts.some((text) => text.includes(label))).toBe(false);
-    }
+  test("movement affordance clicks are preview-only and do not mutate combat resources", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+
+    const previewMessage = "Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.";
+    const apBefore = harness.internals.currentAp;
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+
+    harness.internals.onHeroMoveCloser();
+
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+
+    harness.internals.onHeroMoveAway();
+
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("movement affordance does not log or mutate outside the hero input state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.state = "resolving_mobs";
+    const apBefore = harness.internals.currentAp;
+    const logBefore = [...harness.internals.logLines];
+
+    harness.internals.onHeroMoveCloser();
+    harness.internals.onHeroMoveAway();
+
+    expect(harness.internals.logLines).toEqual(logBefore);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("resolving_mobs");
   });
 
   test("does not render enemy intent for dead mobs skipped by current scene", () => {
