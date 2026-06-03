@@ -622,6 +622,77 @@ describe("CombatScene M12.5 safety harness", () => {
     expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
   });
 
+  test("noise chip does not affect reload or valid magazine attack", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.updateDisplay();
+
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.player.backpack).toEqual([]);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+
+    harness.internals.onHeroAttack();
+    harness.internals.updateDisplay();
+
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+  });
+
+  test("noise chip does not affect empty-magazine ranged fallback", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroAttack();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.logLines).toContain("Нет патронов — удар прикладом.");
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+  });
+
+  test("noise chip stays display-only through movement preview and cover action", () => {
+    const previewMessage = "Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroMoveCloser();
+    harness.internals.onHeroMoveAway();
+
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+    expect(harness.internals.currentNoise).toBe(0);
+
+    harness.internals.onHeroCover();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(GameState.currentSortie?.cover_active).toBe(true);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+    expect(harness.internals.currentNoise).toBe(0);
+  });
+
   test("does not render hero cover chip from enemy mob cover state", () => {
     const harness = createSceneHarness();
     harness.scene.create();
