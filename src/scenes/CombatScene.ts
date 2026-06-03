@@ -31,6 +31,7 @@ import {
   type MobRuntimeState,
 } from "../systems/mobAI";
 import { deriveVisibleEnemyIntent } from "../systems/combatIntents";
+import { formatNoiseDelta, getNoiseDeltaForAction } from "../systems/combatNoise";
 import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
@@ -929,7 +930,18 @@ export class CombatScene extends Phaser.Scene {
       hasMedkit,
       available: isHeroAwaiting,
     });
-    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}`;
+    const attackNoiseDeltaPreview = (() => {
+      if (attackReason || !weaponItem) return "";
+      const currentMagazine = this.currentMagazineByWeaponId.get(player.equipped_weapon_id)?.count ?? 0;
+      const shotPlan = computeMagazineShotPlan({
+        weapon: weaponItem as unknown as AmmoWeaponLike,
+        currentMagazine,
+      });
+      if (!shotPlan.ok) return "";
+
+      return ` · ${formatNoiseDelta(getNoiseDeltaForAction("valid_firearm_shot"))}`;
+    })();
+    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}${attackNoiseDeltaPreview}`;
 
     this.actionPreviewLabel.setText(
       [
