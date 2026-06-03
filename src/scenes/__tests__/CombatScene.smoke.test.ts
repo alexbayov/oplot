@@ -622,6 +622,59 @@ describe("CombatScene M12.5 safety harness", () => {
     expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
   });
 
+  test("loaded firearm attack preview shows preview-only noise delta without mutating noise", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр · Шум +2"))).toBe(true);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+    expect(GameState.player.backpack).toEqual([]);
+  });
+
+  test("firearm noise preview does not render for disabled attack state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    harness.internals.state = "resolving_mobs";
+
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: действие недоступно"))).toBe(true);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+  });
+
+  test("valid attack after noise preview still consumes magazine exactly once", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    harness.internals.updateActionPreview();
+
+    expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text.includes("Шум +2"))).toBe(true);
+    expect(harness.internals.currentNoise).toBe(0);
+
+    harness.internals.onHeroAttack();
+
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
+    expect(GameState.player.backpack).toEqual([]);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.state).toBe("resolving_mobs");
+  });
+
   test("noise chip does not affect reload or valid magazine attack", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
@@ -636,7 +689,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
     expect(harness.internals.currentNoise).toBe(0);
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
-    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр · Шум +2"))).toBe(true);
 
     harness.internals.onHeroAttack();
     harness.internals.updateDisplay();
