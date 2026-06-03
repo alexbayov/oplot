@@ -98,7 +98,9 @@ export class CombatScene extends Phaser.Scene {
   private ammoPreviewLabel?: Phaser.GameObjects.Text;
   private distanceLabel?: Phaser.GameObjects.Text;
   private coverStatusLabel?: Phaser.GameObjects.Text;
+  private noiseLabel?: Phaser.GameObjects.Text;
   private distanceBand: DistanceBand = "medium";
+  private currentNoise = 0;
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
 
   public constructor() {
@@ -125,7 +127,9 @@ export class CombatScene extends Phaser.Scene {
     this.ammoPreviewLabel = undefined;
     this.distanceLabel = undefined;
     this.coverStatusLabel = undefined;
+    this.noiseLabel = undefined;
     this.distanceBand = "medium";
+    this.currentNoise = 0;
     this.currentMagazineByWeaponId.clear();
 
     const sortie = GameState.currentSortie;
@@ -245,6 +249,15 @@ export class CombatScene extends Phaser.Scene {
       .text(CX - 190, actionY - 90, "", {
         align: "center",
         color: "#8FD18F",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    this.noiseLabel = this.add
+      .text(CX + 190, actionY - 90, "", {
+        align: "center",
+        color: "#D6B56D",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
         fontStyle: "bold",
@@ -868,12 +881,20 @@ export class CombatScene extends Phaser.Scene {
     }
   }
 
+  private noiseLevelLabel(): string {
+    if (this.currentNoise >= 9) return "шум критический";
+    if (this.currentNoise >= 6) return "опасно";
+    if (this.currentNoise >= 3) return "слышно";
+    return "тихо";
+  }
+
   private updateActionPreview(): void {
     if (!this.apLabel || !this.actionPreviewLabel) return;
     const apPips = "●".repeat(this.currentAp).padEnd(DEFAULT_PLAYER_AP, "○");
     this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
     this.distanceLabel?.setText(`Дистанция: ${this.distanceBandLabel()}`);
     this.coverStatusLabel?.setText(GameState.currentSortie?.cover_active ? "Укрытие" : "");
+    this.noiseLabel?.setText(`Шум: ${this.noiseLevelLabel()}`);
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     const player = GameState.player;

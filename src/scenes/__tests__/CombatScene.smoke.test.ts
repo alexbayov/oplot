@@ -206,6 +206,7 @@ interface CombatSceneInternals {
   state: string;
   logLines: string[];
   currentAp: number;
+  currentNoise: number;
   distanceBand: "close" | "medium" | "far";
   currentMagazineByWeaponId: Map<string, { ammoId: string; count: number }>;
 }
@@ -569,6 +570,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "ДАЛЬШЕ")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "Шум: тихо")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Укрытие 1 AP: готово"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Отступ 2 AP: готово"))).toBe(true);
@@ -586,7 +588,9 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.scene.create();
 
     expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentNoise).toBe(0);
     expect(harness.textObjects.some((obj) => obj.text === "Дистанция: средне")).toBe(true);
+    expect(harness.textObjects.some((obj) => obj.text === "Шум: тихо")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text === "Укрытие")).toBe(false);
     expect(harness.internals.currentAp).toBe(3);
     expect(GameState.player.backpack).toEqual(backpackBefore);
@@ -594,6 +598,28 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.textObjects.some((obj) => obj.text === "AP ●●● 3/3")).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Магазин: 0/8"))).toBe(true);
     expect(harness.textObjects.some((obj) => obj.text.includes("Мародёр [Намерение: атака]"))).toBe(true);
+  });
+
+  test("renders display-only default noise chip without mutating preview state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+
+    harness.scene.create();
+    const apBefore = harness.internals.currentAp;
+    const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
   });
 
   test("does not render hero cover chip from enemy mob cover state", () => {
@@ -691,6 +717,7 @@ describe("CombatScene M12.5 safety harness", () => {
 
     expect(harness.internals.state).toBe("resolving_mobs");
     expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentNoise).toBe(0);
     expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Дистанция: средне")).toBe(true);
   });
 
@@ -705,6 +732,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(GameState.player.backpack).toEqual([]);
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
     expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentNoise).toBe(0);
     expect(harness.textObjects.some((obj) => !obj.destroyed && obj.text === "Дистанция: средне")).toBe(true);
   });
 
@@ -909,6 +937,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(GameState.currentSortie?.cover_active).toBe(true);
     expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
     expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
     expect(activeTexts.some((text) => text === "БЛИЖЕ")).toBe(true);
     expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Магазин:")) || activeTexts.some((text) => text.includes("Перезарядка:"))).toBe(true);
@@ -965,6 +994,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
     expect(harness.internals.distanceBand).toBe("medium");
     expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.currentNoise).toBe(0);
     expect(harness.internals.state).toBe("awaiting_hero");
   });
 
@@ -986,12 +1016,14 @@ describe("CombatScene M12.5 safety harness", () => {
     }
     expect(activeTexts.some((text) => text === "AP ●●● 3/3")).toBe(true);
     expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
     expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
     expect(activeTexts.some((text) => text.includes("Мародёр [Намерение: атака]"))).toBe(true);
     for (const copy of forbiddenFutureStates) {
       expect(activeTexts.some((text) => text.includes(copy))).toBe(false);
     }
+    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
   });
 
   test("heal path reports missing medkit without advancing turn", () => {
