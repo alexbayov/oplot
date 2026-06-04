@@ -675,6 +675,115 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.state).toBe("resolving_mobs");
   });
 
+  test("empty magazine attack preview does not show firearm noise delta before fallback", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect(harness.internals.currentMagazineByWeaponId.size).toBe(0);
+  });
+
+  test("melee preview does not show firearm noise delta and melee attack remains unchanged", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const hpBefore = harness.internals.mobs[0]?.state.hp ?? 0;
+
+    harness.internals.updateActionPreview();
+
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+    expect(harness.internals.currentNoise).toBe(0);
+
+    harness.internals.onHeroAttack();
+
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.mobs[0]?.state.hp).toBeLessThan(hpBefore);
+    expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
+    expect(harness.internals.currentMagazineByWeaponId.has("knife")).toBe(false);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+  });
+
+  test("reload preview does not attach firearm noise to reload copy", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.updateActionPreview();
+
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Перезарядка: готово"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Перезарядка") && text.includes("Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+    expect(harness.internals.currentNoise).toBe(0);
+
+    harness.internals.onHeroReload();
+    harness.internals.updateActionPreview();
+
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Перезарядка") && text.includes("Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр · Шум +2"))).toBe(true);
+    expect(harness.internals.currentNoise).toBe(0);
+  });
+
+  test("movement and cover preview copy do not receive firearm noise delta", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    harness.internals.updateActionPreview();
+
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр · Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр · Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text.includes("Укрытие 1 AP: готово · Шум +2"))).toBe(false);
+
+    harness.internals.onHeroMoveCloser();
+    harness.internals.onHeroMoveAway();
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.state).toBe("awaiting_hero");
+
+    harness.internals.onHeroCover();
+    harness.internals.updateActionPreview();
+
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("Шум +2"))).toBe(false);
+    expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
+    expect(harness.internals.currentNoise).toBe(0);
+  });
+
+  test("valid loaded firearm noise preview is stable across repeated refreshes", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+
+    harness.internals.updateActionPreview();
+    harness.internals.updateActionPreview();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.filter((text) => text.includes("Атака 1 AP: цель Мародёр · Шум +2"))).toHaveLength(1);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(GameState.player.backpack).toEqual([]);
+  });
+
   test("noise chip does not affect reload or valid magazine attack", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
