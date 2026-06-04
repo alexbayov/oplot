@@ -671,7 +671,7 @@ describe("CombatScene M12.5 safety harness", () => {
 
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
     expect(GameState.player.backpack).toEqual([]);
-    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.currentNoise).toBe(2);
     expect(harness.internals.state).toBe("resolving_mobs");
   });
 
@@ -805,7 +805,7 @@ describe("CombatScene M12.5 safety harness", () => {
 
     activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
-    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.currentNoise).toBe(2);
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
   });
@@ -853,6 +853,38 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
     expect(harness.internals.currentNoise).toBe(0);
+  });
+
+  test("noise chip threshold labels update correctly when noise level changes", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    // 0-2 -> Шум: тихо
+    harness.internals.currentNoise = 2;
+    harness.internals.updateDisplay();
+    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+
+    // 3-5 -> Шум: слышно
+    harness.internals.currentNoise = 4;
+    harness.internals.updateDisplay();
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Шум: слышно")).toBe(true);
+
+    // 6-8 -> Шум: опасно
+    harness.internals.currentNoise = 7;
+    harness.internals.updateDisplay();
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Шум: опасно")).toBe(true);
+
+    // 9+ -> Шум критический
+    harness.internals.currentNoise = 10;
+    harness.internals.updateDisplay();
+    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Шум критический")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум: Шум"))).toBe(false);
   });
 
   test("does not render hero cover chip from enemy mob cover state", () => {
