@@ -442,6 +442,7 @@ export class CombatScene extends Phaser.Scene {
           ammoId,
           count: plan.resultingMagazine,
         });
+        this.currentNoise += getNoiseDeltaForAction("valid_firearm_shot");
         weaponStats = ranged;
       } else {
         this.log("Нет патронов — удар прикладом.");
@@ -895,7 +896,12 @@ export class CombatScene extends Phaser.Scene {
     this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
     this.distanceLabel?.setText(`Дистанция: ${this.distanceBandLabel()}`);
     this.coverStatusLabel?.setText(GameState.currentSortie?.cover_active ? "Укрытие" : "");
-    this.noiseLabel?.setText(`Шум: ${this.noiseLevelLabel()}`);
+    const levelLabel = this.noiseLevelLabel();
+    if (levelLabel === "шум критический") {
+      this.noiseLabel?.setText("Шум критический");
+    } else {
+      this.noiseLabel?.setText(`Шум: ${levelLabel}`);
+    }
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
     const player = GameState.player;
