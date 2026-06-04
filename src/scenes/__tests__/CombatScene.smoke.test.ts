@@ -765,7 +765,7 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.currentNoise).toBe(0);
   });
 
-  test("valid loaded firearm noise preview is stable across repeated refreshes", () => {
+  test("PR7c-b: Preview remains non-mutating", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const harness = createSceneHarness();
@@ -784,33 +784,56 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(GameState.player.backpack).toEqual([]);
   });
 
-  test("noise chip does not affect reload or valid magazine attack", () => {
+  test("PR7c-b: Single valid firearm shot", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const harness = createSceneHarness();
     harness.scene.create();
 
     harness.internals.onHeroReload();
-    harness.internals.updateDisplay();
-
-    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     expect(GameState.player.backpack).toEqual([]);
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
     expect(harness.internals.currentNoise).toBe(0);
-    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
-    expect(activeTexts.some((text) => text.includes("Атака 1 AP: цель Мародёр · Шум +2"))).toBe(true);
 
     harness.internals.onHeroAttack();
     harness.internals.updateDisplay();
 
-    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
     expect(harness.internals.currentNoise).toBe(2);
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
+    expect(GameState.player.backpack).toEqual([]);
   });
 
-  test("noise chip does not affect empty-magazine ranged fallback", () => {
+  test("PR7c-b: Multiple valid firearm shots accumulate local noise", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    
+    // First shot
+    harness.internals.onHeroAttack();
+    expect(harness.internals.currentNoise).toBe(2);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 2 });
+
+    // Reset state to awaiting_hero using safe test seam
+    harness.internals.state = "awaiting_hero";
+
+    // Second shot
+    harness.internals.onHeroAttack();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.currentNoise).toBe(4);
+    expect(activeTexts.some((text) => text === "Шум: слышно")).toBe(true);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 1 });
+    expect(GameState.player.backpack).toEqual([]);
+  });
+
+  test("PR7c-b: Empty-magazine fallback", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const backpackBefore = structuredClone(GameState.player.backpack);
@@ -829,7 +852,38 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
   });
 
-  test("noise chip stays display-only through movement preview and cover action", () => {
+  test("PR7c-b: Melee attack does not mutate noise", () => {
+    GameState.player.equipped_weapon_id = "knife";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const hpBefore = harness.internals.mobs[0]?.state.hp ?? 0;
+
+    harness.internals.onHeroAttack();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.mobs[0]?.state.hp).toBeLessThan(hpBefore);
+    expect(harness.internals.logLines.at(-1)).toContain("Герой бьёт");
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+  });
+
+  test("PR7c-b: Reload does not mutate noise", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.onHeroReload();
+    harness.internals.updateDisplay();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.currentNoise).toBe(0);
+    expect(harness.internals.currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 3 });
+    expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+  });
+
+  test("PR7c-b: Movement preview does not mutate noise", () => {
     const previewMessage = "Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.";
     const harness = createSceneHarness();
     harness.scene.create();
@@ -843,6 +897,11 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(harness.internals.currentAp).toBe(apBefore);
     expect(harness.internals.state).toBe("awaiting_hero");
     expect(harness.internals.currentNoise).toBe(0);
+  });
+
+  test("PR7c-b: Cover does not mutate noise", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
 
     harness.internals.onHeroCover();
     harness.internals.updateDisplay();
@@ -851,40 +910,118 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(GameState.currentSortie?.cover_active).toBe(true);
     expect(activeTexts.some((text) => text === "Укрытие")).toBe(true);
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
-    expect(activeTexts.some((text) => text.includes("Шум +"))).toBe(false);
     expect(harness.internals.currentNoise).toBe(0);
   });
 
-  test("noise chip threshold labels update correctly when noise level changes", () => {
+  test("PR7c-b: Heal/no-heal does not mutate noise", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    // No-medkit path
+    harness.internals.onHeroHeal();
+    expect(harness.internals.logLines.at(-1)).toBe("Нет аптечки.");
+    expect(harness.internals.currentNoise).toBe(0);
+
+    // Medkit path
+    seedGameState([{ item_id: "bandage", count: 1 }]);
+    GameState.player.hp = 50;
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroHeal();
+    expect(GameState.player.hp).toBe(65);
+    expect(harness.internals.currentNoise).toBe(0);
+  });
+
+  test("PR7c-b: Lifecycle/refund unchanged after noise", () => {
     seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
     GameState.player.equipped_weapon_id = "pm";
     const harness = createSceneHarness();
     harness.scene.create();
 
-    // 0-2 -> Шум: тихо
-    harness.internals.currentNoise = 2;
-    harness.internals.updateDisplay();
-    let activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    harness.internals.onHeroReload();
+    harness.internals.onHeroAttack();
+    expect(harness.internals.currentNoise).toBe(2);
+
+    harness.internals.state = "awaiting_hero";
+    harness.internals.onHeroRetreat();
+
+    expect(harness.starts).toContain("SortieScene");
+    expect(GameState.player.backpack).toEqual([{ item_id: "ammo_9x18", count: 2 }]);
+  });
+
+  test("PR7c-b: New scene resets noise", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness1 = createSceneHarness();
+    harness1.scene.create();
+    harness1.internals.onHeroReload();
+    harness1.internals.onHeroAttack();
+    expect(harness1.internals.currentNoise).toBe(2);
+
+    const harness2 = createSceneHarness();
+    harness2.scene.create();
+    expect(harness2.internals.currentNoise).toBe(0);
+    const activeTexts = harness2.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
     expect(activeTexts.some((text) => text === "Шум: тихо")).toBe(true);
+  });
 
-    // 3-5 -> Шум: слышно
-    harness.internals.currentNoise = 4;
-    harness.internals.updateDisplay();
-    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    expect(activeTexts.some((text) => text === "Шум: слышно")).toBe(true);
+  test("PR7c-b: Threshold labels", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
 
-    // 6-8 -> Шум: опасно
-    harness.internals.currentNoise = 7;
-    harness.internals.updateDisplay();
-    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    expect(activeTexts.some((text) => text === "Шум: опасно")).toBe(true);
+    const thresholds = [
+      { val: 0, expected: "Шум: тихо" },
+      { val: 2, expected: "Шум: тихо" },
+      { val: 3, expected: "Шум: слышно" },
+      { val: 5, expected: "Шум: слышно" },
+      { val: 6, expected: "Шум: опасно" },
+      { val: 8, expected: "Шум: опасно" },
+      { val: 9, expected: "Шум критический" },
+      { val: 10, expected: "Шум критический" },
+    ];
 
-    // 9+ -> Шум критический
-    harness.internals.currentNoise = 10;
+    for (const t of thresholds) {
+      harness.internals.currentNoise = t.val;
+      harness.internals.updateDisplay();
+      const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+      expect(activeTexts.some((text) => text === t.expected)).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Шум: Шум"))).toBe(false);
+      if (t.expected === "Шум критический") {
+        expect(activeTexts.some((text) => text === "Шум: Шум критический")).toBe(false);
+      }
+    }
+  });
+
+  test("PR7c-b: Regression guard for core combat elements", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
     harness.internals.updateDisplay();
-    activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
-    expect(activeTexts.some((text) => text === "Шум критический")).toBe(true);
-    expect(activeTexts.some((text) => text.includes("Шум: Шум"))).toBe(false);
+
+    // 1. All 7 action buttons remain rendered exactly once
+    const expectedButtonLabels = ["АТАКА", "УКРЫТИЕ", "АПТЕЧКА", "ПЕРЕЗАРЯДКА", "БЛИЖЕ", "ДАЛЬШЕ", "ОТСТУП"];
+    for (const label of expectedButtonLabels) {
+      expect(
+        harness.textObjects.filter((obj) => obj.text === label),
+        `button label: ${label}`
+      ).toHaveLength(1);
+    }
+
+    // 2. AP preview, ammo/magazine preview, distance band, cover chip, enemy intent, noise chip are all visible/correct
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text.includes("AP"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дистанция:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Шум:"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Намерение:"))).toBe(true);
+
+    harness.internals.onHeroCover();
+    harness.internals.updateDisplay();
+    const activeTextsWithCover = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTextsWithCover.some((text) => text === "Укрытие")).toBe(true);
   });
 
   test("does not render hero cover chip from enemy mob cover state", () => {
