@@ -23,16 +23,16 @@ The following systems and mechanics are currently implemented and verified:
 
 | System | Current Status | Real Gameplay Effect? | Notes |
 |---|---|---|---|
-| **AP System** | Active (3 AP max) | **Yes** | Actions consume AP; turns resolve when AP is spent. |
-| **Reload Action** | Active (0 AP cost) | **Yes** | Decrements reserve calibers and refills weapon magazine. |
+| **AP System / Preview** | Active (HUD / Preview) | **Yes (Partial)** | Tracks and consumes 1 AP for melee/ranged attacks, cover, and heal. Reload/movement do not consume AP yet. |
+| **Reload Action** | Active (0 AP cost) | **Yes** | Decrements reserve calibers and refills weapon magazine; currently free (no AP consumption). |
 | **Magazine Attack**| Active | **Yes** | Ranged weapon fires only if magazine > 0; decrements magazine. |
 | **Ammo Refund** | Active | **Yes** | Returns loaded chambered rounds back to reserve on exit. |
 | **Enemy Intent** | Active | **Yes** | Mob intents are generated and telegraphed before player action. |
-| **Distance Band** | Active (starts Medium) | **Yes** (visual only) | Currently initialized to Medium; has no mechanical modifiers yet. |
+| **Distance Band** | Display-only (starts Medium) | **No (Visual only)** | HUD displays 'Дистанция: средне', but it has no active combat modifiers or gameplay impact. |
 | **Movement Buttons**| Active | **No** (Preview-only) | Pressing buttons logs a preview message without spending AP or changing bands. |
-| **Cover Chip** | Active | **Yes** | Shows when `currentSortie.cover_active` is true. |
-| **Noise Chip** | Active | **Yes** (visual representation) | Represents noise state on the HUD. |
-| **Noise Mutation** | Active (Scene-local) | **Yes** | Firing valid firearm shots increments `currentNoise` by `+2`. |
+| **Cover Chip** | Active (Display-only) | **No (Display-only)** | Cover chip dynamically displays based on existing `cover_active` flag. The combat scene mitigates damage separately using the flag. |
+| **Noise Chip** | Active | **No (Visual only)** | Represents noise state on the HUD. |
+| **Noise Mutation** | Active (Scene-local) | **Yes (Scene-local only)** | Increments `currentNoise` by +2 on valid firearm shots, changing the HUD label. Does NOT affect global sortie risk or trigger reinforcements yet. |
 | **Suppression** | Inactive | **No** | Not yet implemented. |
 | **Status Effects** | Inactive | **No** | Not yet implemented. |
 | **CombatEngine** | Model-only | **No** | The `CombatScene` remains the runtime authority; engine is not active. |
@@ -61,14 +61,14 @@ gantt
     title M12.5 to M14 Roadmap
     dateFormat  YYYY-MM-DD
     section Phase B (M13)
-    PR8: Status Effects Preflight & Display    :active, pr8, 2026-06-05, 5d
-    PR9: Real Tactical Movement (AP cost)     : pr9, after pr8, 7d
-    PR10: Suppression & Exposed States        : pr10, after pr9, 6d
-    PR11: Enemy AI Archetype Variety          : pr11, after pr10, 8d
+    PR8 - Status Effects Preflight & Display    :active, pr8, 2026-06-05, 5d
+    PR9 - Real Tactical Movement (AP cost)     : pr9, after pr8, 7d
+    PR10 - Suppression & Exposed States        : pr10, after pr9, 6d
+    PR11 - Enemy AI Archetype Variety          : pr11, after pr10, 8d
     section Phase C (M14)
-    PR12: Local Noise to Sortie Risk Hook    : pr12, after pr11, 7d
-    PR13: CombatEngine Authority Migration    : pr13, after pr12, 10d
-    PR14: Loot & Balance Tuning Pass          : pr14, after pr13, 7d
+    PR12 - Local Noise to Sortie Risk Hook    : pr12, after pr11, 7d
+    PR13 - CombatEngine Authority Migration    : pr13, after pr12, 10d
+    PR14 - Loot & Balance Tuning Pass          : pr14, after pr13, 7d
 ```
 
 ### Block PR8 — Status Effects Preflight / Display

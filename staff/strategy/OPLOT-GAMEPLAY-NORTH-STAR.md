@@ -15,11 +15,11 @@ This document defines the gameplay identity, design principles, core fantasy, an
 The primary emotion we want players to feel at the end of a combat encounter is: **"I barely made it out."** 
 
 To deliver this experience, combat relies on the following gameplay dynamics:
-* **Ammo Matters:** Firearms are not infinite-firing tools; ammunition Calibers are scarce, magazines are small, and reloading is a distinct tactical decision that costs action points.
+* **Ammo Matters:** Firearms are not infinite-firing tools; ammunition calibers are scarce, magazines are small, and reloading is a distinct tactical decision (currently free in M12.5, with the design option to introduce AP costs in the future to manage scarcity tension).
 * **Telegraphed Danger:** Enemies telegraph their next actions (enemy intents) transparently. The player is not guessing; they are deciding how to solve an incoming threat.
 * **Retreat is a Valid Strategy:** Survival is the goal, not clean sweeps. Retreating is a respected tactical choice that preserves the player’s life and collected loot at the expense of sortie progress.
-* **Noise creates Pressure:** Firing guns fills the local noise meter. Noise is not decorative; it represents mounting pressure that can alert reinforcements or elevate risk in subsequent sortie stages.
-* **Concrete Choices:** Success is constructed from small, clear decisions: "Do I take cover to mitigate damage, spend AP to reload, move to a safer distance, or fire my last bullet and pray?"
+* **Noise creates Pressure:** Firing guns fills the local noise meter. While currently scene-local, it lays the groundwork for future pressure mechanics (where noise can alert reinforcements or elevate risk in subsequent sortie stages).
+* **Concrete Choices:** Success is constructed from small, clear decisions: "Do I take cover to mitigate damage, execute a reload, move to a safer distance, or fire my last bullet and pray?"
 
 ---
 
@@ -29,8 +29,8 @@ The M12.5 milestone established a solid foundation of combat systems:
 1. **AP Budget & Preview:** A strict 3 Action Point system per turn with a real-time HUD preview detailing exactly how much AP an action will spend before the player commits.
 2. **Ammo & Magazine Lifecycle:** A realistic ammo loop where firing depletes weapon-specific magazines, and reloading pulls caliber-appropriate ammo from the backpack reserve. Refunds are safely issued on combat exit (victory, retreat, or defeat) so unspent chambered rounds are never lost.
 3. **Telegraphed Enemy Intents:** Clear visual indicators displaying exactly what action each enemy is planning next (Attack, Cover, Aim, Rush, etc.), enabling pre-emptive strategy.
-4. **Gridless Distance Bands:** Simplified distance positioning (Close, Medium, Far) that modifies weapon effectiveness and movement options without requiring complex spatial grid layouts.
-5. **Dynamic Cover State:** Tactical cover mechanics where players can actively take cover to mitigate ranged damage, marked by a visible HUD chip.
+4. **Gridless Distance Bands (HUD Only):** Simplified distance positioning (Close, Medium, Far) initialized to Medium. Movement buttons are currently in preview mode (non-mutating, free, and logging preview messages), with real movement and distance-based modifiers planned for future phases.
+5. **Dynamic Cover State:** Tactical cover mechanics where the player HUD displays cover status dynamically based on the existing cover flag. The combat scene mitigates damage separately using this flag.
 6. **Local Noise Mutation:** Firearms generate a noise delta (+2 for a standard shot) tracked on a scene-local level, transitioning HUD indicators from "quiet" (`тихо`) to "loud" (`слышно`, `опасно`, `критический`).
 7. **Automated & Manual QA Gates:** A strict first-10-minutes QA validation protocol to ensure that gameplay remains readable, bug-free, and functional under different landscape viewports.
 
@@ -42,7 +42,7 @@ The M12.5 milestone established a solid foundation of combat systems:
 |---|---|---|
 | **Combat Readability** | Flatter HUD, opaque calculations, and hidden turn sequences. | Visible AP previews, clear enemy intent markers, cover states, and noise levels. |
 | **Ammo Management** | Ammo was directly consumed from the backpack reserve. | Ranged weapons require reloading from backpack calibers into localized magazines; refunds protect loaded ammo. |
-| **Tactical Options** | Mainly trading raw damage statistics with enemies. | Actions like taking cover, choosing distance-appropriate tools, managing noise, and retreating are core choices. |
+| **Tactical Options** | Mainly trading raw damage statistics with enemies. | Actions like taking cover, managing noise, and retreating are core choices, with distance-based options telegraphed for future updates. |
 | **Predictability** | High uncertainty; players couldn't plan around enemy behavior. | Enemy actions are telegraphed in advance, allowing players to counter, suppress, or avoid them. |
 
 ---
