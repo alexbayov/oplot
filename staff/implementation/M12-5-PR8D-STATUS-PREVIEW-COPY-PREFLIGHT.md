@@ -24,11 +24,12 @@ This preflight document establishes the implementation blueprint for introducing
 
 ## 2. PR8d Goal
 
-The goal of PR8d is to display potential status outcomes in the action button hover preview text without executing any modifications:
-* **Preview Indicator**: Append status preview text (e.g., `· Кровь 2`) to the action preview line when actions are hovered.
+The goal of PR8d is to display potential status outcomes in the action preview line without executing any modifications:
+* **Preview Indicator**: Append status preview text (e.g., `· Кровь 2`) to the action preview line when action preview is refreshed.
 * **Example Output**: `Атака 1 AP: цель Мародёр · Кровь 2` or `Атака 1 AP: цель Мародёр · Шум +2 · Кровь 2` (with firearm noise).
 * **Strict Non-Mutation**: The status is strictly text-based. No status instance is added to `combatStatusesByTarget` during preview rendering or action execution.
 * **No Runtime side-effects**: Durations do not tick down, no damage is applied, and no AP/intent variables are altered.
+PR8d must not introduce new hover-only controls; preview copy must remain compatible with touch/mobile action UI.
 
 ---
 
@@ -94,8 +95,8 @@ We must preserve the existing HUD behavior:
 ## 8. Future Tests Required
 
 Smoke tests in `CombatScene.smoke.test.ts` must verify:
-1. **Configured Preview**: Status preview copy appears in the action text *only* when configured via seam or test fixture.
-2. **Non-Mutation**: Repeated hovering/refreshing of action previews does not insert statuses into the active map or decrement active status durations.
+1. **Configured Preview**: Status preview copy appears in the action text *only* when preview copy is configured.
+2. **Non-Mutation**: Repeated preview refresh does not insert statuses into the active map or decrement active status durations.
 3. **No Duplication**: Repeated preview updates do not append duplicate status preview chips to the label.
 4. **Combined Indicators**: Ranged weapon previews display both `Шум +2` and the potential status chip (e.g., `Шум +2 · Кровь 2`) correctly.
 5. **Fallback Safety**: Fallback attacks display only the default bash message, skipping firearm noise and firearm-configured status previews.
