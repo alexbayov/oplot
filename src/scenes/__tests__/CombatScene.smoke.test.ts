@@ -2484,5 +2484,238 @@ describe("CombatScene M12.5 safety harness", () => {
       expect(activeTexts.some((text) => text.includes("Подавлен 2"))).toBe(true);
     });
   });
+
+  describe("M12.5 PR8d-a — preview-only status application copy", () => {
+    test("1. No preview by default", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).not.toContain("Кровь");
+      expect(attackPreview).not.toContain("Открыт");
+      expect(attackPreview).not.toContain("Подавлен");
+    });
+
+    test("2. Configured attack preview", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).toContain("Кровь 2");
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("3. Loaded firearm combines noise and status", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).toContain("Шум +2 · Кровь 2");
+      expect(harness.internals.currentNoise).toBe(0);
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("4. Repeated preview refresh", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+
+      const matches = attackPreview!.match(/Кровь 2/g);
+      expect(matches).toHaveLength(1);
+
+      expect((harness.scene as any).statusPreviewByAction.size).toBe(1);
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("5. Attack click does not apply status", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      harness.internals.onHeroAttack();
+
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+      expect(harness.internals.currentNoise).toBeGreaterThan(0);
+    });
+
+    test("6. Empty magazine fallback", () => {
+      seedGameState([]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).not.toContain("Шум +2");
+      expect(attackPreview).not.toContain("Кровь 2");
+
+      harness.internals.onHeroAttack();
+      expect(harness.internals.logLines).toContain("Нет патронов — удар прикладом.");
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("7. Disabled attack", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.state = "resolving_mobs";
+      harness.internals.updateActionPreview();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).toContain("действие недоступно");
+      expect(attackPreview).not.toContain("Кровь 2");
+    });
+
+    test("8. Other actions excluded", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const previewTextObj = activeTexts.find((t) => t.includes("Атака"));
+      expect(previewTextObj).toBeDefined();
+
+      const firstLine = previewTextObj!.split("\n")[0];
+      const segments = firstLine!.split(" · ");
+
+      expect(segments.some((s) => s.includes("Атака"))).toBe(true);
+      expect(segments.some((s) => s.includes("Кровь 2"))).toBe(true);
+
+      const coverSeg = segments.find((s) => s.includes("Укрытие"));
+      expect(coverSeg).toBeDefined();
+      expect(coverSeg).not.toContain("Кровь 2");
+
+      const healSeg = segments.find((s) => s.includes("Аптечка"));
+      expect(healSeg).toBeDefined();
+      expect(healSeg).not.toContain("Кровь 2");
+
+      const retreatSeg = segments.find((s) => s.includes("Отступ"));
+      expect(retreatSeg).toBeDefined();
+      expect(retreatSeg).not.toContain("Кровь 2");
+    });
+
+    test("9. Clear preview seam", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      let activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).toContain("Кровь 2");
+
+      (harness.scene as any).setStatusPreviewForTest("attack", null);
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).not.toContain("Кровь 2");
+    });
+
+    test("10. Existing active status chips unaffected", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const activeStatuses: CombatStatusInstance[] = [{ id: "exposed", durationTurns: 1 }];
+      (harness.scene as any).setCombatStatusesForTest("hero", activeStatuses);
+
+      const previewStatus: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", previewStatus);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+
+      const chipText = activeTexts.find((t) => t.includes("Открыт 1"));
+      expect(chipText).toBeDefined();
+
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toContain("Кровь 2");
+
+      expect(chipText).not.toContain("Кровь 2");
+    });
+
+    test("11. Scene-local preview map reset", () => {
+      const harness1 = createSceneHarness();
+      harness1.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness1.scene as any).setStatusPreviewForTest("attack", status);
+
+      let activeTexts = harness1.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).toContain("Кровь 2");
+
+      const harness2 = createSceneHarness();
+      harness2.scene.create();
+
+      activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).not.toContain("Кровь 2");
+      expect((harness2.scene as any).statusPreviewByAction.size).toBe(0);
+    });
+
+    test("12. Non-attack action keys ignored", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      (harness.scene as any).setStatusPreviewForTest("reload", { id: "bleed", durationTurns: 2 });
+      (harness.scene as any).setStatusPreviewForTest("cover", { id: "exposed", durationTurns: 1 });
+      (harness.scene as any).setStatusPreviewForTest("heal", { id: "suppressed", durationTurns: 1 });
+
+      harness.internals.updateActionPreview();
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const previewTextObj = activeTexts.find((t) => t.includes("Атака"));
+      expect(previewTextObj).toBeDefined();
+
+      const firstLine = previewTextObj!.split("\n")[0];
+      expect(firstLine).not.toContain("Кровь 2");
+      expect(firstLine).not.toContain("Открыт 1");
+      expect(firstLine).not.toContain("Подавлен 1");
+
+      expect((harness.scene as any).statusPreviewByAction.get("reload")).toEqual({ id: "bleed", durationTurns: 2 });
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+  });
 });
 
