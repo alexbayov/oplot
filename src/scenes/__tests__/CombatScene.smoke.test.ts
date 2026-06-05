@@ -28,6 +28,8 @@ import { CombatScene } from "../CombatScene";
 import { GameState, setContent } from "../../state/GameState";
 import type { ContentData, InventoryStack } from "../../state/types";
 import type { Item, Mob, Zone } from "../../types";
+import type { CombatStatusInstance } from "../../systems/combatStatus";
+
 
 vi.mock("../../systems/banner", () => ({
   hideBanner: vi.fn(() => Promise.resolve()),
@@ -1945,4 +1947,237 @@ describe("CombatScene M12.5 safety harness", () => {
     harness.internals.onHeroAttack();
     expect(harness.internals.state).toBe("resolving_mobs");
   });
+
+  describe("M12.5 PR8b — display-only combat status chips", () => {
+    test("1. Initial render: no status chips by default, but existing elements visible", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+
+      expect(activeTexts.some((t) => t.includes("Кровь") || t.includes("Открыт") || t.includes("Подавлен"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("AP ●●●"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Дистанция: средне"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Шум: тихо"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение:"))).toBe(true);
+    });
+
+    test("2. Hero status chip render and safety", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const apBefore = harness.internals.currentAp;
+      const noiseBefore = harness.internals.currentNoise;
+      const backpackBefore = JSON.stringify(GameState.player.backpack);
+      const magazineBefore = JSON.stringify(Array.from((harness.scene as any).currentMagazineByWeaponId.entries()));
+
+      const statuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+        { id: "suppressed", durationTurns: 3 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", statuses);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Кровь 2") && t.includes("Открыт 1") && t.includes("Подавлен 3"))).toBe(true);
+
+      expect(harness.internals.currentAp).toBe(apBefore);
+      expect(harness.internals.currentNoise).toBe(noiseBefore);
+      expect(JSON.stringify(GameState.player.backpack)).toBe(backpackBefore);
+      expect(JSON.stringify(Array.from((harness.scene as any).currentMagazineByWeaponId.entries()))).toBe(magazineBefore);
+    });
+
+    test("3. Enemy status chip render", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const statuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest(mobId, statuses);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Кровь 2") && t.includes("Открыт 1"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение:"))).toBe(true);
+    });
+
+    test("4. Status chip overflow formatting", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const statuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+        { id: "suppressed", durationTurns: 1 },
+        { id: "suppressed", durationTurns: 2 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", statuses);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const chipText = activeTexts.find((t) => t.includes("+2"));
+      expect(chipText).toBeDefined();
+      expect(chipText).toContain("Кровь 2");
+      expect(chipText).toContain("Открыт 1");
+      expect(chipText).toContain("+2");
+      expect(chipText).not.toContain("Подавлен");
+
+      const segments = chipText!.split(" · ");
+      expect(segments).toHaveLength(3);
+    });
+
+    test("5. Status chip sorting priority", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const statuses: CombatStatusInstance[] = [
+        { id: "suppressed", durationTurns: 3 },
+        { id: "exposed", durationTurns: 1 },
+        { id: "bleed", durationTurns: 2 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", statuses);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBeDefined();
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · Подавлен 3");
+    });
+
+    test("6. Non-mutation of statuses on refresh", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const initialStatuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", initialStatuses);
+
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+
+      const currentStatuses = (harness.scene as any).combatStatusesByTarget.get("hero");
+      expect(currentStatuses).toEqual(initialStatuses);
+      expect(currentStatuses[0].durationTurns).toBe(2);
+      expect(currentStatuses[1].durationTurns).toBe(1);
+    });
+
+    test("7. Gameplay actions do not mutate statuses", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 10 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const heroStatuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const enemyStatuses: CombatStatusInstance[] = [{ id: "exposed", durationTurns: 1 }];
+
+      (harness.scene as any).setCombatStatusesForTest("hero", heroStatuses);
+      (harness.scene as any).setCombatStatusesForTest(mobId, enemyStatuses);
+
+      // Reload PM
+      harness.internals.onHeroReload();
+      expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+      expect((harness.scene as any).combatStatusesByTarget.get(mobId)).toEqual(enemyStatuses);
+      expect((harness.scene as any).currentMagazineByWeaponId.get("pm")).toEqual({ ammoId: "ammo_9x18", count: 8 });
+
+      // Attack with loaded firearm
+      harness.internals.onHeroAttack();
+      expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+      expect((harness.scene as any).combatStatusesByTarget.get(mobId)).toEqual(enemyStatuses);
+      expect(harness.internals.currentNoise).toBeGreaterThan(0);
+
+      // Reset state for further moves
+      harness.internals.state = "awaiting_hero";
+
+      // Movement preview
+      harness.internals.onHeroMoveCloser();
+      expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+      expect((harness.scene as any).combatStatusesByTarget.get(mobId)).toEqual(enemyStatuses);
+
+      // Cover
+      harness.internals.onHeroCover();
+      expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+      expect((harness.scene as any).combatStatusesByTarget.get(mobId)).toEqual(enemyStatuses);
+      expect(GameState.currentSortie?.cover_active).toBe(true);
+    });
+
+    test("8. Empty magazine fallback does not mutate statuses", () => {
+      seedGameState([]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const heroStatuses: CombatStatusInstance[] = [{ id: "suppressed", durationTurns: 2 }];
+      (harness.scene as any).setCombatStatusesForTest("hero", heroStatuses);
+
+      harness.internals.onHeroAttack();
+
+      expect(harness.internals.logLines).toContain("Нет патронов — удар прикладом.");
+      expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+    });
+
+    test("9. Lifecycle and new scene reset", () => {
+      const harness1 = createSceneHarness();
+      harness1.scene.create();
+      const statuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      (harness1.scene as any).setCombatStatusesForTest("hero", statuses);
+      expect((harness1.scene as any).combatStatusesByTarget.get("hero")).toBeDefined();
+
+      const harness2 = createSceneHarness();
+      harness2.scene.create();
+      const activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Кровь"))).toBe(false);
+      expect((harness2.scene as any).combatStatusesByTarget.get("hero")).toBeUndefined();
+    });
+
+    test("10. Dead/fled mob guard", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const statuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      (harness.scene as any).setCombatStatusesForTest(mobId, statuses);
+
+      // Verify status renders initially
+      let activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Мародёр"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Кровь 2"))).toBe(true);
+
+      // Dead mob
+      harness.internals.mobs[0]!.state.hp = 0;
+      harness.internals.updateDisplay();
+
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Мародёр"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("Кровь"))).toBe(false);
+    });
+
+    test("11. Regression guard for all HUD elements", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      const expectedButtonLabels = ["АТАКА", "УКРЫТИЕ", "АПТЕЧКА", "ПЕРЕЗАРЯДКА", "БЛИЖЕ", "ДАЛЬШЕ", "ОТСТУП"];
+      for (const label of expectedButtonLabels) {
+        expect(
+          harness.textObjects.filter((obj) => obj.text === label),
+          `button label: ${label}`
+        ).toHaveLength(1);
+      }
+
+      const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+      expect(activeTexts.some((text) => text.includes("AP"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Дистанция:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Шум:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Намерение:"))).toBe(true);
+    });
+  });
 });
+
