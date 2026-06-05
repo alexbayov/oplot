@@ -111,6 +111,7 @@ export class CombatScene extends Phaser.Scene {
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
   private combatStatusesByTarget = new Map<string, CombatStatusInstance[]>();
   private heroStatusLabel?: Phaser.GameObjects.Text;
+  private statusPreviewByAction = new Map<string, CombatStatusInstance>();
 
   public constructor() {
     super("CombatScene");
@@ -142,6 +143,7 @@ export class CombatScene extends Phaser.Scene {
     this.currentMagazineByWeaponId.clear();
     this.heroStatusLabel = undefined;
     this.combatStatusesByTarget.clear();
+    this.statusPreviewByAction.clear();
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
@@ -803,6 +805,15 @@ export class CombatScene extends Phaser.Scene {
     this.updateDisplay();
   }
 
+  public setStatusPreviewForTest(actionKey: string, status: CombatStatusInstance | null): void {
+    if (status === null) {
+      this.statusPreviewByAction.delete(actionKey);
+    } else {
+      this.statusPreviewByAction.set(actionKey, status);
+    }
+    this.updateActionPreview();
+  }
+
   private updateDisplay(): void {
     const player = GameState.player;
     const items = GameState.data.items;
@@ -1001,7 +1012,29 @@ export class CombatScene extends Phaser.Scene {
 
       return ` · ${formatNoiseDelta(getNoiseDeltaForAction("valid_firearm_shot"))}`;
     })();
-    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}${attackNoiseDeltaPreview}`;
+
+    const isRanged = Boolean(weaponItem && getRangedWeaponStats(weaponItem));
+    let isFallback = false;
+    if (isRanged && weaponItem) {
+      const currentMagazine = this.currentMagazineByWeaponId.get(player.equipped_weapon_id)?.count ?? 0;
+      const shotPlan = computeMagazineShotPlan({
+        weapon: weaponItem as unknown as AmmoWeaponLike,
+        currentMagazine,
+      });
+      if (!shotPlan.ok) {
+        isFallback = true;
+      }
+    }
+    const showStatusPreview = !attackReason && !isFallback;
+
+    const attackStatusPreview = (() => {
+      if (!showStatusPreview) return "";
+      const previewStatus = this.statusPreviewByAction.get("attack");
+      if (!previewStatus) return "";
+      return ` · ${formatCombatStatusChip(previewStatus)}`;
+    })();
+
+    const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}${attackNoiseDeltaPreview}${attackStatusPreview}`;
 
     this.actionPreviewLabel.setText(
       [
