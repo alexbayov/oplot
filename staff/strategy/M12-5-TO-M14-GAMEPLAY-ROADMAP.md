@@ -23,7 +23,7 @@ The following systems and mechanics are currently implemented and verified:
 
 | System | Current Status | Real Gameplay Effect? | Notes |
 |---|---|---|---|
-| **AP System / Preview** | Active (HUD / Preview) | **Yes (Partial)** | Tracks and consumes 1 AP for melee/ranged attacks, cover, and heal. Reload/movement do not consume AP yet. |
+| **AP System / Preview** | Active (HUD / Preview) | **Partial / mostly preview** | Shows 3 AP pips and action cost copy, but AP is not yet a fully authoritative runtime economy. Reload and movement do not consume AP; future real movement/AP work must add explicit spend tests. |
 | **Reload Action** | Active (0 AP cost) | **Yes** | Decrements reserve calibers and refills weapon magazine; currently free (no AP consumption). |
 | **Magazine Attack**| Active | **Yes** | Ranged weapon fires only if magazine > 0; decrements magazine. |
 | **Ammo Refund** | Active | **Yes** | Returns loaded chambered rounds back to reserve on exit. |

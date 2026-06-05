@@ -26,7 +26,7 @@ To deliver this experience, combat relies on the following gameplay dynamics:
 ## 3. Current Combat Pillars (Post-M12.5)
 
 The M12.5 milestone established a solid foundation of combat systems:
-1. **AP Budget & Preview:** A strict 3 Action Point system per turn with a real-time HUD preview detailing exactly how much AP an action will spend before the player commits.
+1. **AP Budget & Preview:** The HUD exposes a 3 AP budget and action-cost copy as a readability scaffold. Full AP spend enforcement is not yet complete across all action paths; reload and movement currently remain free/non-consuming and require future explicit AP-economy work.
 2. **Ammo & Magazine Lifecycle:** A realistic ammo loop where firing depletes weapon-specific magazines, and reloading pulls caliber-appropriate ammo from the backpack reserve. Refunds are safely issued on combat exit (victory, retreat, or defeat) so unspent chambered rounds are never lost.
 3. **Telegraphed Enemy Intents:** Clear visual indicators displaying exactly what action each enemy is planning next (Attack, Cover, Aim, Rush, etc.), enabling pre-emptive strategy.
 4. **Gridless Distance Bands (HUD Only):** Simplified distance positioning (Close, Medium, Far) initialized to Medium. Movement buttons are currently in preview mode (non-mutating, free, and logging preview messages), with real movement and distance-based modifiers planned for future phases.
