@@ -2178,6 +2178,311 @@ describe("CombatScene M12.5 safety harness", () => {
       expect(activeTexts.some((text) => text.includes("Шум:"))).toBe(true);
       expect(activeTexts.some((text) => text.includes("Намерение:"))).toBe(true);
     });
+
+    test("A.1. Status display does not mutate source arrays", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const initialStatuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+      ];
+      Object.freeze(initialStatuses);
+      Object.freeze(initialStatuses[0]);
+      Object.freeze(initialStatuses[1]);
+
+      (harness.scene as any).setCombatStatusesForTest("hero", initialStatuses);
+
+      for (let i = 0; i < 5; i++) {
+        harness.internals.updateDisplay();
+        harness.internals.updateActionPreview();
+      }
+
+      const storedStatuses = (harness.scene as any).combatStatusesByTarget.get("hero");
+      expect(storedStatuses).toEqual([
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+      ]);
+      expect(storedStatuses[0].durationTurns).toBe(2);
+      expect(storedStatuses[1].durationTurns).toBe(1);
+    });
+
+    test("A.2. Invalid statuses through seam are safely ignored/normalized", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const malformed: any[] = [
+        { id: "unknown_id", durationTurns: 2 },
+        { id: "bleed", durationTurns: -5 },
+        { id: "exposed", durationTurns: Number.NaN },
+        { id: "suppressed", durationTurns: 1.5 },
+      ];
+
+      (harness.scene as any).setCombatStatusesForTest("hero", malformed as CombatStatusInstance[]);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const chipText = activeTexts.find((t) => t.includes("Кровь"));
+      expect(chipText).toBeDefined();
+
+      expect(chipText).not.toContain("unknown_id");
+
+      expect(chipText).toContain("Кровь");
+      expect(chipText).not.toContain("Кровь -");
+      expect(chipText).not.toContain("Кровь 0");
+
+      expect(chipText).toContain("Открыт");
+      expect(chipText).not.toContain("Открыт NaN");
+
+      expect(chipText).toContain("Подавлен");
+      expect(chipText).not.toContain("Подавлен 1");
+      expect(chipText).not.toContain("Подавлен 2");
+    });
+
+    test("A.3. Overflow exact behavior for hero", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const s3: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+        { id: "suppressed", durationTurns: 1 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", s3);
+      let activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      let chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · Подавлен 1");
+      expect(chipText!.split(" · ")).toHaveLength(3);
+
+      const s4: CombatStatusInstance[] = [
+        ...s3,
+        { id: "suppressed", durationTurns: 2 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", s4);
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · +2");
+      expect(chipText!.split(" · ")).toHaveLength(3);
+
+      const s5: CombatStatusInstance[] = [
+        ...s4,
+        { id: "suppressed", durationTurns: 3 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest("hero", s5);
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · +3");
+      expect(chipText!.split(" · ")).toHaveLength(3);
+    });
+
+    test("A.4. Overflow exact behavior for enemy status line", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const mobId = harness.internals.mobs[0]!.mob.id;
+
+      const s3: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+        { id: "suppressed", durationTurns: 1 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest(mobId, s3);
+      let activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      let chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · Подавлен 1");
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение:"))).toBe(true);
+
+      const s4: CombatStatusInstance[] = [
+        ...s3,
+        { id: "suppressed", durationTurns: 2 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest(mobId, s4);
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · +2");
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение:"))).toBe(true);
+
+      const s5: CombatStatusInstance[] = [
+        ...s4,
+        { id: "suppressed", durationTurns: 3 },
+      ];
+      (harness.scene as any).setCombatStatusesForTest(mobId, s5);
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      chipText = activeTexts.find((t) => t.includes("Кровь 2"));
+      expect(chipText).toBe("Кровь 2 · Открыт 1 · +3");
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение:"))).toBe(true);
+    });
+
+    test("A.5. Dead/fled status guard does not render status chips", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const statuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      (harness.scene as any).setCombatStatusesForTest(mobId, statuses);
+
+      let activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Мародёр"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Кровь 2"))).toBe(true);
+
+      harness.internals.mobs[0]!.state.hp = 0;
+      harness.internals.updateDisplay();
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Мародёр"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("Кровь 2"))).toBe(false);
+
+      harness.internals.mobs[0]!.state.hp = 20;
+      harness.internals.mobs[0]!.state.fled = true;
+      harness.internals.updateDisplay();
+      activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Мародёр"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("Кровь 2"))).toBe(false);
+    });
+
+    test("A.6. Duplicate mob/content-id risk guard: display-only seam limitation comment and test", () => {
+      if (GameState.currentSortie) {
+        GameState.currentSortie.encounters = [["marauder", "marauder"]];
+      }
+
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      expect(harness.internals.mobs).toHaveLength(2);
+      expect(harness.internals.mobs[0]!.mob.id).toBe("marauder");
+      expect(harness.internals.mobs[1]!.mob.id).toBe("marauder");
+
+      const statuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      (harness.scene as any).setCombatStatusesForTest("marauder", statuses);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const marauderTexts = activeTexts.filter((t) => t.includes("Кровь 2"));
+      expect(marauderTexts).toHaveLength(2);
+    });
+
+    test("A.7. Status chips survive existing display refresh and do not duplicate", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const heroStatuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      const enemyStatuses: CombatStatusInstance[] = [{ id: "exposed", durationTurns: 1 }];
+
+      (harness.scene as any).setCombatStatusesForTest("hero", heroStatuses);
+      (harness.scene as any).setCombatStatusesForTest(mobId, enemyStatuses);
+
+      for (let i = 0; i < 3; i++) {
+        harness.internals.updateDisplay();
+      }
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+
+      const heroLines = activeTexts.filter((t) => t === "Кровь 2");
+      expect(heroLines).toHaveLength(1);
+
+      const enemyLines = activeTexts.filter((t) => t === "Открыт 1");
+      expect(enemyLines).toHaveLength(1);
+    });
+
+    test("A.8. Gameplay non-mutation matrix", () => {
+      seedGameState([
+        { item_id: "ammo_9x18", count: 10 },
+        { item_id: "bandage", count: 2 },
+      ]);
+      GameState.player.equipped_weapon_id = "pm";
+
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const heroStatuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const enemyStatuses: CombatStatusInstance[] = [{ id: "exposed", durationTurns: 1 }];
+
+      (harness.scene as any).setCombatStatusesForTest("hero", heroStatuses);
+      (harness.scene as any).setCombatStatusesForTest(mobId, enemyStatuses);
+
+      const verifyUnchanged = () => {
+        expect((harness.scene as any).combatStatusesByTarget.get("hero")).toEqual(heroStatuses);
+        expect((harness.scene as any).combatStatusesByTarget.get(mobId)).toEqual(enemyStatuses);
+      };
+
+      harness.internals.onHeroReload();
+      verifyUnchanged();
+
+      harness.internals.onHeroAttack();
+      verifyUnchanged();
+
+      harness.internals.state = "awaiting_hero";
+
+      harness.internals.onHeroMoveCloser();
+      verifyUnchanged();
+
+      harness.internals.onHeroCover();
+      verifyUnchanged();
+
+      harness.internals.onHeroHeal();
+      verifyUnchanged();
+
+      harness.internals.state = "awaiting_hero";
+      (harness.scene as any).currentMagazineByWeaponId.clear();
+      GameState.player.backpack = [];
+
+      harness.internals.onHeroAttack();
+      verifyUnchanged();
+
+      harness.internals.onHeroRetreat();
+      verifyUnchanged();
+    });
+
+    test("A.9. Lifecycle clearing on create and scene transitions", () => {
+      const harness1 = createSceneHarness();
+      harness1.scene.create();
+      const statuses: CombatStatusInstance[] = [{ id: "bleed", durationTurns: 2 }];
+      (harness1.scene as any).setCombatStatusesForTest("hero", statuses);
+      expect((harness1.scene as any).combatStatusesByTarget.get("hero")).toEqual(statuses);
+
+      const harness2 = createSceneHarness();
+      harness2.scene.create();
+      expect((harness2.scene as any).combatStatusesByTarget.size).toBe(0);
+      const activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Кровь"))).toBe(false);
+    });
+
+    test("A.10. UI regression guard with active statuses", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const heroStatuses: CombatStatusInstance[] = [
+        { id: "bleed", durationTurns: 2 },
+        { id: "exposed", durationTurns: 1 },
+      ];
+      const mobId = harness.internals.mobs[0]!.mob.id;
+      const enemyStatuses: CombatStatusInstance[] = [{ id: "suppressed", durationTurns: 2 }];
+
+      (harness.scene as any).setCombatStatusesForTest("hero", heroStatuses);
+      (harness.scene as any).setCombatStatusesForTest(mobId, enemyStatuses);
+
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      const expectedButtonLabels = ["АТАКА", "УКРЫТИЕ", "АПТЕЧКА", "ПЕРЕЗАРЯДКА", "БЛИЖЕ", "ДАЛЬШЕ", "ОТСТУП"];
+      for (const label of expectedButtonLabels) {
+        expect(
+          harness.textObjects.filter((obj) => obj.text === label),
+          `button label: ${label}`
+        ).toHaveLength(1);
+      }
+
+      const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+      expect(activeTexts.some((text) => text.includes("AP"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Магазин:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Дистанция:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Шум:"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Намерение:"))).toBe(true);
+
+      expect(activeTexts.some((text) => text.includes("Кровь 2 · Открыт 1"))).toBe(true);
+      expect(activeTexts.some((text) => text.includes("Подавлен 2"))).toBe(true);
+    });
   });
 });
 
