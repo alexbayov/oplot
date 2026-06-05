@@ -1031,7 +1031,11 @@ export class CombatScene extends Phaser.Scene {
       if (!showStatusPreview) return "";
       const previewStatus = this.statusPreviewByAction.get("attack");
       if (!previewStatus) return "";
-      return ` · ${formatCombatStatusChip(previewStatus)}`;
+      try {
+        return ` · ${formatCombatStatusChip(previewStatus)}`;
+      } catch {
+        return "";
+      }
     })();
 
     const attackReady = `цель ${firstAlive?.mob.name_ru ?? "—"}${attackNoiseDeltaPreview}${attackStatusPreview}`;
