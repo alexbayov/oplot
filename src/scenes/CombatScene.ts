@@ -49,6 +49,12 @@ import {
 } from "../systems/combatAmmo";
 import type { ConsumableItem, Mob } from "../types";
 import {
+  formatCombatStatusChip,
+  formatStatusOverflowChip,
+  limitCombatStatusesForDisplay,
+  type CombatStatusInstance,
+} from "../systems/combatStatus";
+import {
   createButton,
   createPanel,
   createSubtitle,
@@ -103,6 +109,8 @@ export class CombatScene extends Phaser.Scene {
   private distanceBand: DistanceBand = "medium";
   private currentNoise = 0;
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
+  private combatStatusesByTarget = new Map<string, CombatStatusInstance[]>();
+  private heroStatusLabel?: Phaser.GameObjects.Text;
 
   public constructor() {
     super("CombatScene");
@@ -132,6 +140,8 @@ export class CombatScene extends Phaser.Scene {
     this.distanceBand = "medium";
     this.currentNoise = 0;
     this.currentMagazineByWeaponId.clear();
+    this.heroStatusLabel = undefined;
+    this.combatStatusesByTarget.clear();
 
     const sortie = GameState.currentSortie;
     if (!sortie) {
@@ -259,6 +269,15 @@ export class CombatScene extends Phaser.Scene {
       .text(CX + 190, actionY - 90, "", {
         align: "center",
         color: "#D6B56D",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+    this.heroStatusLabel = this.add
+      .text(CX, actionY - 110, "", {
+        align: "center",
+        color: "#FFAAAA",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
         fontStyle: "bold",
@@ -779,6 +798,11 @@ export class CombatScene extends Phaser.Scene {
 
   // ---------- UI ----------
 
+  public setCombatStatusesForTest(targetKey: string, statuses: CombatStatusInstance[]): void {
+    this.combatStatusesByTarget.set(targetKey, statuses);
+    this.updateDisplay();
+  }
+
   private updateDisplay(): void {
     const player = GameState.player;
     const items = GameState.data.items;
@@ -835,7 +859,26 @@ export class CombatScene extends Phaser.Scene {
         this.add.text(enemyBarX + 250, enemyY + 18, "🛡️", { fontSize: "12px" })
           .setOrigin(0.5).setData("hpBar", true);
       }
-      enemyY += 40;
+
+      // Render status chips if any
+      const mobStatuses = this.combatStatusesByTarget.get(inst.mob.id) ?? [];
+      const { visible: visMob, overflowCount: overMob } = limitCombatStatusesForDisplay(mobStatuses, 3);
+      const mobChips = visMob.map(formatCombatStatusChip);
+      const mobOverflow = formatStatusOverflowChip(overMob);
+      if (mobOverflow) {
+        mobChips.push(mobOverflow);
+      }
+      if (mobChips.length > 0) {
+        this.add.text(enemyBarX, enemyY + 32, mobChips.join(" · "), {
+          color: "#FFAAAA",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "11px",
+          fontStyle: "bold",
+        }).setData("hpBar", true);
+        enemyY += 52;
+      } else {
+        enemyY += 40;
+      }
     });
 
     if (this.logText) {
@@ -901,6 +944,17 @@ export class CombatScene extends Phaser.Scene {
       this.noiseLabel?.setText("Шум критический");
     } else {
       this.noiseLabel?.setText(`Шум: ${levelLabel}`);
+    }
+
+    if (this.heroStatusLabel) {
+      const statuses = this.combatStatusesByTarget.get("hero") ?? [];
+      const { visible, overflowCount } = limitCombatStatusesForDisplay(statuses, 3);
+      const chips = visible.map(formatCombatStatusChip);
+      const overflow = formatStatusOverflowChip(overflowCount);
+      if (overflow) {
+        chips.push(overflow);
+      }
+      this.heroStatusLabel.setText(chips.length > 0 ? chips.join(" · ") : "");
     }
 
     const firstAlive = this.mobs.find((m) => m.state.hp > 0 && !m.state.fled);
