@@ -2567,10 +2567,22 @@ describe("CombatScene M12.5 safety harness", () => {
       const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
       (harness.scene as any).setStatusPreviewForTest("attack", status);
 
+      // Verify magazine count before shot
+      expect(harness.internals.currentMagazineByWeaponId.get("pm")?.count).toBe(3);
+
       harness.internals.onHeroAttack();
 
+      // Assert currentNoise increments as existing PR7 behavior
+      expect(harness.internals.currentNoise).toBe(2);
+
+      // Assert magazine decrements
+      expect(harness.internals.currentMagazineByWeaponId.get("pm")?.count).toBe(2);
+
+      // Assert combatStatusesByTarget remains empty (no status application)
       expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
-      expect(harness.internals.currentNoise).toBeGreaterThan(0);
+
+      // Assert statusPreviewByAction still contains preview entry
+      expect((harness.scene as any).statusPreviewByAction.get("attack")).toEqual(status);
     });
 
     test("6. Empty magazine fallback", () => {
@@ -2608,6 +2620,7 @@ describe("CombatScene M12.5 safety harness", () => {
       expect(attackPreview).toBeDefined();
       expect(attackPreview).toContain("действие недоступно");
       expect(attackPreview).not.toContain("Кровь 2");
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
     });
 
     test("8. Other actions excluded", () => {
@@ -2692,6 +2705,10 @@ describe("CombatScene M12.5 safety harness", () => {
       activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
       expect(activeTexts.find((t) => t.includes("Атака"))).not.toContain("Кровь 2");
       expect((harness2.scene as any).statusPreviewByAction.size).toBe(0);
+      expect((harness2.scene as any).combatStatusesByTarget.size).toBe(0);
+      expect(activeTexts.some((t) => t.includes("Открыт"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("Кровь"))).toBe(false);
+      expect(activeTexts.some((t) => t.includes("Подавлен"))).toBe(false);
     });
 
     test("12. Non-attack action keys ignored", () => {
@@ -2701,6 +2718,8 @@ describe("CombatScene M12.5 safety harness", () => {
       (harness.scene as any).setStatusPreviewForTest("reload", { id: "bleed", durationTurns: 2 });
       (harness.scene as any).setStatusPreviewForTest("cover", { id: "exposed", durationTurns: 1 });
       (harness.scene as any).setStatusPreviewForTest("heal", { id: "suppressed", durationTurns: 1 });
+      (harness.scene as any).setStatusPreviewForTest("movement", { id: "suppressed", durationTurns: 1 });
+      (harness.scene as any).setStatusPreviewForTest("retreat", { id: "bleed", durationTurns: 2 });
 
       harness.internals.updateActionPreview();
 
@@ -2708,13 +2727,169 @@ describe("CombatScene M12.5 safety harness", () => {
       const previewTextObj = activeTexts.find((t) => t.includes("Атака"));
       expect(previewTextObj).toBeDefined();
 
-      const firstLine = previewTextObj!.split("\n")[0];
+      const lines = previewTextObj!.split("\n");
+      const firstLine = lines[0];
+      const secondLine = lines[1];
+
+      // Assert none of those statuses appear in action preview line
       expect(firstLine).not.toContain("Кровь 2");
       expect(firstLine).not.toContain("Открыт 1");
       expect(firstLine).not.toContain("Подавлен 1");
+      expect(secondLine).not.toContain("Подавлен 1");
+      expect(secondLine).not.toContain("Кровь 2");
 
+      // Assert map can contain seam entries, but UI ignores them
       expect((harness.scene as any).statusPreviewByAction.get("reload")).toEqual({ id: "bleed", durationTurns: 2 });
+      expect((harness.scene as any).statusPreviewByAction.get("cover")).toEqual({ id: "exposed", durationTurns: 1 });
+      expect((harness.scene as any).statusPreviewByAction.get("heal")).toEqual({ id: "suppressed", durationTurns: 1 });
+      expect((harness.scene as any).statusPreviewByAction.get("movement")).toEqual({ id: "suppressed", durationTurns: 1 });
+      expect((harness.scene as any).statusPreviewByAction.get("retreat")).toEqual({ id: "bleed", durationTurns: 2 });
+
+      // Assert combatStatusesByTarget unchanged
       expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("13. Preview map source object non-mutation", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const previewStatus = Object.freeze({ id: "bleed", durationTurns: 2 });
+      (harness.scene as any).setStatusPreviewForTest("attack", previewStatus);
+
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+
+      // Assert original object unchanged
+      expect(previewStatus.durationTurns).toBe(2);
+      expect(previewStatus.id).toBe("bleed");
+
+      // Assert statusPreviewByAction entry unchanged
+      const stored = (harness.scene as any).statusPreviewByAction.get("attack");
+      expect(stored).toEqual({ id: "bleed", durationTurns: 2 });
+
+      // Assert combatStatusesByTarget remains empty
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("14. Invalid preview statuses are safe", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      // Configure invalid configurations
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "unknown_id", durationTurns: 2 } as unknown as CombatStatusInstance);
+      harness.internals.updateActionPreview();
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).not.toContain("unknown_id");
+
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: -1 } as unknown as CombatStatusInstance);
+      harness.internals.updateActionPreview();
+
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: NaN } as unknown as CombatStatusInstance);
+      harness.internals.updateActionPreview();
+
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: 1.5 } as unknown as CombatStatusInstance);
+      harness.internals.updateActionPreview();
+
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("15. Repeated attack preview after click does not apply status", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      harness.internals.onHeroAttack();
+      expect(harness.internals.state).toBe("resolving_mobs");
+
+      // Reset state back to awaiting_hero safely
+      harness.internals.state = "awaiting_hero";
+      harness.internals.updateActionPreview();
+      harness.internals.updateDisplay();
+
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toContain("Кровь 2");
+    });
+
+    test("16. Melee configured preview", () => {
+      seedGameState([]);
+      GameState.player.equipped_weapon_id = "knife";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      const status: CombatStatusInstance = { id: "exposed", durationTurns: 1 };
+      (harness.scene as any).setStatusPreviewForTest("attack", status);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toBeDefined();
+      expect(attackPreview).toContain("Открыт 1");
+
+      harness.internals.onHeroAttack();
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
+
+    test("17. HUD regression and layout integrity", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      harness.internals.updateDisplay();
+
+      // Configure preview
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: 2 });
+
+      // Configure active statuses to render chips
+      (harness.scene as any).setCombatStatusesForTest("hero", [{ id: "exposed", durationTurns: 1 }]);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+
+      // Verify all seven action buttons still render
+      expect(activeTexts.some((t) => t === "АТАКА")).toBe(true);
+      expect(activeTexts.some((t) => t === "УКРЫТИЕ")).toBe(true);
+      expect(activeTexts.some((t) => t === "АПТЕЧКА")).toBe(true);
+      expect(activeTexts.some((t) => t === "ОТСТУП")).toBe(true);
+      expect(activeTexts.some((t) => t === "БЛИЖЕ")).toBe(true);
+      expect(activeTexts.some((t) => t === "ДАЛЬШЕ")).toBe(true);
+
+      // AP preview visible
+      expect(activeTexts.some((t) => t === "AP ●●● 3/3")).toBe(true);
+
+      // Ammo/magazine preview visible
+      expect(activeTexts.some((t) => t.includes("Магазин: 3/8"))).toBe(true);
+
+      // Distance chip visible
+      expect(activeTexts.some((t) => t === "Дистанция: средне")).toBe(true);
+
+      // Cover chip behavior still works/renders
+      expect(activeTexts.some((t) => t === "Укрытие")).toBe(false);
+
+      // Noise chip visible
+      expect(activeTexts.some((t) => t === "Шум: тихо")).toBe(true);
+
+      // Enemy intent visible
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение: атака]"))).toBe(true);
+
+      // Active status chips still visible
+      expect(activeTexts.some((t) => t.includes("Открыт 1"))).toBe(true);
+
+      // Preview status copy does not erase Шум +2
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toContain("Шум +2 · Кровь 2");
     });
   });
 });
