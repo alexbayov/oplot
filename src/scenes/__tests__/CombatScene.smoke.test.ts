@@ -2675,6 +2675,47 @@ describe("CombatScene M12.5 safety harness", () => {
 
       expect(chipText).not.toContain("Кровь 2");
     });
+
+    test("11. Scene-local preview map reset", () => {
+      const harness1 = createSceneHarness();
+      harness1.scene.create();
+
+      const status: CombatStatusInstance = { id: "bleed", durationTurns: 2 };
+      (harness1.scene as any).setStatusPreviewForTest("attack", status);
+
+      let activeTexts = harness1.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).toContain("Кровь 2");
+
+      const harness2 = createSceneHarness();
+      harness2.scene.create();
+
+      activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.find((t) => t.includes("Атака"))).not.toContain("Кровь 2");
+      expect((harness2.scene as any).statusPreviewByAction.size).toBe(0);
+    });
+
+    test("12. Non-attack action keys ignored", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      (harness.scene as any).setStatusPreviewForTest("reload", { id: "bleed", durationTurns: 2 });
+      (harness.scene as any).setStatusPreviewForTest("cover", { id: "exposed", durationTurns: 1 });
+      (harness.scene as any).setStatusPreviewForTest("heal", { id: "suppressed", durationTurns: 1 });
+
+      harness.internals.updateActionPreview();
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const previewTextObj = activeTexts.find((t) => t.includes("Атака"));
+      expect(previewTextObj).toBeDefined();
+
+      const firstLine = previewTextObj!.split("\n")[0];
+      expect(firstLine).not.toContain("Кровь 2");
+      expect(firstLine).not.toContain("Открыт 1");
+      expect(firstLine).not.toContain("Подавлен 1");
+
+      expect((harness.scene as any).statusPreviewByAction.get("reload")).toEqual({ id: "bleed", durationTurns: 2 });
+      expect((harness.scene as any).combatStatusesByTarget.size).toBe(0);
+    });
   });
 });
 
