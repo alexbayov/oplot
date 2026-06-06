@@ -200,6 +200,7 @@ interface CombatSceneInternals {
   onHeroReload: () => void;
   onHeroMoveCloser: () => void;
   onHeroMoveAway: () => void;
+  setDistanceBandForTest: (band: "close" | "medium" | "far") => void;
   onHeroRetreat: () => void;
   checkEnd: () => boolean;
   updateActionPreview: () => void;
@@ -1164,6 +1165,143 @@ describe("CombatScene M12.5 safety harness", () => {
     expect(activeTexts.some((text) => text === "ДАЛЬШЕ")).toBe(true);
     expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
     expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
+  });
+
+
+
+  test("PR9b keeps medium default preview-only movement copy unchanged", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    expect(harness.internals.distanceBand).toBe("medium");
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(activeTexts.some((text) => text === "Дистанция: средне")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
+  });
+
+  test("PR9b renders close boundary disabled copy without enabling real movement", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.setDistanceBandForTest("close");
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.distanceBand).toBe("close");
+    expect(activeTexts.some((text) => text === "Дистанция: близко")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: уже близко"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: готово"))).toBe(false);
+  });
+
+  test("PR9b renders far boundary disabled copy without enabling real movement", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+
+    harness.internals.setDistanceBandForTest("far");
+    harness.internals.updateDisplay();
+    harness.internals.updateActionPreview();
+
+    const activeTexts = harness.textObjects.filter((obj) => !obj.destroyed).map((obj) => obj.text);
+    expect(harness.internals.distanceBand).toBe("far");
+    expect(activeTexts.some((text) => text === "Дистанция: далеко")).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Ближе 1 AP: предпросмотр"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: уже далеко"))).toBe(true);
+    expect(activeTexts.some((text) => text.includes("Дальше 1 AP: готово"))).toBe(false);
+  });
+
+  test("PR9b close boundary click logs disabled reason and does not mutate state", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    harness.internals.setDistanceBandForTest("close");
+
+    const apBefore = harness.internals.currentAp;
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+    const noiseBefore = harness.internals.currentNoise;
+    const statusesBefore = structuredClone([...(harness.scene as any).combatStatusesByTarget.entries()]);
+    const previewsBefore = structuredClone([...(harness.scene as any).statusPreviewByAction.entries()]);
+
+    harness.internals.onHeroMoveCloser();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже близко.");
+    expect(harness.internals.distanceBand).toBe("close");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+    expect(harness.internals.currentNoise).toBe(noiseBefore);
+    expect([...(harness.scene as any).combatStatusesByTarget.entries()]).toEqual(statusesBefore);
+    expect([...(harness.scene as any).statusPreviewByAction.entries()]).toEqual(previewsBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("PR9b far boundary click logs disabled reason and does not mutate state", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.setDistanceBandForTest("far");
+
+    const apBefore = harness.internals.currentAp;
+    const noiseBefore = harness.internals.currentNoise;
+
+    harness.internals.onHeroMoveAway();
+
+    expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже далеко.");
+    expect(harness.internals.distanceBand).toBe("far");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.currentNoise).toBe(noiseBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("PR9b valid movement clicks remain preview-only at medium", () => {
+    const harness = createSceneHarness();
+    harness.scene.create();
+    const previewMessage = "Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.";
+    const apBefore = harness.internals.currentAp;
+
+    harness.internals.onHeroMoveCloser();
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+
+    harness.internals.onHeroMoveAway();
+    expect(harness.internals.logLines.at(-1)).toBe(previewMessage);
+    expect(harness.internals.distanceBand).toBe("medium");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(harness.internals.state).toBe("awaiting_hero");
+  });
+
+  test("PR9b display and preview refreshes do not mutate boundary distance or resources", () => {
+    seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+    GameState.player.equipped_weapon_id = "pm";
+    const harness = createSceneHarness();
+    harness.scene.create();
+    harness.internals.onHeroReload();
+    (harness.scene as any).setStatusPreviewForTest("movement", { id: "suppressed", durationTurns: 1 });
+    harness.internals.setDistanceBandForTest("far");
+
+    const apBefore = harness.internals.currentAp;
+    const backpackBefore = structuredClone(GameState.player.backpack);
+    const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+    const noiseBefore = harness.internals.currentNoise;
+    const previewsBefore = structuredClone([...(harness.scene as any).statusPreviewByAction.entries()]);
+
+    for (let i = 0; i < 3; i++) {
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+    }
+
+    expect(harness.internals.distanceBand).toBe("far");
+    expect(harness.internals.currentAp).toBe(apBefore);
+    expect(GameState.player.backpack).toEqual(backpackBefore);
+    expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+    expect(harness.internals.currentNoise).toBe(noiseBefore);
+    expect([...(harness.scene as any).statusPreviewByAction.entries()]).toEqual(previewsBefore);
   });
 
   test("movement buttons do not replace core combat actions or previews", () => {

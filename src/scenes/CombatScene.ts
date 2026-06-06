@@ -32,6 +32,14 @@ import {
 } from "../systems/mobAI";
 import { deriveVisibleEnemyIntent } from "../systems/combatIntents";
 import { formatNoiseDelta, getNoiseDeltaForAction } from "../systems/combatNoise";
+import {
+  DEFAULT_DISTANCE_BAND,
+  computeDistanceMovePlan,
+  getDistanceChipText,
+  getDistanceMoveDisabledReasonLabel,
+  type DistanceBand,
+  type DistanceMoveDirection,
+} from "../systems/combatDistance";
 import { initBossFight, getBossGuaranteedDrops } from "../systems/mobRole";
 import { runTween } from "../systems/tweens";
 import { applyLootLoss, computeWeight } from "../systems/weight";
@@ -75,8 +83,6 @@ interface MobInstance {
 }
 
 type CombatState = "awaiting_hero" | "resolving_mobs" | "ended";
-type DistanceBand = "close" | "medium" | "far";
-
 interface TurnOrderEntry {
   kind: "hero" | "mob";
   mobIndex?: number;
@@ -106,7 +112,7 @@ export class CombatScene extends Phaser.Scene {
   private distanceLabel?: Phaser.GameObjects.Text;
   private coverStatusLabel?: Phaser.GameObjects.Text;
   private noiseLabel?: Phaser.GameObjects.Text;
-  private distanceBand: DistanceBand = "medium";
+  private distanceBand: DistanceBand = DEFAULT_DISTANCE_BAND;
   private currentNoise = 0;
   private currentMagazineByWeaponId = new Map<string, { ammoId: string; count: number }>();
   private combatStatusesByTarget = new Map<string, CombatStatusInstance[]>();
@@ -138,7 +144,7 @@ export class CombatScene extends Phaser.Scene {
     this.distanceLabel = undefined;
     this.coverStatusLabel = undefined;
     this.noiseLabel = undefined;
-    this.distanceBand = "medium";
+    this.distanceBand = DEFAULT_DISTANCE_BAND;
     this.currentNoise = 0;
     this.currentMagazineByWeaponId.clear();
     this.heroStatusLabel = undefined;
@@ -556,15 +562,20 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private onHeroMoveCloser(): void {
-    this.onHeroMovePreview();
+    this.onHeroMovePreview("closer");
   }
 
   private onHeroMoveAway(): void {
-    this.onHeroMovePreview();
+    this.onHeroMovePreview("away");
   }
 
-  private onHeroMovePreview(): void {
+  private onHeroMovePreview(direction: DistanceMoveDirection): void {
     if (this.state !== "awaiting_hero") return;
+    const plan = computeDistanceMovePlan({ current: this.distanceBand, direction });
+    if (!plan.ok) {
+      this.log(`Манёвр недоступен: ${getDistanceMoveDisabledReasonLabel(plan.reason)}.`);
+      return;
+    }
     this.log("Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.");
   }
 
@@ -805,6 +816,11 @@ export class CombatScene extends Phaser.Scene {
     this.updateDisplay();
   }
 
+  public setDistanceBandForTest(band: DistanceBand): void {
+    this.distanceBand = band;
+    this.updateDisplay();
+  }
+
   public setStatusPreviewForTest(actionKey: string, status: CombatStatusInstance | null): void {
     if (status === null) {
       this.statusPreviewByAction.delete(actionKey);
@@ -926,17 +942,6 @@ export class CombatScene extends Phaser.Scene {
     this.updateActionPreview();
   }
 
-  private distanceBandLabel(): string {
-    switch (this.distanceBand) {
-      case "close":
-        return "близко";
-      case "medium":
-        return "средне";
-      case "far":
-        return "далеко";
-    }
-  }
-
   private noiseLevelLabel(): string {
     if (this.currentNoise >= 9) return "шум критический";
     if (this.currentNoise >= 6) return "опасно";
@@ -948,7 +953,7 @@ export class CombatScene extends Phaser.Scene {
     if (!this.apLabel || !this.actionPreviewLabel) return;
     const apPips = "●".repeat(this.currentAp).padEnd(DEFAULT_PLAYER_AP, "○");
     this.apLabel.setText(`AP ${apPips} ${this.currentAp}/${DEFAULT_PLAYER_AP}`);
-    this.distanceLabel?.setText(`Дистанция: ${this.distanceBandLabel()}`);
+    this.distanceLabel?.setText(getDistanceChipText(this.distanceBand));
     this.coverStatusLabel?.setText(GameState.currentSortie?.cover_active ? "Укрытие" : "");
     const levelLabel = this.noiseLevelLabel();
     if (levelLabel === "шум критический") {
@@ -1048,7 +1053,10 @@ export class CombatScene extends Phaser.Scene {
           previewAction("Аптечка", "heal", healReason),
           previewAction("Отступ", "retreat"),
         ].join(" · "),
-        "Ближе 1 AP: предпросмотр · Дальше 1 AP: предпросмотр",
+        [
+          this.formatDistanceMovePreview("closer"),
+          this.formatDistanceMovePreview("away"),
+        ].join(" · "),
       ].join("\n"),
     );
 
@@ -1097,6 +1105,15 @@ export class CombatScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  private formatDistanceMovePreview(direction: DistanceMoveDirection): string {
+    const plan = computeDistanceMovePlan({ current: this.distanceBand, direction });
+    const label = direction === "closer" ? "Ближе" : "Дальше";
+    if (!plan.ok) {
+      return `${label} ${plan.apCost} AP: ${getDistanceMoveDisabledReasonLabel(plan.reason)}`;
+    }
+    return `${label} ${plan.apCost} AP: предпросмотр`;
   }
 
   private log(message: string): void {
