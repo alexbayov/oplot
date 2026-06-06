@@ -3077,14 +3077,19 @@ describe("CombatScene M12.5 safety harness", () => {
 
       // At close, click БЛИЖЕ
       (harness.scene as any).setDistanceBandForTest("close");
+      const beforeClose = harness.internals.logLines.length;
       harness.internals.onHeroMoveCloser();
-      expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже близко.");
-      expect(harness.internals.logLines.some((line) => line.includes("Манёвр пока в предпросмотре"))).toBe(false);
+      const closeAdded = harness.internals.logLines.slice(beforeClose);
+      expect(closeAdded).toEqual(["Манёвр недоступен: уже близко."]);
+      expect(closeAdded.some((line) => line.includes("Манёвр пока в предпросмотре"))).toBe(false);
 
       // At far, click ДАЛЬШЕ
       (harness.scene as any).setDistanceBandForTest("far");
+      const beforeFar = harness.internals.logLines.length;
       harness.internals.onHeroMoveAway();
-      expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже далеко.");
+      const farAdded = harness.internals.logLines.slice(beforeFar);
+      expect(farAdded).toEqual(["Манёвр недоступен: уже далеко."]);
+      expect(farAdded.some((line) => line.includes("Манёвр пока в предпросмотре"))).toBe(false);
     });
 
     test("3. Valid direction at boundary still preview-only", () => {
