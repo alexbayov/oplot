@@ -3030,5 +3030,180 @@ describe("CombatScene M12.5 safety harness", () => {
       expect(attackPreview).toContain("Шум +2 · Кровь 2");
     });
   });
+
+  describe("M12.5 PR9c — harden preview-only distance boundary display", () => {
+    test("1. Boundary preview survives repeated refresh", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      (harness.scene as any).setDistanceBandForTest("close");
+      
+      const apBefore = harness.internals.currentAp;
+      const noiseBefore = harness.internals.currentNoise;
+      const backpackBefore = structuredClone(GameState.player.backpack);
+      const magazineBefore = structuredClone([...harness.internals.currentMagazineByWeaponId.entries()]);
+      const statusMapBefore = structuredClone([...(harness.scene as any).combatStatusesByTarget.entries()]);
+
+      for (let i = 0; i < 5; i++) {
+        harness.internals.updateDisplay();
+        harness.internals.updateActionPreview();
+      }
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Ближе 1 AP: уже близко"))).toBe(true);
+      expect(harness.internals.distanceBand).toBe("close");
+      expect(harness.internals.currentAp).toBe(apBefore);
+      expect(harness.internals.currentNoise).toBe(noiseBefore);
+      expect(GameState.player.backpack).toEqual(backpackBefore);
+      expect([...harness.internals.currentMagazineByWeaponId.entries()]).toEqual(magazineBefore);
+      expect([...(harness.scene as any).combatStatusesByTarget.entries()]).toEqual(statusMapBefore);
+
+      // Repeat for far
+      (harness.scene as any).setDistanceBandForTest("far");
+      for (let i = 0; i < 5; i++) {
+        harness.internals.updateDisplay();
+        harness.internals.updateActionPreview();
+      }
+      const activeTextsFar = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTextsFar.some((t) => t.includes("Дальше 1 AP: уже далеко"))).toBe(true);
+      expect(harness.internals.distanceBand).toBe("far");
+    });
+
+    test("2. Boundary click does not append preview-only success log", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      // At close, click БЛИЖЕ
+      (harness.scene as any).setDistanceBandForTest("close");
+      harness.internals.onHeroMoveCloser();
+      expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже близко.");
+      expect(harness.internals.logLines.some((line) => line.includes("Манёвр пока в предпросмотре"))).toBe(false);
+
+      // At far, click ДАЛЬШЕ
+      (harness.scene as any).setDistanceBandForTest("far");
+      harness.internals.onHeroMoveAway();
+      expect(harness.internals.logLines.at(-1)).toBe("Манёвр недоступен: уже далеко.");
+    });
+
+    test("3. Valid direction at boundary still preview-only", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      // At close, click ДАЛЬШЕ
+      (harness.scene as any).setDistanceBandForTest("close");
+      const apBefore = harness.internals.currentAp;
+      harness.internals.onHeroMoveAway();
+      expect(harness.internals.logLines.at(-1)).toBe("Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.");
+      expect(harness.internals.distanceBand).toBe("close");
+      expect(harness.internals.currentAp).toBe(apBefore);
+      expect(harness.internals.state).toBe("awaiting_hero");
+
+      // At far, click БЛИЖЕ
+      (harness.scene as any).setDistanceBandForTest("far");
+      harness.internals.onHeroMoveCloser();
+      expect(harness.internals.logLines.at(-1)).toBe("Манёвр пока в предпросмотре: перемещение не тратит AP и не меняет дистанцию.");
+      expect(harness.internals.distanceBand).toBe("far");
+      expect(harness.internals.currentAp).toBe(apBefore);
+      expect(harness.internals.state).toBe("awaiting_hero");
+    });
+
+    test("4. Non-hero-state guard", () => {
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.state = "resolving_mobs";
+      const logLengthBefore = harness.internals.logLines.length;
+      const apBefore = harness.internals.currentAp;
+      const distanceBefore = harness.internals.distanceBand;
+
+      harness.internals.onHeroMoveCloser();
+      harness.internals.onHeroMoveAway();
+
+      expect(harness.internals.logLines.length).toBe(logLengthBefore);
+      expect(harness.internals.distanceBand).toBe(distanceBefore);
+      expect(harness.internals.currentAp).toBe(apBefore);
+    });
+
+    test("5. Status/noise/reload interaction", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: 2 });
+      (harness.scene as any).setCombatStatusesForTest("hero", [{ id: "exposed", durationTurns: 1 }]);
+
+      // Set distance close
+      (harness.scene as any).setDistanceBandForTest("close");
+      harness.internals.updateDisplay();
+      harness.internals.updateActionPreview();
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      expect(activeTexts.some((t) => t.includes("Ближе 1 AP: уже близко"))).toBe(true);
+
+      const attackPreview = activeTexts.find((t) => t.includes("Атака"));
+      expect(attackPreview).toContain("Шум +2");
+      expect(attackPreview).toContain("Кровь 2");
+      expect(activeTexts.some((t) => t.includes("Открыт 1"))).toBe(true);
+
+      // Reload/magazine state unchanged
+      expect(harness.internals.currentMagazineByWeaponId.get("pm")?.count).toBe(3);
+    });
+
+    test("6. Layout regression", () => {
+      seedGameState([{ item_id: "ammo_9x18", count: 3 }]);
+      GameState.player.equipped_weapon_id = "pm";
+      const harness = createSceneHarness();
+      harness.scene.create();
+
+      harness.internals.onHeroReload();
+      (harness.scene as any).setStatusPreviewForTest("attack", { id: "bleed", durationTurns: 2 });
+      (harness.scene as any).setCombatStatusesForTest("hero", [{ id: "exposed", durationTurns: 1 }]);
+
+      const activeTexts = harness.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+
+      // Verify buttons
+      expect(activeTexts.filter((t) => t === "АТАКА")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "УКРЫТИЕ")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "АПТЕЧКА")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "ПЕРЕЗАРЯДКА")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "БЛИЖЕ")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "ДАЛЬШЕ")).toHaveLength(1);
+      expect(activeTexts.filter((t) => t === "ОТСТУП")).toHaveLength(1);
+
+      // HUD components
+      expect(activeTexts.some((t) => t.includes("AP ●●● 3/3"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Магазин: 3/8"))).toBe(true);
+      expect(activeTexts.some((t) => t === "Дистанция: средне")).toBe(true);
+      expect(activeTexts.some((t) => t === "Шум: тихо")).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Мародёр [Намерение: атака]"))).toBe(true);
+      expect(activeTexts.some((t) => t.includes("Открыт 1"))).toBe(true);
+
+      const actionPreview = activeTexts.find((t) => t.includes("Ближе"));
+      expect(actionPreview).toBeDefined();
+      const lines = actionPreview!.split("\n");
+      expect(lines).toHaveLength(2);
+      expect(lines[1]).toContain("Ближе");
+      expect(lines[1]).not.toContain("готово"); // movement must not show "готово"
+    });
+
+    test("7. New scene reset", () => {
+      const harness1 = createSceneHarness();
+      harness1.scene.create();
+      (harness1.scene as any).setDistanceBandForTest("close");
+      expect(harness1.internals.distanceBand).toBe("close");
+
+      const harness2 = createSceneHarness();
+      harness2.scene.create();
+      expect(harness2.internals.distanceBand).toBe("medium");
+      
+      const activeTexts = harness2.textObjects.filter((o) => !o.destroyed).map((o) => o.text);
+      const actionPreview = activeTexts.find((t) => t.includes("Ближе"));
+      expect(actionPreview).toContain("Ближе 1 AP: предпросмотр · Дальше 1 AP: предпросмотр");
+    });
+  });
 });
 
