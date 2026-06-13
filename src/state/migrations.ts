@@ -76,6 +76,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 3) {
     next = migrateV2ToV3(next);
   }
+  if (version < 4) {
+    next = migrateV3ToV4(next);
+  }
 
   return next;
 };
@@ -150,5 +153,26 @@ const migrateV2ToV3 = (snap: VersionedSnapshot): VersionedSnapshot => {
     version: 3,
     unlockedSkillNodes: unlocked,
     skillPoints: bonus,
+  };
+};
+
+/**
+ * v3 → v4 (M13 PR-1: бой в авторесолв):
+ *   - Добавляем `baseResources` со стартовыми нулями.
+ *   - Добавляем `injuries: []`.
+ *   - Любой in-flight `currentSortie` дропается на стороне applySnapshot
+ *     (он не сериализуется в snapshot, поэтому миграция тут не нужна,
+ *     но мы фиксируем версию, чтобы знать, что это v4).
+ *
+ * Если в будущем cloud-сейв начнёт сериализовать `currentSortie`, эту
+ * миграцию надо расширить: вернуть HP, перенести `taken_consumables` в
+ * `inventory`, обнулить sortie. Сейчас же — пустой контракт.
+ */
+const migrateV3ToV4 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  return {
+    ...snap,
+    version: 4,
+    baseResources: snap.baseResources ?? { water: 0, fuel: 0, metal: 0, food: 0 },
+    injuries: snap.injuries ?? [],
   };
 };

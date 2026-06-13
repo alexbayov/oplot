@@ -1,9 +1,10 @@
 import Phaser from "phaser";
 import { GameState, setContent } from "../state/GameState";
-import type { ContentData } from "../state/types";
+import type { ContentData, NarrativeBundle, NarrativeEvent } from "../state/types";
 import type { Item, Mob, RadioSignal, Recipe, Zone } from "../types";
 import type { Encounter } from "../types/encounter";
 import type { SkillNode } from "../types/skillNode";
+import { setNarrative } from "../systems/sortieResolve";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
 import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
@@ -88,7 +89,7 @@ export class BootScene extends Phaser.Scene {
   private async loadContent(): Promise<void> {
     try {
       // M3: radio.json loaded in parallel; failure or [] is fine (UI shows "Эфир пуст").
-      const [items, mobs, recipes, zones, radioSignals, perks, encounters] = await Promise.all([
+      const [items, mobs, recipes, zones, radioSignals, perks, encounters, narrative, narrativeEvents] = await Promise.all([
         loadJson<Item[]>("content/items.json"),
         loadJson<Mob[]>("content/mobs.json"),
         loadJson<Recipe[]>("content/recipes.json"),
@@ -96,6 +97,12 @@ export class BootScene extends Phaser.Scene {
         loadJson<RadioSignal[]>("content/radio.json").catch(() => [] as RadioSignal[]),
         loadJson<SkillNode[]>("content/perks.json").catch(() => [] as SkillNode[]),
         loadJson<Encounter[]>("content/encounters.json").catch(() => [] as Encounter[]),
+        loadJson<NarrativeBundle>("content/narrative.json").catch(
+          () => ({ encounters: [], goal_intros: {}, return_intros: {} }) as NarrativeBundle,
+        ),
+        loadJson<{ events: NarrativeEvent[] }>("content/narrative_events.json")
+          .then((j) => j.events ?? [])
+          .catch(() => [] as NarrativeEvent[]),
       ]);
       const data: ContentData = {
         items: indexBy(items),
@@ -106,7 +113,10 @@ export class BootScene extends Phaser.Scene {
         perks: {},
         skillNodes: perks,
         encounters,
+        narrative,
+        narrativeEvents,
       };
+      setNarrative(narrative);
       softWarnCounts(data);
       const recipeIssues = validateRecipeRefs(data);
       if (recipeIssues.length > 0) {

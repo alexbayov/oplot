@@ -27,6 +27,24 @@ export interface SettingsState {
   sfxVolume: number;
 }
 
+/**
+ * M13: ресурсы базы. PR-1 — счётчики. PR-5 — будут потребляться/производиться
+ * постройками (грядка, верстак, генератор, койка) с офлайн-прогрессией.
+ */
+export interface BaseResources {
+  water: number;
+  fuel: number;
+  metal: number;
+  food: number;
+}
+
+/** M13: травма героя, влияет на формулу resolveEncounter. */
+export interface PlayerInjury {
+  kind: "arm" | "leg" | "head";
+  /** Игровых дней до выздоровления. Уменьшается по концу каждой вылазки. */
+  days_left: number;
+}
+
 export interface PlayerState {
   hp: number;
   hp_max: number;
@@ -36,31 +54,42 @@ export interface PlayerState {
   equipped_weapon_id: string;
   equipped_armor_id: string;
   perks: Perk[];
-  /** M11.4: ID открытых узлов skill tree (заменяет flat perks). Legacy perks остаются для backward compat в combat.ts. */
+  /** M11.4: ID открытых узлов skill tree (заменяет flat perks). */
   unlockedSkillNodes?: string[];
   /** M11.4: непотраченные очки навыков (1 на уровень). */
   skillPoints?: number;
   backpack: InventoryStack[];
   gas: number;
+  /** M13: активные травмы. Накапливаются от resolveEncounter, тикают со временем. */
+  injuries?: PlayerInjury[];
 }
 
+/**
+ * M13: вылазка — интерактивный авторесолв.
+ *
+ * Между энкаунтерами игрок выбирает «идти дальше / вернуться». Каждый бой —
+ * один вызов resolveEncounter. Лут копится в pending_loot, в LootScene
+ * игрок распределяет его в рюкзак/склад.
+ */
 export interface SortieState {
   zone_id: string;
   depth: 1 | 2 | 3;
+  /** Цель вылазки. Один из SortieGoal из types/sortie.ts. */
+  goal: string;
   fights_total: number;
   fights_completed: number;
-  // All combats for this sortie are rolled up-front so retries can't cherry-pick easy mobs.
+  /** Пред-роллнутые наборы мобов на каждый энкаунтер. */
   encounters: string[][];
-  // Zone resources pre-rolled at sortie start, drained per fight.
+  /** Пред-роллнутые ресурсы зоны, дренятся per encounter. */
   zone_loot_remaining: InventoryStack[];
-  // Loot dropped during the most recent combat, presented in LootScene.
+  /** Лут, накопленный за вылазку. */
   pending_loot: InventoryStack[];
-  // Set when hero used "Укрытие"; expires at hero's next turn.
-  cover_active: boolean;
-  // M10.2: эффекты предыдущего encounter'а, применяются в следующем бою и сбрасываются.
-  next_fight_initiative_loss?: boolean;
-  next_mob_hp_bonus_pct?: number;
-  next_fight_enemy_count_delta?: number;
+  /** Расходники, которые герой взял с собой. */
+  taken_consumables: InventoryStack[];
+  /** Лог завершённых энкаунтеров для итоговой сводки (нарративные строки). */
+  resolved_log?: string[];
+  /** Итоговый исход. Заполняется в LootScene/ReturnScene. */
+  final_outcome?: "success" | "retreat" | "knocked_out";
 }
 
 export interface ContentData {
@@ -69,12 +98,40 @@ export interface ContentData {
   recipes: Record<string, Recipe>;
   zones: Record<string, Zone>;
   // M3 GDD §10.M3: radio signals loaded from content/radio.json at boot.
-  // Empty array when the file is missing or content count mismatches (soft-warn).
   radioSignals: RadioSignal[];
   perks: Record<string, Perk>;
   // M10.2: encounters between fights — loaded from content/encounters.json.
   encounters?: Encounter[];
   skillNodes?: SkillNode[];
+  /** M13: nar-каталог для resolveSortie. См. content/narrative.json. */
+  narrative?: NarrativeBundle;
+  /** M13: event-выборы между энкаунтерами. См. content/narrative_events.json. */
+  narrativeEvents?: NarrativeEvent[];
+}
+
+export interface NarrativeBundle {
+  encounters: { tags: string[]; lines: string[] }[];
+  goal_intros: Record<string, string[]>;
+  return_intros: Record<string, string[]>;
+}
+
+export interface NarrativeEventOutcome {
+  loot?: { id: string; n: number }[];
+  hp_delta?: number;
+  consume_item?: string;
+  consume_n?: number;
+  trust_delta?: number;
+}
+
+export interface NarrativeEvent {
+  id: string;
+  zones: string[];
+  text: string;
+  choices: {
+    id: string;
+    text: string;
+    outcome: NarrativeEventOutcome;
+  }[];
 }
 
 export interface GameStateShape {
@@ -82,6 +139,8 @@ export interface GameStateShape {
   data: ContentData;
   currentSortie: SortieState | null;
   baseStash: InventoryStack[];
+  /** M13: ресурсы базы. */
+  baseResources: BaseResources;
   // M3 GDD §6.4.M3.3 — unlock flags driving MapScene visibility.
   progress: GameProgress;
   settings: SettingsState;

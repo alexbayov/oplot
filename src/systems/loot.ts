@@ -1,4 +1,4 @@
-import type { Rng } from "./combat";
+import type { Rng } from "./sortieResolve";
 import type { InventoryStack } from "../state/types";
 import type { Mob, Zone, ZoneLevel } from "../types";
 

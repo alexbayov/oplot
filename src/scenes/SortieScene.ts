@@ -8,21 +8,24 @@ import { hideBanner } from "../systems/banner";
 import { CX, CY, W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 import { computeWeight } from "../systems/weight";
+import type { SortieGoal } from "../types/sortie";
+import { SORTIE_GOALS } from "../systems/sortieResolve";
 
 interface SortieInit {
   zoneId?: string;
 }
 
-// fights_per_depth from balance.md §Зоны
 const FIGHTS_PER_DEPTH: Record<1 | 2 | 3, number> = { 1: 2, 2: 3, 3: 4 };
 
-const CONSUMABLE_PASSTHROUGH_KEEP = (itemId: string): boolean => {
-  // Hero brings consumables (bandages, medkits, ammo) into the sortie automatically.
-  return ["bandage", "medkit", "ammo_pistol"].includes(itemId);
+const CONSUMABLE_PASSTHROUGH = (itemId: string): boolean => {
+  // M13: герой берёт расходники в вылазку автоматом. UI выбора — PR-1.5.
+  return ["bandage", "medkit", "ammo_pistol", "canned_food", "water"].includes(itemId);
 };
 
 export class SortieScene extends Phaser.Scene {
   private zoneId: string | null = null;
+  private selectedDepth: 1 | 2 | 3 = 1;
+  private selectedGoal: SortieGoal = "quiet";
 
   public constructor() {
     super("SortieScene");
@@ -56,52 +59,107 @@ export class SortieScene extends Phaser.Scene {
       createSubtitle(
         this,
         CY - 40,
-        `Зона: ${zone.name_ru}\nГлубина ${sortie.depth}: бои ${sortie.fights_total}\nБоёв осталось: ${remaining}`,
+        `Зона: ${zone.name_ru}\nГлубина ${sortie.depth}: всего ${sortie.fights_total}\nОсталось энкаунтеров: ${remaining}`,
       );
-      createButton(this, H - 130, "Следующий бой", () => this.scene.start("CombatScene"), true);
-      createButton(this, H - 70, "Назад в Оплот", () => {
-        GameState.currentSortie = null;
-        this.scene.start("BaseScene");
-      });
+      createButton(this, H - 130, "Продолжить", () => this.scene.start("SortieRunScene"), true);
+      createButton(this, H - 70, "В Оплот", () => this.returnFromActiveSortie());
       return;
     }
 
-    createPanel(this, CX, 220, 600, 160);
-    createSubtitle(
-      this,
-      200,
-      `Зона: ${zone.name_ru}`,
-    );
-    createSubtitle(this, 240, "Выбери глубину вылазки");
+    createPanel(this, CX, 200, 600, 130);
+    createSubtitle(this, 180, `Зона: ${zone.name_ru}`);
+    createSubtitle(this, 220, "Выбери глубину и цель вылазки");
 
+    this.renderDepthRow(zone);
+    this.renderGoalRow();
+    this.renderGoSummary(zone);
+
+    createButton(this, H - 60, "Назад", () => this.scene.start("MapScene"));
+  }
+
+  private renderDepthRow(zone: { levels: { depth: 1 | 2 | 3; min_player_level: number }[] }): void {
     const playerLevel = GameState.player.level;
     const depths: (1 | 2 | 3)[] = [1, 2, 3];
-    // 3 кнопки в ряд по центру
-    const btnW = 260;
-    const gap = 20;
+    const btnW = 200;
+    const gap = 16;
     const totalW = depths.length * btnW + (depths.length - 1) * gap;
     const startX = CX - totalW / 2 + btnW / 2;
-    const btnY = 420;
+    const btnY = 320;
+
+    createSubtitle(this, 290, "Глубина");
 
     depths.forEach((depth, idx) => {
       const level = zone.levels.find((l) => l.depth === depth);
       const xPos = startX + idx * (btnW + gap);
-      if (!level) {
-        createButton(this, btnY, `Depth ${depth} нет`, () => undefined, false, xPos);
-        return;
-      }
+      if (!level) return;
       const fights = FIGHTS_PER_DEPTH[depth];
       const locked = playerLevel < level.min_player_level;
       const label = locked
-        ? `Depth ${depth} 🔒 lvl ${level.min_player_level}`
-        : `Depth ${depth} (${fights} боёв)`;
-      createButton(this, btnY, label, () => {
-        if (locked) return;
-        this.startSortie(zone.id, depth, fights);
-      }, !locked && depth === 1, xPos);
+        ? `${depth} 🔒 lvl ${level.min_player_level}`
+        : `Глубина ${depth} (${fights})`;
+      createButton(
+        this,
+        btnY,
+        label,
+        () => {
+          if (locked) return;
+          this.selectedDepth = depth;
+          this.scene.restart();
+        },
+        !locked && depth === this.selectedDepth,
+        xPos,
+      );
     });
+  }
 
-    createButton(this, H - 60, "Назад", () => this.scene.start("MapScene"));
+  private renderGoalRow(): void {
+    createSubtitle(this, 390, "Цель");
+
+    const goals: SortieGoal[] = [
+      "quiet",
+      "greedy",
+      "targeted_fuel",
+      "targeted_metal",
+      "targeted_food",
+      "targeted_water",
+    ];
+    const btnW = 195;
+    const gap = 10;
+    const perRow = 3;
+    const totalW = perRow * btnW + (perRow - 1) * gap;
+    const startX = CX - totalW / 2 + btnW / 2;
+    const baseY = 430;
+
+    goals.forEach((g, idx) => {
+      const col = idx % perRow;
+      const row = Math.floor(idx / perRow);
+      const x = startX + col * (btnW + gap);
+      const y = baseY + row * 60;
+      const def = SORTIE_GOALS[g];
+      createButton(
+        this,
+        y,
+        def.name_ru,
+        () => {
+          this.selectedGoal = g;
+          this.scene.restart();
+        },
+        g === this.selectedGoal,
+        x,
+      );
+    });
+  }
+
+  private renderGoSummary(zone: { id: string; name_ru: string }): void {
+    const def = SORTIE_GOALS[this.selectedGoal];
+    createSubtitle(this, H - 130, def.description_ru);
+    createButton(
+      this,
+      H - 90,
+      `В вылазку: ${def.name_ru} · глубина ${this.selectedDepth}`,
+      () => this.startSortie(zone.id, this.selectedDepth, FIGHTS_PER_DEPTH[this.selectedDepth]),
+      true,
+    );
   }
 
   private startSortie(zoneId: string, depth: 1 | 2 | 3, fights: number): void {
@@ -113,37 +171,40 @@ export class SortieScene extends Phaser.Scene {
       overlay.destroy();
       const encounters = generateSortieEncounters(zone, depth, fights);
       const zoneLootPool = generateZoneLoot(zone, depth);
+      const taken = this.takeConsumables();
       const sortie: SortieState = {
         zone_id: zoneId,
         depth,
+        goal: this.selectedGoal,
         fights_total: fights,
         fights_completed: 0,
         encounters,
         zone_loot_remaining: zoneLootPool,
         pending_loot: [],
-        cover_active: false,
+        taken_consumables: taken,
+        resolved_log: [],
       };
       GameState.currentSortie = sortie;
+      GameState.player.backpack = taken;
 
       track("sortie_started", {
         zone_id: sortie.zone_id,
         depth: sortie.depth,
+        goal: sortie.goal,
         weight: computeWeight(GameState.player.backpack, GameState.data.items),
         hp_pct: Math.round((GameState.player.hp / GameState.player.hp_max) * 100),
       });
 
-      GameState.player.backpack = this.takeConsumables();
-      this.scene.start("CombatScene");
+      this.scene.start("SortieRunScene");
     });
   }
 
-  // Move consumables from baseStash into the backpack at sortie start.
   private takeConsumables(): InventoryStack[] {
     const stash = GameState.baseStash;
     const keptStash: InventoryStack[] = [];
     let backpack: InventoryStack[] = [];
     for (const stack of stash) {
-      if (CONSUMABLE_PASSTHROUGH_KEEP(stack.item_id) && stack.count > 0) {
+      if (CONSUMABLE_PASSTHROUGH(stack.item_id) && stack.count > 0) {
         backpack = addToStack(backpack, stack.item_id, stack.count);
       } else {
         keptStash.push({ ...stack });
@@ -151,5 +212,22 @@ export class SortieScene extends Phaser.Scene {
     }
     GameState.baseStash = keptStash;
     return backpack;
+  }
+
+  private returnFromActiveSortie(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) {
+      this.scene.start("BaseScene");
+      return;
+    }
+    sortie.final_outcome = "retreat";
+    track("sortie_finished", {
+      zone_id: sortie.zone_id,
+      depth: sortie.depth,
+      outcome: sortie.final_outcome,
+      encounters_done: sortie.fights_completed,
+      source: "resume_screen",
+    });
+    this.scene.start("LootScene");
   }
 }

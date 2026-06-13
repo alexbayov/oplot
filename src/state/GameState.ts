@@ -9,6 +9,7 @@ import {
   HERO_START_XP,
 } from "./balance";
 import type {
+  BaseResources,
   ContentData,
   GameProgress,
   GameStateShape,
@@ -17,6 +18,7 @@ import type {
   SettingsState,
   SortieState,
 } from "./types";
+import type { BaseResourceId } from "../types/sortie";
 import { loadContentItems } from "./ItemRegistry";
 
 const createDefaultPlayer = (): PlayerState => ({
@@ -30,6 +32,7 @@ const createDefaultPlayer = (): PlayerState => ({
   perks: [],
   backpack: [],
   gas: 5,
+  injuries: [],
 });
 
 const createEmptyContent = (): ContentData => ({
@@ -59,11 +62,19 @@ const createDefaultSettings = (): SettingsState => ({
   sfxVolume: 1.0,
 });
 
+export const createDefaultBaseResources = (): BaseResources => ({
+  water: 0,
+  fuel: 0,
+  metal: 0,
+  food: 0,
+});
+
 const state: GameStateShape = {
   player: createDefaultPlayer(),
   data: createEmptyContent(),
   currentSortie: null,
   baseStash: [{ item_id: "bandage", count: HERO_START_BANDAGES }],
+  baseResources: createDefaultBaseResources(),
   progress: createDefaultProgress(),
   settings: createDefaultSettings(),
 };
@@ -93,6 +104,12 @@ export const GameState = {
   set baseStash(value: InventoryStack[]) {
     state.baseStash = value;
   },
+  get baseResources(): BaseResources {
+    return state.baseResources;
+  },
+  set baseResources(value: BaseResources) {
+    state.baseResources = value;
+  },
   get progress(): GameProgress {
     return state.progress;
   },
@@ -105,26 +122,23 @@ export const GameState = {
   set settings(value: SettingsState) {
     state.settings = value;
   },
-  // Reset to factory defaults (used by tests and after defeat smoke).
   reset(): void {
     state.player = createDefaultPlayer();
     state.data = createEmptyContent();
     state.currentSortie = null;
     state.baseStash = [{ item_id: "bandage", count: HERO_START_BANDAGES }];
+    state.baseResources = createDefaultBaseResources();
     state.progress = createDefaultProgress();
     state.settings = createDefaultSettings();
   },
-  // HERO_BASE_SPEED exposed for systems/combat.
   baseSpeed: HERO_BASE_SPEED,
 };
 
-// Used by tests / callers that need to seed content without going through Boot.
 export const setContent = (data: ContentData): void => {
   state.data = data;
   loadContentItems(data.items);
 };
 
-// Helper used by combat/loot to mutate the backpack atomically.
 export const addToStack = (
   stacks: InventoryStack[],
   item_id: string,
@@ -171,6 +185,26 @@ export const countInStacks = (
   }
   return total;
 };
+
+/** M13: добавить ресурс базы. Кэп будет в PR-5. */
+export const addBaseResource = (
+  resources: BaseResources,
+  id: BaseResourceId,
+  amount: number,
+): BaseResources => ({
+  ...resources,
+  [id]: Math.max(0, resources[id] + amount),
+});
+
+/** M13: списать ресурс базы. Не уходит ниже нуля. */
+export const consumeBaseResource = (
+  resources: BaseResources,
+  id: BaseResourceId,
+  amount: number,
+): BaseResources => ({
+  ...resources,
+  [id]: Math.max(0, resources[id] - amount),
+});
 
 export const setSfxMute = (value: boolean): void => {
   state.settings.sfxMuted = value;

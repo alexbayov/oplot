@@ -172,10 +172,11 @@ export class ReturnScene extends Phaser.Scene {
     const sortie = GameState.currentSortie;
     const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
     if (sortie && zone && sortie.fights_completed > 0) {
+      const victory = sortie.final_outcome === "success";
       GameState.progress = applySortieCompletion(
-        GameState.progress, zone, sortie.depth, true,
+        GameState.progress, zone, sortie.depth, victory,
       );
-      if (zone.boss_id) {
+      if (victory && zone.boss_id) {
         markDailyCompleted(GameState.progress, zone.id, Date.now());
       }
       this.showReturnOptions();
@@ -270,13 +271,28 @@ export class ReturnScene extends Phaser.Scene {
       GameState.data.radioSignals,
       GameState.progress.radio_trust,
     );
+    // M13: лут переезжает на склад, а распознанные ресурсы базы
+    // (water/fuel/metal/food) идут отдельным потоком в baseResources.
     let stash = GameState.baseStash;
+    let baseResources = GameState.baseResources;
     for (const stack of player.backpack) {
-      stash = addToStack(stash, stack.item_id, stack.count);
+      const baseTarget = routeToBaseResource(stack.item_id);
+      if (baseTarget) {
+        baseResources = { ...baseResources, [baseTarget]: baseResources[baseTarget] + stack.count };
+      } else {
+        stash = addToStack(stash, stack.item_id, stack.count);
+      }
     }
     GameState.baseStash = stash;
+    GameState.baseResources = baseResources;
     player.backpack = [];
-    player.hp = player.hp_max;
+    // Полное восстановление HP убрано: лечение должно быть осмысленным.
+    // Возвращаем минимум 25% HP за возврат, чтобы не клинить игрока.
+    player.hp = Math.max(player.hp, Math.round(player.hp_max * 0.25));
+    // Тик травм на 1 день.
+    player.injuries = (player.injuries ?? [])
+      .map((i) => ({ ...i, days_left: i.days_left - 1 }))
+      .filter((i) => i.days_left > 0);
     GameState.currentSortie = null;
     void saveToCloud();
     showInterstitial(() => {
@@ -285,3 +301,25 @@ export class ReturnScene extends Phaser.Scene {
     });
   }
 }
+
+const BASE_RESOURCE_ROUTE: Record<string, "water" | "fuel" | "metal" | "food"> = {
+  water: "water",
+  fuel: "fuel",
+  oil: "fuel",
+  machine_oil: "fuel",
+  scrap: "metal",
+  scrap_metal: "metal",
+  metal: "metal",
+  electronics: "metal",
+  circuitry: "metal",
+  industrial_cable: "metal",
+  canned_food: "food",
+  food: "food",
+  ration_bar: "food",
+};
+
+const routeToBaseResource = (
+  item_id: string,
+): "water" | "fuel" | "metal" | "food" | null => {
+  return BASE_RESOURCE_ROUTE[item_id] ?? null;
+};
