@@ -172,10 +172,11 @@ export class ReturnScene extends Phaser.Scene {
     const sortie = GameState.currentSortie;
     const zone = sortie ? GameState.data.zones[sortie.zone_id] : null;
     if (sortie && zone && sortie.fights_completed > 0) {
+      const victory = sortie.final_outcome === "success";
       GameState.progress = applySortieCompletion(
-        GameState.progress, zone, sortie.depth, true,
+        GameState.progress, zone, sortie.depth, victory,
       );
-      if (zone.boss_id) {
+      if (victory && zone.boss_id) {
         markDailyCompleted(GameState.progress, zone.id, Date.now());
       }
       this.showReturnOptions();

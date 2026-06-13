@@ -62,10 +62,7 @@ export class SortieScene extends Phaser.Scene {
         `Зона: ${zone.name_ru}\nГлубина ${sortie.depth}: всего ${sortie.fights_total}\nОсталось энкаунтеров: ${remaining}`,
       );
       createButton(this, H - 130, "Продолжить", () => this.scene.start("SortieRunScene"), true);
-      createButton(this, H - 70, "В Оплот", () => {
-        GameState.currentSortie = null;
-        this.scene.start("BaseScene");
-      });
+      createButton(this, H - 70, "В Оплот", () => this.returnFromActiveSortie());
       return;
     }
 
@@ -215,5 +212,22 @@ export class SortieScene extends Phaser.Scene {
     }
     GameState.baseStash = keptStash;
     return backpack;
+  }
+
+  private returnFromActiveSortie(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) {
+      this.scene.start("BaseScene");
+      return;
+    }
+    sortie.final_outcome = "retreat";
+    track("sortie_finished", {
+      zone_id: sortie.zone_id,
+      depth: sortie.depth,
+      outcome: sortie.final_outcome,
+      encounters_done: sortie.fights_completed,
+      source: "resume_screen",
+    });
+    this.scene.start("LootScene");
   }
 }
