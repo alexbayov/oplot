@@ -11,12 +11,14 @@ import { track } from "../systems/telemetry";
 import { renderZoneTierPlate } from "../ui/tierBadge";
 
 /**
- * MapScene (M10.1) — painted world map с интерактивными пинами вместо grid карточек.
+ * MapScene (M10.1, M13 PR-2) — painted world map с пинами для 3 зон M13.
  *
- * Painted-фон world_map.jpg показывает аэрофотоснимок руин города.
- * 9 пинов размещены поверх над соответствующими painted-локациями.
- * Locked зоны отображаются полупрозрачно, с замком — без слова "Закрыто".
- * Hover на пин показывает tooltip с описанием зоны и условиями.
+ * До M13 на карте было 9 локаций. M13 PR-2 ужал до 3: Лес (start), Склад
+ * (player_level_2), Промзона (player_level_4). Координаты остальных 6
+ * сохранены в docs/redesign/archive/m14-zones.md для будущего восстановления.
+ *
+ * Locked зоны отображаются полупрозрачно, с замком. Hover показывает tooltip
+ * с описанием и условиями разблокировки.
  */
 
 interface PinDef {
@@ -29,13 +31,7 @@ interface PinDef {
 const PINS: PinDef[] = [
   { zone_id: "forest", x: 262, y: 122 },
   { zone_id: "warehouse", x: 211, y: 356 },
-  { zone_id: "suburbs", x: 211, y: 525 },
-  { zone_id: "city", x: 511, y: 328 },
-  { zone_id: "school", x: 834, y: 272 },
-  { zone_id: "hospital", x: 768, y: 487 },
   { zone_id: "factory", x: 1068, y: 403 },
-  { zone_id: "metro", x: 900, y: 581 },
-  { zone_id: "power_plant", x: 1115, y: 122 },
 ];
 
 export class MapScene extends Phaser.Scene {
@@ -81,7 +77,11 @@ export class MapScene extends Phaser.Scene {
     PINS.forEach((p) => {
       const zone = GameState.data.zones[p.zone_id];
       if (!zone) return;
-      const unlockOk = evaluateUnlockCondition(zone.unlock_condition, GameState.progress);
+      const unlockOk = evaluateUnlockCondition(
+        zone.unlock_condition,
+        GameState.progress,
+        GameState.player.level,
+      );
       const dailyAvailable = zone.boss_id
         ? canEnterDailyInstance(GameState.progress, zone, now)
         : true;

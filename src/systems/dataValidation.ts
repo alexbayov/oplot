@@ -9,7 +9,9 @@ export interface CountExpectations {
 }
 
 export const M7_EXPECTED: CountExpectations = {
-  zones: 9,
+  // M13 PR-2: zones ужаты с 9 до 3 (forest/warehouse/factory). Остальные 6 —
+  // в docs/redesign/archive/m14-zones.md до M14.
+  zones: 3,
   items: 187,
   recipes: 71,
   mobs: 11,
