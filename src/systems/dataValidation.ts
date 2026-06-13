@@ -1,5 +1,6 @@
 import type { ContentData } from "../state/types";
-import type { Zone } from "../types";
+import type { Item, Zone } from "../types";
+import { itemsFileSchema } from "./itemSchema";
 import { zonesFileSchema } from "./zoneSchema";
 
 export interface CountExpectations {
@@ -48,6 +49,14 @@ export const softWarnCounts = (
       `[dataValidation] Content count mismatch (soft): ${issues.join(", ")}`,
     );
   }
+};
+
+export const validateItemShapes = (items: Item[]): string[] => {
+  const result = itemsFileSchema.safeParse(items);
+  if (result.success) return [];
+  return result.error.issues.map(
+    (i) => `${i.path.join(".") || "<root>"}: ${i.message}`,
+  );
 };
 
 export const validateZoneShapes = (zones: Zone[]): string[] => {

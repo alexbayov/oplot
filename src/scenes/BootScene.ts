@@ -130,6 +130,11 @@ export class BootScene extends Phaser.Scene {
           `[BootScene] Zone schema mismatch (soft): ${zoneIssues.join("; ")}`,
         );
       }
+      // M13 PR-3: itemSchema-валидация на boot НЕ вайрится — в PR-3 она
+      // падала бы на всех 187 предметах старой схемы, маскируя реальные
+      // ошибки за ожидаемым шумом. Вайрим в PR-4 в том же коммите, что
+      // мигрирует items.json — тогда первая жизнь валидатора против
+      // соответствующих данных, и любой warn = реальный дрейф.
 
       const sfxReg = await loadSfxRegistry();
       if (sfxReg) {
