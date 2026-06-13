@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { GameState, addToStack } from "../state/GameState";
 import type { InventoryStack } from "../state/types";
 import { canAddItem, computeWeight } from "../systems/weight";
-import { pickEncounter } from "../systems/encounters";
 import {
   createButton,
   createPanel,
@@ -11,10 +10,16 @@ import {
 } from "./sceneUi";
 import { CX, H } from "../ui/layout";
 
+/**
+ * LootScene (M13 PR-1) — финальное окно лута после вылазки.
+ *
+ * Между энкаунтерами больше не показывается. Вылазка резолвится цепочкой
+ * в SortieRunScene, лут копится в `currentSortie.pending_loot`. Здесь
+ * игрок забирает что влезает по весу, после чего идёт ReturnScene.
+ */
 export class LootScene extends Phaser.Scene {
   private weightText?: Phaser.GameObjects.Text;
   private returnButton?: Phaser.GameObjects.Container;
-  private nextFightButton?: Phaser.GameObjects.Container;
   private takeAllBtn?: Phaser.GameObjects.Container;
 
   public constructor() {
@@ -22,9 +27,8 @@ export class LootScene extends Phaser.Scene {
   }
 
   public create(): void {
-    createTitle(this, "Лут");
-    
-    // Weight panel with bar (полная ширина в верху)
+    createTitle(this, "Лут вылазки");
+
     createPanel(this, CX, 110, 800, 50);
     this.weightText = this.add.text(CX, 96, "", {
       color: "#C8C0B0",
@@ -33,7 +37,6 @@ export class LootScene extends Phaser.Scene {
       fontStyle: "bold",
     }).setOrigin(0.5);
 
-    // Pending loot panel (большая, центрированная)
     createPanel(this, CX, 360, 1100, 360);
 
     this.refreshLootButtons();
@@ -94,7 +97,7 @@ export class LootScene extends Phaser.Scene {
   private updateWeight(): void {
     const player = GameState.player;
     const weight = computeWeight(player.backpack, GameState.data.items);
-    
+
     for (const c of this.children.list.filter((c) => c.getData("weightBar") === true)) {
       c.destroy();
     }
@@ -112,7 +115,6 @@ export class LootScene extends Phaser.Scene {
 
   private refreshControls(): void {
     this.returnButton?.destroy();
-    this.nextFightButton?.destroy();
     this.takeAllBtn?.destroy();
 
     const sortie = GameState.currentSortie;
@@ -120,32 +122,21 @@ export class LootScene extends Phaser.Scene {
     const player = GameState.player;
     const items = GameState.data.items;
     const weight = computeWeight(player.backpack, items);
-
-    const hasMoreFights = sortie.fights_completed < sortie.fights_total;
     const isOverweight = weight > player.max_weight_kg;
 
-    // 3 кнопки в ряд внизу
     const btnY = H - 50;
-    const btnW = 260;
+    const btnW = 280;
     const gap = 28;
-    const numBtns = hasMoreFights ? 3 : 2;
-    const totalW = numBtns * btnW + (numBtns - 1) * gap;
+    const totalW = 2 * btnW + gap;
     const startX = CX - totalW / 2 + btnW / 2;
 
-    this.takeAllBtn = createButton(this, btnY, "Взять всё", () => this.takeAll(), true, startX);
-
-    if (hasMoreFights) {
-      this.nextFightButton = createButton(this, btnY, "След. бой", () => {
-        this.proceedToNextFight();
-      }, false, startX + (btnW + gap));
-    }
+    this.takeAllBtn = createButton(this, btnY, "Взять всё что влезет", () => this.takeAll(), true, startX);
 
     const label = isOverweight ? "Перегруз" : "На базу";
-    const returnX = hasMoreFights ? startX + (btnW + gap) * 2 : startX + (btnW + gap);
     this.returnButton = createButton(this, btnY, label, () => {
       if (isOverweight) return;
       this.endSortie();
-    }, false, returnX);
+    }, false, startX + btnW + gap);
   }
 
   private takeAll(): void {
@@ -155,7 +146,7 @@ export class LootScene extends Phaser.Scene {
     const items = GameState.data.items;
     let weight = computeWeight(player.backpack, items);
     const remaining: InventoryStack[] = [];
-    
+
     for (const stack of sortie.pending_loot) {
       let leftToTake = stack.count;
       while (leftToTake > 0 && canAddItem(weight, stack.item_id, 1, player.max_weight_kg, items)) {
@@ -168,7 +159,7 @@ export class LootScene extends Phaser.Scene {
         remaining.push({ item_id: stack.item_id, count: leftToTake });
       }
     }
-    
+
     sortie.pending_loot = remaining;
     this.refreshLootButtons();
     this.refreshControls();
@@ -177,23 +168,5 @@ export class LootScene extends Phaser.Scene {
   private endSortie(): void {
     if (!GameState.currentSortie) return;
     this.scene.start("ReturnScene");
-  }
-
-  private proceedToNextFight(): void {
-    const sortie = GameState.currentSortie;
-    if (!sortie) {
-      this.scene.start("CombatScene");
-      return;
-    }
-    const allEncounters = GameState.data.encounters ?? [];
-    // 50% шанс на encounter между боями
-    if (allEncounters.length > 0 && Math.random() < 0.5) {
-      const enc = pickEncounter(allEncounters, sortie.zone_id);
-      if (enc) {
-        this.scene.start("EncounterScene", { encounter: enc, return_to: "CombatScene" });
-        return;
-      }
-    }
-    this.scene.start("CombatScene");
   }
 }

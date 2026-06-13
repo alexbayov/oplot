@@ -1,0 +1,104 @@
+{
+  "events": [
+    {
+      "id": "stash_under_floor",
+      "zones": ["forest", "warehouse", "city"],
+      "text": "Половица скрипит иначе, чем остальные. Под ней что-то завернутое в тряпку.",
+      "choices": [
+        {
+          "id": "open_carefully",
+          "text": "Открыть аккуратно",
+          "outcome": { "loot": [{ "id": "scrap_metal", "n": 2 }, { "id": "cloth", "n": 1 }] }
+        },
+        {
+          "id": "open_quickly",
+          "text": "Дернуть рывком",
+          "outcome": { "loot": [{ "id": "scrap_metal", "n": 4 }], "hp_delta": -8 }
+        },
+        {
+          "id": "skip",
+          "text": "Пройти мимо",
+          "outcome": {}
+        }
+      ]
+    },
+    {
+      "id": "wounded_dog",
+      "zones": ["forest"],
+      "text": "Раненый пёс. Не нападает, смотрит. Сухая трава вокруг и кровь.",
+      "choices": [
+        {
+          "id": "help",
+          "text": "Перевязать (расходуется бинт)",
+          "outcome": { "consume_item": "bandage", "trust_delta": 5 }
+        },
+        {
+          "id": "kill",
+          "text": "Добить ножом",
+          "outcome": { "loot": [{ "id": "canned_food", "n": 1 }] }
+        },
+        {
+          "id": "skip",
+          "text": "Уйти не глядя",
+          "outcome": {}
+        }
+      ]
+    },
+    {
+      "id": "abandoned_car",
+      "zones": ["warehouse", "city"],
+      "text": "Машина с открытым багажником. Бак ещё пахнет соляркой.",
+      "choices": [
+        {
+          "id": "siphon",
+          "text": "Слить остатки топлива",
+          "outcome": { "loot": [{ "id": "fuel", "n": 3 }] }
+        },
+        {
+          "id": "strip_wires",
+          "text": "Снять проводку",
+          "outcome": { "loot": [{ "id": "electronics", "n": 2 }, { "id": "metal", "n": 1 }] }
+        },
+        {
+          "id": "skip",
+          "text": "Не задерживаться",
+          "outcome": {}
+        }
+      ]
+    },
+    {
+      "id": "old_garden",
+      "zones": ["forest", "warehouse"],
+      "text": "Заросший участок. Под лопухами кусты с ягодой и одичавший огород.",
+      "choices": [
+        {
+          "id": "harvest",
+          "text": "Набрать всё что есть",
+          "outcome": { "loot": [{ "id": "canned_food", "n": 2 }, { "id": "water", "n": 1 }] }
+        },
+        {
+          "id": "skip",
+          "text": "Не еда, время важнее",
+          "outcome": {}
+        }
+      ]
+    },
+    {
+      "id": "spring_water",
+      "zones": ["forest"],
+      "text": "Родник между корней. Вода чистая, холодная.",
+      "choices": [
+        {
+          "id": "fill_cans",
+          "text": "Наполнить канистры",
+          "outcome": { "loot": [{ "id": "water", "n": 4 }] }
+        },
+        {
+          "id": "drink_skip",
+          "text": "Попить и идти дальше",
+          "outcome": { "hp_delta": 5 }
+        }
+      ]
+    }
+  ]
+}

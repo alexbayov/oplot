@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH } from "./config";
 import { BaseScene } from "./scenes/BaseScene";
 import { BootScene } from "./scenes/BootScene";
-import { CombatScene } from "./scenes/CombatScene";
 import { CraftScene } from "./scenes/CraftScene";
 import { InventoryScene } from "./scenes/InventoryScene";
 import { LootScene } from "./scenes/LootScene";
@@ -13,6 +12,7 @@ import { ProgressionScene } from "./scenes/ProgressionScene";
 import { RadioScene } from "./scenes/RadioScene";
 import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
+import { SortieRunScene } from "./scenes/SortieRunScene";
 import { SkillTreeScene } from "./scenes/SkillTreeScene";
 import { initPlatform } from "./systems/platform";
 import { startCloudSave } from "./systems/cloudSave";
@@ -46,7 +46,7 @@ const config: Phaser.Types.Core.GameConfig = {
     BaseScene,
     MapScene,
     SortieScene,
-    CombatScene,
+    SortieRunScene,
     LootScene,
     EncounterScene,
     ReturnScene,

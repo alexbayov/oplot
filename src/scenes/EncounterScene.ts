@@ -16,13 +16,13 @@ import { track } from "../systems/telemetry";
 
 interface EncounterSceneData {
   encounter: Encounter;
-  /** Куда возвращаться после resolve. */
-  return_to: "CombatScene" | "ReturnScene" | "BaseScene";
+  /** Куда возвращаться после resolve. M13: бой удалён, разворот на SortieRunScene/ReturnScene. */
+  return_to: "SortieRunScene" | "ReturnScene" | "BaseScene";
 }
 
 export class EncounterScene extends Phaser.Scene {
   private encounter!: Encounter;
-  private returnTo: EncounterSceneData["return_to"] = "CombatScene";
+  private returnTo: EncounterSceneData["return_to"] = "SortieRunScene";
 
   public constructor() {
     super("EncounterScene");
@@ -30,7 +30,7 @@ export class EncounterScene extends Phaser.Scene {
 
   public init(data: EncounterSceneData): void {
     this.encounter = data.encounter;
-    this.returnTo = data.return_to ?? "CombatScene";
+    this.returnTo = data.return_to ?? "SortieRunScene";
   }
 
   public create(): void {
@@ -192,18 +192,9 @@ export class EncounterScene extends Phaser.Scene {
       // Storage в save можно расширить позже — пока эфемерно.
     }
 
-    // Next fight effects — stored on sortie state
-    if (sortie) {
-      if (o.next_fight_initiative_loss) {
-        sortie.next_fight_initiative_loss = true;
-      }
-      if (o.next_mob_hp_bonus_pct) {
-        sortie.next_mob_hp_bonus_pct = o.next_mob_hp_bonus_pct;
-      }
-      if (o.next_fight_enemy_count_delta) {
-        sortie.next_fight_enemy_count_delta = o.next_fight_enemy_count_delta;
-      }
-    }
+    // M13: next_fight_* эффекты дропнуты вместе с боем. В M14+ вернутся
+    // как модификаторы на следующий resolveEncounter (зависит от шейпа боя).
+    void sortie;
   }
 
   private showOutcomeAndAdvance(o: EncounterOutcome): void {
@@ -244,15 +235,6 @@ export class EncounterScene extends Phaser.Scene {
     }
     if (o.trust_delta) {
       parts.push(`${o.trust_delta > 0 ? "+" : ""}${o.trust_delta} ДОВЕРИЕ`);
-    }
-    if (o.next_fight_initiative_loss) {
-      parts.push("сл. бой: −инициатива");
-    }
-    if (o.next_mob_hp_bonus_pct) {
-      parts.push(`сл. моб: +${Math.round(o.next_mob_hp_bonus_pct * 100)}% HP`);
-    }
-    if (o.next_fight_enemy_count_delta) {
-      parts.push(`сл. бой: ${o.next_fight_enemy_count_delta > 0 ? "+" : ""}${o.next_fight_enemy_count_delta} врагов`);
     }
     if (o.lore_fragment) {
       parts.push("+ фрагмент истории");

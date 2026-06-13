@@ -1,5 +1,5 @@
-import { GameState } from "../state/GameState";
-import type { InventoryStack, SettingsState } from "../state/types";
+import { GameState, createDefaultBaseResources } from "../state/GameState";
+import type { BaseResources, InventoryStack, SettingsState, PlayerInjury } from "../state/types";
 import { getPlatform } from "./platform";
 import { t } from "./locale";
 import { SAVE_VERSION } from "../config";
@@ -24,6 +24,10 @@ export interface CloudSaveSnapshot {
   /** M11.4: skill tree state. */
   unlockedSkillNodes?: string[];
   skillPoints?: number;
+  /** M13: ресурсы базы. v4+. */
+  baseResources?: BaseResources;
+  /** M13: травмы. v4+. */
+  injuries?: PlayerInjury[];
   // Optional for backward-compat with saves predating the unlock-flag fix.
   // Missing keys are treated as false on load.
   progress_flags?: {
@@ -41,7 +45,7 @@ export interface CloudSaveSnapshot {
 let lastSaveTime = 0;
 
 export function serializeGameState(): CloudSaveSnapshot {
-  const { player, baseStash, progress, settings } = GameState;
+  const { player, baseStash, baseResources, progress, settings } = GameState;
   return {
     version: SAVE_VERSION,
     level: player.level,
@@ -58,6 +62,8 @@ export function serializeGameState(): CloudSaveSnapshot {
     gas: player.gas,
     unlockedSkillNodes: player.unlockedSkillNodes ?? [],
     skillPoints: player.skillPoints ?? 0,
+    baseResources,
+    injuries: player.injuries ?? [],
     progress_flags: {
       forest_depth_2_completed: progress.forest_depth_2_completed,
       any_warehouse_sortie_completed: progress.any_warehouse_sortie_completed,
@@ -112,6 +118,9 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.baseStash = baseStash;
   GameState.settings = settings;
   GameState.progress.radio_trust = radio_trust;
+  // M13: восстановить ресурсы базы и травмы (если в сейве есть).
+  GameState.baseResources = migrated.baseResources ?? createDefaultBaseResources();
+  GameState.player.injuries = migrated.injuries ?? [];
   // M11.4: restore skill tree state и пересчитать legacy perks для combat/loot/craft.
   GameState.player.unlockedSkillNodes = migrated.unlockedSkillNodes ?? [];
   GameState.player.skillPoints = migrated.skillPoints ?? 0;
@@ -202,6 +211,9 @@ export async function loadFromCloud(): Promise<CloudSaveSnapshot | null> {
       "settings",
       "saved_at",
       "gas",
+      "baseResources",
+      "injuries",
+      "version",
     ];
     const raw = await platform.player.getData(keys);
     if (!raw || typeof raw !== "object") return null;

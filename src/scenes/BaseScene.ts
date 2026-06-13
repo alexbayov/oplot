@@ -131,6 +131,9 @@ export class BaseScene extends Phaser.Scene {
     // ── Status conditions ─────────────────────────────────────
     this.renderStatusOverlays();
 
+    // ── M13: ресурсы базы ─────────────────────────────────────
+    this.renderBaseResources();
+
     // ── Hotspots ──────────────────────────────────────────────
     HOTSPOTS.forEach((h) => this.attachHotspot(h));
 
@@ -245,6 +248,43 @@ export class BaseScene extends Phaser.Scene {
       fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "11px",
     }).setDepth(9);
+  }
+
+  /**
+   * M13: панель ресурсов базы в правом-верхнем углу.
+   * PR-1 — только счётчики. PR-5 — постройки начнут их потреблять/производить.
+   */
+  private renderBaseResources(): void {
+    const r = GameState.baseResources;
+    const x = W - 230;
+    const y = 60;
+    const w = 200;
+    const h = 110;
+
+    this.add.rectangle(x + w / 2, y + h / 2, w, h, 0x0a0806, 0.78)
+      .setStrokeStyle(2, 0x3a2f1a, 1)
+      .setDepth(8);
+
+    this.add.text(x + 12, y + 8, "СКЛАД БАЗЫ", {
+      color: "#a89968",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "12px",
+      fontStyle: "bold",
+    }).setDepth(9);
+
+    const rows: [string, number, string][] = [
+      ["Вода", r.water, "#6fbcd0"],
+      ["Топливо", r.fuel, "#d4a04a"],
+      ["Металл", r.metal, "#a09078"],
+      ["Еда", r.food, "#8aa86f"],
+    ];
+    rows.forEach(([label, value, color], i) => {
+      this.add.text(x + 12, y + 28 + i * 18, `${label}: ${value}`, {
+        color,
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+      }).setDepth(9);
+    });
   }
 
   private renderStatusOverlays(): void {

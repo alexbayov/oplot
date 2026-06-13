@@ -175,22 +175,16 @@ export class RadioScene extends Phaser.Scene {
     }
 
     if (result.ambushMobId) {
+      // M13: бой удалён. Засада превращается в мгновенный HP-удар без сцены
+      // (без полноценного encounter-флоу — это эпизодический ивент по радио).
       const mob = GameState.data.mobs[result.ambushMobId];
       const name = mob?.name_ru ?? result.ambushMobId;
-      createSubtitle(this, 260, `Засада! ${name} атакует!`);
-      const signal = GameState.data.radioSignals.find((s) => s.id === signalId);
+      const damage = Math.max(5, Math.round((mob?.damage_min ?? 5) + (mob?.damage_max ?? 10)) / 2 + 4);
+      const player = GameState.player;
+      player.hp = Math.max(1, player.hp - Math.round(damage));
+      createSubtitle(this, 260, `Засада! ${name}. Удар по касательной, −${Math.round(damage)} HP.`);
       this.time.delayedCall(1200, () => {
-        GameState.currentSortie = {
-          zone_id: signal?.zone_id ?? "forest",
-          depth: 1,
-          fights_total: 1,
-          fights_completed: 0,
-          encounters: [[result.ambushMobId as string]],
-          zone_loot_remaining: [],
-          pending_loot: [],
-          cover_active: false,
-        };
-        this.scene.start("CombatScene");
+        this.returnToList();
       });
       return;
     }
