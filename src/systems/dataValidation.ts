@@ -1,4 +1,6 @@
 import type { ContentData } from "../state/types";
+import type { Zone } from "../types";
+import { zonesFileSchema } from "./zoneSchema";
 
 export interface CountExpectations {
   zones: number;
@@ -46,6 +48,14 @@ export const softWarnCounts = (
       `[dataValidation] Content count mismatch (soft): ${issues.join(", ")}`,
     );
   }
+};
+
+export const validateZoneShapes = (zones: Zone[]): string[] => {
+  const result = zonesFileSchema.safeParse(zones);
+  if (result.success) return [];
+  return result.error.issues.map(
+    (i) => `${i.path.join(".") || "<root>"}: ${i.message}`,
+  );
 };
 
 export const validateRecipeRefs = (data: ContentData): string[] => {

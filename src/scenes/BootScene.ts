@@ -6,7 +6,7 @@ import type { Encounter } from "../types/encounter";
 import type { SkillNode } from "../types/skillNode";
 import { setNarrative } from "../systems/sortieResolve";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
-import { softWarnCounts, validateRecipeRefs } from "../systems/dataValidation";
+import { softWarnCounts, validateRecipeRefs, validateZoneShapes } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
@@ -122,6 +122,12 @@ export class BootScene extends Phaser.Scene {
       if (recipeIssues.length > 0) {
         console.warn(
           `[BootScene] Recipe reference mismatch (soft): ${recipeIssues.join("; ")}`,
+        );
+      }
+      const zoneIssues = validateZoneShapes(zones);
+      if (zoneIssues.length > 0) {
+        console.warn(
+          `[BootScene] Zone schema mismatch (soft): ${zoneIssues.join("; ")}`,
         );
       }
 
