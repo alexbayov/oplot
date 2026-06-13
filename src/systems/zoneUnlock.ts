@@ -1,16 +1,33 @@
 import type { GameProgress } from "../state/types";
 import type { Zone } from "../types";
 
-// GDD §6.4.M3.3+: switch on Zone.unlock_condition strings.
-// All 9 zones' unlock conditions from content/zones.json are wired here.
-// Unknown strings → locked + console warn.
+/**
+ * M13 PR-2: гейтинг зон.
+ *
+ * До PR-2 зоны открывались по «было такое-то событие» (`forest_depth_2_completed`,
+ * `any_warehouse_sortie_completed` и т.п.). После M13 у нас всего 3 зоны открыты
+ * на лаунч, и логика проще: гейтим по уровню героя.
+ *
+ * `player_level_N` — открыта, когда player.level >= N.
+ *
+ * Старые строки оставлены для обратной совместимости со старыми сейвами и для
+ * 6 архивных зон (см. docs/redesign/archive/m14-zones.md), которые могут
+ * вернуться в M14.
+ */
 export const evaluateUnlockCondition = (
   condition: string,
   progress: GameProgress,
+  player_level: number,
 ): boolean => {
+  if (condition === "start") return true;
+
+  const lvlMatch = /^player_level_(\d+)$/.exec(condition);
+  if (lvlMatch) {
+    const required = Number(lvlMatch[1]);
+    return player_level >= required;
+  }
+
   switch (condition) {
-    case "start":
-      return true;
     case "forest_depth_2_completed":
       return progress.forest_depth_2_completed;
     case "any_warehouse_sortie_completed":
@@ -37,9 +54,10 @@ export const evaluateUnlockCondition = (
 // Используется в шаблоне "Закрыто. Требуется: <описание>." — поэтому фраза
 // должна нормально читаться в родительном падеже.
 export const describeUnlockCondition = (condition: string): string => {
+  if (condition === "start") return "Доступно с начала";
+  const lvlMatch = /^player_level_(\d+)$/.exec(condition);
+  if (lvlMatch) return `уровня героя ${lvlMatch[1]}`;
   switch (condition) {
-    case "start":
-      return "Доступно с начала";
     case "forest_depth_2_completed":
       return "успешной вылазки в Лес на глубину 2";
     case "any_warehouse_sortie_completed":
@@ -88,24 +106,9 @@ export const applySortieCompletion = (
     if (depth === 3 && zone.boss_id) next.warehouse_boss_defeated = true;
   }
 
-  // Suburbs
-  if (zone.id === "suburbs") {
-    next.suburbs_sortie_completed = true;
-  }
-
-  // City
-  if (zone.id === "city") {
-    if (depth === 3 && zone.boss_id) next.city_boss_defeated = true;
-  }
-
-  // Factory
+  // Factory (M13 PR-2 переименована в Промзону)
   if (zone.id === "factory") {
     next.factory_sortie_completed = true;
-  }
-
-  // Metro
-  if (zone.id === "metro") {
-    next.metro_sortie_completed = true;
   }
 
   return next;

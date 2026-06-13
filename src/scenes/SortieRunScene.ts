@@ -83,6 +83,7 @@ export class SortieRunScene extends Phaser.Scene {
       mob_total_threat: computeMobThreat(mob_ids, GameState.data.mobs),
       loot_pool: loot.pool,
       loot_base_count: loot.base_count,
+      loot_profile: zone?.loot_profile,
       consumables: GameState.player.backpack.filter((s) =>
         ["bandage", "medkit"].includes(s.item_id),
       ),

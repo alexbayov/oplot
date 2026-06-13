@@ -7,6 +7,7 @@
 // Контракт и тестовые gate-ы: docs/redesign/M13-PIVOT.md §«Авторесолв».
 
 import type { InventoryStack } from "../state/types";
+import type { ZoneLootCategory, ZoneLootProfile } from "../types/zone";
 import type {
   BaseResourceId,
   EncounterInput,
@@ -156,11 +157,84 @@ const decideOutcome = (
   return "won";
 };
 
+/**
+ * Какие категории `loot_profile.base_weights` различает rollLoot.
+ * Совпадает с BaseResourceId плюс "other" для не-базовых предметов.
+ */
+const CATEGORY_KEYS: ZoneLootCategory[] = ["water", "fuel", "metal", "food", "other"];
+
+/**
+ * M13 PR-2: пред-расчёт «к какой категории относится каждый item в пуле».
+ * "other" — item не входит ни в одну BASE_RESOURCE_ITEMS-категорию.
+ */
+const partitionPoolByCategory = (
+  pool: string[],
+): Record<ZoneLootCategory, string[]> => {
+  const out: Record<ZoneLootCategory, string[]> = {
+    water: [],
+    fuel: [],
+    metal: [],
+    food: [],
+    other: [],
+  };
+  for (const id of pool) {
+    let assigned = false;
+    for (const cat of ["water", "fuel", "metal", "food"] as const) {
+      if (BASE_RESOURCE_ITEMS[cat].includes(id)) {
+        out[cat].push(id);
+        assigned = true;
+        break;
+      }
+    }
+    if (!assigned) out.other.push(id);
+  }
+  return out;
+};
+
+/**
+ * Катит категорию по нормализованным весам. Если в выпавшей категории нет
+ * предметов в пуле — каскадим вниз по списку категорий, пока не найдём
+ * непустую. В крайнем случае возвращаем uniform-choice из всего пула.
+ */
+const pickFromProfile = (
+  partitioned: Record<ZoneLootCategory, string[]>,
+  profile: ZoneLootProfile,
+  pool: string[],
+  rng: Rng,
+): string | null => {
+  let totalWeight = 0;
+  for (const cat of CATEGORY_KEYS) {
+    const w = profile.base_weights[cat] ?? 0;
+    if (w > 0 && partitioned[cat].length > 0) totalWeight += w;
+  }
+  if (totalWeight <= 0) {
+    // Профиль пустой или ни одна категория не пересекается с пулом.
+    if (pool.length === 0) return null;
+    const idx = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
+    return pool[idx] ?? null;
+  }
+  let roll = rng() * totalWeight;
+  for (const cat of CATEGORY_KEYS) {
+    const w = profile.base_weights[cat] ?? 0;
+    if (w <= 0 || partitioned[cat].length === 0) continue;
+    roll -= w;
+    if (roll <= 0) {
+      const bucket = partitioned[cat];
+      const idx = Math.min(bucket.length - 1, Math.floor(rng() * bucket.length));
+      return bucket[idx] ?? null;
+    }
+  }
+  // Численный fallback на хвосте плавающей точки.
+  const idx = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
+  return pool[idx] ?? null;
+};
+
 const rollLoot = (
   pool: string[],
   base_count: number,
   goal: SortieGoalDef,
   outcome: EncounterResult["outcome"],
+  profile: ZoneLootProfile | undefined,
   rng: Rng,
 ): InventoryStack[] => {
   if (outcome === "knocked_out") return [];
@@ -176,12 +250,18 @@ const rollLoot = (
   const biasPresentInPool = biasIds ? pool.filter((id) => biasIds.includes(id)) : [];
   const biasActive = biasIds !== null && biasPresentInPool.length > 0;
 
+  // Цельный goal-bias перебивает зональный профиль — игрок явно прицелился.
+  // Если bias не активен и профиль задан — катим по профилю.
+  const partitioned = !biasActive && profile ? partitionPoolByCategory(pool) : null;
+
   const counts = new Map<string, number>();
   for (let i = 0; i < count; i++) {
     let chosen: string | null = null;
     if (biasActive && rng() < 0.7) {
       const idx = Math.min(biasPresentInPool.length - 1, Math.floor(rng() * biasPresentInPool.length));
       chosen = biasPresentInPool[idx] ?? null;
+    } else if (partitioned && profile) {
+      chosen = pickFromProfile(partitioned, profile, pool, rng);
     }
     if (!chosen) {
       const idx = Math.min(pool.length - 1, Math.floor(rng() * pool.length));
@@ -278,7 +358,14 @@ export const resolveEncounter = (input: EncounterInput, rng: Rng): EncounterResu
   // hp_lost не может превысить текущее hp героя.
   const hp_lost_capped = Math.min(input.hero.hp, hp_lost);
 
-  const loot_rolled = rollLoot(input.loot_pool, input.loot_base_count, goalDef, outcome, rng);
+  const loot_rolled = rollLoot(
+    input.loot_pool,
+    input.loot_base_count,
+    goalDef,
+    outcome,
+    input.loot_profile,
+    rng,
+  );
   const injury = rollInjury(hp_lost_capped, input.hero.hp_max, outcome, rng);
 
   const narrative_lines = pickNarrativeLines(input.zone_id, outcome, rng);

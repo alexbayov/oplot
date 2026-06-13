@@ -1,4 +1,6 @@
 import type { ContentData } from "../state/types";
+import type { Zone } from "../types";
+import { zonesFileSchema } from "./zoneSchema";
 
 export interface CountExpectations {
   zones: number;
@@ -9,7 +11,9 @@ export interface CountExpectations {
 }
 
 export const M7_EXPECTED: CountExpectations = {
-  zones: 9,
+  // M13 PR-2: zones ужаты с 9 до 3 (forest/warehouse/factory). Остальные 6 —
+  // в docs/redesign/archive/m14-zones.md до M14.
+  zones: 3,
   items: 187,
   recipes: 71,
   mobs: 11,
@@ -44,6 +48,14 @@ export const softWarnCounts = (
       `[dataValidation] Content count mismatch (soft): ${issues.join(", ")}`,
     );
   }
+};
+
+export const validateZoneShapes = (zones: Zone[]): string[] => {
+  const result = zonesFileSchema.safeParse(zones);
+  if (result.success) return [];
+  return result.error.issues.map(
+    (i) => `${i.path.join(".") || "<root>"}: ${i.message}`,
+  );
 };
 
 export const validateRecipeRefs = (data: ContentData): string[] => {

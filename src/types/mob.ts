@@ -47,4 +47,10 @@ export interface Mob {
   drop_table: DropEntry[];
   /** M11.0 — новый формат. Опционален, читается параллельно drop_table. */
   drops?: M11Drop[];
+  /**
+   * M13 PR-2: список зон, в которых моб может встречаться помимо родного `zone`.
+   * Используется SortieScene при сборе encounters, чтобы перекидывать моба между
+   * родственными зонами (warehouse ⇄ factory) без дублирования записей.
+   */
+  zone_affinity?: string[];
 }

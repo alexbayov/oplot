@@ -2,6 +2,7 @@
 // Источник: docs/redesign/M13-PIVOT.md §«Авторесолв с decision surface».
 
 import type { InventoryStack } from "../state/types";
+import type { ZoneLootProfile } from "./zone";
 
 /** Цель вылазки, выбранная игроком в SortieScene. Влияет на формулу и лут. */
 export type SortieGoal =
@@ -59,6 +60,12 @@ export interface EncounterInput {
   loot_pool: string[];
   /** Сколько единиц лута бросается до модификаторов цели. */
   loot_base_count: number;
+  /**
+   * M13 PR-2: loot-профиль зоны. Если задан и goal не targeted_*, rollLoot катит
+   * категорию по base_weights и подбирает item из пересечения с loot_pool.
+   * Без профиля и без bias — равномерный выбор из пула (старое поведение).
+   */
+  loot_profile?: ZoneLootProfile;
   /** Сколько бинтов/аптечек у героя сейчас (применяются автоматом). */
   consumables: InventoryStack[];
 }

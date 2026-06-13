@@ -88,7 +88,10 @@
         "chance": 0.03
       }
     ],
-    "mob_tier": 1
+    "mob_tier": 1,
+    "zone_affinity": [
+      "forest"
+    ]
   },
   {
     "id": "wild_dog",
@@ -145,7 +148,10 @@
         ]
       }
     ],
-    "mob_tier": 1
+    "mob_tier": 1,
+    "zone_affinity": [
+      "forest"
+    ]
   },
   {
     "id": "mutant",
@@ -204,7 +210,11 @@
         ]
       }
     ],
-    "mob_tier": 2
+    "mob_tier": 2,
+    "zone_affinity": [
+      "forest",
+      "factory"
+    ]
   },
   {
     "id": "looter_sniper",
@@ -286,7 +296,10 @@
         "chance": 0.06
       }
     ],
-    "mob_tier": 3
+    "mob_tier": 3,
+    "zone_affinity": [
+      "warehouse"
+    ]
   },
   {
     "id": "armored_guard",
@@ -376,7 +389,11 @@
         "chance": 0.08
       }
     ],
-    "mob_tier": 3
+    "mob_tier": 3,
+    "zone_affinity": [
+      "warehouse",
+      "factory"
+    ]
   },
   {
     "id": "fanatic_berserker",
@@ -462,7 +479,10 @@
         "chance": 0.05
       }
     ],
-    "mob_tier": 3
+    "mob_tier": 3,
+    "zone_affinity": [
+      "factory"
+    ]
   },
   {
     "id": "pack_rat",
@@ -526,7 +546,10 @@
         ]
       }
     ],
-    "mob_tier": 2
+    "mob_tier": 2,
+    "zone_affinity": [
+      "factory"
+    ]
   },
   {
     "id": "relic_drone",
@@ -588,7 +611,11 @@
         "chance": 0.15
       }
     ],
-    "mob_tier": 3
+    "mob_tier": 3,
+    "zone_affinity": [
+      "warehouse",
+      "factory"
+    ]
   },
   {
     "id": "forest_alpha_mutant",
@@ -662,7 +689,10 @@
         "chance": 0.3
       }
     ],
-    "mob_tier": 3
+    "mob_tier": 3,
+    "zone_affinity": [
+      "forest"
+    ]
   },
   {
     "id": "warehouse_drone_prime",
@@ -796,7 +826,10 @@
         "chance": 0.2
       }
     ],
-    "mob_tier": 4
+    "mob_tier": 4,
+    "zone_affinity": [
+      "warehouse"
+    ]
   },
   {
     "id": "city_guard_captain",
@@ -914,6 +947,9 @@
         "chance": 0.04
       }
     ],
-    "mob_tier": 4
+    "mob_tier": 4,
+    "zone_affinity": [
+      "factory"
+    ]
   }
 ]
