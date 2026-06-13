@@ -6,7 +6,7 @@ import type { Encounter } from "../types/encounter";
 import type { SkillNode } from "../types/skillNode";
 import { setNarrative } from "../systems/sortieResolve";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
-import { softWarnCounts, validateItemShapes, validateRecipeRefs, validateZoneShapes } from "../systems/dataValidation";
+import { softWarnCounts, validateRecipeRefs, validateZoneShapes } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
@@ -130,19 +130,11 @@ export class BootScene extends Phaser.Scene {
           `[BootScene] Zone schema mismatch (soft): ${zoneIssues.join("; ")}`,
         );
       }
-      // M13 PR-3: itemSchema описывает целевую таксономию (kind: material |
-      // component | consumable | weapon | armor | tool). До миграции content
-      // в PR-4 items.json почти целиком на старой схеме, поэтому ругань
-      // сворачиваем в одну строку со счётчиком и тремя первыми ошибками — иначе
-      // консоль заваливает 187 одинаковых "Invalid discriminator value".
-      const itemIssues = validateItemShapes(items);
-      if (itemIssues.length > 0) {
-        const head = itemIssues.slice(0, 3).join("; ");
-        const tail = itemIssues.length > 3 ? ` (+${itemIssues.length - 3} more)` : "";
-        console.warn(
-          `[BootScene] Item schema mismatch (soft, PR-4 мигрирует): ${head}${tail}`,
-        );
-      }
+      // M13 PR-3: itemSchema-валидация на boot НЕ вайрится — в PR-3 она
+      // падала бы на всех 187 предметах старой схемы, маскируя реальные
+      // ошибки за ожидаемым шумом. Вайрим в PR-4 в том же коммите, что
+      // мигрирует items.json — тогда первая жизнь валидатора против
+      // соответствующих данных, и любой warn = реальный дрейф.
 
       const sfxReg = await loadSfxRegistry();
       if (sfxReg) {

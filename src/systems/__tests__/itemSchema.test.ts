@@ -63,7 +63,7 @@ describe("itemSchema — happy-path по каждому kind", () => {
     ).toBe(false);
   });
 
-  test("weapon — slot из WEAPON_SLOTS, аффиксов <=3", () => {
+  test("weapon — slot из WEAPON_SLOTS, intrinsic_affixes <=3", () => {
     for (const slot of WEAPON_SLOTS) {
       expect(
         itemSchema.safeParse({ ...baseFields, kind: "weapon", slot }).success,
@@ -78,7 +78,7 @@ describe("itemSchema — happy-path по каждому kind", () => {
         ...baseFields,
         kind: "weapon",
         slot: "barrel",
-        affixes: [
+        intrinsic_affixes: [
           { id: "a", value: 1 },
           { id: "b", value: 2 },
           { id: "c", value: 3 },
@@ -86,6 +86,18 @@ describe("itemSchema — happy-path по каждому kind", () => {
         ],
       }).success,
     ).toBe(false);
+    expect(
+      itemSchema.safeParse({
+        ...baseFields,
+        kind: "weapon",
+        slot: "barrel",
+        intrinsic_affixes: [
+          { id: "a", value: 1 },
+          { id: "b", value: 2 },
+          { id: "c", value: 3 },
+        ],
+      }).success,
+    ).toBe(true);
   });
 
   test("armor — slot из ARMOR_SLOTS", () => {

@@ -3,15 +3,31 @@
 // Описывает целевой контракт M13: discriminatedUnion по полю `kind` с шестью
 // ветками (material | component | consumable | weapon | armor | tool). PR-3
 // фиксирует контракт; миграция содержимого content/items.json под этот
-// контракт — задача PR-4. Поэтому на boot validateItemShapes() обернут в
-// мягкий warn: на сегодня items.json целиком на старой схеме, ругань ожидаема
-// и говорит, что данные ещё не переехали.
+// контракт — задача PR-4, тогда же validateItemShapes() вайрится в BootScene
+// soft-warn-ом (в PR-3 на boot не дёргаем: валидатор всегда падал бы на 187
+// предметах старой схемы, и реальная новая ошибка спряталась бы среди
+// ожидаемых).
 //
 // Slot-енумы:
 // - weapon: barrel | action | stock | mod — модульные части оружия.
 // - armor:  plate | strap | helm — модульные части брони.
-// Аффиксы (опционально) — минимальный список {id, value} для PR-3, расширим
-// под нужды баланса в PR-4 после миграции.
+//
+// Слой аффиксов — два разных понятия, не путать:
+// - intrinsic_affixes (здесь, на шаблоне) — авторские, детерминированные,
+//   для уникальных частей: scout_vest всегда +carry_kg, headlamp всегда
+//   +scavenge_chance. Это контентная фича шаблона, попадает в items.json,
+//   валидируется этой схемой. Потолок .max(3) — это ceiling, не roll-count.
+// - random affixes (в PR-4/5, на инстансе) — 0-2 ролла по тиру верстака
+//   (30/60/90%), один раз в момент крафта на СОБРАННОЕ оружие/комплект, не
+//   по каждой части. Живут в сейве крафченого инстанса, в шаблон не пишутся
+//   и схемой шаблонов не валидируются. Контракт ролла приземлится вместе с
+//   крафт-логикой и сейв-моделью в PR-4/5.
+//
+// component.stats: namerennoe `z.object({}).strict().optional()` — форма
+// детерминированного стат-блока компонентов осознанно отложена до PR-4
+// (там появятся первые реальные компоненты и станет видно, какие поля
+// нужны). Добавление полей в опциональный stats-объект — аддитивная
+// backward-compat правка, та же логика что для слот-енумов.
 
 import { z } from "zod";
 
@@ -23,7 +39,7 @@ const tierSchema = z.union([
   z.literal(5),
 ]);
 
-const affixSchema = z.object({
+const intrinsicAffixSchema = z.object({
   id: z.string().min(1),
   value: z.number(),
 });
@@ -78,7 +94,7 @@ const weaponSchema = z.object({
       damage_max: z.number().nonnegative().optional(),
     })
     .optional(),
-  affixes: z.array(affixSchema).max(3).optional(),
+  intrinsic_affixes: z.array(intrinsicAffixSchema).max(3).optional(),
 });
 
 const armorSchema = z.object({
@@ -90,7 +106,7 @@ const armorSchema = z.object({
       armor_value: z.number().nonnegative().optional(),
     })
     .optional(),
-  affixes: z.array(affixSchema).max(3).optional(),
+  intrinsic_affixes: z.array(intrinsicAffixSchema).max(3).optional(),
 });
 
 const toolSchema = z.object({
