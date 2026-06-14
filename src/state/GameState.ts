@@ -22,7 +22,7 @@ import type {
 import type { BaseResourceId } from "../types/sortie";
 import { loadContentItems } from "./ItemRegistry";
 
-const createDefaultPlayer = (): PlayerState => ({
+export const createDefaultPlayer = (): PlayerState => ({
   hp: HERO_HP_MAX,
   hp_max: HERO_HP_MAX,
   level: HERO_START_LEVEL,

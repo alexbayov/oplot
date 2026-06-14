@@ -85,6 +85,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 6) {
     next = migrateV5ToV6(next);
   }
+  if (version < 7) {
+    next = migrateV6ToV7(next);
+  }
 
   return next;
 };
@@ -229,4 +232,24 @@ const migrateV5ToV6 = (snap: VersionedSnapshot): VersionedSnapshot => {
     version: 6,
     hp: snap.hp ?? null,
   };
+};
+
+/**
+ * v6 → v7 (M13 PR-6b-1: durability-wire persist):
+ *   - Добавляются `equipped_weapon?` (EquippedWeapon | null) и
+ *     `crafted_weapons?: WeaponInstance[]` в CloudSaveSnapshot. Оба
+ *     optional. Миграция — stamp-only: v6-сейв НЕ несёт этих ключей
+ *     (undefined), applySnapshot подставит дефолты (catalog craft_knife
+ *     для equipped_weapon, [] для crafted_weapons).
+ *   - КРИТИЧНО: НЕ инжектим `equipped_weapon: null` здесь. У старого
+ *     v6-сейва намерения «слот пуст» нет — он просто не знал про поле.
+ *     Дефолт «стартовый craft_knife» правильнее, чем «голые руки».
+ *     Соответственно — пишем ТОЛЬКО version, без полей-данных.
+ *     applySnapshot отличает «ключа нет» от «ключ есть = null» через
+ *     `in`-проверку (Trap A preflight §5).
+ *   - Идемпотентно: повторный запуск на v7 → главный guard в
+ *     migrateSnapshot возвращает snap до этой строки.
+ */
+const migrateV6ToV7 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  return { ...snap, version: 7 };
 };
