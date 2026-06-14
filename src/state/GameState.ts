@@ -10,6 +10,7 @@ import {
 } from "./balance";
 import type {
   BaseResources,
+  BuildingState,
   ContentData,
   GameProgress,
   GameStateShape,
@@ -74,12 +75,23 @@ export const createDefaultBaseResources = (): BaseResources => ({
   food: 0,
 });
 
+/**
+ * M13 PR-6c: дефолтный набор построек для новой игры. Always-on per
+ * preflight §7 — никакого build/unlock UI, оба здания пред-размещены
+ * с пустым буфером.
+ */
+export const createDefaultBuildings = (): BuildingState[] => [
+  { id: "garden", accumulated_output: 0 },
+  { id: "bunk", accumulated_output: 0 },
+];
+
 const state: GameStateShape = {
   player: createDefaultPlayer(),
   data: createEmptyContent(),
   currentSortie: null,
   baseStash: [{ item_id: "bandage", count: HERO_START_BANDAGES }],
   baseResources: createDefaultBaseResources(),
+  buildings: createDefaultBuildings(),
   progress: createDefaultProgress(),
   settings: createDefaultSettings(),
 };
@@ -115,6 +127,12 @@ export const GameState = {
   set baseResources(value: BaseResources) {
     state.baseResources = value;
   },
+  get buildings(): BuildingState[] {
+    return state.buildings;
+  },
+  set buildings(value: BuildingState[]) {
+    state.buildings = value;
+  },
   get progress(): GameProgress {
     return state.progress;
   },
@@ -133,6 +151,7 @@ export const GameState = {
     state.currentSortie = null;
     state.baseStash = [{ item_id: "bandage", count: HERO_START_BANDAGES }];
     state.baseResources = createDefaultBaseResources();
+    state.buildings = createDefaultBuildings();
     state.progress = createDefaultProgress();
     state.settings = createDefaultSettings();
   },

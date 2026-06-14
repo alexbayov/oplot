@@ -82,6 +82,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 5) {
     next = migrateV4ToV5(next);
   }
+  if (version < 6) {
+    next = migrateV5ToV6(next);
+  }
 
   return next;
 };
@@ -202,4 +205,30 @@ const migrateV3ToV4 = (snap: VersionedSnapshot): VersionedSnapshot => {
  */
 const migrateV4ToV5 = (snap: VersionedSnapshot): VersionedSnapshot => {
   return { ...snap, version: 5 };
+};
+
+/**
+ * v5 → v6 (M13 PR-6c: base sim layer):
+ *   - Добавляются `buildings?: BuildingState[]` и `hp?: number` в
+ *     CloudSaveSnapshot. Оба optional → миграция стампует версию +
+ *     дает явные дефолты:
+ *       buildings: [] — старые сейвы получают пустой массив, не
+ *         createDefaultBuildings(). Логика: если v5-сейв загрузился без
+ *         buildings, offline progression просто не имеет что начислять
+ *         (accrueGarden/Bunk no-op при `findBuilding=undefined`). На
+ *         первом мерже с GameState defaults в applySnapshot оба здания
+ *         появятся через `createDefaultBuildings()` fallback.
+ *       hp: snap.hp ?? null — на applySnapshot подтянется `?? hp_max`.
+ *         Здесь же null чтобы не зашить hp_max константу в миграцию
+ *         (она могла бы со временем меняться через perks/balance).
+ *   - Идемпотентно: повторный запуск на v6 ничего не меняет (см. главный
+ *     guard в migrateSnapshot — `if (version >= SAVE_VERSION) return`).
+ */
+const migrateV5ToV6 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  return {
+    ...snap,
+    version: 6,
+    buildings: snap.buildings ?? [],
+    hp: snap.hp ?? null,
+  };
 };

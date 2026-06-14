@@ -1,0 +1,188 @@
+/**
+ * M13 PR-6c — offline accrual tests.
+ *
+ * Все 8 invariants из preflight §8 + §9. Чистая функция (без mock-ов
+ * Phaser/GameState) — тесты бьют по shape, не по wiring.
+ */
+
+import { describe, expect, it, vi, afterEach } from "vitest";
+import {
+  accrualHasYield,
+  accrueOffline,
+  type AccrualState,
+} from "../offlineProgression";
+import { createDefaultBuildings } from "../../state/GameState";
+import {
+  BUNK_CYCLE_MS,
+  BUNK_FOOD_PER_CYCLE,
+  BUNK_HP_PER_CYCLE,
+  GARDEN_CAP,
+  GARDEN_CYCLE_MS,
+  GARDEN_FOOD_PER_CYCLE,
+  GARDEN_WATER_PER_CYCLE,
+  MAX_OFFLINE_WINDOW_MS,
+  MIN_ACCRUAL_WINDOW_MS,
+} from "../../state/balance";
+
+const T0 = 1_000_000_000_000; // arbitrary fixed anchor (avoids Date.now drift)
+
+const baseState = (overrides: Partial<AccrualState> = {}): AccrualState => ({
+  baseResources: { water: 100, fuel: 0, metal: 0, food: 0 },
+  buildings: createDefaultBuildings(),
+  hp: 50,
+  hp_max: 100,
+  ...overrides,
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe("accrueOffline — pure function contract", () => {
+  it("no-op при delta < MIN_ACCRUAL_WINDOW_MS (30с)", () => {
+    const s = baseState();
+    const { state, summary } = accrueOffline(s, T0, T0 + 30 * 1000);
+    expect(state).toEqual(s); // state не меняется
+    expect(summary.delta_ms).toBe(0);
+    expect(summary.garden_food_added).toBe(0);
+    expect(summary.bunk_hp_added).toBe(0);
+    expect(summary.rolled_back).toBe(false);
+  });
+
+  it("rollback при delta < 0 (now < savedAt)", () => {
+    // Spy на console.log чтобы тест не шумел (telemetry track падает
+    // в console.log при отсутствии ym counter).
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const s = baseState();
+    const { state, summary } = accrueOffline(s, T0, T0 - 3_600_000);
+    expect(state).toEqual(s);
+    expect(summary.rolled_back).toBe(true);
+    expect(summary.delta_ms).toBe(0);
+  });
+
+  it("NaN/Infinity delta трактуется как rollback (safety)", () => {
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const s = baseState();
+    const { summary } = accrueOffline(s, Number.NaN, T0);
+    expect(summary.rolled_back).toBe(true);
+  });
+
+  it("cap window: delta=100ч клампится до 8ч, capped_at_max=true", () => {
+    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0 } });
+    const { summary } = accrueOffline(s, T0, T0 + 100 * 3600 * 1000);
+    expect(summary.capped_at_max).toBe(true);
+    expect(summary.delta_ms).toBe(MAX_OFFLINE_WINDOW_MS);
+  });
+
+  it("garden cap: 100ч offline → буфер ровно GARDEN_CAP, без переполнения", () => {
+    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0 } });
+    const { state, summary } = accrueOffline(s, T0, T0 + 100 * 3600 * 1000);
+    const garden = state.buildings.find((b) => b.id === "garden");
+    expect(garden?.accumulated_output).toBe(GARDEN_CAP);
+    expect(summary.garden_food_added).toBe(GARDEN_CAP);
+  });
+
+  it("input-bounded: water=0 → garden 0 цциклов, water не уходит в минус", () => {
+    const s = baseState({ baseResources: { water: 0, fuel: 0, metal: 0, food: 0 } });
+    const { state, summary } = accrueOffline(s, T0, T0 + 5 * 3600 * 1000);
+    expect(summary.garden_food_added).toBe(0);
+    expect(summary.garden_water_spent).toBe(0);
+    expect(state.baseResources.water).toBe(0); // unchanged, not negative
+  });
+
+  it("bunk не превышает hp_max", () => {
+    const s = baseState({
+      hp: 95,
+      hp_max: 100,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 100 },
+    });
+    const { state, summary } = accrueOffline(s, T0, T0 + 8 * 3600 * 1000);
+    expect(state.hp).toBe(100);
+    // hp_max=100, hp=95, нужно +5 hp = 1 цикл = 1 food.
+    expect(summary.bunk_hp_added).toBe(5);
+    expect(summary.bunk_food_spent).toBe(1);
+  });
+
+  it("bunk останавливается когда food=0", () => {
+    const s = baseState({
+      hp: 0,
+      hp_max: 100,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 3 },
+    });
+    const { state, summary } = accrueOffline(s, T0, T0 + 8 * 3600 * 1000);
+    expect(summary.bunk_food_spent).toBe(3);
+    expect(summary.bunk_hp_added).toBe(15); // 3 цикла × 5 HP
+    expect(state.baseResources.food).toBe(0);
+    expect(state.hp).toBe(15);
+  });
+
+  it("детерминизм: один и тот же вход → один и тот же выход", () => {
+    const s = baseState({ baseResources: { water: 20, fuel: 0, metal: 0, food: 30 } });
+    const a = accrueOffline(s, T0, T0 + 2 * 3600 * 1000);
+    const b = accrueOffline(s, T0, T0 + 2 * 3600 * 1000);
+    expect(b.state).toEqual(a.state);
+    expect(b.summary).toEqual(a.summary);
+  });
+
+  it("ставки матчат балансовые константы (sanity)", () => {
+    const s = baseState({
+      baseResources: { water: 10, fuel: 0, metal: 0, food: 0 },
+      hp: 50,
+      hp_max: 100,
+    });
+    // Ровно 1 цикл грядки: 30 мин offline = 1 цикл = +5 food, −1 water
+    const oneGarden = accrueOffline(s, T0, T0 + GARDEN_CYCLE_MS);
+    expect(oneGarden.summary.garden_food_added).toBe(GARDEN_FOOD_PER_CYCLE);
+    expect(oneGarden.summary.garden_water_spent).toBe(GARDEN_WATER_PER_CYCLE);
+
+    // 30 мин также = 3 цикла койки (10 мин × 3) если есть food. food=0 → 0.
+    expect(oneGarden.summary.bunk_food_spent).toBe(0);
+    expect(oneGarden.summary.bunk_hp_added).toBe(0);
+
+    // С food=10, 30 мин = 3 цикла койки = -3 food, +15 hp (50→65)
+    const withFood = accrueOffline(
+      baseState({
+        baseResources: { water: 0, fuel: 0, metal: 0, food: 10 },
+        hp: 50,
+        hp_max: 100,
+      }),
+      T0,
+      T0 + BUNK_CYCLE_MS * 3,
+    );
+    expect(withFood.summary.bunk_hp_added).toBe(BUNK_HP_PER_CYCLE * 3);
+    expect(withFood.summary.bunk_food_spent).toBe(BUNK_FOOD_PER_CYCLE * 3);
+  });
+
+  it("min boundary: delta точно MIN_ACCRUAL_WINDOW_MS — accrual идёт", () => {
+    const s = baseState();
+    const { summary } = accrueOffline(s, T0, T0 + MIN_ACCRUAL_WINDOW_MS);
+    expect(summary.delta_ms).toBe(MIN_ACCRUAL_WINDOW_MS);
+    // 60с < 10мин (койка) и < 30мин (грядка) → 0 циклов обоих
+    expect(summary.garden_food_added).toBe(0);
+    expect(summary.bunk_hp_added).toBe(0);
+  });
+});
+
+describe("accrualHasYield — toast guard", () => {
+  it("true если garden или bunk начислили", () => {
+    expect(accrualHasYield({
+      delta_ms: 1, rolled_back: false, capped_at_max: false,
+      garden_food_added: 5, garden_water_spent: 1, bunk_hp_added: 0, bunk_food_spent: 0,
+    })).toBe(true);
+    expect(accrualHasYield({
+      delta_ms: 1, rolled_back: false, capped_at_max: false,
+      garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 5, bunk_food_spent: 1,
+    })).toBe(true);
+  });
+
+  it("false если ничего реально не начислилось", () => {
+    expect(accrualHasYield({
+      delta_ms: 0, rolled_back: false, capped_at_max: false,
+      garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
+    })).toBe(false);
+    expect(accrualHasYield({
+      delta_ms: 0, rolled_back: true, capped_at_max: false,
+      garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
+    })).toBe(false);
+  });
+});

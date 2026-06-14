@@ -1,10 +1,11 @@
-import { GameState, createDefaultBaseResources } from "../state/GameState";
-import type { BaseResources, InventoryStack, SettingsState, PlayerInjury } from "../state/types";
+import { GameState, createDefaultBaseResources, createDefaultBuildings } from "../state/GameState";
+import type { BaseResources, BuildingState, InventoryStack, SettingsState, PlayerInjury } from "../state/types";
 import { getPlatform } from "./platform";
 import { t } from "./locale";
 import { SAVE_VERSION } from "../config";
 import { migrateSnapshot } from "../state/migrations";
 import { derivePerks } from "../state/SkillTree";
+import { accrueOffline, type AccrualSummary } from "./offlineProgression";
 
 export const MIN_CLOUD_SAVE_INTERVAL_MS = 10_000;
 
@@ -28,6 +29,19 @@ export interface CloudSaveSnapshot {
   baseResources?: BaseResources;
   /** M13: травмы. v4+. */
   injuries?: PlayerInjury[];
+  /**
+   * M13 PR-6c: persisted base buildings (грядка/койка). v6+.
+   * Optional — v5 сейвы получают `?? []` в миграции, потом
+   * applySnapshot мержит с `createDefaultBuildings()` через fallback.
+   */
+  buildings?: BuildingState[];
+  /**
+   * M13 PR-6c: hp персистится с v6. До v6 hp ресетился в hp_max на
+   * каждый load (createDefaultPlayer default). Optional — v5 сейвы
+   * получают `null` в миграции, applySnapshot затем фолбэкает на hp_max
+   * (= prior behavior, zero regression).
+   */
+  hp?: number | null;
   // Optional for backward-compat with saves predating the unlock-flag fix.
   // Missing keys are treated as false on load.
   progress_flags?: {
@@ -64,6 +78,9 @@ export function serializeGameState(): CloudSaveSnapshot {
     skillPoints: player.skillPoints ?? 0,
     baseResources,
     injuries: player.injuries ?? [],
+    // M13 PR-6c: persist buildings + hp (см. comments on type).
+    buildings: GameState.buildings,
+    hp: player.hp,
     progress_flags: {
       forest_depth_2_completed: progress.forest_depth_2_completed,
       any_warehouse_sortie_completed: progress.any_warehouse_sortie_completed,
@@ -145,7 +162,49 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
     }
   }
 
+  // M13 PR-6c: восстановить buildings + hp, потом прогнать accrueOffline
+  // от saved_at до now. Summary прячется в module-level var и забирается
+  // через consumePendingAccrualSummary() — BaseScene показывает тост
+  // только при наличии yield (accrualHasYield()).
+  GameState.buildings = migrated.buildings ?? createDefaultBuildings();
+  GameState.player.hp =
+    typeof migrated.hp === "number"
+      ? Math.max(0, Math.min(GameState.player.hp_max, migrated.hp))
+      : GameState.player.hp_max;
+
+  const savedAtMs = Date.parse(migrated.saved_at);
+  if (Number.isFinite(savedAtMs)) {
+    const result = accrueOffline(
+      {
+        baseResources: GameState.baseResources,
+        buildings: GameState.buildings,
+        hp: GameState.player.hp,
+        hp_max: GameState.player.hp_max,
+      },
+      savedAtMs,
+      Date.now(),
+    );
+    GameState.baseResources = result.state.baseResources;
+    GameState.buildings = result.state.buildings;
+    GameState.player.hp = result.state.hp;
+    pendingAccrualSummary = result.summary;
+  }
+
   lastSaveTime = Date.now();
+}
+
+/**
+ * M13 PR-6c: захваченный summary последнего accrueOffline на load.
+ * BaseScene забирает его через consumePendingAccrualSummary() и показывает
+ * тост. Pattern: эксклюзивно load-путь — BaseScene-entry refresh имеет свой
+ * accrue с подавлением тоста.
+ */
+let pendingAccrualSummary: AccrualSummary | null = null;
+
+export function consumePendingAccrualSummary(): AccrualSummary | null {
+  const s = pendingAccrualSummary;
+  pendingAccrualSummary = null;
+  return s;
 }
 
 export function resolveConflict(
