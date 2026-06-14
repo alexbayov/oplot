@@ -10,7 +10,7 @@ import { softWarnCounts, validateItemShapes, validateRecipeRefs, validateZoneSha
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
-import { loadFromCloud, applySnapshot } from "../systems/cloudSave";
+import { loadFromCloud, applySnapshot, saveToCloudImmediate } from "../systems/cloudSave";
 import { sessionStart } from "../systems/telemetry";
 import { loadSkillNodes } from "../state/SkillTree";
 import { CY } from "../ui/layout";
@@ -161,6 +161,11 @@ export class BootScene extends Phaser.Scene {
       const snapshot = await loadFromCloud();
       if (snapshot) {
         applySnapshot(snapshot);
+        // M13 PR-6c (preflight §4): applySnapshot прогнал accrueOffline и
+        // подрезал ресурсы/буфер. Немедленно перезаписываем сейв — это
+        // сдвигает saved_at на now, иначе F5/refresh до первого обычного
+        // сейва начислил бы офлайн повторно от того же anchor (double-accrue).
+        await saveToCloudImmediate();
       }
 
       sessionStart({

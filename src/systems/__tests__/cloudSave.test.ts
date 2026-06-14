@@ -161,4 +161,56 @@ describe("cloudSave", () => {
     await expect(saveToCloud()).resolves.toBeUndefined();
     await expect(loadFromCloud()).resolves.toBeNull();
   });
+
+  // ── M13 PR-6c persistence regression (catches PR-6c review fold-in) ──
+
+  test("getData whitelist covers every serialized key (drift guard)", async () => {
+    // Yandex getData(keys) возвращает ТОЛЬКО whitelisted ключи. Если
+    // serialize пишет ключ, которого нет в CLOUD_SAVE_KEYS — он тихо не
+    // переживёт round-trip. Этот тест ловит дрейф (поймал бы пропавшие
+    // buildings/hp/skillPoints/unlockedSkillNodes/progress_flags).
+    const { serializeGameState, CLOUD_SAVE_KEYS } = await import("../cloudSave");
+    const serializedKeys = Object.keys(serializeGameState());
+    const whitelist = CLOUD_SAVE_KEYS as string[];
+    const missing = serializedKeys.filter((k) => !whitelist.includes(k));
+    expect(missing).toEqual([]);
+  });
+
+  test("buildings buffer + hp survive a full save→getData→load round-trip", async () => {
+    const { GameState } = await import("../../state/GameState");
+    GameState.buildings = [
+      { id: "garden", accumulated_output: 12 },
+      { id: "bunk", accumulated_output: 0 },
+    ];
+    const woundedHp = Math.max(1, GameState.player.hp_max - 20);
+    GameState.player.hp = woundedHp;
+
+    const { serializeGameState, applySnapshot, CLOUD_SAVE_KEYS } = await import("../cloudSave");
+    const saved = serializeGameState() as unknown as Record<string, unknown>;
+
+    // Симулируем Yandex getData(keys): только whitelisted ключи доезжают.
+    const fromCloud: Record<string, unknown> = {};
+    for (const k of CLOUD_SAVE_KEYS as string[]) {
+      if (k in saved) fromCloud[k] = saved[k];
+    }
+
+    GameState.reset(); // wipe in-memory state
+    applySnapshot(fromCloud as never);
+
+    const garden = GameState.buildings.find((b) => b.id === "garden");
+    expect(garden?.accumulated_output).toBe(12); // буфер пережил load
+    expect(GameState.player.hp).toBe(woundedHp); // hp пережил load (раненым)
+  });
+
+  test("old v5 save (no buildings) loads with garden+bunk, not empty", async () => {
+    // CATCH: migrate v5→v6 раньше инжектил buildings:[], и applySnapshot
+    // `[] ?? default === []` оставлял существующего игрока без построек.
+    const { GameState } = await import("../../state/GameState");
+    const { applySnapshot } = await import("../cloudSave");
+    const v5 = makeSnapshot({ version: 5, saved_at: new Date().toISOString() });
+    GameState.reset();
+    applySnapshot(v5 as never);
+    const ids = GameState.buildings.map((b) => b.id).sort();
+    expect(ids).toEqual(["bunk", "garden"]);
+  });
 });

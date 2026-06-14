@@ -166,7 +166,13 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   // от saved_at до now. Summary прячется в module-level var и забирается
   // через consumePendingAccrualSummary() — BaseScene показывает тост
   // только при наличии yield (accrualHasYield()).
-  GameState.buildings = migrated.buildings ?? createDefaultBuildings();
+  // Always-on per preflight §7: каждый сейв ДОЛЖЕН иметь грядку+койку.
+  // Length-guard (не просто `??`): старые v5 сейвы, мигрированные с
+  // `buildings: []`, иначе застряли бы с нулём построек (`[] ?? x === []`).
+  GameState.buildings =
+    migrated.buildings && migrated.buildings.length > 0
+      ? migrated.buildings
+      : createDefaultBuildings();
   GameState.player.hp =
     typeof migrated.hp === "number"
       ? Math.max(0, Math.min(GameState.player.hp_max, migrated.hp))
@@ -254,27 +260,50 @@ export async function saveToCloudImmediate(): Promise<void> {
   }
 }
 
+/**
+ * Whitelist ключей, запрашиваемых у `player.getData()`. Yandex getData(keys)
+ * возвращает ТОЛЬКО перечисленные ключи — если поле пишется в
+ * serializeGameState, но отсутствует здесь, оно НЕ переживёт round-trip
+ * (тихо ресетится в дефолт на каждый load).
+ *
+ * SINGLE SOURCE OF TRUTH: должен покрывать все ключи serializeGameState.
+ * Тест `cloudSave.test` ("getData whitelist covers every serialized key")
+ * — drift-guard: упадёт если serialize обзавёлся ключом, не добавленным сюда.
+ *
+ * M13 PR-6c добавил `buildings` + `hp` (preflight §5, точка 3 из 5-звенной
+ * цепочки). Заодно восстановлены `unlockedSkillNodes`/`skillPoints`/
+ * `progress_flags` — они писались в serialize, но отсутствовали в whitelist
+ * (pre-existing дрейф: skill-tree state и unlock-флаги не переживали
+ * cloud-load на реальной платформе). `?? default` в applySnapshot делает
+ * это zero-regression.
+ */
+export const CLOUD_SAVE_KEYS: (keyof CloudSaveSnapshot)[] = [
+  "version",
+  "level",
+  "xp",
+  "perks",
+  "inventory",
+  "baseStash",
+  "radio_trust",
+  "resolvedSignals",
+  "settings",
+  "saved_at",
+  "gas",
+  "unlockedSkillNodes",
+  "skillPoints",
+  "baseResources",
+  "injuries",
+  "buildings",
+  "hp",
+  "progress_flags",
+];
+
 export async function loadFromCloud(): Promise<CloudSaveSnapshot | null> {
   const platform = getPlatform();
   if (!platform.available || !platform.player) return null;
 
   try {
-    const keys: (keyof CloudSaveSnapshot)[] = [
-      "level",
-      "xp",
-      "perks",
-      "inventory",
-      "baseStash",
-      "radio_trust",
-      "resolvedSignals",
-      "settings",
-      "saved_at",
-      "gas",
-      "baseResources",
-      "injuries",
-      "version",
-    ];
-    const raw = await platform.player.getData(keys);
+    const raw = await platform.player.getData(CLOUD_SAVE_KEYS);
     if (!raw || typeof raw !== "object") return null;
     const data = raw as Record<string, unknown>;
 
