@@ -213,4 +213,80 @@ describe("cloudSave", () => {
     const ids = GameState.buildings.map((b) => b.id).sort();
     expect(ids).toEqual(["bunk", "garden"]);
   });
+
+  // ── M13 PR-6b-1 persistence regression (durability-wire) ──────────
+
+  test("equipped_weapon + crafted_weapons survive full save→getData→load round-trip", async () => {
+    // Test 5 из preflight: equipped + crafted + durability_current
+    // должны пережить cloud round-trip. До PR-6b-1 эти поля не
+    // сериализовались — durability тихо ресетилась на каждый load.
+    const { GameState } = await import("../../state/GameState");
+    const wi = {
+      id: "wi_round",
+      name_ru: "Сборка",
+      slot: "action" as const,
+      stats: { damage_min: 4, damage_max: 9 },
+      durability_max: 5,
+      durability_current: 2,
+      parts: ["pm_frame", "pm_barrel"],
+    };
+    GameState.player.crafted_weapons = [wi];
+    GameState.player.equipped_weapon = { kind: "crafted", id: "wi_round" };
+
+    const { serializeGameState, applySnapshot, CLOUD_SAVE_KEYS } = await import("../cloudSave");
+    const saved = serializeGameState() as unknown as Record<string, unknown>;
+    const fromCloud: Record<string, unknown> = {};
+    for (const k of CLOUD_SAVE_KEYS as string[]) {
+      if (k in saved) fromCloud[k] = saved[k];
+    }
+
+    GameState.reset();
+    applySnapshot(fromCloud as never);
+
+    expect(GameState.player.equipped_weapon).toEqual({ kind: "crafted", id: "wi_round" });
+    expect(GameState.player.crafted_weapons).toHaveLength(1);
+    expect(GameState.player.crafted_weapons[0]?.durability_current).toBe(2);
+    expect(GameState.player.crafted_weapons[0]?.durability_max).toBe(5);
+  });
+
+  test("old v6 save (no equipped_weapon key) loads with default catalog craft_knife", async () => {
+    // Test 6 part A: v6 → v7 миграция — отсутствующий ключ даёт дефолт
+    // (createDefaultPlayer().equipped_weapon = catalog craft_knife).
+    const { GameState } = await import("../../state/GameState");
+    const { applySnapshot } = await import("../cloudSave");
+    const v6 = makeSnapshot({ version: 6, saved_at: new Date().toISOString() });
+    GameState.reset();
+    applySnapshot(v6 as never);
+    expect(GameState.player.equipped_weapon).toEqual({ kind: "catalog", id: "craft_knife" });
+    expect(GameState.player.crafted_weapons).toEqual([]);
+  });
+
+  test("Trap A: equipped_weapon=null в снапшоте → НЕ перезаписывается дефолтом", async () => {
+    // Test 6 part B (preflight §5 ловушка A): null = валидное «слот пуст»
+    // (после поломки крафта). `migrated.equipped_weapon ?? default` стёр
+    // бы намерение, потому что `null ?? x === x`. applySnapshot должна
+    // отличать «ключа нет» от «ключ есть = null» через `in`-проверку.
+    const { GameState } = await import("../../state/GameState");
+    const { applySnapshot } = await import("../cloudSave");
+    const snap = makeSnapshot({
+      version: 7,
+      saved_at: new Date().toISOString(),
+      equipped_weapon: null,
+      crafted_weapons: [],
+    });
+    GameState.reset();
+    applySnapshot(snap as never);
+    expect(GameState.player.equipped_weapon).toBeNull();
+  });
+
+  test("migrateV6ToV7 идемпотентен — двойной запуск = no-op", async () => {
+    // Test 6 part C: главный guard в migrateSnapshot — `version >= SAVE_VERSION
+    // → passthrough`, плюс v6→v7 сам по себе stamp-only, не дёргает поля.
+    const { migrateSnapshot } = await import("../../state/migrations");
+    const v6 = makeSnapshot({ version: 6, saved_at: "2026-06-14T00:00:00Z" });
+    const once = migrateSnapshot(v6 as never);
+    const twice = migrateSnapshot(once);
+    expect(once.version).toBe(7);
+    expect(twice).toEqual(once);
+  });
 });

@@ -1,5 +1,6 @@
-import { GameState, createDefaultBaseResources, createDefaultBuildings } from "../state/GameState";
-import type { BaseResources, BuildingState, InventoryStack, SettingsState, PlayerInjury } from "../state/types";
+import { GameState, createDefaultBaseResources, createDefaultBuildings, createDefaultPlayer } from "../state/GameState";
+import type { BaseResources, BuildingState, EquippedWeapon, InventoryStack, SettingsState, PlayerInjury } from "../state/types";
+import type { WeaponInstance } from "./weaponAssembly";
 import { getPlatform } from "./platform";
 import { t } from "./locale";
 import { SAVE_VERSION } from "../config";
@@ -42,6 +43,27 @@ export interface CloudSaveSnapshot {
    * (= prior behavior, zero regression).
    */
   hp?: number | null;
+  /**
+   * M13 PR-6b-1: эквипнутое оружие. Discriminated catalog|crafted ИЛИ
+   * `null` (=намеренно пустой слот после поломки). Optional на уровне
+   * snapshot — v6-сейв не несёт ключа. applySnapshot отличает
+   * «ключа нет» (миграция → дефолт) от «ключ есть, значение null»
+   * (намерение → сохраняем null) через `in`-проверку. Trap A
+   * (preflight §5): `migrated.equipped_weapon ?? default` стёр бы
+   * валидный пустой слот, потому что `null ?? x === x`.
+   */
+  equipped_weapon?: EquippedWeapon | null;
+  /**
+   * M13 PR-6b-1: собранные крафт-инстансы. Frozen stats + mutable
+   * durability_current. Source-of-truth для damage-расчёта в
+   * snapshotHero (НЕ пересчитываем из parts на load — дисциплина
+   * freeze-on-assembly). Optional на уровне snapshot — v6-сейв не
+   * несёт ключа, applySnapshot подставит `?? []` (валидно: пустой
+   * массив = «нет ни одной сборки», `[] ?? x` тут безопасен,
+   * потому что `[]` это валидное конечное состояние, не баг как
+   * у buildings).
+   */
+  crafted_weapons?: WeaponInstance[];
   // Optional for backward-compat with saves predating the unlock-flag fix.
   // Missing keys are treated as false on load.
   progress_flags?: {
@@ -81,6 +103,9 @@ export function serializeGameState(): CloudSaveSnapshot {
     // M13 PR-6c: persist buildings + hp (см. comments on type).
     buildings: GameState.buildings,
     hp: player.hp,
+    // M13 PR-6b-1: persist equip-state + crafted инстансы.
+    equipped_weapon: player.equipped_weapon,
+    crafted_weapons: player.crafted_weapons,
     progress_flags: {
       forest_depth_2_completed: progress.forest_depth_2_completed,
       any_warehouse_sortie_completed: progress.any_warehouse_sortie_completed,
@@ -177,6 +202,21 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
     typeof migrated.hp === "number"
       ? Math.max(0, Math.min(GameState.player.hp_max, migrated.hp))
       : GameState.player.hp_max;
+
+  // M13 PR-6b-1: восстановить equipped_weapon + crafted_weapons.
+  // Trap A: для equipped_weapon `null` = валидный «слот пуст» (после
+  // поломки крафта). Поэтому `in`-проверка: ключ ЕСТЬ в migrated →
+  // берём значение как есть (включая null); ключа НЕТ → дефолт
+  // (createDefaultPlayer().equipped_weapon = catalog craft_knife).
+  // `migrated.equipped_weapon ?? default` тут сломан: `null ?? default`
+  // вернул бы default, стерев намерение игрока.
+  GameState.player.equipped_weapon =
+    "equipped_weapon" in migrated
+      ? (migrated.equipped_weapon as EquippedWeapon | null)
+      : createDefaultPlayer().equipped_weapon;
+  // Для crafted_weapons `?? []` безопасен: `[]` это валидное конечное
+  // состояние («нет ни одной сборки»), не сигнал об ошибке.
+  GameState.player.crafted_weapons = migrated.crafted_weapons ?? [];
 
   const savedAtMs = Date.parse(migrated.saved_at);
   if (Number.isFinite(savedAtMs)) {
@@ -295,6 +335,11 @@ export const CLOUD_SAVE_KEYS: (keyof CloudSaveSnapshot)[] = [
   "injuries",
   "buildings",
   "hp",
+  // M13 PR-6b-1: equip-state + crafted инстансы. БЕЗ обоих ключей
+  // здесь снапшот пишется, но НЕ читается из Yandex getData → durability
+  // тихо ресетится на каждый load (тот же класс бага что PR-6c §5 точка 3).
+  "equipped_weapon",
+  "crafted_weapons",
   "progress_flags",
 ];
 

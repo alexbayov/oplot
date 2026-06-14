@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { GameState, addToStack, countInStacks, removeFromStack } from "../state/GameState";
+import { applyPerEncounterDurabilityHit } from "../systems/durability";
 import {
   buildEncounterLootPool,
   computeArmorReduction,
@@ -186,7 +187,31 @@ export class SortieRunScene extends Phaser.Scene {
         { kind: result.injury.kind, days_left: result.injury.duration_days },
       ];
     }
+
+    // M13 PR-6b-1: durability-hit + breakage. Только на won, crafted-only
+    // (catalog/null → no-op). При breakage инстанс остаётся в
+    // crafted_weapons (repair-долг C6), equipped_weapon падает в дефолт
+    // craft_knife (тот же что у createDefaultPlayer). Тост показывается
+    // в renderEncounterSummary через breakageMsg-флаг.
+    if (result.outcome === "won") {
+      const hit = applyPerEncounterDurabilityHit(
+        player.equipped_weapon,
+        player.crafted_weapons,
+      );
+      player.equipped_weapon = hit.equipped_weapon;
+      player.crafted_weapons = hit.crafted_weapons;
+      this.breakageMsg = hit.broken ? "Оружие сломалось" : null;
+    } else {
+      this.breakageMsg = null;
+    }
   }
+
+  /**
+   * M13 PR-6b-1: одноразовый флаг для рендера тоста о поломке оружия в
+   * `renderEncounterSummary`. Set-нут в applyResult, прочитан в
+   * renderEncounterSummary, сбрасывается в null между энкаунтерами.
+   */
+  private breakageMsg: string | null = null;
 
   private renderEncounterSummary(result: EncounterResult, mob_ids: string[]): void {
     const sortie = GameState.currentSortie;
@@ -252,6 +277,9 @@ export class SortieRunScene extends Phaser.Scene {
             ? "повреждена нога"
             : "ушиб головы";
       stats.push(`травма: ${kind} (${result.injury.duration_days} дн.)`);
+    }
+    if (this.breakageMsg) {
+      stats.push(this.breakageMsg);
     }
 
     this.add

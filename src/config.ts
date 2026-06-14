@@ -22,5 +22,13 @@ export const MAX_LEVEL = 5;
  *      buildings: [] (offline progression на новой сессии не накопит,
  *      потому что нет buildings — sane default) и hp: hp_max (=
  *      существующее поведение, нулевая регрессия).
+ * v7 = M13 (PR-6b-1): durability-wire persist — equipped_weapon
+ *      (discriminated catalog|crafted, nullable) и crafted_weapons[]
+ *      переезжают в cloud-снапшот. Миграция v6→v7 — stamp-only:
+ *      старые v6-сейвы не несут полей; applySnapshot подставит
+ *      createDefaultPlayer().equipped_weapon (catalog craft_knife)
+ *      и crafted_weapons: []. Trap A: `null` у equipped_weapon —
+ *      валидное «слот пуст», проверяем через `in`, не `?? default`,
+ *      иначе `null ?? default` стёр бы намеренно пустой слот.
  */
-export const SAVE_VERSION = 6 as const;
+export const SAVE_VERSION = 7 as const;

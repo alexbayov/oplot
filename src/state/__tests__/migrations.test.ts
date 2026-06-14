@@ -109,7 +109,13 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(migrated.baseStash).toEqual(v5.baseStash);
   });
 
-  test("v6 идемпотентен — повторный запуск ничего не меняет", () => {
+  test("v6 snapshot gets bumped to v7 — equipped_weapon/crafted_weapons НЕ инжектятся", () => {
+    // M13 PR-6b-1: v6→v7 — stamp-only. equipped_weapon НАМЕРЕННО
+    // не инжектится (остаётся undefined), чтобы applySnapshot подставил
+    // createDefaultPlayer().equipped_weapon. Trap A (preflight §5):
+    // инжект `null` сломал бы новых игроков, потому что null —
+    // валидное «слот пуст после поломки», и applySnapshot его
+    // сохраняет; а старый v6-сейв этого намерения не нёс.
     const v6: VersionedSnapshot = {
       ...makeV1Snapshot(),
       version: 6,
@@ -120,7 +126,39 @@ describe("migrateSnapshot v1 → v2", () => {
       hp: 73,
     };
     const migrated = migrateSnapshot(v6);
-    expect(migrated).toEqual(v6);
+    expect(migrated.version).toBe(SAVE_VERSION);
+    expect("equipped_weapon" in migrated).toBe(false);
+    expect("crafted_weapons" in migrated).toBe(false);
+    // Все существующие поля сохранены 1:1.
+    expect(migrated.buildings).toEqual(v6.buildings);
+    expect(migrated.hp).toBe(73);
+    expect(migrated.inventory).toEqual(v6.inventory);
+  });
+
+  test("v7 идемпотентен — повторный запуск ничего не меняет", () => {
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+      buildings: [
+        { id: "garden", accumulated_output: 12 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+      hp: 73,
+      equipped_weapon: { kind: "crafted", id: "wi_a" },
+      crafted_weapons: [
+        {
+          id: "wi_a",
+          name_ru: "сборка",
+          slot: "action",
+          stats: { damage_min: 3, damage_max: 6 },
+          durability_max: 5,
+          durability_current: 4,
+          parts: ["pm_frame"],
+        },
+      ],
+    };
+    const migrated = migrateSnapshot(v7);
+    expect(migrated).toEqual(v7);
   });
 
   test("migrateSnapshot идемпотентна на любой версии", () => {

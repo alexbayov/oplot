@@ -81,6 +81,20 @@ export const PERK_POOL_SIZE = 8;
 export const PERKS_PER_LEVEL_UP = 3;
 export const VETERAN_CONDITIONING_HP_BONUS = 10;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M13 PR-6b-1 — durability wire
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Сколько durability_current отнимается с эквипнутого crafted-оружия
+ * за один выигранный энкаунтер. Дефолт preflight §8 = 1: при
+ * durability_max = 5 (типичная стартовая сборка из 4 партов с
+ * `+1 durability` каждая) сборка переживает ~5 победных энкаунтеров.
+ * Тюнится свободно — тесты бьют по знаку (decrement-on-won), не
+ * по числу.
+ */
+export const PER_ENCOUNTER_HIT = 1;
+
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;
 export const MARAUDER_FLEE_INITIATIVE_PENALTY = 0.05;
