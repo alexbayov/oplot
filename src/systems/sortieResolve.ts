@@ -96,6 +96,38 @@ const INJURY_BASE_CHANCE = 0.3;
 const clamp = (n: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, n));
 
+/**
+ * Маппит экипированную броню в `armor_reduction` для HeroSnapshot.
+ * Источник истины для одного места, где данные брони встречают авторесолв —
+ * до PR-3 эта логика жила инлайном в SortieRunScene.snapshotHero() и
+ * существовала отдельно от тестов авторесолва (которые принимают уже
+ * готовый armor_reduction). После миграции items.json (PR-5) броня
+ * перейдёт на M13-схему со stats.armor_value, до неё боевая броня всё ещё
+ * лежит как stats.defense. Хелпер покрывает оба пути плюс легаси-формы
+ * на верхнем уровне, чтобы один проход тесты + рантайм.
+ */
+export const computeArmorReduction = (armor: unknown): number => {
+  if (!armor || typeof armor !== "object") return 0.1;
+  const a = armor as {
+    stats?: { armor_value?: unknown; defense?: unknown };
+    armor_reduction?: unknown;
+    defense?: unknown;
+  };
+  if (typeof a.stats?.armor_value === "number") {
+    return clamp(a.stats.armor_value / 10, 0, 0.9);
+  }
+  if (typeof a.stats?.defense === "number") {
+    return clamp(a.stats.defense / 10, 0, 0.9);
+  }
+  if (typeof a.armor_reduction === "number") {
+    return clamp(a.armor_reduction, 0, 0.9);
+  }
+  if (typeof a.defense === "number") {
+    return clamp(a.defense / 10, 0, 0.9);
+  }
+  return 0.1;
+};
+
 const jitter = (rng: Rng, min = 0.85, max = 1.15): number =>
   min + rng() * (max - min);
 
