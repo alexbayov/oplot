@@ -3,14 +3,18 @@ import { computeGasDamage, playerHasGasMask } from "../gasZone";
 import type { PlayerState } from "../../state/types";
 import type { Zone } from "../../types";
 
+// M13 PR-6a: gas_mask мигрирован в armor.slot=helm. Тест ставит
+// armorId в helm-слот (а не в plate как было в legacy single-slot equip),
+// чтобы playerHasGasMask видел его через equipped_armor_ids.helm.
 const makePlayer = (armorId: string, backpackItems: string[] = []): PlayerState => ({
   hp: 100,
   hp_max: 100,
   level: 1,
   xp: 0,
   max_weight_kg: 30,
-  equipped_weapon_id: "knife",
-  equipped_armor_id: armorId,
+  equipped_weapon: { kind: "catalog", id: "craft_knife" },
+  crafted_weapons: [],
+  equipped_armor_ids: { helm: armorId },
   perks: [],
   backpack: backpackItems.map((id) => ({ item_id: id, count: 1 })),
   gas: 5,

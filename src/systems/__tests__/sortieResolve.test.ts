@@ -352,4 +352,57 @@ describe("sortieResolve · computeArmorReduction", () => {
     expect(computeArmorReduction({ stats: {} })).toBeCloseTo(0.1, 5);
     expect(computeArmorReduction({ id: "naked", name_ru: "ничего" })).toBeCloseTo(0.1, 5);
   });
+
+  // M13 PR-6a: 3-slot armor aggregation (C7/C8). Floor/clamp на сумме,
+  // не per-slot — иначе три пустых слота уехали бы в 0.3 вместо
+  // baseline 0.1. Тесты бьют по самой острой границе.
+
+  it("3-slot: пустой массив → 0.1 baseline (равно голому)", () => {
+    expect(computeArmorReduction([])).toBeCloseTo(0.1, 5);
+  });
+
+  it("3-slot: три armor_value=0 → 0.1 (floor на агрегате, не per-slot)", () => {
+    // Per-slot floor дал бы 0.1+0.1+0.1=0.3 — неправильно. Аггрегат-floor
+    // даёт max(0, 0+0+0) = 0, потом max(0.1, 0) = 0.1 baseline.
+    expect(
+      computeArmorReduction([
+        { stats: { armor_value: 0 } },
+        { stats: { armor_value: 0 } },
+        { stats: { armor_value: 0 } },
+      ]),
+    ).toBeCloseTo(0.1, 5);
+  });
+
+  it("3-slot: суммируется через слоты, потом clamp 0.9", () => {
+    // helm 1 + plate 3 + strap 2 = 0.6 редукции. Ниже clamp-а.
+    expect(
+      computeArmorReduction([
+        { stats: { armor_value: 1 } },
+        { stats: { armor_value: 3 } },
+        { stats: { armor_value: 2 } },
+      ]),
+    ).toBeCloseTo(0.6, 5);
+  });
+
+  it("3-slot: сумма > 9 клампится до 0.9", () => {
+    expect(
+      computeArmorReduction([
+        { stats: { armor_value: 5 } },
+        { stats: { armor_value: 5 } },
+        { stats: { armor_value: 5 } },
+      ]),
+    ).toBeCloseTo(0.9, 5);
+  });
+
+  it("3-slot: смешанные слоты с легаси-полями суммируются корректно", () => {
+    // Защита от случая «после миграции один путь, до — другой» —
+    // суммируем безотносительно конкретного пути формы.
+    expect(
+      computeArmorReduction([
+        { stats: { armor_value: 2 } },  // 0.2
+        { stats: { defense: 3 } },      // 0.3
+        { armor_reduction: 0.1 },        // 0.1
+      ]),
+    ).toBeCloseTo(0.6, 5);
+  });
 });

@@ -79,6 +79,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 4) {
     next = migrateV3ToV4(next);
   }
+  if (version < 5) {
+    next = migrateV4ToV5(next);
+  }
 
   return next;
 };
@@ -134,8 +137,11 @@ export const _testRemapId = remapId;
 /**
  * v2 → v3 (M11.4 + M12.0):
  *   - M11.4: legacy perks[] → unlockedSkillNodes[] + bonus skillPoints для unmapped.
- *   - M12.0: версия проставляется. WeaponInstance shape живёт в ItemRegistry runtime,
- *     structural миграция инвентаря не требуется.
+ *   - M12.0: версия проставляется. M11 WeaponInstance в этом слое жил в
+ *     ItemRegistry runtime — он снесён в PR-5 целиком вместе с M11-слоем.
+ *     Новый M13 WeaponInstance в PR-6a живёт в `systems/weaponAssembly.ts`,
+ *     v3 saves его не содержат — для них init-ится пустым массивом в
+ *     applySnapshot defaults.
  */
 const migrateV2ToV3 = (snap: VersionedSnapshot): VersionedSnapshot => {
   const unlocked: string[] = [];
@@ -175,4 +181,25 @@ const migrateV3ToV4 = (snap: VersionedSnapshot): VersionedSnapshot => {
     baseResources: snap.baseResources ?? { water: 0, fuel: 0, metal: 0, food: 0 },
     injuries: snap.injuries ?? [],
   };
+};
+
+/**
+ * v4 → v5 (M13 PR-6a: craft core):
+ *   - PlayerState реструктурирован: equipped_weapon_id → discriminated
+ *     equipped_weapon: {kind:catalog|crafted, id}; equipped_armor_id →
+ *     3-slot equipped_armor_ids: {helm?, plate?, strap?}; новое поле
+ *     crafted_weapons: WeaponInstance[].
+ *   - Snapshot не несёт эти поля (cloudSave сейчас не сериализует
+ *     equipped state, см. cloudSave.ts:applySnapshot — оно ресетится
+ *     на дефолты при load-е, pre-existing ограничение). Поэтому
+ *     миграция тут — version-stamp only, без поля-данных.
+ *   - Когда PR-6b/PR-7 расширит cloudSave для персистентности
+ *     equipped + crafted (под живой craft UI), эту миграцию переделают
+ *     в полноценную: legacy `equipped_weapon_id` → discriminated catalog
+ *     wrap; `equipped_armor_id` → slot по armor.slot из каталога;
+ *     `crafted_weapons` → []. Дисциплина та же что в PR-5: save-safe,
+ *     id-ы стабильны.
+ */
+const migrateV4ToV5 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  return { ...snap, version: 5 };
 };

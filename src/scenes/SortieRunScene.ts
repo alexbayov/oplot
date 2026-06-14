@@ -112,13 +112,45 @@ export class SortieRunScene extends Phaser.Scene {
   private snapshotHero(): HeroSnapshot {
     const p = GameState.player;
     const items = GameState.data.items;
-    const weapon = items[p.equipped_weapon_id];
-    const armor = items[p.equipped_armor_id];
-    const damageMin =
-      weapon && "damage_min" in weapon ? (weapon as { damage_min: number }).damage_min : 4;
-    const damageMax =
-      weapon && "damage_max" in weapon ? (weapon as { damage_max: number }).damage_max : 7;
-    const armorReduction = computeArmorReduction(armor);
+
+    // M13 PR-6a: discriminated weapon resolve. Catalog → читаем из
+    // items.json. Crafted → читаем замороженные stats из инстанса в
+    // crafted_weapons (источник истины — `stats` инстанса, НЕ parts;
+    // re-assemble на load запрещён, C4). Сломанный crafted падает
+    // в bare-hands fallback 4/7, как было до PR-6a (OP3 default).
+    let damageMin = 4;
+    let damageMax = 7;
+    const eq = p.equipped_weapon;
+    if (eq) {
+      if (eq.kind === "catalog") {
+        const w = items[eq.id];
+        if (w && w.kind === "weapon" && w.stats) {
+          if (typeof w.stats.damage_min === "number") damageMin = w.stats.damage_min;
+          if (typeof w.stats.damage_max === "number") damageMax = w.stats.damage_max;
+        }
+      } else {
+        const inst = p.crafted_weapons.find((wi) => wi.id === eq.id);
+        if (inst && inst.durability_current > 0) {
+          damageMin = inst.stats.damage_min;
+          damageMax = inst.stats.damage_max;
+        }
+        // else: broken / missing — fallback 4/7 как при полном unequip.
+      }
+    }
+
+    // M13 PR-6a: 3-slot armor aggregation (C7/C8). Собираем slot-предметы
+    // в массив и передаём в computeArmorReduction, который суммирует
+    // armor_value с floor+clamp НА ИТОГЕ (не per-slot — иначе три пустых
+    // слота дали бы 0.3 вместо baseline 0.1).
+    const armorPieces = [
+      p.equipped_armor_ids.helm,
+      p.equipped_armor_ids.plate,
+      p.equipped_armor_ids.strap,
+    ]
+      .filter((id): id is string => typeof id === "string")
+      .map((id) => items[id])
+      .filter((it): it is NonNullable<typeof it> => it != null);
+    const armorReduction = computeArmorReduction(armorPieces);
 
     return {
       hp: p.hp,

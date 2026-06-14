@@ -19,7 +19,10 @@ export const HERO_ENERGY_MAX = 50;
 export const HERO_BASE_SPEED = 100;
 export const HERO_START_LEVEL = 1;
 export const HERO_START_XP = 0;
-export const HERO_START_WEAPON_ID = "knife";
+// M13 PR-5: post-migration `knife` → `craft_knife` (legacy item_class=
+// craft, kind=weapon slot=action). cloth_jacket остался с тем же id,
+// armor.slot=plate.
+export const HERO_START_WEAPON_ID = "craft_knife";
 export const HERO_START_ARMOR_ID = "cloth_jacket";
 export const HERO_START_BANDAGES = 2;
 
