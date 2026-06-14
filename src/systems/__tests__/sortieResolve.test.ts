@@ -327,11 +327,25 @@ describe("sortieResolve · computeArmorReduction", () => {
     expect(computeArmorReduction({ defense: 2 })).toBeCloseTo(0.2, 5);
   });
 
-  it("clamp в [0, 0.9]: отрицательные и переразмерные значения", () => {
+  it("clamp ≤ 0.9: переразмерные значения режутся сверху", () => {
     expect(computeArmorReduction({ stats: { armor_value: 100 } })).toBeCloseTo(0.9, 5);
-    expect(computeArmorReduction({ stats: { armor_value: -5 } })).toBeCloseTo(0, 5);
     expect(computeArmorReduction({ armor_reduction: 1.5 })).toBeCloseTo(0.9, 5);
-    expect(computeArmorReduction({ armor_reduction: -0.2 })).toBeCloseTo(0, 5);
+  });
+
+  it("распознанная броня с нулевым/отрицательным значением → 0.1 baseline, не хуже голого", () => {
+    // scout_mask в текущем items.json имеет defense=0; без floor-а
+    // надетая маска давала 0 редукции, т.е. была хуже отсутствия брони.
+    expect(computeArmorReduction({ stats: { defense: 0 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ stats: { armor_value: 0 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ stats: { armor_value: -5 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ armor_reduction: -0.2 })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ defense: 0 })).toBeCloseTo(0.1, 5);
+  });
+
+  it("распознанная броня с def=1 совпадает с baseline (граница floor-а)", () => {
+    // Чтобы доказать что floor 0.1 не задирает def≥1 — cloth_jacket=1
+    // как был 0.1, так и остался 0.1, без эффекта на остальной баланс.
+    expect(computeArmorReduction({ stats: { defense: 1 } })).toBeCloseTo(0.1, 5);
   });
 
   it("пустая броня без распознаваемых полей → 0.1", () => {
