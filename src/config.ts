@@ -16,5 +16,11 @@ export const MAX_LEVEL = 5;
  *      crafted_weapons[]. Snapshot не несёт эти поля (pre-existing
  *      ограничение, см. cloudSave.ts) — версия бамп-нута для
  *      будущей персистентности крафта; миграция v4→v5 — no-op stamp.
+ * v6 = M13 (PR-6c): base sim layer — buildings[] (грядка/койка)
+ *      персистится с буфером накопленной еды, hp персистится (раньше
+ *      ресетился в hp_max на каждый load). Миграция v5→v6 даёт
+ *      buildings: [] (offline progression на новой сессии не накопит,
+ *      потому что нет buildings — sane default) и hp: hp_max (=
+ *      существующее поведение, нулевая регрессия).
  */
-export const SAVE_VERSION = 5 as const;
+export const SAVE_VERSION = 6 as const;

@@ -61,14 +61,42 @@ export interface SettingsState {
 }
 
 /**
- * M13: ресурсы базы. PR-1 — счётчики. PR-5 — будут потребляться/производиться
- * постройками (грядка, верстак, генератор, койка) с офлайн-прогрессией.
+ * M13: ресурсы базы. PR-1 — счётчики. PR-6c — потребляются постройками
+ * (грядка, койка) с офлайн-прогрессией. Дренинг через `consumeBaseResource`,
+ * который существовал с PR-1 но не вызывался — PR-6c наконец-то дёргает.
  */
 export interface BaseResources {
   water: number;
   fuel: number;
   metal: number;
   food: number;
+}
+
+/**
+ * M13 PR-6c: постройки базы. До PR-6c base loop был открыт (baseResources
+ * только аккумулирует от вылазок, sink-а нет). Грядка дренит water →
+ * генерит food в свой буфер; койка дренит food → лечит hp игрока живьём.
+ *
+ * Дизайн-разрез (preflight §1 Option B): только 2 здания на этот PR —
+ * минимально-достаточный набор чтобы закрыть петлю water→food→HP.
+ * Генератор/верстак — 6b вместе с краф-UI (без живого consumer-а они
+ * пустые placeholders).
+ */
+export type BuildingId = "garden" | "bunk";
+
+/**
+ * Per-building runtime state.
+ *
+ * - garden: `accumulated_output` = food в буфере грядки (cap 20, тап в
+ *   BaseScene собирает в `baseResources.food`).
+ * - bunk: `accumulated_output` всегда 0 — койка лечит hp напрямую в
+ *   PlayerState.hp при accrue (не имеет буфера, нечего собирать).
+ *   Поле сохранено для shape-uniform-ности (могут быть buffered здания
+ *   в будущем).
+ */
+export interface BuildingState {
+  id: BuildingId;
+  accumulated_output: number;
 }
 
 /** M13: травма героя, влияет на формулу resolveEncounter. */
@@ -189,6 +217,12 @@ export interface GameStateShape {
   baseStash: InventoryStack[];
   /** M13: ресурсы базы. */
   baseResources: BaseResources;
+  /**
+   * M13 PR-6c: runtime-state построек базы. Always-on (предразмещены,
+   * не требуют unlock/build UI per preflight §7 anti-scope). На новой
+   * игре — оба здания с `accumulated_output: 0`.
+   */
+  buildings: BuildingState[];
   // M3 GDD §6.4.M3.3 — unlock flags driving MapScene visibility.
   progress: GameProgress;
   settings: SettingsState;

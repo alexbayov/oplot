@@ -94,11 +94,33 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(migrated.baseStash).toEqual(v4.baseStash);
   });
 
-  test("v5 snapshot — passthrough unchanged", () => {
+  test("v5 snapshot gets bumped to v6 — hp default, buildings НЕ инжектится", () => {
+    // M13 PR-6c: v5→v6 — стампует версию + hp-дефолт. buildings НАМЕРЕННО
+    // не инжектится (остаётся undefined), чтобы applySnapshot подставил
+    // createDefaultBuildings(). Инжект `[]` сломал бы always-on (§7):
+    // `[] ?? default === []` → существующий игрок без построек навсегда.
     const v5: VersionedSnapshot = { ...makeV1Snapshot(), version: 5 };
     const migrated = migrateSnapshot(v5);
-    expect(migrated.version).toBe(5);
-    expect(migrated).toEqual(v5);
+    expect(migrated.version).toBe(SAVE_VERSION);
+    expect(migrated.buildings).toBeUndefined();
+    expect(migrated.hp).toBeNull();
+    // Все существующие поля сохранены.
+    expect(migrated.inventory).toEqual(v5.inventory);
+    expect(migrated.baseStash).toEqual(v5.baseStash);
+  });
+
+  test("v6 идемпотентен — повторный запуск ничего не меняет", () => {
+    const v6: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 6,
+      buildings: [
+        { id: "garden", accumulated_output: 12 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+      hp: 73,
+    };
+    const migrated = migrateSnapshot(v6);
+    expect(migrated).toEqual(v6);
   });
 
   test("migrateSnapshot идемпотентна на любой версии", () => {

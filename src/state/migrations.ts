@@ -82,6 +82,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   if (version < 5) {
     next = migrateV4ToV5(next);
   }
+  if (version < 6) {
+    next = migrateV5ToV6(next);
+  }
 
   return next;
 };
@@ -202,4 +205,28 @@ const migrateV3ToV4 = (snap: VersionedSnapshot): VersionedSnapshot => {
  */
 const migrateV4ToV5 = (snap: VersionedSnapshot): VersionedSnapshot => {
   return { ...snap, version: 5 };
+};
+
+/**
+ * v5 → v6 (M13 PR-6c: base sim layer):
+ *   - Добавляются `buildings?: BuildingState[]` и `hp?: number` в
+ *     CloudSaveSnapshot. Оба optional. Миграция — stamp + hp-дефолт:
+ *       buildings: НЕ инжектим. Старые v5 сейвы остаются БЕЗ ключа
+ *         `buildings` (undefined). applySnapshot тогда подставит
+ *         `createDefaultBuildings()` (грядка+койка always-on per §7).
+ *         КРИТИЧНО: инжектить `[]` здесь нельзя — `[] ?? default === []`,
+ *         и существующий игрок остался бы навсегда без построек.
+ *       hp: snap.hp ?? null — на applySnapshot подтянется `?? hp_max`.
+ *         Здесь null чтобы не зашивать hp_max константу в миграцию
+ *         (она может меняться через perks/balance).
+ *   - Идемпотентно: повторный запуск на v6 ничего не меняет (главный
+ *     guard в migrateSnapshot — `if (version >= SAVE_VERSION) return`),
+ *     и `snap.buildings` у v6-сейва сохраняется как есть.
+ */
+const migrateV5ToV6 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  return {
+    ...snap,
+    version: 6,
+    hp: snap.hp ?? null,
+  };
 };

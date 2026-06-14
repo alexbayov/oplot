@@ -26,6 +26,40 @@ export const HERO_START_WEAPON_ID = "craft_knife";
 export const HERO_START_ARMOR_ID = "cloth_jacket";
 export const HERO_START_BANDAGES = 2;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M13 PR-6c — base sim layer (offline accrual)
+// ─────────────────────────────────────────────────────────────────────────
+// Defaults из preflight §11. Балансовые ставки — тюнятся свободно после
+// playtest без изменений в коде/тестах (тесты бьют по invariants, не по
+// конкретным числам где это возможно).
+
+/** Грядка: water/цикл (стоимость еды). */
+export const GARDEN_WATER_PER_CYCLE = 1;
+/** Грядка: food/цикл (накапливается в буфер постройки). */
+export const GARDEN_FOOD_PER_CYCLE = 5;
+/** Грядка: длина цикла. */
+export const GARDEN_CYCLE_MS = 30 * 60 * 1000;
+/** Грядка: cap буфера. После заполнения цикл больше не идёт. */
+export const GARDEN_CAP = 20;
+
+/** Койка: food/цикл (потребляется из baseResources). */
+export const BUNK_FOOD_PER_CYCLE = 1;
+/** Койка: hp/цикл (лечит player.hp напрямую, clamp ≤ hp_max). */
+export const BUNK_HP_PER_CYCLE = 5;
+/** Койка: длина цикла. */
+export const BUNK_CYCLE_MS = 10 * 60 * 1000;
+
+/**
+ * Максимальное окно офлайн-прогрессии. После 8ч delta клампится — не
+ * вознаграждаем бесконечное отсутствие (sortie loop важнее).
+ */
+export const MAX_OFFLINE_WINDOW_MS = 8 * 60 * 60 * 1000;
+/**
+ * Минимальное окно для accrual. Открыл-закрыл за минуту — no-op.
+ * Гасит спам от частых заходов и F5-refresh.
+ */
+export const MIN_ACCRUAL_WINDOW_MS = 60 * 1000;
+
 // XP table — M4 formula: xp_to_next(level) = round(40 * level^1.5).
 // M1/M2 formula preserved as xpToNextM1 for reference only.
 export const xpToNextM1 = (level: number): number =>

@@ -1,9 +1,10 @@
 import Phaser from "phaser";
-import { GameState, setSfxMute, setSfxVolume } from "../state/GameState";
+import { GameState, setSfxMute, setSfxVolume, addBaseResource } from "../state/GameState";
 import { computeWeight } from "../systems/weight";
-import { saveToCloud } from "../systems/cloudSave";
+import { consumePendingAccrualSummary, saveToCloud } from "../systems/cloudSave";
+import { accrualHasYield } from "../systems/offlineProgression";
 import { activeSignals } from "../systems/radio";
-import { xpToNext } from "../state/balance";
+import { GARDEN_CAP, xpToNext } from "../state/balance";
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 
@@ -100,6 +101,30 @@ const HOTSPOTS: Hotspot[] = [
     glow: 0xd4a04a,
     action: (s) => s.scene.start("MapScene"),
   },
+  // M13 PR-6c: 2 placeholder hotspots для base sim layer. Без арта
+  // (preflight §6: «без иконок и анимации»), координаты в свободных
+  // зонах painted background-а — балансировка пиксель-точная — задача
+  // художественного редизайна, не PR-6c.
+  {
+    id: "garden",
+    x: 470,
+    y: 220,
+    hw: 80,
+    hh: 40,
+    label: "ГРЯДКА",
+    glow: 0x6fc26f,
+    action: (s) => s.collectGarden(),
+  },
+  {
+    id: "bunk",
+    x: 200,
+    y: 220,
+    hw: 90,
+    hh: 40,
+    label: "КОЙКА",
+    glow: 0x8aa86f,
+    action: (s) => s.showBunkStatus(),
+  },
 ];
 
 export class BaseScene extends Phaser.Scene {
@@ -137,8 +162,20 @@ export class BaseScene extends Phaser.Scene {
     // ── Hotspots ──────────────────────────────────────────────
     HOTSPOTS.forEach((h) => this.attachHotspot(h));
 
+    // M13 PR-6c: always-on garden buffer counter рядом с грядка-хотспотом.
+    // Обновляется через restart() сцены при collect (паттерн тот же что
+    // существующий weapon-swap в InventoryScene).
+    this.renderGardenCounter();
+
     // ── Костёр: subtle animated flicker overlay ───────────────
     this.attachKettleAnimation();
+
+    // M13 PR-6c: offline-return toast. Эксклюзивно load-путь:
+    // applySnapshot → accrueOffline → захватил summary, BaseScene
+    // забирает и показывает один раз. BaseScene-entry не от load
+    // (например после возврата из CraftScene) не будет иметь pending
+    // summary — это OK, refresh счётчика буфера идёт через renderGardenCounter.
+    this.maybeShowOfflineToast();
 
     // ── Cleanup on shutdown ──────────────────────────────────
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -423,6 +460,92 @@ export class BaseScene extends Phaser.Scene {
 
   public showRestInfo(): void {
     this.showToast("Лежанка — отдых восстанавливает HP в начале вылазки");
+  }
+
+  /**
+   * M13 PR-6c: COLLECT для грядки. Перебрасывает buffer → baseResources.food
+   * и обнуляет буфер. Триггерится тапом на garden-хотспот. Рестартим сцену
+   * чтобы счётчик буфера и base-resources панель показали новое значение.
+   */
+  public collectGarden(): void {
+    const garden = GameState.buildings.find((b) => b.id === "garden");
+    if (!garden || garden.accumulated_output === 0) {
+      this.showToast("Буфер грядки пустой");
+      return;
+    }
+    const collected = garden.accumulated_output;
+    GameState.baseResources = addBaseResource(
+      GameState.baseResources,
+      "food",
+      collected,
+    );
+    GameState.buildings = GameState.buildings.map((b) =>
+      b.id === "garden" ? { ...b, accumulated_output: 0 } : b,
+    );
+    track("garden_collect", { food: collected });
+    this.showToast(`+${collected} еды собрано с грядки`);
+    this.scene.restart();
+  }
+
+  /**
+   * M13 PR-6c: passive статус койки. По preflight §6 «Койка: пассивный
+   * статус-лейбл» — клик не действие, просто info-toast.
+   */
+  public showBunkStatus(): void {
+    const { hp, hp_max } = GameState.player;
+    const foodAvailable = GameState.baseResources.food;
+    if (hp >= hp_max) {
+      this.showToast(`HP: ${hp}/${hp_max} (полное здоровье)`);
+    } else if (foodAvailable === 0) {
+      this.showToast(`HP: ${hp}/${hp_max} (нет еды — койка спит)`);
+    } else {
+      this.showToast(`HP: ${hp}/${hp_max} (койка лечит +5/10 мин если есть еда)`);
+    }
+  }
+
+  /**
+   * Always-on счётчик буфера грядки рядом с garden-хотспотом. Не tooltip —
+   * виден всегда, потому что игроку нужно знать «когда собрать».
+   */
+  private renderGardenCounter(): void {
+    const garden = HOTSPOTS.find((h) => h.id === "garden");
+    if (!garden) return;
+    const buffer = GameState.buildings.find((b) => b.id === "garden")?.accumulated_output ?? 0;
+    this.add
+      .text(garden.x, garden.y + garden.hh + 8, `🌱 ${buffer}/${GARDEN_CAP}`, {
+        color: "#d4c5a0",
+        backgroundColor: "#1a120880",
+        fontFamily: "Oswald, sans-serif",
+        fontSize: "13px",
+        padding: { x: 6, y: 2 },
+      })
+      .setOrigin(0.5)
+      .setDepth(7);
+  }
+
+  /**
+   * Offline-return toast. Читает summary через consumePendingAccrualSummary
+   * (захватываем + чистим). Показывает только если что-то реально начислилось
+   * (`accrualHasYield` — экономит шум на коротких заходах с нулевыми
+   * ставками).
+   */
+  private maybeShowOfflineToast(): void {
+    const summary = consumePendingAccrualSummary();
+    if (!summary || !accrualHasYield(summary)) return;
+    const parts: string[] = [];
+    const hours = Math.round(summary.delta_ms / (60 * 60 * 1000));
+    parts.push(`Пока вас не было (${hours} ч):`);
+    if (summary.garden_food_added > 0) {
+      parts.push(`грядка +${summary.garden_food_added} еды`);
+    }
+    if (summary.bunk_hp_added > 0) {
+      parts.push(`койка +${summary.bunk_hp_added} HP`);
+    }
+    const spent: string[] = [];
+    if (summary.garden_water_spent > 0) spent.push(`${summary.garden_water_spent} воды`);
+    if (summary.bunk_food_spent > 0) spent.push(`${summary.bunk_food_spent} еды`);
+    if (spent.length > 0) parts.push(`Потрачено: ${spent.join(", ")}`);
+    this.showToast(parts.join(". "));
   }
 
   private showToast(msg: string): void {
