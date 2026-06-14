@@ -1,0 +1,256 @@
+{
+ "pm_slide": {
+  "damage_min": 4,
+  "damage_max": 7,
+  "durability_max": 11
+ },
+ "pm_frame": {
+  "damage_min": 1,
+  "damage_max": 2,
+  "durability_max": 23
+ },
+ "pm_magazine": {
+  "durability_max": 11
+ },
+ "tt_slide": {
+  "damage_min": 5,
+  "damage_max": 8,
+  "durability_max": 11
+ },
+ "tt_frame": {
+  "damage_min": 2,
+  "damage_max": 3,
+  "durability_max": 23
+ },
+ "tt_magazine": {
+  "durability_max": 11
+ },
+ "aps_slide": {
+  "damage_min": 4,
+  "damage_max": 8,
+  "durability_max": 14
+ },
+ "aps_frame": {
+  "damage_min": 2,
+  "damage_max": 2,
+  "durability_max": 27
+ },
+ "aps_magazine": {
+  "durability_max": 7
+ },
+ "aps_stock": {
+  "durability_max": 7
+ },
+ "akm_barrel": {
+  "damage_min": 10,
+  "damage_max": 14,
+  "durability_max": 15
+ },
+ "akm_receiver": {
+  "damage_min": 3,
+  "damage_max": 5,
+  "durability_max": 29
+ },
+ "akm_bolt": {
+  "durability_max": 8
+ },
+ "akm_magazine": {
+  "durability_max": 8
+ },
+ "aks74u_barrel": {
+  "damage_min": 8,
+  "damage_max": 12,
+  "durability_max": 14
+ },
+ "aks74u_receiver": {
+  "damage_min": 3,
+  "damage_max": 4,
+  "durability_max": 27
+ },
+ "aks74u_bolt": {
+  "durability_max": 7
+ },
+ "aks74u_magazine": {
+  "durability_max": 7
+ },
+ "bekas_barrel": {
+  "damage_min": 10,
+  "damage_max": 14,
+  "durability_max": 16
+ },
+ "bekas_receiver": {
+  "damage_min": 3,
+  "damage_max": 5,
+  "durability_max": 33
+ },
+ "bekas_pump": {
+  "durability_max": 8
+ },
+ "bekas_stock": {
+  "durability_max": 8
+ },
+ "hunting_barrel": {
+  "damage_min": 10,
+  "damage_max": 14,
+  "durability_max": 18
+ },
+ "hunting_receiver": {
+  "damage_min": 3,
+  "damage_max": 5,
+  "durability_max": 34
+ },
+ "hunting_bolt": {
+  "durability_max": 9
+ },
+ "hunting_scope": {
+  "durability_max": 9
+ },
+ "izh43_barrels": {
+  "damage_min": 10,
+  "damage_max": 16,
+  "durability_max": 16
+ },
+ "izh43_receiver": {
+  "damage_min": 4,
+  "damage_max": 5,
+  "durability_max": 33
+ },
+ "izh43_stock": {
+  "durability_max": 16
+ },
+ "mosin_barrel": {
+  "damage_min": 11,
+  "damage_max": 16,
+  "durability_max": 18
+ },
+ "mosin_receiver": {
+  "damage_min": 4,
+  "damage_max": 6,
+  "durability_max": 34
+ },
+ "mosin_bolt": {
+  "durability_max": 9
+ },
+ "mosin_stock": {
+  "durability_max": 9
+ },
+ "ppsh_barrel": {
+  "damage_min": 6,
+  "damage_max": 10,
+  "durability_max": 14
+ },
+ "ppsh_receiver": {
+  "damage_min": 2,
+  "damage_max": 3,
+  "durability_max": 27
+ },
+ "ppsh_drum": {
+  "durability_max": 7
+ },
+ "ppsh_stock": {
+  "durability_max": 7
+ },
+ "sks_barrel": {
+  "damage_min": 9,
+  "damage_max": 13,
+  "durability_max": 16
+ },
+ "sks_receiver": {
+  "damage_min": 3,
+  "damage_max": 4,
+  "durability_max": 33
+ },
+ "sks_bolt": {
+  "durability_max": 8
+ },
+ "sks_stock": {
+  "durability_max": 8
+ },
+ "ak74_barrel": {
+  "damage_min": 10,
+  "damage_max": 15,
+  "durability_max": 19
+ },
+ "ak74_receiver": {
+  "damage_min": 4,
+  "damage_max": 5,
+  "durability_max": 38
+ },
+ "ak74_bolt": {
+  "durability_max": 6
+ },
+ "ak74_magazine": {
+  "durability_max": 6
+ },
+ "ak74_stock": {
+  "durability_max": 6
+ },
+ "rpk_barrel": {
+  "damage_min": 11,
+  "damage_max": 16,
+  "durability_max": 20
+ },
+ "rpk_receiver": {
+  "damage_min": 4,
+  "damage_max": 6,
+  "durability_max": 39
+ },
+ "rpk_bipod": {
+  "durability_max": 7
+ },
+ "rpk_bolt": {
+  "durability_max": 7
+ },
+ "rpk_magazine": {
+  "durability_max": 7
+ },
+ "saiga_barrel": {
+  "damage_min": 12,
+  "damage_max": 18,
+  "durability_max": 18
+ },
+ "saiga_receiver": {
+  "damage_min": 4,
+  "damage_max": 6,
+  "durability_max": 34
+ },
+ "saiga_bolt": {
+  "durability_max": 9
+ },
+ "saiga_magazine": {
+  "durability_max": 9
+ },
+ "svd_barrel": {
+  "damage_min": 16,
+  "damage_max": 24,
+  "durability_max": 22
+ },
+ "svd_receiver": {
+  "damage_min": 6,
+  "damage_max": 8,
+  "durability_max": 44
+ },
+ "svd_bolt": {
+  "durability_max": 8
+ },
+ "svd_magazine": {
+  "durability_max": 8
+ },
+ "svd_stock": {
+  "durability_max": 8
+ },
+ "mod_pbs_universal": {
+  "damage_min": -1,
+  "damage_max": -1
+ },
+ "mod_pbs1": {
+  "damage_min": -1,
+  "damage_max": -1
+ },
+ "mod_bayonet": {},
+ "mod_ext_mag_545": {},
+ "mod_ext_mag_9x18": {},
+ "mod_optic_4x": {},
+ "mod_pso1": {},
+ "mod_tac_grip": {}
+}

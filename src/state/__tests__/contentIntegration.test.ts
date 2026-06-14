@@ -128,12 +128,12 @@ describe("Content integration — items.json under M13 schema", () => {
     }
   });
 
-  test("PR-6a: pm_* парты собираются в валидный WeaponInstance (structural)", async () => {
-    // M13 PR-6a: гейт собираемости, не числа. Цифры вкладов 60 партов
-    // приедут с Виктора (preflight OP1, anchored to catalog damage bands).
-    // Пока контракт: 4 pm_* парта прогоняются через assembleWeapon, не
-    // throw, результат имеет ожидаемую форму с invariants:
-    //   damage_min ≥ 0 (floor),  damage_max ≥ damage_min (clamp).
+  test("PR-6a OP1: pm_* full build → каталоговая band 5-9, dura 45", async () => {
+    // PR-6a (структурный гейт) → PR-6a-contributions: цифры подтянулись.
+    // pm-семейство (3 парта: pm_slide DMG, pm_frame STRUCT, pm_magazine aux)
+    // суммируется ровно в каталог pm damage 5-9 + dura target 45.
+    // Per-family exact anchor — методология в
+    // docs/redesign/M13-OP1-PART-CONTRIBUTIONS.md.
     const { assembleWeapon } = await import("../../systems/weaponAssembly");
     const items = loadRealItems();
     const pmParts = items
@@ -141,13 +141,13 @@ describe("Content integration — items.json under M13 schema", () => {
       .filter(
         (i): i is Extract<M13Item, { kind: "component" }> => i.kind === "component",
       );
-    expect(pmParts.length).toBeGreaterThan(0);
+    expect(pmParts.length).toBe(3);
     const w = assembleWeapon(pmParts, "wi_pm_test");
     expect(w.slot).toBe("action");
-    expect(w.stats.damage_min).toBeGreaterThanOrEqual(0);
-    expect(w.stats.damage_max).toBeGreaterThanOrEqual(w.stats.damage_min);
-    expect(w.durability_max).toBeGreaterThanOrEqual(0);
-    expect(w.durability_current).toBe(w.durability_max);
+    expect(w.stats.damage_min).toBe(5);
+    expect(w.stats.damage_max).toBe(9);
+    expect(w.durability_max).toBe(45);
+    expect(w.durability_current).toBe(45);
     expect(w.parts).toEqual(pmParts.map((p) => p.id));
   });
 });
