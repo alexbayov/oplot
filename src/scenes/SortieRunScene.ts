@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { GameState, addToStack, countInStacks, removeFromStack } from "../state/GameState";
 import {
   buildEncounterLootPool,
+  computeArmorReduction,
   computeMobThreat,
   resolveEncounter,
   setNarrative,
@@ -117,12 +118,7 @@ export class SortieRunScene extends Phaser.Scene {
       weapon && "damage_min" in weapon ? (weapon as { damage_min: number }).damage_min : 4;
     const damageMax =
       weapon && "damage_max" in weapon ? (weapon as { damage_max: number }).damage_max : 7;
-    const armorReduction =
-      armor && "armor_reduction" in armor
-        ? Math.max(0, Math.min(0.9, (armor as { armor_reduction: number }).armor_reduction))
-        : armor && "defense" in armor
-          ? Math.max(0, Math.min(0.9, (armor as { defense: number }).defense / 10))
-          : 0.1;
+    const armorReduction = computeArmorReduction(armor);
 
     return {
       hp: p.hp,

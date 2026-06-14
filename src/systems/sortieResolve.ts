@@ -96,6 +96,46 @@ const INJURY_BASE_CHANCE = 0.3;
 const clamp = (n: number, lo: number, hi: number): number =>
   Math.max(lo, Math.min(hi, n));
 
+/**
+ * Маппит экипированную броню в `armor_reduction` для HeroSnapshot.
+ * Источник истины для одного места, где данные брони встречают авторесолв —
+ * до PR-3 эта логика жила инлайном в SortieRunScene.snapshotHero() и
+ * существовала отдельно от тестов авторесолва (которые принимают уже
+ * готовый armor_reduction). После миграции items.json (PR-5) броня
+ * перейдёт на M13-схему со stats.armor_value, до неё боевая броня всё ещё
+ * лежит как stats.defense. Хелпер покрывает оба пути плюс легаси-формы
+ * на верхнем уровне, чтобы один проход тесты + рантайм.
+ *
+ * Floor 0.1 на распознанной броне: голый герой получает 0.1 baseline
+ * (см. else-ветку ниже), и если бы экипировка с defense=0 (scout_mask
+ * в текущем items.json) уехала в 0, надетый предмет был бы хуже голого.
+ * Маска перестаёт быть worse-than-naked footgun-ом, при этом def≥1
+ * не меняется (def=1 → 0.1 = тот же baseline).
+ */
+const ARMOR_REDUCTION_FLOOR = 0.1;
+
+export const computeArmorReduction = (armor: unknown): number => {
+  if (!armor || typeof armor !== "object") return ARMOR_REDUCTION_FLOOR;
+  const a = armor as {
+    stats?: { armor_value?: unknown; defense?: unknown };
+    armor_reduction?: unknown;
+    defense?: unknown;
+  };
+  if (typeof a.stats?.armor_value === "number") {
+    return clamp(Math.max(ARMOR_REDUCTION_FLOOR, a.stats.armor_value / 10), 0, 0.9);
+  }
+  if (typeof a.stats?.defense === "number") {
+    return clamp(Math.max(ARMOR_REDUCTION_FLOOR, a.stats.defense / 10), 0, 0.9);
+  }
+  if (typeof a.armor_reduction === "number") {
+    return clamp(Math.max(ARMOR_REDUCTION_FLOOR, a.armor_reduction), 0, 0.9);
+  }
+  if (typeof a.defense === "number") {
+    return clamp(Math.max(ARMOR_REDUCTION_FLOOR, a.defense / 10), 0, 0.9);
+  }
+  return ARMOR_REDUCTION_FLOOR;
+};
+
 const jitter = (rng: Rng, min = 0.85, max = 1.15): number =>
   min + rng() * (max - min);
 

@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import {
   BASE_RESOURCE_ITEMS,
   buildEncounterLootPool,
+  computeArmorReduction,
   computeMobThreat,
   resolveEncounter,
   resolveFullSortie,
@@ -283,5 +284,72 @@ describe("sortieResolve · helpers", () => {
     expect(keys).toContain("targeted_metal");
     expect(keys).toContain("targeted_food");
     expect(keys).toContain("targeted_water");
+  });
+});
+
+describe("sortieResolve · computeArmorReduction", () => {
+  // Хелпер живёт ровно ради одной точки в SortieRunScene.snapshotHero(), где
+  // данные брони встречаются с авторесолвом. Тесты бьют именно по маппингу,
+  // а не по форме HeroSnapshot — иначе зелёный тест ничего не ловит.
+
+  it("undefined → 0.1 baseline", () => {
+    expect(computeArmorReduction(undefined)).toBeCloseTo(0.1, 5);
+  });
+
+  it("non-object → 0.1 baseline", () => {
+    expect(computeArmorReduction(null)).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction(42)).toBeCloseTo(0.1, 5);
+  });
+
+  it("M13: stats.armor_value делится на 10", () => {
+    expect(computeArmorReduction({ stats: { armor_value: 3 } })).toBeCloseTo(0.3, 5);
+    expect(computeArmorReduction({ stats: { armor_value: 5 } })).toBeCloseTo(0.5, 5);
+  });
+
+  it("legacy до миграции: stats.defense делится на 10", () => {
+    // Источник из текущего items.json — cloth_jacket=1, leather_vest=3.
+    expect(computeArmorReduction({ stats: { defense: 1 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ stats: { defense: 3 } })).toBeCloseTo(0.3, 5);
+  });
+
+  it("M13 stats.armor_value приоритетнее legacy stats.defense", () => {
+    // На случай переходного состояния, когда оба поля присутствуют.
+    expect(
+      computeArmorReduction({ stats: { armor_value: 5, defense: 1 } }),
+    ).toBeCloseTo(0.5, 5);
+  });
+
+  it("paranoid fallback: top-level armor_reduction идёт как есть", () => {
+    expect(computeArmorReduction({ armor_reduction: 0.4 })).toBeCloseTo(0.4, 5);
+  });
+
+  it("paranoid fallback: top-level defense делится на 10", () => {
+    expect(computeArmorReduction({ defense: 2 })).toBeCloseTo(0.2, 5);
+  });
+
+  it("clamp ≤ 0.9: переразмерные значения режутся сверху", () => {
+    expect(computeArmorReduction({ stats: { armor_value: 100 } })).toBeCloseTo(0.9, 5);
+    expect(computeArmorReduction({ armor_reduction: 1.5 })).toBeCloseTo(0.9, 5);
+  });
+
+  it("распознанная броня с нулевым/отрицательным значением → 0.1 baseline, не хуже голого", () => {
+    // scout_mask в текущем items.json имеет defense=0; без floor-а
+    // надетая маска давала 0 редукции, т.е. была хуже отсутствия брони.
+    expect(computeArmorReduction({ stats: { defense: 0 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ stats: { armor_value: 0 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ stats: { armor_value: -5 } })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ armor_reduction: -0.2 })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ defense: 0 })).toBeCloseTo(0.1, 5);
+  });
+
+  it("распознанная броня с def=1 совпадает с baseline (граница floor-а)", () => {
+    // Чтобы доказать что floor 0.1 не задирает def≥1 — cloth_jacket=1
+    // как был 0.1, так и остался 0.1, без эффекта на остальной баланс.
+    expect(computeArmorReduction({ stats: { defense: 1 } })).toBeCloseTo(0.1, 5);
+  });
+
+  it("пустая броня без распознаваемых полей → 0.1", () => {
+    expect(computeArmorReduction({ stats: {} })).toBeCloseTo(0.1, 5);
+    expect(computeArmorReduction({ id: "naked", name_ru: "ничего" })).toBeCloseTo(0.1, 5);
   });
 });
