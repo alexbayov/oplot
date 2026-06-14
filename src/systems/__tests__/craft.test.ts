@@ -5,11 +5,11 @@ import type { Item } from "../../types";
 
 const items = ((): Record<string, Item> => {
   const arr = [
-    item("wood", "resource", 1),
-    item("cloth", "resource", 0.5),
-    item("scrap", "resource", 0.5),
-    item("gunpowder", "resource", 0.5),
-    item("pistol", "weapon_ranged", 1.5),
+    item("wood", "material", 1),
+    item("cloth", "material", 0.5),
+    item("scrap", "material", 0.5),
+    item("gunpowder", "material", 0.5),
+    item("pistol", "weapon", 1.5),
   ];
   const out: Record<string, Item> = {};
   for (const it of arr) out[it.id] = it;
