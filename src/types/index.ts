@@ -1,19 +1,13 @@
 export type {
   ArmorItem,
-  ArmorStats,
+  ComponentItem,
   ConsumableItem,
-  ConsumableStats,
   Item,
-  ItemStats,
+  ItemKind,
   ItemTier,
-  ItemType,
-  NoiseLevel,
-  ResourceItem,
-  ResourceStats,
-  WeaponMeleeItem,
-  WeaponMeleeStats,
-  WeaponRangedItem,
-  WeaponRangedStats,
+  MaterialItem,
+  ToolItem,
+  WeaponItem,
 } from "./item";
 export type { DropEntry, Mob, MobBehavior, MobType } from "./mob";
 export type { Perk, PerkStat, PerkType } from "./perk";

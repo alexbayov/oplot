@@ -1,92 +1,24 @@
-export type ItemType =
-  | "resource"
-  | "weapon_melee"
-  | "weapon_ranged"
-  | "armor"
-  | "consumable";
+// M13 PR-5: `Item` теперь синоним M13Item (см. systems/itemSchema.ts).
+//
+// До PR-5 здесь жила legacy-форма с дискриминатором `type`
+// (resource | weapon_melee | weapon_ranged | armor | consumable) и
+// слоем M11Item поверх через ItemRegistry-адаптер. Оба слоя снесены в
+// PR-5: items.json теперь под itemSchema, рантайм-код читает `kind`.
+//
+// Все типы — re-export из itemSchema, чтобы был один источник истины
+// и схема + типы автоматически согласованы (z.infer).
 
+import type { M13Item, M13ItemKind } from "../systems/itemSchema";
+
+export type Item = M13Item;
+export type ItemKind = M13ItemKind;
 export type ItemTier = 1 | 2 | 3 | 4 | 5;
 
-export type NoiseLevel = "low" | "medium" | "high";
-
-export interface ResourceStats {}
-
-export interface WeaponMeleeStats {
-  damage_min: number;
-  damage_max: number;
-  attack_speed: number;
-  noise: NoiseLevel;
-}
-
-export interface WeaponRangedStats {
-  damage_min: number;
-  damage_max: number;
-  attack_speed: number;
-  noise: NoiseLevel;
-  ammo_id: string;
-  ammo_per_shot: number;
-}
-
-export interface ArmorStats {
-  defense: number;
-  evasion_bonus_pct?: number;
-  vs_melee_bonus?: number;
-}
-
-export interface ConsumableStats {
-  effect_type: "heal" | "ammo_refill";
-  effect_value: number;
-  charges: number;
-}
-
-export type ItemStats =
-  | ResourceStats
-  | WeaponMeleeStats
-  | WeaponRangedStats
-  | ArmorStats
-  | ConsumableStats;
-
-interface ItemBase {
-  id: string;
-  name_ru: string;
-  type: ItemType;
-  tier: ItemTier;
-  zone_origin: string;
-  weight_kg: number;
-  description_ru: string;
-  flavor_ru: string;
-  recipe_id: string | null;
-  stats: ItemStats;
-}
-
-export type ResourceItem = ItemBase & {
-  type: "resource";
-  stats: ResourceStats;
-};
-
-export type WeaponMeleeItem = ItemBase & {
-  type: "weapon_melee";
-  stats: WeaponMeleeStats;
-};
-
-export type WeaponRangedItem = ItemBase & {
-  type: "weapon_ranged";
-  stats: WeaponRangedStats;
-};
-
-export type ArmorItem = ItemBase & {
-  type: "armor";
-  stats: ArmorStats;
-};
-
-export type ConsumableItem = ItemBase & {
-  type: "consumable";
-  stats: ConsumableStats;
-};
-
-export type Item =
-  | ResourceItem
-  | WeaponMeleeItem
-  | WeaponRangedItem
-  | ArmorItem
-  | ConsumableItem;
+// Узкие алиасы по kind для мест где удобно разделить дискриминацию
+// (InventoryScene tooltip, sortie weapon/armor read).
+export type MaterialItem = Extract<Item, { kind: "material" }>;
+export type ComponentItem = Extract<Item, { kind: "component" }>;
+export type ConsumableItem = Extract<Item, { kind: "consumable" }>;
+export type WeaponItem = Extract<Item, { kind: "weapon" }>;
+export type ArmorItem = Extract<Item, { kind: "armor" }>;
+export type ToolItem = Extract<Item, { kind: "tool" }>;

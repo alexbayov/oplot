@@ -53,6 +53,11 @@ const commonItemFields = {
   description_ru: z.string(),
   flavor_ru: z.string().optional(),
   recipe_id: z.string().nullable(),
+  // D3 (PR-5): durability_max несётся optional на каждом предмете.
+  // Система durability будет приварена в PR-6 вместе с крафт-UI; пока
+  // поле гарантирует что авторские значения (13 предметов в каталоге
+  // на момент миграции) не теряются при первом проходе.
+  durability_max: z.number().int().positive().optional(),
 } as const;
 
 export const WEAPON_SLOTS = ["barrel", "action", "stock", "mod"] as const;
@@ -74,14 +79,60 @@ const componentSchema = z.object({
   stats: z.object({}).strict().optional(),
 });
 
+// D1 (PR-5): consumable.stats несёт ЛИБО {effect_value, charges} для
+// «использовать» (бинты, аптечки, патроны, адреналин), ЛИБО
+// {damage_min, damage_max} для бросаемых (гранаты, молотов). 4 бросаемых
+// в каталоге на момент миграции: rgd5/f1/rgo/craft_molotov.
+//
+// `effect_type` — z.enum, не свободный string. Без enum опечатки в
+// эффекте проходят молча и баг ищется через QA, а не падает на boot.
+// Расширять enum по мере добавления новых эффектов — backward-compat.
+//
+// Если у бросаемых появятся фьюз/радиус/AoE — выделить в kind
+// `throwable`. Сейчас refine это временный мост чтобы не плодить kind
+// ради 4 предметов (2% каталога) без активных потребителей формы.
+const CONSUMABLE_EFFECT_TYPES = [
+  "heal",
+  "ammo_refill",
+  "initiative_boost",
+  "cover_boost",
+  "mech_disable",
+  "explosive_thrown",
+  "incendiary_thrown",
+] as const;
+
+const consumableStatsSchema = z
+  .object({
+    effect_type: z.enum(CONSUMABLE_EFFECT_TYPES),
+    effect_value: z.number().optional(),
+    charges: z.number().int().positive().optional(),
+    damage_min: z.number().nonnegative().optional(),
+    damage_max: z.number().nonnegative().optional(),
+  })
+  .refine(
+    (s) => {
+      const isThrowable =
+        s.effect_type === "explosive_thrown" ||
+        s.effect_type === "incendiary_thrown";
+      if (isThrowable) {
+        return (
+          typeof s.damage_min === "number" && typeof s.damage_max === "number"
+        );
+      }
+      return (
+        typeof s.effect_value === "number" && typeof s.charges === "number"
+      );
+    },
+    {
+      message:
+        "consumable: throwable требует {damage_min, damage_max}; иначе {effect_value, charges}",
+    },
+  );
+
 const consumableSchema = z.object({
   kind: z.literal("consumable"),
   ...commonItemFields,
-  stats: z.object({
-    effect_type: z.string().min(1),
-    effect_value: z.number(),
-    charges: z.number().int().positive(),
-  }),
+  stats: consumableStatsSchema,
 });
 
 const weaponSchema = z.object({
