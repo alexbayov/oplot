@@ -26,8 +26,8 @@ describe("computeWeight", () => {
 
   test("sums count * weight_kg per stack", () => {
     const items = idx(
-      item("wood", "resource", 2),
-      item("cloth", "resource", 1),
+      item("wood", "material", 2),
+      item("cloth", "material", 1),
     );
     const inventory = [
       { item_id: "wood", count: 3 },
@@ -37,7 +37,7 @@ describe("computeWeight", () => {
   });
 
   test("skips unknown item_ids", () => {
-    const items = idx(item("wood", "resource", 2));
+    const items = idx(item("wood", "material", 2));
     expect(
       computeWeight(
         [
@@ -51,7 +51,7 @@ describe("computeWeight", () => {
 });
 
 describe("canAddItem", () => {
-  const items = idx(item("wood", "resource", 2));
+  const items = idx(item("wood", "material", 2));
 
   test("true when fits exactly", () => {
     expect(canAddItem(28, "wood", 1, 30, items)).toBe(true);
@@ -128,8 +128,8 @@ describe("computeReturnTime", () => {
 describe("applyLootLoss", () => {
   test("matches GDD example: wood 3x2kg + cloth 4x1kg → cloth 4 remains", () => {
     const items = idx(
-      item("wood", "resource", 2),
-      item("cloth", "resource", 1),
+      item("wood", "material", 2),
+      item("cloth", "material", 1),
     );
     const inventory = [
       { item_id: "wood", count: 3 },
@@ -145,9 +145,9 @@ describe("applyLootLoss", () => {
 
   test("drops at least half of weight; remaining weight < total", () => {
     const items = idx(
-      item("a", "resource", 5),
-      item("b", "resource", 3),
-      item("c", "resource", 1),
+      item("a", "material", 5),
+      item("b", "material", 3),
+      item("c", "material", 1),
     );
     const inventory = [
       { item_id: "a", count: 2 },
@@ -163,8 +163,8 @@ describe("applyLootLoss", () => {
 
   test("uniform-weight items: drops first half deterministically by id order", () => {
     const items = idx(
-      item("a", "resource", 1),
-      item("b", "resource", 1),
+      item("a", "material", 1),
+      item("b", "material", 1),
     );
     const inventory = [
       { item_id: "a", count: 4 },

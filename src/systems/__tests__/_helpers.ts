@@ -1,4 +1,4 @@
-import type { Item, Mob, Recipe } from "../../types";
+import type { Item, ItemKind, Mob, Recipe } from "../../types";
 
 // Seeded LCG used by tests to make RNG-dependent systems deterministic.
 export const seededRng = (seed: number): (() => number) => {
@@ -22,69 +22,60 @@ export const sequenceRng = (values: number[]): (() => number) => {
   };
 };
 
+// M13 test factory: строит Item per kind с дефолтными stats. До PR-5
+// принимал legacy `type` ("weapon_melee"/"weapon_ranged"/"armor"/...) и
+// собирал legacy stats; теперь kind-discriminator + сужённые stats.
+// Все потребители (sortie тесты, craft тесты) пользуются дефолтами
+// либо переопределяют их через `extra`.
+const base = (id: string, weight_kg: number) => ({
+  id,
+  name_ru: id,
+  tier: 1 as const,
+  zone_origin: "test",
+  weight_kg,
+  description_ru: "",
+  flavor_ru: "",
+  recipe_id: null,
+});
+
 export const item = (
   id: string,
-  type: Item["type"],
+  kind: ItemKind,
   weight_kg: number,
-  extra: Partial<Item> = {},
+  extra: Record<string, unknown> = {},
 ): Item => {
-  const base = {
-    id,
-    name_ru: id,
-    type,
-    tier: 1 as const,
-    zone_origin: "test",
-    weight_kg,
-    description_ru: "",
-    flavor_ru: "",
-    recipe_id: null,
-    ...extra,
-  };
-  if (type === "resource") {
-    return { ...base, type, stats: {} };
+  const b = base(id, weight_kg);
+  switch (kind) {
+    case "material":
+      return { ...b, kind, stats: {}, ...extra } as Item;
+    case "component":
+      return { ...b, kind, fits: "weapon", stats: {}, ...extra } as Item;
+    case "weapon":
+      return {
+        ...b,
+        kind,
+        slot: "action",
+        stats: { damage_min: 1, damage_max: 1 },
+        ...extra,
+      } as Item;
+    case "armor":
+      return {
+        ...b,
+        kind,
+        slot: "plate",
+        stats: { armor_value: 1 },
+        ...extra,
+      } as Item;
+    case "consumable":
+      return {
+        ...b,
+        kind,
+        stats: { effect_type: "heal", effect_value: 10, charges: 1 },
+        ...extra,
+      } as Item;
+    case "tool":
+      return { ...b, kind, stats: { tool_type: "test" }, ...extra } as Item;
   }
-  if (type === "weapon_melee") {
-    return {
-      ...base,
-      type,
-      stats: {
-        damage_min: 1,
-        damage_max: 1,
-        attack_speed: 100,
-        noise: "low" as const,
-      },
-    };
-  }
-  if (type === "weapon_ranged") {
-    return {
-      ...base,
-      type,
-      stats: {
-        damage_min: 1,
-        damage_max: 1,
-        attack_speed: 100,
-        noise: "low" as const,
-        ammo_id: "ammo_pistol",
-        ammo_per_shot: 1,
-      },
-    };
-  }
-  if (type === "armor") {
-    return {
-      ...base,
-      type,
-      stats: { defense: 1 },
-    };
-  }
-  return {
-    ...base,
-    type: "consumable",
-    stats: {
-      effect_type: "heal" as const,
-      effect_value: 10,
-      charges: 1,
-    },
-  };
 };
 
 export const mob = (id: string, overrides: Partial<Mob> = {}): Mob => ({

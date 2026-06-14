@@ -19,58 +19,69 @@ const TIER_LABEL: Record<number, string> = {
   3: "Превосходный",
 };
 
-const TYPE_LABEL_RU: Record<string, string> = {
-  resource: "Ресурс",
+const KIND_LABEL_RU: Record<string, string> = {
+  material: "Материал",
+  component: "Компонент",
   consumable: "Расходник",
-  weapon_melee: "Оружие ближнего боя",
-  weapon_ranged: "Оружие дальнего боя",
+  weapon: "Оружие",
   armor: "Броня",
+  tool: "Инструмент",
 };
 
-const NOISE_LABEL_RU: Record<string, string> = {
-  low: "тихий",
-  medium: "средний",
-  high: "громкий",
+// M13 (CATCH 2): тултипы переписаны на kind-discriminator + сужённые
+// stats. attack_speed/noise/ammo_id/ammo_per_shot/vs_melee_bonus/
+// vs_ranged_bonus снесены вместе с легаси-формой items.json — поля
+// больше не существуют после миграции PR-5, а тулипы на undefined
+// показывали бы пусто и молча. Возвращаются в PR-6 если/когда нужны
+// под новый стат-блок component вкладов.
+const EFFECT_LABEL_RU: Record<string, (n: number) => string> = {
+  heal: (n) => `Восстанавливает ${n} HP`,
+  ammo_refill: (n) => `Патронов: +${n}`,
+  initiative_boost: (n) => `+${n} к инициативе`,
+  cover_boost: (n) => `Укрытие: +${n}`,
+  mech_disable: (n) => `Отключает механику (${n})`,
 };
 
 const formatStats = (item: Item): string[] => {
-  const s = (item.stats ?? {}) as Record<string, unknown>;
   const lines: string[] = [];
-  if (item.type === "weapon_melee" || item.type === "weapon_ranged") {
-    if (typeof s.damage_min === "number" && typeof s.damage_max === "number") {
-      lines.push(`Урон: ${s.damage_min}–${s.damage_max}`);
+  switch (item.kind) {
+    case "weapon": {
+      const s = item.stats;
+      if (s && typeof s.damage_min === "number" && typeof s.damage_max === "number") {
+        lines.push(`Урон: ${s.damage_min}–${s.damage_max}`);
+      }
+      break;
     }
-    if (typeof s.attack_speed === "number") {
-      lines.push(`Скорость: ${s.attack_speed}`);
+    case "armor": {
+      const s = item.stats;
+      if (s && typeof s.armor_value === "number") lines.push(`Защита: ${s.armor_value}`);
+      break;
     }
-    if (typeof s.noise === "string") {
-      lines.push(`Шум: ${NOISE_LABEL_RU[s.noise] ?? s.noise}`);
+    case "consumable": {
+      const s = item.stats;
+      if (
+        s.effect_type === "explosive_thrown" ||
+        s.effect_type === "incendiary_thrown"
+      ) {
+        if (typeof s.damage_min === "number" && typeof s.damage_max === "number") {
+          lines.push(`Урон при броске: ${s.damage_min}–${s.damage_max}`);
+        }
+      } else if (typeof s.effect_value === "number") {
+        const fmt = EFFECT_LABEL_RU[s.effect_type];
+        lines.push(fmt ? fmt(s.effect_value) : `${s.effect_type}: ${s.effect_value}`);
+      }
+      if (typeof s.charges === "number" && s.charges > 1) {
+        lines.push(`Зарядов: ${s.charges}`);
+      }
+      break;
     }
-    if (typeof s.ammo_id === "string" && typeof s.ammo_per_shot === "number") {
-      const ammoName = GameState.data.items[s.ammo_id]?.name_ru ?? s.ammo_id;
-      lines.push(`Патрон: ${ammoName} (${s.ammo_per_shot}/выстрел)`);
-    }
-  } else if (item.type === "armor") {
-    if (typeof s.defense === "number") lines.push(`Защита: ${s.defense}`);
-    if (typeof s.vs_melee_bonus === "number" && s.vs_melee_bonus > 0) {
-      lines.push(`Бонус против ближ.: +${s.vs_melee_bonus}`);
-    }
-    if (typeof s.vs_ranged_bonus === "number" && s.vs_ranged_bonus > 0) {
-      lines.push(`Бонус против дальн.: +${s.vs_ranged_bonus}`);
-    }
-  } else if (item.type === "consumable") {
-    if (typeof s.effect_type === "string" && typeof s.effect_value === "number") {
-      const effectMap: Record<string, string> = {
-        heal: `Восстанавливает ${s.effect_value} HP`,
-        adrenaline: `+${s.effect_value} к скорости`,
-        antidote: `Снимает яд (${s.effect_value})`,
-        stun: `Оглушает (${s.effect_value} сек)`,
-      };
-      lines.push(effectMap[s.effect_type] ?? `${s.effect_type}: ${s.effect_value}`);
-    }
-    if (typeof s.charges === "number" && s.charges > 1) {
-      lines.push(`Зарядов: ${s.charges}`);
-    }
+    case "component":
+    case "material":
+    case "tool":
+      // Stats у этих kind либо пустой объект, либо несут авторские поля
+      // (tool_type / uses), которые UI пока не показывает. Тултипы по
+      // ним остаются только с базовой инфой (name + flavor).
+      break;
   }
   return lines;
 };
@@ -144,7 +155,7 @@ export class InventoryScene extends Phaser.Scene {
     const showTooltip = (anchorX: number, anchorY: number, item: Item, stackCount: number) => {
       const tier = item.tier ?? 1;
       const tierColor = (TIER_COLOR[tier] ?? TIER_COLOR[1]) as number;
-      const typeStr = TYPE_LABEL_RU[item.type] ?? item.type;
+      const typeStr = KIND_LABEL_RU[item.kind] ?? item.kind;
       const totalWeight = (item.weight_kg * stackCount).toFixed(1);
 
       ttName.setText(item.name_ru ?? item.id);
@@ -313,10 +324,8 @@ export class InventoryScene extends Phaser.Scene {
       createSmallButton(this, panelCenterX, yBase + 162, btnLabel, 200, btnAction);
     };
 
-    const weaponsInStash = stash.filter(
-      (s) => items[s.item_id]?.type === "weapon_melee" || items[s.item_id]?.type === "weapon_ranged",
-    );
-    const armorInStash = stash.filter((s) => items[s.item_id]?.type === "armor");
+    const weaponsInStash = stash.filter((s) => items[s.item_id]?.kind === "weapon");
+    const armorInStash = stash.filter((s) => items[s.item_id]?.kind === "armor");
 
     renderEquipmentSlot(
       "Оружие",

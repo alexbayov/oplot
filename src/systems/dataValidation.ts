@@ -12,11 +12,13 @@ export interface CountExpectations {
 }
 
 export const M7_EXPECTED: CountExpectations = {
-  // M13 PR-2: zones ужаты с 9 до 3 (forest/warehouse/factory). Остальные 6 —
-  // в docs/redesign/archive/m14-zones.md до M14.
+  // M13 PR-2: zones ужаты с 9 до 3 (forest/warehouse/factory).
   zones: 3,
   items: 187,
-  recipes: 71,
+  // M13 PR-5: рецепты сняты до пустого массива (живой craft-UI и
+  // recipe-rebuild возвращаются в PR-6 целостным куском). Остальные
+  // 71 рецепта удалены вместе с item_class=craft путём в legacy-каталоге.
+  recipes: 0,
   mobs: 11,
   sfx: 10,
 };

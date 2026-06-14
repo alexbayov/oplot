@@ -21,7 +21,7 @@ describe("dataValidation", () => {
 
   test("validateRecipeRefs resolves valid references", () => {
     const data: ContentData = {
-      items: { wood: item("wood", "resource", 2) },
+      items: { wood: item("wood", "material", 2) },
       mobs: {},
       recipes: {
         r1: recipe({ id: "r1", result_id: "wood", ingredients: [{ item_id: "wood", count: 1 }] }),

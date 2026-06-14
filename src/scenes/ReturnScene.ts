@@ -226,7 +226,7 @@ export class ReturnScene extends Phaser.Scene {
         const doubled: InventoryStack[] = [];
         for (const stack of player.backpack) {
           const item = GameState.data.items[stack.item_id];
-          if (item && item.type === "resource") {
+          if (item && item.kind === "material") {
             doubled.push({ item_id: stack.item_id, count: stack.count });
           }
         }

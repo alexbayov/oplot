@@ -6,7 +6,7 @@ import type { Encounter } from "../types/encounter";
 import type { SkillNode } from "../types/skillNode";
 import { setNarrative } from "../systems/sortieResolve";
 import { setSfxRegistry, preloadSfx, loadSfxRegistry } from "../systems/audio";
-import { softWarnCounts, validateRecipeRefs, validateZoneShapes } from "../systems/dataValidation";
+import { softWarnCounts, validateItemShapes, validateRecipeRefs, validateZoneShapes } from "../systems/dataValidation";
 import { loadJson } from "../utils/loader";
 import { createSubtitle, createTitle } from "./sceneUi";
 import { initPlatform } from "../systems/platform";
@@ -130,11 +130,17 @@ export class BootScene extends Phaser.Scene {
           `[BootScene] Zone schema mismatch (soft): ${zoneIssues.join("; ")}`,
         );
       }
-      // M13 PR-3: itemSchema-валидация на boot НЕ вайрится — в PR-3 она
-      // падала бы на всех 187 предметах старой схемы, маскируя реальные
-      // ошибки за ожидаемым шумом. Вайрим в PR-4 в том же коммите, что
-      // мигрирует items.json — тогда первая жизнь валидатора против
-      // соответствующих данных, и любой warn = реальный дрейф.
+      // M13 PR-5: itemSchema приварен теперь, когда items.json мигрирован
+      // под kind-таксономию. До PR-5 валидатор падал бы на 187 legacy-
+      // предметах — реальный дрейф спрятался бы за ожидаемым шумом. Soft-
+      // warn (не throw) ровно так же, как для zones и recipe-ref-ов: любая
+      // реальная schema-дивергенция всплывает в console DEV-сборки.
+      const itemIssues = validateItemShapes(Object.values(items));
+      if (itemIssues.length > 0) {
+        console.warn(
+          `[BootScene] Item schema mismatch (soft): ${itemIssues.join("; ")}`,
+        );
+      }
 
       const sfxReg = await loadSfxRegistry();
       if (sfxReg) {
