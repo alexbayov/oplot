@@ -127,4 +127,27 @@ describe("Content integration — items.json under M13 schema", () => {
       expect(c.fits).toBe("weapon");
     }
   });
+
+  test("PR-6a: pm_* парты собираются в валидный WeaponInstance (structural)", async () => {
+    // M13 PR-6a: гейт собираемости, не числа. Цифры вкладов 60 партов
+    // приедут с Виктора (preflight OP1, anchored to catalog damage bands).
+    // Пока контракт: 4 pm_* парта прогоняются через assembleWeapon, не
+    // throw, результат имеет ожидаемую форму с invariants:
+    //   damage_min ≥ 0 (floor),  damage_max ≥ damage_min (clamp).
+    const { assembleWeapon } = await import("../../systems/weaponAssembly");
+    const items = loadRealItems();
+    const pmParts = items
+      .filter((i) => i.id.startsWith("pm_"))
+      .filter(
+        (i): i is Extract<M13Item, { kind: "component" }> => i.kind === "component",
+      );
+    expect(pmParts.length).toBeGreaterThan(0);
+    const w = assembleWeapon(pmParts, "wi_pm_test");
+    expect(w.slot).toBe("action");
+    expect(w.stats.damage_min).toBeGreaterThanOrEqual(0);
+    expect(w.stats.damage_max).toBeGreaterThanOrEqual(w.stats.damage_min);
+    expect(w.durability_max).toBeGreaterThanOrEqual(0);
+    expect(w.durability_current).toBe(w.durability_max);
+    expect(w.parts).toEqual(pmParts.map((p) => p.id));
+  });
 });

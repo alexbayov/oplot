@@ -327,29 +327,45 @@ export class InventoryScene extends Phaser.Scene {
     const weaponsInStash = stash.filter((s) => items[s.item_id]?.kind === "weapon");
     const armorInStash = stash.filter((s) => items[s.item_id]?.kind === "armor");
 
+    // M13 PR-6a (C9): equip-handlers переписаны под новую discriminated
+    // equip-форму. Оружейный switcher циклит между catalog-стволами в
+    // stash (crafted-инстансы вне scope этого экрана — равиваются в
+    // PR-6b с краф-UI). Бронепный switcher показывает один представительский
+    // slot=plate; полноценный 3-slot equip UI уезжает в PR-6b.
+    const currentEquippedWeaponId =
+      player.equipped_weapon?.kind === "catalog" ? player.equipped_weapon.id : null;
     renderEquipmentSlot(
       "Оружие",
-      player.equipped_weapon_id,
+      currentEquippedWeaponId,
       dp.y + 60,
       weaponsInStash.length > 0 ? "Сменить оружие" : "Нет другого",
       () => {
         if (weaponsInStash.length === 0) return;
-        const idx = weaponsInStash.findIndex((s) => s.item_id === player.equipped_weapon_id);
+        const idx = weaponsInStash.findIndex((s) => s.item_id === currentEquippedWeaponId);
         const next = weaponsInStash[(idx + 1) % weaponsInStash.length];
-        if (next) player.equipped_weapon_id = next.item_id;
+        if (next) player.equipped_weapon = { kind: "catalog", id: next.item_id };
         this.scene.restart();
       },
     );
+    const currentEquippedPlateId = player.equipped_armor_ids.plate ?? null;
     renderEquipmentSlot(
       "Броня",
-      player.equipped_armor_id,
+      currentEquippedPlateId,
       dp.y + 270,
       armorInStash.length > 0 ? "Сменить броню" : "Нет другой",
       () => {
         if (armorInStash.length === 0) return;
-        const idx = armorInStash.findIndex((s) => s.item_id === player.equipped_armor_id);
+        const idx = armorInStash.findIndex((s) => s.item_id === currentEquippedPlateId);
         const next = armorInStash[(idx + 1) % armorInStash.length];
-        if (next) player.equipped_armor_id = next.item_id;
+        if (next) {
+          const nextItem = items[next.item_id];
+          if (nextItem && nextItem.kind === "armor") {
+            player.equipped_armor_ids = {
+              ...player.equipped_armor_ids,
+              [nextItem.slot]: next.item_id,
+            };
+          }
+        }
         this.scene.restart();
       },
     );

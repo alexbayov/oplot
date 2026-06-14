@@ -27,8 +27,13 @@ const createDefaultPlayer = (): PlayerState => ({
   level: HERO_START_LEVEL,
   xp: HERO_START_XP,
   max_weight_kg: HERO_MAX_WEIGHT_KG,
-  equipped_weapon_id: HERO_START_WEAPON_ID,
-  equipped_armor_id: HERO_START_ARMOR_ID,
+  // M13 PR-6a: discriminated equip. Стартовый knife (post-migration
+  // craft_knife) — catalog kind=weapon, плюс пустой crafted_weapons.
+  // Стартовая броня cloth_jacket — armor.slot=plate, в соответствующий
+  // слот; helm/strap пустые.
+  equipped_weapon: { kind: "catalog", id: HERO_START_WEAPON_ID },
+  crafted_weapons: [],
+  equipped_armor_ids: { plate: HERO_START_ARMOR_ID },
   perks: [],
   backpack: [],
   gas: 5,

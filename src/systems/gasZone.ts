@@ -2,7 +2,11 @@ import type { InventoryStack, PlayerState } from "../state/types";
 import type { Zone } from "../types";
 
 export const playerHasGasMask = (player: PlayerState): boolean => {
-  if (player.equipped_armor_id === "gas_mask") return true;
+  // M13 PR-6a: gas_mask мигрирован в armor.slot=helm (PR-5 D-armor
+  // table). До PR-6a жил один equipped_armor_id; сейчас 3-slot,
+  // gas_mask должен сидеть конкретно в helm. Проверяем оба пути:
+  // надетый в helm-слот + в рюкзаке.
+  if (player.equipped_armor_ids.helm === "gas_mask") return true;
   return player.backpack.some((s: InventoryStack) => s.item_id === "gas_mask");
 };
 

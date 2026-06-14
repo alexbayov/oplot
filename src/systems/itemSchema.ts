@@ -72,11 +72,31 @@ const materialSchema = z.object({
   stats: z.object({}).strict().optional(),
 });
 
+// M13 PR-6a: component.stats — additive scalar contribution на ключи
+// целевого kind. Ассемблер суммирует по ключам, потом применяет floor
+// (damage_min ≥ 0, итог clamp). Multiplier и roll-range-per-part
+// отклонены: первый порядко-зависим без базы, второй — rng-внутри-rng
+// без потребителя (формула sortieResolve читает только damage_avg).
+//
+// weight_kg ОТСУТСТВУЕТ в contribute — собранное оружие весит ровно
+// sum(part.weight_kg) из commonItemFields. Одно «вес» на одно поле,
+// без семантического пересечения.
+//
+// Когда в M14+ появится accuracy/noise и реально процентный мод,
+// добавим `contribute_mult` отдельным объектом. Сейчас additive
+// scalar — единственная форма с живым потребителем (ассемблер).
 const componentSchema = z.object({
   kind: z.literal("component"),
   ...commonItemFields,
   fits: z.enum(["weapon", "armor"]),
-  stats: z.object({}).strict().optional(),
+  stats: z
+    .object({
+      damage_min: z.number().int().optional(),
+      damage_max: z.number().int().optional(),
+      durability_max: z.number().int().nonnegative().optional(),
+    })
+    .strict()
+    .optional(),
 });
 
 // D1 (PR-5): consumable.stats несёт ЛИБО {effect_value, charges} для

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { migrateSnapshot, _testRemapId, ITEM_MIGRATION_MAP } from "../migrations";
 import type { VersionedSnapshot } from "../migrations";
+import { SAVE_VERSION } from "../../config";
 
 const makeV1Snapshot = (
   overrides: Partial<VersionedSnapshot> = {},
@@ -25,7 +26,7 @@ describe("migrateSnapshot v1 → v2", () => {
   test("v1 snapshot (no version) gets full chain to v3", () => {
     const v1 = makeV1Snapshot();
     const v2 = migrateSnapshot(v1);
-    expect(v2.version).toBe(4);
+    expect(v2.version).toBe(SAVE_VERSION);
   });
 
   test("knife → craft_knife", () => {
@@ -78,21 +79,33 @@ describe("migrateSnapshot v1 → v2", () => {
       inventory: [{ id: "craft_knife", count: 1 }],
     };
     const result = migrateSnapshot(v2);
-    expect(result.version).toBe(4);
+    expect(result.version).toBe(SAVE_VERSION);
     expect(result.inventory).toEqual(v2.inventory);
   });
 
-  test("v4 snapshot passes through unchanged version", () => {
+  test("v4 snapshot gets bumped to current SAVE_VERSION (v5 stamp-only)", () => {
+    // M13 PR-6a: v4→v5 — version stamp, без поля-данных (snapshot не
+    // несёт equipped state, см. migrations.ts:migrateV4ToV5). Тест
+    // фиксирует контракт «v4 → SAVE_VERSION без потерь полей».
     const v4: VersionedSnapshot = { ...makeV1Snapshot(), version: 4 };
     const migrated = migrateSnapshot(v4);
-    expect(migrated.version).toBe(4);
+    expect(migrated.version).toBe(SAVE_VERSION);
+    expect(migrated.inventory).toEqual(v4.inventory);
+    expect(migrated.baseStash).toEqual(v4.baseStash);
+  });
+
+  test("v5 snapshot — passthrough unchanged", () => {
+    const v5: VersionedSnapshot = { ...makeV1Snapshot(), version: 5 };
+    const migrated = migrateSnapshot(v5);
+    expect(migrated.version).toBe(5);
+    expect(migrated).toEqual(v5);
   });
 
   test("migrateSnapshot идемпотентна на любой версии", () => {
     const v1 = makeV1Snapshot();
     const once = migrateSnapshot(v1);
     const twice = migrateSnapshot(once);
-    expect(twice.version).toBe(4);
+    expect(twice.version).toBe(SAVE_VERSION);
     expect(twice).toEqual(once);
   });
 
@@ -130,7 +143,7 @@ describe("v2 -> v3 migration (M11.4 skill tree)", () => {
       perks: ["toughness", "scavenger", "unknown_perk"],
     };
     const v4 = migrateSnapshot(v2);
-    expect(v4.version).toBe(4);
+    expect(v4.version).toBe(SAVE_VERSION);
     expect(Array.isArray(v4.unlockedSkillNodes)).toBe(true);
     expect(typeof v4.skillPoints).toBe("number");
   });
@@ -138,7 +151,7 @@ describe("v2 -> v3 migration (M11.4 skill tree)", () => {
   test("v1 -> v4 chain works", () => {
     const v1 = makeV1Snapshot();
     const out = migrateSnapshot(v1);
-    expect(out.version).toBe(4);
+    expect(out.version).toBe(SAVE_VERSION);
   });
 
   test("v3 -> v4 sets baseResources and injuries defaults", () => {
@@ -149,7 +162,7 @@ describe("v2 -> v3 migration (M11.4 skill tree)", () => {
       skillPoints: 2,
     };
     const v4 = migrateSnapshot(v3);
-    expect(v4.version).toBe(4);
+    expect(v4.version).toBe(SAVE_VERSION);
     expect(v4.unlockedSkillNodes).toEqual(["marks_1"]);
     expect(v4.skillPoints).toBe(2);
     expect(v4.baseResources).toEqual({ water: 0, fuel: 0, metal: 0, food: 0 });

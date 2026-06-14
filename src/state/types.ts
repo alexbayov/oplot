@@ -1,6 +1,39 @@
 import type { Item, Mob, Perk, RadioSignal, Recipe, Zone } from "../types";
 import type { Encounter } from "../types/encounter";
 import type { SkillNode } from "../types/skillNode";
+import type { WeaponInstance } from "../systems/weaponAssembly";
+
+/**
+ * M13 PR-6a: эквипнутое оружие. Discriminated union по `kind`:
+ * - "catalog" — id из items.json (одно из 32 цельных оружий, kind=weapon,
+ *   slot=action). Stats читаются из каталога, durability не применима.
+ * - "crafted" — id экземпляра из `crafted_weapons[]`. Stats заморожены
+ *   при сборке (`assembleWeapon`), durability мутируется через
+ *   `applyDurabilityHit`. Сломанный (`isBroken`) автоматически unequip-
+ *   ается snapshotHero-логикой и падает в bare-hands fallback (4/7).
+ *
+ * До PR-6a жил один `equipped_weapon_id: string` — неоднозначный, не
+ * различал «id шаблона» от «id инстанса». Новая discriminated форма
+ * делает невалидное состояние «оба установлены» непредставимым (C2).
+ */
+export type EquippedWeapon =
+  | { kind: "catalog"; id: string }
+  | { kind: "crafted"; id: string };
+
+/**
+ * M13 PR-6a: эквипнутая броня в три слота. helm | plate | strap по
+ * armorSchema. До PR-6a жил один `equipped_armor_id: string` —
+ * single-slot, что не отражало geometry брони (маска + жилет + щит
+ * одновременно). Сейчас три independent слота, snapshotHero суммирует
+ * armor_value по слотам, `computeArmorReduction` применяет
+ * floor/clamp на агрегате (C8: floor защищает от worse-than-naked
+ * именно на итоге, а не на каждом слоте).
+ */
+export interface EquippedArmor {
+  helm?: string;
+  plate?: string;
+  strap?: string;
+}
 
 export interface InventoryStack {
   item_id: string;
@@ -51,8 +84,23 @@ export interface PlayerState {
   level: number;
   xp: number;
   max_weight_kg: number;
-  equipped_weapon_id: string;
-  equipped_armor_id: string;
+  /**
+   * M13 PR-6a: discriminated catalog|crafted. До PR-6a (save v4) —
+   * `equipped_weapon_id: string`. Migration v4→v5 заворачивает старый
+   * id в `{kind:"catalog", id}`.
+   */
+  equipped_weapon: EquippedWeapon | null;
+  /**
+   * M13 PR-6a: owned crafted instances. До PR-6a не существовало.
+   * Migration v4→v5 инициализирует пустым массивом.
+   */
+  crafted_weapons: WeaponInstance[];
+  /**
+   * M13 PR-6a: three-slot armor. До PR-6a (save v4) — одиночный
+   * `equipped_armor_id: string`. Migration v4→v5 ставит старый id
+   * в соответствующий слот по `armor.slot` из каталога (helm/plate/strap).
+   */
+  equipped_armor_ids: EquippedArmor;
   perks: Perk[];
   /** M11.4: ID открытых узлов skill tree (заменяет flat perks). */
   unlockedSkillNodes?: string[];
