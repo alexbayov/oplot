@@ -955,7 +955,10 @@
     "recipe_id": "recipe_mod_pbs_universal",
     "flavor_ru": "«Маленькая деталь — большая разница.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": -1,
+      "damage_max": -1
+    }
   },
   {
     "kind": "material",
@@ -1011,7 +1014,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 1,
+      "damage_max": 2,
+      "durability_max": 23
+    }
   },
   {
     "kind": "component",
@@ -1024,7 +1031,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 11
+    }
   },
   {
     "kind": "component",
@@ -1037,7 +1046,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 7,
+      "durability_max": 11
+    }
   },
   {
     "kind": "material",
@@ -1265,7 +1278,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 2,
+      "damage_max": 3,
+      "durability_max": 23
+    }
   },
   {
     "kind": "component",
@@ -1278,7 +1295,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 11
+    }
   },
   {
     "kind": "component",
@@ -1291,7 +1310,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 5,
+      "damage_max": 8,
+      "durability_max": 11
+    }
   },
   {
     "kind": "weapon",
@@ -1320,7 +1343,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 14,
+      "durability_max": 15
+    }
   },
   {
     "kind": "component",
@@ -1333,7 +1360,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -1346,7 +1375,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -1359,7 +1390,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 5,
+      "durability_max": 29
+    }
   },
   {
     "kind": "component",
@@ -1372,7 +1407,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 8,
+      "damage_max": 12,
+      "durability_max": 14
+    }
   },
   {
     "kind": "component",
@@ -1385,7 +1424,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -1398,7 +1439,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -1411,7 +1454,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 4,
+      "durability_max": 27
+    }
   },
   {
     "kind": "weapon",
@@ -1504,7 +1551,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 2,
+      "damage_max": 2,
+      "durability_max": 27
+    }
   },
   {
     "kind": "component",
@@ -1517,7 +1568,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -1530,7 +1583,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 8,
+      "durability_max": 14
+    }
   },
   {
     "kind": "component",
@@ -1543,7 +1600,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "material",
@@ -1596,7 +1655,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 14,
+      "durability_max": 16
+    }
   },
   {
     "kind": "component",
@@ -1609,7 +1672,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -1622,7 +1687,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 5,
+      "durability_max": 33
+    }
   },
   {
     "kind": "component",
@@ -1635,7 +1704,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "material",
@@ -1720,7 +1791,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 14,
+      "durability_max": 18
+    }
   },
   {
     "kind": "component",
@@ -1733,7 +1808,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "component",
@@ -1746,7 +1823,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 5,
+      "durability_max": 34
+    }
   },
   {
     "kind": "component",
@@ -1759,7 +1840,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "weapon",
@@ -1788,7 +1871,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 16,
+      "durability_max": 16
+    }
   },
   {
     "kind": "component",
@@ -1801,7 +1888,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 5,
+      "durability_max": 33
+    }
   },
   {
     "kind": "component",
@@ -1814,7 +1905,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 16
+    }
   },
   {
     "kind": "material",
@@ -1890,7 +1983,10 @@
     "recipe_id": "recipe_mod_pbs1",
     "flavor_ru": "«Маленькая деталь — большая разница.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": -1,
+      "damage_max": -1
+    }
   },
   {
     "kind": "component",
@@ -1932,7 +2028,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 11,
+      "damage_max": 16,
+      "durability_max": 18
+    }
   },
   {
     "kind": "component",
@@ -1945,7 +2045,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "component",
@@ -1958,7 +2060,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 6,
+      "durability_max": 34
+    }
   },
   {
     "kind": "component",
@@ -1971,7 +2077,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "weapon",
@@ -2016,7 +2124,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 6,
+      "damage_max": 10,
+      "durability_max": 14
+    }
   },
   {
     "kind": "component",
@@ -2029,7 +2141,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -2042,7 +2156,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 2,
+      "damage_max": 3,
+      "durability_max": 27
+    }
   },
   {
     "kind": "component",
@@ -2055,7 +2173,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "weapon",
@@ -2168,7 +2288,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 9,
+      "damage_max": 13,
+      "durability_max": 16
+    }
   },
   {
     "kind": "component",
@@ -2181,7 +2305,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -2194,7 +2320,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 3,
+      "damage_max": 4,
+      "durability_max": 33
+    }
   },
   {
     "kind": "component",
@@ -2207,7 +2337,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "material",
@@ -2232,7 +2364,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 10,
+      "damage_max": 15,
+      "durability_max": 19
+    }
   },
   {
     "kind": "component",
@@ -2245,7 +2381,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 6
+    }
   },
   {
     "kind": "component",
@@ -2258,7 +2396,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 6
+    }
   },
   {
     "kind": "component",
@@ -2271,7 +2411,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 5,
+      "durability_max": 38
+    }
   },
   {
     "kind": "component",
@@ -2284,7 +2428,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 6
+    }
   },
   {
     "kind": "weapon",
@@ -2386,7 +2532,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 11,
+      "damage_max": 16,
+      "durability_max": 20
+    }
   },
   {
     "kind": "component",
@@ -2399,7 +2549,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -2412,7 +2564,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -2425,7 +2579,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 7
+    }
   },
   {
     "kind": "component",
@@ -2438,7 +2594,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 6,
+      "durability_max": 39
+    }
   },
   {
     "kind": "weapon",
@@ -2467,7 +2627,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 12,
+      "damage_max": 18,
+      "durability_max": 18
+    }
   },
   {
     "kind": "component",
@@ -2480,7 +2644,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "component",
@@ -2493,7 +2659,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 9
+    }
   },
   {
     "kind": "component",
@@ -2506,7 +2674,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 4,
+      "damage_max": 6,
+      "durability_max": 34
+    }
   },
   {
     "kind": "consumable",
@@ -2551,7 +2723,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 16,
+      "damage_max": 24,
+      "durability_max": 22
+    }
   },
   {
     "kind": "component",
@@ -2564,7 +2740,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -2577,7 +2755,9 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   },
   {
     "kind": "component",
@@ -2590,7 +2770,11 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "damage_min": 6,
+      "damage_max": 8,
+      "durability_max": 44
+    }
   },
   {
     "kind": "component",
@@ -2603,6 +2787,8 @@
     "recipe_id": null,
     "flavor_ru": "«Половина — не половина. Без неё — ничего.»",
     "fits": "weapon",
-    "stats": {}
+    "stats": {
+      "durability_max": 8
+    }
   }
 ]
