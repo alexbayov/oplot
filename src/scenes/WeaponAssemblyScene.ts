@@ -25,6 +25,10 @@ import type { ComponentItem } from "../types";
 
 interface InitData {
   family?: string;
+  // M13 PR-6b-2 fix: pickedIds протягивается через scene.restart, иначе
+  // init() стирает Set и ни одна карточка не подсвечивается (Phaser
+  // зовёт init заново на каждом restart). См. PR #191 P1.
+  pickedIds?: string[];
 }
 
 const UNIVERSAL = "universal";
@@ -40,7 +44,7 @@ export class WeaponAssemblyScene extends Phaser.Scene {
 
   public init(data?: InitData): void {
     this.selectedFamily = data?.family ?? null;
-    this.selectedPartIds = new Set();
+    this.selectedPartIds = new Set(data?.pickedIds ?? []);
     this.errorText = null;
   }
 
@@ -228,7 +232,10 @@ export class WeaponAssemblyScene extends Phaser.Scene {
         } else {
           this.selectedPartIds.add(part.id);
         }
-        this.scene.restart({ family: this.selectedFamily });
+        this.scene.restart({
+          family: this.selectedFamily,
+          pickedIds: [...this.selectedPartIds],
+        });
       });
       this.add
         .text(x, y, part.name_ru, {
