@@ -17,6 +17,7 @@ import type { ComponentItem } from "../types";
 import type { InventoryStack } from "../state/types";
 import { countInStacks, removeFromStack } from "../state/GameState";
 import { AssemblyError, validateAssemblyParts } from "./assemblyValidation";
+import type { AssemblyInvalidReason } from "./assemblyValidation";
 import {
   assembleWeapon,
   nextWeaponInstanceId,
@@ -63,4 +64,60 @@ export const assembleFromStash = (
 
   const instance = assembleWeapon(parts, nextWeaponInstanceId(rng));
   return { instance, nextStash };
+};
+
+// ─── M13 PR-6b-3 — pure decision helper для Verstak energy gate ─────
+
+/**
+ * Результат `attemptAssembly` — discriminated union, чтобы caller (UI)
+ * не дублировал логику gate'а. Все три формы взаимоисключающие.
+ */
+export type AssemblyAttemptResult =
+  | {
+      kind: "ok";
+      instance: WeaponInstance;
+      nextStash: InventoryStack[];
+      energy_spent: number;
+    }
+  | { kind: "no_energy"; required: number; available: number }
+  | { kind: "invalid"; reason: AssemblyInvalidReason };
+
+/**
+ * Pure-helper для G4 atomic energy×parts ordering. Принимает входное
+ * состояние, возвращает либо «ok + updates», либо «no_energy» (gate),
+ * либо «invalid» (parts validator). Caller (UI) применяет updates ИЛИ
+ * показывает ошибку — без своей gate-логики.
+ *
+ * Инвариант: _energy списана ⟺ оружие создано._ В этой функции это
+ * означает: только `kind:"ok"` несёт `energy_spent`, остальные ветки
+ * не трогают энергию.
+ *
+ * Порядок проверок строгий, как в `tryAssemble` (preflight §10 G4):
+ *   1. Energy pre-check → `no_energy`, parts/stash не тронуты.
+ *   2. `assembleFromStash` атомарно (валидация + consume).
+ *      - `AssemblyError` → `invalid`, energy не списана.
+ *      - missing part → bubbles up как plain Error.
+ *   3. Success → `ok` с `energy_spent = cost`. Caller списывает.
+ */
+export const attemptAssembly = (
+  parts: ComponentItem[],
+  stash: InventoryStack[],
+  energy: number,
+  cost: number,
+  rng: () => number,
+): AssemblyAttemptResult => {
+  if (energy < cost) {
+    return { kind: "no_energy", required: cost, available: energy };
+  }
+  try {
+    const { instance, nextStash } = assembleFromStash(parts, stash, rng);
+    return { kind: "ok", instance, nextStash, energy_spent: cost };
+  } catch (e) {
+    if (e instanceof AssemblyError) {
+      return { kind: "invalid", reason: e.reason };
+    }
+    // missing-part defensive Error — bubble up, не маскируем
+    // (это integrity-bug, не player-facing).
+    throw e;
+  }
 };

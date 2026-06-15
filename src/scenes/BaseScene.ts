@@ -4,7 +4,13 @@ import { computeWeight } from "../systems/weight";
 import { consumePendingAccrualSummary, saveToCloud } from "../systems/cloudSave";
 import { accrualHasYield } from "../systems/offlineProgression";
 import { activeSignals } from "../systems/radio";
-import { GARDEN_CAP, xpToNext } from "../state/balance";
+import {
+  GARDEN_CAP,
+  GENERATOR_CYCLE_MS,
+  GENERATOR_ENERGY_PER_CYCLE,
+  GENERATOR_FUEL_PER_CYCLE,
+  xpToNext,
+} from "../state/balance";
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 
@@ -125,6 +131,18 @@ const HOTSPOTS: Hotspot[] = [
     glow: 0x8aa86f,
     action: (s) => s.showBunkStatus(),
   },
+  // M13 PR-6b-3: generator (bunk-model). Координаты приближённые,
+  // pixel-perfect — задача редизайна. Status-toast при тапе (D8).
+  {
+    id: "generator",
+    x: 380,
+    y: 480,
+    hw: 80,
+    hh: 50,
+    label: "ГЕНЕРАТОР",
+    glow: 0xe8b547,
+    action: (s) => s.showGeneratorStatus(),
+  },
 ];
 
 export class BaseScene extends Phaser.Scene {
@@ -166,6 +184,7 @@ export class BaseScene extends Phaser.Scene {
     // Обновляется через restart() сцены при collect (паттерн тот же что
     // существующий weapon-swap в InventoryScene).
     this.renderGardenCounter();
+    this.renderGeneratorBadge();
 
     // ── Костёр: subtle animated flicker overlay ───────────────
     this.attachKettleAnimation();
@@ -504,6 +523,27 @@ export class BaseScene extends Phaser.Scene {
   }
 
   /**
+   * M13 PR-6b-3 — Generator status toast. Без collect-кнопки (D8): energy
+   * пишется НАПРЯМУЮ в baseResources.energy при accrue (bunk-model).
+   * Mirror'ит `showBunkStatus` по форме.
+   */
+  public showGeneratorStatus(): void {
+    const energy = GameState.baseResources.energy;
+    const fuel = GameState.baseResources.fuel;
+    const cycleMin = Math.round(GENERATOR_CYCLE_MS / 60_000);
+    if (fuel === 0) {
+      this.showToast(
+        `⚡ ${energy} (нет топлива — генератор простаивает)`,
+      );
+    } else {
+      this.showToast(
+        `⚡ ${energy} (производит +${GENERATOR_ENERGY_PER_CYCLE}/${cycleMin}мин, ` +
+          `тратит ⛽${GENERATOR_FUEL_PER_CYCLE}/${cycleMin}мин)`,
+      );
+    }
+  }
+
+  /**
    * Always-on счётчик буфера грядки рядом с garden-хотспотом. Не tooltip —
    * виден всегда, потому что игроку нужно знать «когда собрать».
    */
@@ -514,6 +554,26 @@ export class BaseScene extends Phaser.Scene {
     this.add
       .text(garden.x, garden.y + garden.hh + 8, `🌱 ${buffer}/${GARDEN_CAP}`, {
         color: "#d4c5a0",
+        backgroundColor: "#1a120880",
+        fontFamily: "Oswald, sans-serif",
+        fontSize: "13px",
+        padding: { x: 6, y: 2 },
+      })
+      .setOrigin(0.5)
+      .setDepth(7);
+  }
+
+  /**
+   * M13 PR-6b-3 — Always-on energy counter рядом с generator-хотспотом.
+   * Идиома `🌱 N/CAP` грядки, но без cap (energy unbounded).
+   */
+  private renderGeneratorBadge(): void {
+    const gen = HOTSPOTS.find((h) => h.id === "generator");
+    if (!gen) return;
+    const energy = GameState.baseResources.energy ?? 0;
+    this.add
+      .text(gen.x, gen.y + gen.hh + 8, `⚡ ${energy}`, {
+        color: "#e8b547",
         backgroundColor: "#1a120880",
         fontFamily: "Oswald, sans-serif",
         fontSize: "13px",

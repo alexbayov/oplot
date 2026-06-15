@@ -25,7 +25,7 @@ export interface SortieGoalDef {
   loot_bias?: BaseResourceId;
 }
 
-export type BaseResourceId = "water" | "fuel" | "metal" | "food";
+export type BaseResourceId = "water" | "fuel" | "metal" | "food" | "energy";
 
 export interface InjuryState {
   kind: "arm" | "leg" | "head";

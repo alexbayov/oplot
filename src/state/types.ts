@@ -70,6 +70,13 @@ export interface BaseResources {
   fuel: number;
   metal: number;
   food: number;
+  /**
+   * M13 PR-6b-3: energy для Verstak-gate. Производится `generator` building
+   * (bunk-model: fuel→energy напрямую в baseResources, без buffer).
+   * Потребляется `assembleFromStash` через UI-gate в `WeaponAssemblyScene`.
+   * Unbounded (как все baseResources).
+   */
+  energy: number;
 }
 
 /**
@@ -82,7 +89,7 @@ export interface BaseResources {
  * Генератор/верстак — 6b вместе с краф-UI (без живого consumer-а они
  * пустые placeholders).
  */
-export type BuildingId = "garden" | "bunk";
+export type BuildingId = "garden" | "bunk" | "generator";
 
 /**
  * Per-building runtime state.

@@ -31,4 +31,4 @@ export const MAX_LEVEL = 5;
  *      валидное «слот пуст», проверяем через `in`, не `?? default`,
  *      иначе `null ?? default` стёр бы намеренно пустой слот.
  */
-export const SAVE_VERSION = 7 as const;
+export const SAVE_VERSION = 8 as const;

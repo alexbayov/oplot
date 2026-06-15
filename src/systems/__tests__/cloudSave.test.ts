@@ -210,8 +210,10 @@ describe("cloudSave", () => {
     const v5 = makeSnapshot({ version: 5, saved_at: new Date().toISOString() });
     GameState.reset();
     applySnapshot(v5 as never);
+    // M13 PR-6b-3 G3: даже v5-сейв через v5→v6→v7→v8 chain получает
+    // generator (Trap B-2 закрыт в migrateV7ToV8 ensure-by-id).
     const ids = GameState.buildings.map((b) => b.id).sort();
-    expect(ids).toEqual(["bunk", "garden"]);
+    expect(ids).toEqual(["bunk", "garden", "generator"]);
   });
 
   // ── M13 PR-6b-1 persistence regression (durability-wire) ──────────
@@ -279,14 +281,67 @@ describe("cloudSave", () => {
     expect(GameState.player.equipped_weapon).toBeNull();
   });
 
-  test("migrateV6ToV7 идемпотентен — двойной запуск = no-op", async () => {
-    // Test 6 part C: главный guard в migrateSnapshot — `version >= SAVE_VERSION
-    // → passthrough`, плюс v6→v7 сам по себе stamp-only, не дёргает поля.
+  test("migrate chain идемпотентен — двойной запуск = no-op", async () => {
+    // M13 PR-6b-3: после v7→v8 (data-full с ensure-by-id) проверяем что
+    // повторный запуск миграции на уже-актуальном snapshot не дёргает
+    // baseResources/buildings. Главный guard в migrateSnapshot —
+    // `version >= SAVE_VERSION → passthrough`, плюс ensure-by-id
+    // идемпотентен (находит generator и не добавляет ещё один).
     const { migrateSnapshot } = await import("../../state/migrations");
     const v6 = makeSnapshot({ version: 6, saved_at: "2026-06-14T00:00:00Z" });
     const once = migrateSnapshot(v6 as never);
     const twice = migrateSnapshot(once);
-    expect(once.version).toBe(7);
+    expect(once.version).toBe(8);
     expect(twice).toEqual(once);
+  });
+
+  // ── M13 PR-6b-3 Verstak energy + generator persistence ──────────
+
+  test("(e) v7 save с [garden,bunk] получает generator через v7→v8 applySnapshot", async () => {
+    const { GameState } = await import("../../state/GameState");
+    const { applySnapshot } = await import("../cloudSave");
+    GameState.reset();
+    const v7 = makeSnapshot({
+      version: 7,
+      saved_at: new Date().toISOString(),
+      buildings: [
+        { id: "garden", accumulated_output: 5 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+      baseResources: { water: 1, fuel: 2, metal: 3, food: 4 },
+    });
+    applySnapshot(v7 as never);
+    const ids = GameState.buildings.map((b) => b.id).sort();
+    expect(ids).toEqual(["bunk", "garden", "generator"]);
+    expect(GameState.baseResources.energy).toBe(0);
+    expect(GameState.baseResources.water).toBe(1);
+    expect(GameState.baseResources.fuel).toBe(2);
+  });
+
+  test("energy + generator переживают save → getData(whitelist) → load", async () => {
+    const { GameState } = await import("../../state/GameState");
+    GameState.reset();
+    GameState.baseResources = {
+      water: 0, fuel: 0, metal: 0, food: 0, energy: 7,
+    };
+    GameState.buildings = [
+      { id: "garden", accumulated_output: 0 },
+      { id: "bunk", accumulated_output: 0 },
+      { id: "generator", accumulated_output: 0 },
+    ];
+
+    const { serializeGameState, applySnapshot, CLOUD_SAVE_KEYS } = await import("../cloudSave");
+    const saved = serializeGameState() as unknown as Record<string, unknown>;
+    const fromCloud: Record<string, unknown> = {};
+    for (const k of CLOUD_SAVE_KEYS as string[]) {
+      fromCloud[k] = saved[k];
+    }
+
+    GameState.reset();
+    applySnapshot(fromCloud as never);
+
+    expect(GameState.baseResources.energy).toBe(7);
+    const ids = GameState.buildings.map((b) => b.id).sort();
+    expect(ids).toEqual(["bunk", "garden", "generator"]);
   });
 });

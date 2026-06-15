@@ -78,6 +78,9 @@ export const BASE_RESOURCE_ITEMS: Readonly<Record<BaseResourceId, readonly strin
   fuel: ["fuel", "machine_oil", "oil"],
   metal: ["scrap_metal", "scrap", "metal", "electronics", "circuitry", "industrial_cable"],
   food: ["canned_food", "food", "ration_bar"],
+  // M13 PR-6b-3: energy не лутается в sortie — производится generator-ом
+  // на базе. Пустой массив = «никакой item не маппится в этот ресурс».
+  energy: [],
 };
 
 const DEPTH_THREAT_MULTIPLIER: Readonly<Record<1 | 2 | 3, number>> = {

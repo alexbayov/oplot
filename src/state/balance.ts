@@ -60,6 +60,19 @@ export const MAX_OFFLINE_WINDOW_MS = 8 * 60 * 60 * 1000;
  */
 export const MIN_ACCRUAL_WINDOW_MS = 60 * 1000;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M13 PR-6b-3 — Verstak energy gate + generator (bunk-model)
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Генератор: fuel/цикл (стоимость энергии). */
+export const GENERATOR_FUEL_PER_CYCLE = 1;
+/** Генератор: energy/цикл (пишется НАПРЯМУЮ в `baseResources.energy`, без buffer). */
+export const GENERATOR_ENERGY_PER_CYCLE = 1;
+/** Генератор: длина цикла. Между bunk (10мин) и garden (30мин). */
+export const GENERATOR_CYCLE_MS = 5 * 60 * 1000;
+/** Verstak-gate: flat cost за каждый успешный `assembleFromStash`. */
+export const ASSEMBLE_ENERGY_COST = 5;
+
 // XP table — M4 formula: xp_to_next(level) = round(40 * level^1.5).
 // M1/M2 formula preserved as xpToNextM1 for reference only.
 export const xpToNextM1 = (level: number): number =>

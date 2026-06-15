@@ -7,6 +7,9 @@ const ruRegistry: Record<string, string> = {
   assembly_invalid_duplicate_part: "Нельзя ставить одну и ту же деталь дважды",
   assembly_invalid_no_structural_part:
     "Нужна основа: рамка или ствольная коробка",
+  // M13 PR-6b-3 — Verstak energy gate + generator status.
+  not_enough_energy_for_assembly: "Не хватает энергии для сборки",
+  generator_status: "Генератор: производит ⚡{rate}/{cycleMin}мин, потребляет ⛽{cost}/{cycleMin}мин",
 };
 
 export const t = (key: string): string => {
