@@ -14,6 +14,7 @@ import { ReturnScene } from "./scenes/ReturnScene";
 import { SortieScene } from "./scenes/SortieScene";
 import { SortieRunScene } from "./scenes/SortieRunScene";
 import { SkillTreeScene } from "./scenes/SkillTreeScene";
+import { WeaponAssemblyScene } from "./scenes/WeaponAssemblyScene";
 import { initPlatform } from "./systems/platform";
 import { startCloudSave } from "./systems/cloudSave";
 import { initIap, checkUnprocessedPurchases, registerConsumable } from "./systems/iap";
@@ -52,6 +53,7 @@ const config: Phaser.Types.Core.GameConfig = {
     ReturnScene,
     InventoryScene,
     CraftScene,
+    WeaponAssemblyScene,
     RadioScene,
     ProgressionScene,
     SkillTreeScene,

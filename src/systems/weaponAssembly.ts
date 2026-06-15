@@ -15,6 +15,7 @@
 // в PR-5 вместе с M11-слоем и не воскрешается). Импорт из этого модуля.
 
 import type { ComponentItem } from "../types";
+import { AssemblyError, validateAssemblyParts } from "./assemblyValidation";
 
 export interface WeaponInstance {
   /**
@@ -64,6 +65,11 @@ export const assembleWeapon = (
   parts: ComponentItem[],
   id: string,
 ): WeaponInstance => {
+  // M13 PR-6b-2: первой строкой — замороженный 3-reason validate. Invalid
+  // parts → throws с reason-кодом; UI ловит и локализует через `t()`.
+  const validation = validateAssemblyParts(parts);
+  if (!validation.ok) throw new AssemblyError(validation.reason);
+
   let damageMin = 0;
   let damageMax = 0;
   let durabilityMax = 0;

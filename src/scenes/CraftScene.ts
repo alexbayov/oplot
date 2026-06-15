@@ -177,6 +177,13 @@ export class CraftScene extends Phaser.Scene {
       bg.setStrokeStyle(2, isActive ? 0xc5a267 : 0x4a4035);
       bg.setInteractive({ useHandCursor: true });
       bg.on("pointerup", () => {
+        // M13 PR-6b-2: таб «Сборка» уходит в свободный ассемблер вместо
+        // фильтра пустого recipe-grid (recipes.json пуст, ассемблер
+        // живёт в WeaponAssemblyScene).
+        if (tab.value === "assemble") {
+          this.scene.start("WeaponAssemblyScene");
+          return;
+        }
         if (this.filter !== tab.value) {
           this.scene.start("CraftScene", { filter: tab.value, page: 0 });
         }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assembleWeapon, nextWeaponInstanceId } from "../weaponAssembly";
+import { AssemblyError } from "../assemblyValidation";
 import type { ComponentItem } from "../../types";
 
 const part = (
@@ -22,8 +23,8 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
   it("суммирует damage_min/max/durability_max по всем партам", () => {
     const w = assembleWeapon(
       [
-        part("frame", { damage_min: 1, damage_max: 2, durability_max: 10 }),
-        part("barrel", { damage_min: 2, damage_max: 4, durability_max: 5 }),
+        part("pm_frame", { damage_min: 1, damage_max: 2, durability_max: 10 }),
+        part("pm_slide", { damage_min: 2, damage_max: 4, durability_max: 5 }),
       ],
       "wi_test1",
     );
@@ -32,15 +33,14 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
     expect(w.durability_max).toBe(15);
     expect(w.durability_current).toBe(15);
     expect(w.slot).toBe("action");
-    expect(w.parts).toEqual(["frame", "barrel"]);
+    expect(w.parts).toEqual(["pm_frame", "pm_slide"]);
   });
 
   it("commutativity: порядок частей не влияет на результат", () => {
-    // Свойство которое мотивирует выбор additive (preflight 6a).
     const partsA = [
-      part("a", { damage_min: 1, damage_max: 3, durability_max: 5 }),
-      part("b", { damage_min: 2, damage_max: 4, durability_max: 7 }),
-      part("c", { damage_min: 0, damage_max: 1, durability_max: 3 }),
+      part("pm_frame", { damage_min: 1, damage_max: 3, durability_max: 5 }),
+      part("pm_slide", { damage_min: 2, damage_max: 4, durability_max: 7 }),
+      part("pm_magazine", { damage_min: 0, damage_max: 1, durability_max: 3 }),
     ];
     const partsB = [partsA[2], partsA[0], partsA[1]].filter(
       (p): p is ComponentItem => p !== undefined,
@@ -54,8 +54,8 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
 
   it("determinism: один и тот же ввод → один и тот же результат", () => {
     const parts = [
-      part("p1", { damage_min: 1, damage_max: 2, durability_max: 5 }),
-      part("p2", { damage_min: 2, damage_max: 3, durability_max: 5 }),
+      part("pm_frame", { damage_min: 1, damage_max: 2, durability_max: 5 }),
+      part("pm_slide", { damage_min: 2, damage_max: 3, durability_max: 5 }),
     ];
     const w1 = assembleWeapon(parts, "wi_det");
     const w2 = assembleWeapon(parts, "wi_det");
@@ -65,9 +65,9 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
   it("пустые stats у партов — суммируются как нули", () => {
     const w = assembleWeapon(
       [
-        part("empty1", {}),
-        part("empty2", {}),
-        part("good", { damage_min: 1, damage_max: 2 }),
+        part("pm_frame", {}),
+        part("pm_slide", {}),
+        part("pm_magazine", { damage_min: 1, damage_max: 2 }),
       ],
       "wi_empty",
     );
@@ -77,13 +77,10 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
   });
 
   it("floor damage_min ≥ 0: отрицательная сумма обнуляется", () => {
-    // Гипотетический «облегчающий» парт с отрицательным damage_min,
-    // компенсирующий другую часть. Если общая сумма уходит в минус —
-    // floor.
     const w = assembleWeapon(
       [
-        part("base", { damage_min: 1, damage_max: 5 }),
-        part("strip", { damage_min: -10, damage_max: 0 }),
+        part("pm_frame", { damage_min: 1, damage_max: 5 }),
+        part("pm_slide", { damage_min: -10, damage_max: 0 }),
       ],
       "wi_neg",
     );
@@ -92,24 +89,53 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
   });
 
   it("clamp damage_max ≥ damage_min: inverted range не пропускается", () => {
-    // Защита от неконсистентных вкладов: если parts собрались так что
-    // damage_max < damage_min после floor (редкая комбинация), клампим
-    // max до min — иначе sortieResolve получит inverted range.
     const w = assembleWeapon(
-      [
-        part("big_min", { damage_min: 10, damage_max: 2 }),
-      ],
+      [part("pm_frame", { damage_min: 10, damage_max: 2 })],
       "wi_inv",
     );
     expect(w.stats.damage_min).toBe(10);
     expect(w.stats.damage_max).toBe(10);
   });
+});
 
-  it("пустой parts → нулевой инстанс, не throw", () => {
-    const w = assembleWeapon([], "wi_zero");
-    expect(w.stats).toEqual({ damage_min: 0, damage_max: 0 });
-    expect(w.durability_max).toBe(0);
-    expect(w.parts).toEqual([]);
+describe("assembleWeapon — throws AssemblyError на invalid input (PR-6b-2)", () => {
+  it("пустой parts → AssemblyError empty_parts (контракт сменился: бросает, не возвращает 0-инстанс)", () => {
+    let caught: unknown;
+    try {
+      assembleWeapon([], "wi_zero");
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AssemblyError);
+    expect((caught as AssemblyError).reason).toBe("empty_parts");
+  });
+
+  it("дубликат → throws duplicate_part", () => {
+    let caught: unknown;
+    try {
+      assembleWeapon(
+        [part("pm_frame", {}), part("pm_frame", {})],
+        "wi_dup",
+      );
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AssemblyError);
+    expect((caught as AssemblyError).reason).toBe("duplicate_part");
+  });
+
+  it("без структурного парта → throws no_structural_part", () => {
+    let caught: unknown;
+    try {
+      assembleWeapon(
+        [part("mod_pbs1", {}), part("mod_optic_4x", {})],
+        "wi_no_struct",
+      );
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(AssemblyError);
+    expect((caught as AssemblyError).reason).toBe("no_structural_part");
   });
 });
 
