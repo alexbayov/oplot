@@ -16,6 +16,8 @@
 import type { CloudSaveSnapshot } from "../systems/cloudSave";
 import { SAVE_VERSION } from "../config";
 import { PERK_MIGRATION_MAP } from "./SkillTree";
+import { createDefaultBaseResources } from "./GameState";
+import type { BaseResources, BuildingState } from "./types";
 
 /**
  * Карта переименований v1 → v2.
@@ -87,6 +89,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   }
   if (version < 7) {
     next = migrateV6ToV7(next);
+  }
+  if (version < 8) {
+    next = migrateV7ToV8(next);
   }
 
   return next;
@@ -184,7 +189,11 @@ const migrateV3ToV4 = (snap: VersionedSnapshot): VersionedSnapshot => {
   return {
     ...snap,
     version: 4,
-    baseResources: snap.baseResources ?? { water: 0, fuel: 0, metal: 0, food: 0 },
+    // M13 PR-6b-3: используем createDefaultBaseResources() вместо инлайн-
+    // литерала, чтобы новое поле `energy` автоматически попадало в v3→v4
+    // путь миграции. v7→v8 в любом случае добивает energy через
+    // default-first spread (idempotent), но cleaner — закрыть тип сразу.
+    baseResources: snap.baseResources ?? createDefaultBaseResources(),
     injuries: snap.injuries ?? [],
   };
 };
@@ -252,4 +261,54 @@ const migrateV5ToV6 = (snap: VersionedSnapshot): VersionedSnapshot => {
  */
 const migrateV6ToV7 = (snap: VersionedSnapshot): VersionedSnapshot => {
   return { ...snap, version: 7 };
+};
+
+/**
+ * v7 → v8 (M13 PR-6b-3: Verstak energy gate + generator).
+ *
+ * DATA-FULL (НЕ stamp-only). В отличие от v6→v7, эта миграция реально
+ * пишет два поля, и проигнорировать их = тихо мёртвая фича на рантайме:
+ *   - `baseResources.energy = 0` — иначе `accrueGenerator` пишет в undefined
+ *     ключ объекта, `consumeBaseResource` распространяет NaN, Verstak-gate
+ *     читает `< ASSEMBLE_ENERGY_COST` как `false` (т.к. `undefined < N`
+ *     даёт `false`), фича висит на «Не хватает энергии» вечно даже после
+ *     accrue. И ещё хуже: написание `baseResources.energy` через
+ *     `consumeBaseResource("energy", N)` даст `Math.max(0, NaN) = NaN`,
+ *     что попадает в save и распространяется.
+ *   - `generator` building — `offlineProgression.accrueGenerator` делает
+ *     `findBuilding(state.buildings, "generator")` → `if (!gen) return no-op`.
+ *     Length-guard в applySnapshot (`length > 0`) НЕ срабатывает на
+ *     `[garden, bunk]` (length=2 > 0), массив возвращается без generator
+ *     навсегда. Trap B-вариант-2 — описан в preflight §5.
+ *
+ * Форма миграции:
+ *   - `baseResources`: default-first spread → snap values (water/fuel/metal/
+ *     food) побеждают, `energy:0` добивается из дефолта. Идемпотентно
+ *     (energy=N сохраняется на повторе).
+ *   - `buildings`: ensure-by-id. Если массив есть и в нём нет generator —
+ *     добавляем. Если массив отсутствует — пропускаем (applySnapshot потом
+ *     подставит createDefaultBuildings() который уже включает generator).
+ *     Идемпотентно: повторный запуск находит generator и не дублирует.
+ *
+ * Главный guard в migrateSnapshot (`if (version >= SAVE_VERSION) return`)
+ * предотвращает re-entry на v8-snap, но эта миграция всё равно остаётся
+ * идемпотентной — for safety.
+ */
+const ensureBuildingPresent = (
+  buildings: BuildingState[],
+  id: BuildingState["id"],
+): BuildingState[] => {
+  if (buildings.some((b) => b.id === id)) return buildings;
+  return [...buildings, { id, accumulated_output: 0 }];
+};
+
+const migrateV7ToV8 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  const baseResources: BaseResources = {
+    ...createDefaultBaseResources(),
+    ...(snap.baseResources ?? {}),
+  };
+  const buildings = snap.buildings
+    ? ensureBuildingPresent(snap.buildings, "generator")
+    : snap.buildings;
+  return { ...snap, version: 8, baseResources, buildings };
 };

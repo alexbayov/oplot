@@ -27,7 +27,7 @@ import {
 const T0 = 1_000_000_000_000; // arbitrary fixed anchor (avoids Date.now drift)
 
 const baseState = (overrides: Partial<AccrualState> = {}): AccrualState => ({
-  baseResources: { water: 100, fuel: 0, metal: 0, food: 0 },
+  baseResources: { water: 100, fuel: 0, metal: 0, food: 0, energy: 0 },
   buildings: createDefaultBuildings(),
   hp: 50,
   hp_max: 100,
@@ -68,14 +68,14 @@ describe("accrueOffline — pure function contract", () => {
   });
 
   it("cap window: delta=100ч клампится до 8ч, capped_at_max=true", () => {
-    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0 } });
+    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0, energy: 0 } });
     const { summary } = accrueOffline(s, T0, T0 + 100 * 3600 * 1000);
     expect(summary.capped_at_max).toBe(true);
     expect(summary.delta_ms).toBe(MAX_OFFLINE_WINDOW_MS);
   });
 
   it("garden cap: 100ч offline → буфер ровно GARDEN_CAP, без переполнения", () => {
-    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0 } });
+    const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0, energy: 0 } });
     const { state, summary } = accrueOffline(s, T0, T0 + 100 * 3600 * 1000);
     const garden = state.buildings.find((b) => b.id === "garden");
     expect(garden?.accumulated_output).toBe(GARDEN_CAP);
@@ -83,7 +83,7 @@ describe("accrueOffline — pure function contract", () => {
   });
 
   it("input-bounded: water=0 → garden 0 цциклов, water не уходит в минус", () => {
-    const s = baseState({ baseResources: { water: 0, fuel: 0, metal: 0, food: 0 } });
+    const s = baseState({ baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0 } });
     const { state, summary } = accrueOffline(s, T0, T0 + 5 * 3600 * 1000);
     expect(summary.garden_food_added).toBe(0);
     expect(summary.garden_water_spent).toBe(0);
@@ -94,7 +94,7 @@ describe("accrueOffline — pure function contract", () => {
     const s = baseState({
       hp: 95,
       hp_max: 100,
-      baseResources: { water: 0, fuel: 0, metal: 0, food: 100 },
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 100, energy: 0 },
     });
     const { state, summary } = accrueOffline(s, T0, T0 + 8 * 3600 * 1000);
     expect(state.hp).toBe(100);
@@ -107,7 +107,7 @@ describe("accrueOffline — pure function contract", () => {
     const s = baseState({
       hp: 0,
       hp_max: 100,
-      baseResources: { water: 0, fuel: 0, metal: 0, food: 3 },
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 3, energy: 0 },
     });
     const { state, summary } = accrueOffline(s, T0, T0 + 8 * 3600 * 1000);
     expect(summary.bunk_food_spent).toBe(3);
@@ -117,7 +117,7 @@ describe("accrueOffline — pure function contract", () => {
   });
 
   it("детерминизм: один и тот же вход → один и тот же выход", () => {
-    const s = baseState({ baseResources: { water: 20, fuel: 0, metal: 0, food: 30 } });
+    const s = baseState({ baseResources: { water: 20, fuel: 0, metal: 0, food: 30, energy: 0 } });
     const a = accrueOffline(s, T0, T0 + 2 * 3600 * 1000);
     const b = accrueOffline(s, T0, T0 + 2 * 3600 * 1000);
     expect(b.state).toEqual(a.state);
@@ -126,7 +126,7 @@ describe("accrueOffline — pure function contract", () => {
 
   it("ставки матчат балансовые константы (sanity)", () => {
     const s = baseState({
-      baseResources: { water: 10, fuel: 0, metal: 0, food: 0 },
+      baseResources: { water: 10, fuel: 0, metal: 0, food: 0, energy: 0 },
       hp: 50,
       hp_max: 100,
     });
@@ -142,7 +142,7 @@ describe("accrueOffline — pure function contract", () => {
     // С food=10, 30 мин = 3 цикла койки = -3 food, +15 hp (50→65)
     const withFood = accrueOffline(
       baseState({
-        baseResources: { water: 0, fuel: 0, metal: 0, food: 10 },
+        baseResources: { water: 0, fuel: 0, metal: 0, food: 10, energy: 0 },
         hp: 50,
         hp_max: 100,
       }),
@@ -168,10 +168,12 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 5, garden_water_spent: 1, bunk_hp_added: 0, bunk_food_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0,
     })).toBe(true);
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 5, bunk_food_spent: 1,
+      generator_energy_added: 0, generator_fuel_spent: 0,
     })).toBe(true);
   });
 
@@ -179,10 +181,97 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0,
     })).toBe(false);
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: true, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0,
     })).toBe(false);
+  });
+
+  it("true если generator начислил energy", () => {
+    expect(accrualHasYield({
+      delta_ms: 1, rolled_back: false, capped_at_max: false,
+      garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
+      generator_energy_added: 3, generator_fuel_spent: 3,
+    })).toBe(true);
+  });
+});
+
+// ─── M13 PR-6b-3 generator (bunk-model) ──────────────────────────────
+
+describe("accrueOffline — generator (M13 PR-6b-3)", () => {
+  it("(a) energy ВЫРОС в baseResources.energy (не в accumulated_output) — bunk-model", () => {
+    const s = baseState({
+      baseResources: { water: 0, fuel: 10, metal: 0, food: 0, energy: 0 },
+    });
+    const r = accrueOffline(s, T0, T0 + 10 * 60_000); // 10 min = 2 cycles
+    expect(r.state.baseResources.energy).toBe(2);
+    expect(r.summary.generator_energy_added).toBe(2);
+    // КЛЮЧЕВОЕ: generator.accumulated_output ОСТАЁТСЯ 0 (D4×D8 trap).
+    const gen = r.state.buildings.find((b) => b.id === "generator");
+    expect(gen?.accumulated_output).toBe(0);
+  });
+
+  it("(b) fuel списан 1:1, не уходит в минус (input-bounded)", () => {
+    const s = baseState({
+      baseResources: { water: 0, fuel: 2, metal: 0, food: 0, energy: 0 },
+    });
+    // 1h = 12 cycles теоретически, но fuel=2 ограничивает до 2.
+    const r = accrueOffline(s, T0, T0 + 60 * 60_000);
+    expect(r.state.baseResources.fuel).toBe(0);
+    expect(r.state.baseResources.energy).toBe(2);
+    expect(r.summary.generator_fuel_spent).toBe(2);
+  });
+
+  it("без fuel → 0 циклов, energy не растёт", () => {
+    const s = baseState({
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0 },
+    });
+    const r = accrueOffline(s, T0, T0 + 10 * 60_000);
+    expect(r.state.baseResources.energy).toBe(0);
+    expect(r.summary.generator_energy_added).toBe(0);
+  });
+
+  it("NaN-guard: baseResources.energy === undefined → 0, не NaN", () => {
+    // Синтетический skip-migrate: миграция провалена, energy отсутствует.
+    // accrueGenerator должен прочитать `?? 0` и не писать NaN в save.
+    const s = baseState({
+      baseResources: { water: 0, fuel: 5, metal: 0, food: 0 } as never,
+    });
+    const r = accrueOffline(s, T0, T0 + 10 * 60_000);
+    expect(r.state.baseResources.energy).toBe(2);
+    expect(Number.isFinite(r.state.baseResources.energy)).toBe(true);
+  });
+
+  it("без generator-building → no-op, energy не пишется", () => {
+    // Trap B-вариант-2: миграция провалена, generator отсутствует.
+    // accrueGenerator делает findBuilding и возвращает no-op.
+    const s = baseState({
+      buildings: [
+        { id: "garden", accumulated_output: 0 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+      baseResources: { water: 0, fuel: 10, metal: 0, food: 0, energy: 0 },
+    });
+    const r = accrueOffline(s, T0, T0 + 10 * 60_000);
+    expect(r.state.baseResources.energy).toBe(0);
+    expect(r.summary.generator_energy_added).toBe(0);
+    // fuel тоже не списан.
+    expect(r.state.baseResources.fuel).toBe(10);
+  });
+
+  it("fixed-order [generator, garden, bunk]: накопленная energy не влияет на garden/bunk", () => {
+    // Здания независимы по storage (gen: fuel, garden: water, bunk: food),
+    // но fixed-порядок для детерминизма.
+    const s = baseState({
+      baseResources: { water: 10, fuel: 5, metal: 0, food: 20, energy: 0 },
+      hp: 50,
+    });
+    const r = accrueOffline(s, T0, T0 + 60 * 60_000);
+    expect(r.summary.generator_energy_added).toBeGreaterThan(0);
+    expect(r.summary.garden_food_added).toBeGreaterThan(0);
+    expect(r.summary.bunk_hp_added).toBeGreaterThan(0);
   });
 });

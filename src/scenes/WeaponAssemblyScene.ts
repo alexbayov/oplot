@@ -11,16 +11,14 @@
 // заморожен на 3 кода.
 
 import Phaser from "phaser";
-import { GameState } from "../state/GameState";
+import { GameState, consumeBaseResource } from "../state/GameState";
 import { createButton, createSmallButton, createTitle } from "./sceneUi";
 import { CX, H, W } from "../ui/layout";
-import {
-  AssemblyError,
-  weaponFamily,
-} from "../systems/assemblyValidation";
-import { assembleFromStash } from "../systems/assemblyFlow";
+import { weaponFamily } from "../systems/assemblyValidation";
+import { attemptAssembly } from "../systems/assemblyFlow";
 import { t } from "../systems/locale";
 import { saveToCloud } from "../systems/cloudSave";
+import { ASSEMBLE_ENERGY_COST } from "../state/balance";
 import type { ComponentItem } from "../types";
 
 interface InitData {
@@ -163,9 +161,30 @@ export class WeaponAssemblyScene extends Phaser.Scene {
       universalParts,
     );
 
-    createSmallButton(this, CX, H - 100, "Собрать", 280, () => {
-      this.tryAssemble(familyParts.concat(universalParts));
-    }, true);
+    // M13 PR-6b-3 — Verstak gate UI. Кнопка disabled при `energy < cost`,
+    // inline-help `⚡нужно X, есть Y` под кнопкой. D2 в preflight:
+    // disabled UX лучше чем click→fail, игрок видит причину до тапа.
+    const currentEnergy = GameState.baseResources.energy ?? 0;
+    const hasEnergy = currentEnergy >= ASSEMBLE_ENERGY_COST;
+    if (hasEnergy) {
+      createSmallButton(this, CX, H - 100, "Собрать", 280, () => {
+        this.tryAssemble(familyParts.concat(universalParts));
+      }, true);
+    } else {
+      this.renderDisabledAssembleButton();
+    }
+    this.add
+      .text(
+        CX,
+        H - 70,
+        `⚡ нужно ${ASSEMBLE_ENERGY_COST}, есть ${currentEnergy}`,
+        {
+          color: hasEnergy ? "#8A8070" : "#E8B547",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "13px",
+        },
+      )
+      .setOrigin(0.5);
 
     this.errorText = this.add
       .text(CX, H - 140, "", {
@@ -173,6 +192,25 @@ export class WeaponAssemblyScene extends Phaser.Scene {
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "15px",
         align: "center",
+      })
+      .setOrigin(0.5);
+  }
+
+  /** Non-interactive grey rectangle вместо «Собрать» когда energy
+   * недостаточно. Чёткий visual feedback что фича не доступна. */
+  private renderDisabledAssembleButton(): void {
+    const w = 280;
+    const h = 36;
+    const x = CX;
+    const y = H - 100;
+    const bg = this.add.rectangle(x, y, w, h, 0x1f1c17, 1);
+    bg.setStrokeStyle(2, 0x4a4035);
+    this.add
+      .text(x, y, "Собрать", {
+        color: "#5a5045",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "14px",
+        fontStyle: "bold",
       })
       .setOrigin(0.5);
   }
@@ -248,36 +286,71 @@ export class WeaponAssemblyScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * M13 PR-6b-3 — G4 atomic energy×parts ordering (preflight §10).
+   *
+   * Инвариант: _energy списана ⟺ оружие создано._
+   *
+   * Порядок строгий:
+   *   1. Energy pre-check. Если `< cost` — inline-error, ранний return
+   *      БЕЗ touch'а стеша/энергии (кнопка disabled тоже, но defensive
+   *      double-check на случай race-condition между render и click).
+   *   2. `assembleFromStash` атомарно consume парты ИЛИ throws (parts
+   *      contract — 6b-2). Если throw — energy НЕ списана.
+   *   3. На success: commit парты в state, deduct energy, persist.
+   */
   private tryAssemble(visibleParts: ComponentItem[]): void {
     const picked = visibleParts.filter((p) => this.selectedPartIds.has(p.id));
+
+    // Pure-decision helper закрывает G4 atomic energy×parts ordering
+    // (preflight §10). Caller (этот метод) применяет updates ИЛИ показывает
+    // ошибку — без своей gate-логики. Инвариант: energy списана ⟺
+    // оружие создано (только ветка `ok` несёт `energy_spent`).
+    let result;
     try {
-      const { instance, nextStash } = assembleFromStash(
+      result = attemptAssembly(
         picked,
         GameState.baseStash,
+        GameState.baseResources.energy,
+        ASSEMBLE_ENERGY_COST,
         Math.random,
       );
-      // Авто-equip + persist (D5).
-      GameState.baseStash = nextStash;
-      GameState.player.crafted_weapons = [
-        ...GameState.player.crafted_weapons,
-        instance,
-      ];
-      GameState.player.equipped_weapon = { kind: "crafted", id: instance.id };
-      void saveToCloud();
-      this.showToast(`Собрано: ${instance.name_ru}`);
-      this.time.delayedCall(900, () => {
-        this.scene.start("BaseScene");
-      });
-    } catch (e) {
-      if (e instanceof AssemblyError) {
-        this.showError(t(`assembly_invalid_${e.reason}`));
-        return;
-      }
-      // Defensive integrity (missing part в стеше) — не должно достигать
-      // UI, т.к. picked фильтруется из стеша. Но если достигло —
-      // показываем нейтральное «попробуйте ещё раз», не сырое сообщение.
+    } catch {
+      // Defensive integrity (missing part) — не должно достигать UI,
+      // picked фильтруется из стеша. Если достигло — нейтральное сообщение.
       this.showError("Не удалось собрать. Проверьте детали в инвентаре.");
+      return;
     }
+
+    if (result.kind === "no_energy") {
+      this.showError(t("not_enough_energy_for_assembly"));
+      return;
+    }
+    if (result.kind === "invalid") {
+      this.showError(t(`assembly_invalid_${result.reason}`));
+      return;
+    }
+
+    // result.kind === "ok" — applies updates атомарно.
+    GameState.baseStash = result.nextStash;
+    GameState.player.crafted_weapons = [
+      ...GameState.player.crafted_weapons,
+      result.instance,
+    ];
+    GameState.player.equipped_weapon = {
+      kind: "crafted",
+      id: result.instance.id,
+    };
+    GameState.baseResources = consumeBaseResource(
+      GameState.baseResources,
+      "energy",
+      result.energy_spent,
+    );
+    void saveToCloud();
+    this.showToast(`Собрано: ${result.instance.name_ru}`);
+    this.time.delayedCall(900, () => {
+      this.scene.start("BaseScene");
+    });
   }
 
   private showError(message: string): void {

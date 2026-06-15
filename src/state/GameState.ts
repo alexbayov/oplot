@@ -73,6 +73,7 @@ export const createDefaultBaseResources = (): BaseResources => ({
   fuel: 0,
   metal: 0,
   food: 0,
+  energy: 0,
 });
 
 /**
@@ -83,6 +84,9 @@ export const createDefaultBaseResources = (): BaseResources => ({
 export const createDefaultBuildings = (): BuildingState[] => [
   { id: "garden", accumulated_output: 0 },
   { id: "bunk", accumulated_output: 0 },
+  // M13 PR-6b-3: generator (bunk-model). accumulated_output всегда 0 —
+  // energy пишется НАПРЯМУЮ в baseResources.energy, без UI-collect.
+  { id: "generator", accumulated_output: 0 },
 ];
 
 const state: GameStateShape = {

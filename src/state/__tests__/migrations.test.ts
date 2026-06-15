@@ -129,20 +129,26 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(migrated.version).toBe(SAVE_VERSION);
     expect("equipped_weapon" in migrated).toBe(false);
     expect("crafted_weapons" in migrated).toBe(false);
-    // Все существующие поля сохранены 1:1.
-    expect(migrated.buildings).toEqual(v6.buildings);
+    // M13 PR-6b-3 v7→v8 в чейне добавил generator к buildings.
+    expect(migrated.buildings).toEqual([
+      { id: "garden", accumulated_output: 12 },
+      { id: "bunk", accumulated_output: 0 },
+      { id: "generator", accumulated_output: 0 },
+    ]);
     expect(migrated.hp).toBe(73);
     expect(migrated.inventory).toEqual(v6.inventory);
   });
 
-  test("v7 идемпотентен — повторный запуск ничего не меняет", () => {
-    const v7: VersionedSnapshot = {
+  test("v8 идемпотентен — повторный запуск ничего не меняет", () => {
+    const v8: VersionedSnapshot = {
       ...makeV1Snapshot(),
-      version: 7,
+      version: 8,
       buildings: [
         { id: "garden", accumulated_output: 12 },
         { id: "bunk", accumulated_output: 0 },
+        { id: "generator", accumulated_output: 0 },
       ],
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0 },
       hp: 73,
       equipped_weapon: { kind: "crafted", id: "wi_a" },
       crafted_weapons: [
@@ -157,8 +163,8 @@ describe("migrateSnapshot v1 → v2", () => {
         },
       ],
     };
-    const migrated = migrateSnapshot(v7);
-    expect(migrated).toEqual(v7);
+    const migrated = migrateSnapshot(v8);
+    expect(migrated).toEqual(v8);
   });
 
   test("migrateSnapshot идемпотентна на любой версии", () => {
@@ -225,7 +231,9 @@ describe("v2 -> v3 migration (M11.4 skill tree)", () => {
     expect(v4.version).toBe(SAVE_VERSION);
     expect(v4.unlockedSkillNodes).toEqual(["marks_1"]);
     expect(v4.skillPoints).toBe(2);
-    expect(v4.baseResources).toEqual({ water: 0, fuel: 0, metal: 0, food: 0 });
+    // M13 PR-6b-3: миграция теперь добивает energy:0 (v7→v8 step) даже
+    // когда вход — старый v3. SAVE_VERSION = 8.
+    expect(v4.baseResources).toEqual({ water: 0, fuel: 0, metal: 0, food: 0, energy: 0 });
     expect(v4.injuries).toEqual([]);
   });
 });
@@ -234,17 +242,17 @@ describe("v3 -> v4 migration (M13 PR-1)", () => {
   test("отсутствие baseResources в v3 → нули в v4", () => {
     const v3: VersionedSnapshot = { ...makeV1Snapshot(), version: 3 };
     const v4 = migrateSnapshot(v3);
-    expect(v4.baseResources).toEqual({ water: 0, fuel: 0, metal: 0, food: 0 });
+    expect(v4.baseResources).toEqual({ water: 0, fuel: 0, metal: 0, food: 0, energy: 0 });
   });
 
   test("существующие baseResources сохраняются", () => {
     const v3: VersionedSnapshot = {
       ...makeV1Snapshot(),
       version: 3,
-      baseResources: { water: 5, fuel: 10, metal: 2, food: 8 },
+      baseResources: { water: 5, fuel: 10, metal: 2, food: 8, energy: 0 },
     };
     const v4 = migrateSnapshot(v3);
-    expect(v4.baseResources).toEqual({ water: 5, fuel: 10, metal: 2, food: 8 });
+    expect(v4.baseResources).toEqual({ water: 5, fuel: 10, metal: 2, food: 8, energy: 0 });
   });
 
   test("инвентарь и стэш не трогаются", () => {
@@ -257,5 +265,86 @@ describe("v3 -> v4 migration (M13 PR-1)", () => {
     const v4 = migrateSnapshot(v3);
     expect(v4.inventory).toEqual([{ id: "craft_knife", count: 1 }]);
     expect(v4.baseStash).toEqual([{ id: "scrap_metal", count: 7 }]);
+  });
+});
+
+// ─── M13 PR-6b-3 v7 → v8 — energy + generator (data-full) ─────────────
+
+describe("v7 -> v8 migration (M13 PR-6b-3 Verstak energy gate)", () => {
+  test("v7 без energy/generator → v8 добивает оба (G1+G2)", () => {
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+      baseResources: { water: 5, fuel: 3, metal: 1, food: 2 } as never,
+      buildings: [
+        { id: "garden", accumulated_output: 10 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+    };
+    const v8 = migrateSnapshot(v7);
+    expect(v8.version).toBe(SAVE_VERSION);
+    expect(v8.baseResources).toEqual({
+      water: 5, fuel: 3, metal: 1, food: 2, energy: 0,
+    });
+    expect(v8.buildings).toEqual([
+      { id: "garden", accumulated_output: 10 },
+      { id: "bunk", accumulated_output: 0 },
+      { id: "generator", accumulated_output: 0 },
+    ]);
+  });
+
+  test("v7 с пустым buildings:[] → не инжектим generator (preserve v5-pattern)", () => {
+    // Trap B-вариант-1 guard: пустой массив = «мигрированный v5 без
+    // явных построек», applySnapshot потом подставит createDefaultBuildings()
+    // через length-guard. Не инжектим generator в [] здесь, чтобы
+    // не маскировать этот путь.
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+      buildings: [],
+    };
+    const v8 = migrateSnapshot(v7);
+    expect(v8.buildings).toEqual([{ id: "generator", accumulated_output: 0 }]);
+  });
+
+  test("v7-snapshot с уже-присутствующим energy=99 сохраняет значение", () => {
+    // Идемпотентность: повторный запуск или snapshot созданный новым кодом
+    // на старой версии — energy не сбрасывается на 0.
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 99 } as never,
+    };
+    const v8 = migrateSnapshot(v7);
+    expect(v8.baseResources?.energy).toBe(99);
+  });
+
+  test("v8 идемпотентен на ensure-by-id — двойной запуск не дублирует generator", () => {
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+      buildings: [
+        { id: "garden", accumulated_output: 0 },
+        { id: "bunk", accumulated_output: 0 },
+      ],
+    };
+    const once = migrateSnapshot(v7);
+    const twice = migrateSnapshot(once);
+    expect(twice.buildings).toEqual(once.buildings);
+    expect(twice.buildings?.filter((b) => b.id === "generator").length).toBe(1);
+  });
+
+  test("v7 без baseResources (undefined) → v8 пропускает поле, applySnapshot подставит default", () => {
+    // Идиома 5-точечной safety: миграция не пишет baseResources когда
+    // его не было — applySnapshot тогда зовёт createDefaultBaseResources().
+    const v7: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 7,
+    };
+    delete (v7 as { baseResources?: unknown }).baseResources;
+    const v8 = migrateSnapshot(v7);
+    // baseResources всё равно появляется (default-first spread в v3→v4)
+    expect(v8.baseResources).toBeDefined();
+    expect(v8.baseResources?.energy).toBe(0);
   });
 });

@@ -29,6 +29,9 @@ import {
   GARDEN_CYCLE_MS,
   GARDEN_FOOD_PER_CYCLE,
   GARDEN_WATER_PER_CYCLE,
+  GENERATOR_CYCLE_MS,
+  GENERATOR_ENERGY_PER_CYCLE,
+  GENERATOR_FUEL_PER_CYCLE,
   MAX_OFFLINE_WINDOW_MS,
   MIN_ACCRUAL_WINDOW_MS,
 } from "../state/balance";
@@ -58,6 +61,11 @@ export interface AccrualSummary {
   bunk_hp_added: number;
   /** Food потраченный койкой за этот accrual. */
   bunk_food_spent: number;
+  /** M13 PR-6b-3: energy накопленная генератором в `baseResources.energy`
+   * НАПРЯМУЮ (bunk-model, без buffer). */
+  generator_energy_added: number;
+  /** M13 PR-6b-3: fuel потраченный генератором за этот accrual. */
+  generator_fuel_spent: number;
 }
 
 /**
@@ -85,6 +93,8 @@ const EMPTY_SUMMARY: AccrualSummary = {
   capped_at_max: false,
   garden_food_added: 0,
   garden_water_spent: 0,
+  generator_energy_added: 0,
+  generator_fuel_spent: 0,
   bunk_hp_added: 0,
   bunk_food_spent: 0,
 };
@@ -146,6 +156,64 @@ const accrueGarden = (
     },
     food_added,
     water_spent,
+  };
+};
+
+/**
+ * M13 PR-6b-3 — Считает генератор: потребляет fuel, пишет energy НАПРЯМУЮ
+ * в `baseResources.energy` (bunk-model, без buffer).
+ *
+ * D4 в preflight: симметрично койке, а НЕ грядке. Если бы energy копилась
+ * в `generator.accumulated_output` без UI-collect, Verstak-gate всегда
+ * видел бы 0 → фича мёртвая (юниты не ловят, accrue logic зелёный, gate
+ * зелёный, но connection между ними сломан).
+ *
+ * NaN-guard: `state.baseResources.energy ?? 0` на чтение. Если миграция
+ * провалена и energy === undefined, мы не пишем NaN в save — `Math.max(0,
+ * undefined + N) === Math.max(0, NaN) === NaN` распространяется. Defensive
+ * read закрывает Trap C (preflight §5).
+ *
+ * Generator-only path: если building `generator` отсутствует (старый сейв
+ * без миграции), no-op. Это Trap B-вариант-2: миграция должна закрыть
+ * этот путь, но если она провалена, не пишем мусор в state.
+ */
+const accrueGenerator = (
+  state: AccrualState,
+  deltaMs: number,
+): {
+  state: AccrualState;
+  energy_added: number;
+  fuel_spent: number;
+} => {
+  const generator = findBuilding(state.buildings, "generator");
+  if (!generator) return { state, energy_added: 0, fuel_spent: 0 };
+
+  const theoreticalCycles = Math.floor(deltaMs / GENERATOR_CYCLE_MS);
+  const inputBoundedCycles = Math.floor(
+    state.baseResources.fuel / GENERATOR_FUEL_PER_CYCLE,
+  );
+
+  const cycles = Math.max(0, Math.min(theoreticalCycles, inputBoundedCycles));
+  if (cycles === 0) return { state, energy_added: 0, fuel_spent: 0 };
+
+  const fuel_spent = cycles * GENERATOR_FUEL_PER_CYCLE;
+  const energy_added = cycles * GENERATOR_ENERGY_PER_CYCLE;
+
+  // NaN-guard на чтение: undefined ?? 0 = 0. Распространение NaN в save
+  // закрыто здесь, не на consume-site (consumeBaseResource не знает про
+  // defaults).
+  const currentEnergy = state.baseResources.energy ?? 0;
+
+  return {
+    state: {
+      ...state,
+      baseResources: {
+        ...consumeBaseResource(state.baseResources, "fuel", fuel_spent),
+        energy: currentEnergy + energy_added,
+      },
+    },
+    energy_added,
+    fuel_spent,
   };
 };
 
@@ -221,7 +289,13 @@ export const accrueOffline = (
   const capped = rawDelta > MAX_OFFLINE_WINDOW_MS;
   const delta = Math.min(rawDelta, MAX_OFFLINE_WINDOW_MS);
 
-  const gardenResult = accrueGarden(state, delta);
+  // M13 PR-6b-3: fixed-order [generator, garden, bunk] для детерминизма.
+  // Здания независимы по storage (generator: fuel→energy, garden:
+  // water→buffer, bunk: food→hp), порядок не влияет на резалт, но
+  // зафиксирован чтобы убрать класс «порядок зданий влияет» из
+  // тестов и ревью.
+  const generatorResult = accrueGenerator(state, delta);
+  const gardenResult = accrueGarden(generatorResult.state, delta);
   const bunkResult = accrueBunk(gardenResult.state, delta);
 
   return {
@@ -232,6 +306,8 @@ export const accrueOffline = (
       capped_at_max: capped,
       garden_food_added: gardenResult.food_added,
       garden_water_spent: gardenResult.water_spent,
+      generator_energy_added: generatorResult.energy_added,
+      generator_fuel_spent: generatorResult.fuel_spent,
       bunk_hp_added: bunkResult.hp_added,
       bunk_food_spent: bunkResult.food_spent,
     },
@@ -240,4 +316,6 @@ export const accrueOffline = (
 
 /** True если в summary что-то реально начислилось (для toast-гарда). */
 export const accrualHasYield = (summary: AccrualSummary): boolean =>
-  summary.garden_food_added > 0 || summary.bunk_hp_added > 0;
+  summary.garden_food_added > 0 ||
+  summary.bunk_hp_added > 0 ||
+  summary.generator_energy_added > 0;
