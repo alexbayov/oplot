@@ -2,6 +2,11 @@ import { GameState } from "../state/GameState";
 
 const ruRegistry: Record<string, string> = {
   cloud_save_error: "Ошибка сохранения",
+  // M13 PR-6b-2 — assembly invalid reasons (frozen Model C contract: 3 кода).
+  assembly_invalid_empty_parts: "Выберите хотя бы одну деталь",
+  assembly_invalid_duplicate_part: "Нельзя ставить одну и ту же деталь дважды",
+  assembly_invalid_no_structural_part:
+    "Нужна основа: рамка или ствольная коробка",
 };
 
 export const t = (key: string): string => {
