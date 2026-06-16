@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   AssemblyError,
+  availableFamilies,
   isStructuralPart,
   validateAssemblyParts,
   weaponFamily,
@@ -125,6 +126,32 @@ describe("weaponFamily — UI-gate префикс", () => {
   it("mod_* → universal", () => {
     expect(weaponFamily("mod_pbs1")).toBe("universal");
     expect(weaponFamily("mod_ext_mag_545")).toBe("universal");
+  });
+});
+
+describe("availableFamilies — sorted unique без universal (M14-PR1 D6)", () => {
+  it("mix семейств + mod_* → universal исключён, sorted ASC, unique", () => {
+    const parts = [
+      part("pm_slide"),
+      part("akm_barrel"),
+      part("pm_frame"),
+      part("mod_pbs1"),
+      part("mod_optic_4x"),
+    ];
+    expect(availableFamilies(parts)).toEqual(["akm", "pm"]);
+  });
+
+  it("только mod_* → []", () => {
+    expect(availableFamilies([part("mod_pbs1"), part("mod_light")])).toEqual([]);
+  });
+
+  it("дубли партов одного семейства → семейство один раз", () => {
+    const parts = [part("pm_frame"), part("pm_slide"), part("pm_magazine")];
+    expect(availableFamilies(parts)).toEqual(["pm"]);
+  });
+
+  it("[] → []", () => {
+    expect(availableFamilies([])).toEqual([]);
   });
 });
 

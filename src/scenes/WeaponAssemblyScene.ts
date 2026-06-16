@@ -14,8 +14,8 @@ import Phaser from "phaser";
 import { GameState, consumeBaseResource } from "../state/GameState";
 import { createButton, createSmallButton, createTitle } from "./sceneUi";
 import { CX, H, W } from "../ui/layout";
-import { weaponFamily } from "../systems/assemblyValidation";
-import { attemptAssembly } from "../systems/assemblyFlow";
+import { availableFamilies, weaponFamily } from "../systems/assemblyValidation";
+import { attemptAssembly, previewAssembly } from "../systems/assemblyFlow";
 import { t } from "../systems/locale";
 import { saveToCloud } from "../systems/cloudSave";
 import { ASSEMBLE_ENERGY_COST } from "../state/balance";
@@ -79,16 +79,12 @@ export class WeaponAssemblyScene extends Phaser.Scene {
   }
 
   private renderFamilyPicker(stash: ComponentItem[]): void {
-    const byFamily = new Map<string, ComponentItem[]>();
-    for (const c of stash) {
-      const fam = weaponFamily(c.id);
-      if (fam === UNIVERSAL) continue;
-      const list = byFamily.get(fam) ?? [];
-      list.push(c);
-      byFamily.set(fam, list);
-    }
-
-    const families = Array.from(byFamily.keys()).sort();
+    // M14-PR1 (D6): family-список через pure `availableFamilies` (sorted,
+    // unique, без universal) вместо inline-группировки — поведение 1:1,
+    // но список теперь unit-тестируем.
+    const families = availableFamilies(stash);
+    const countOf = (fam: string): number =>
+      stash.filter((c) => weaponFamily(c.id) === fam).length;
     this.add
       .text(CX, 90, "Выберите семейство", {
         color: "#D4C5A0",
@@ -123,12 +119,11 @@ export class WeaponAssemblyScene extends Phaser.Scene {
       const row = Math.floor(idx / cols);
       const x = startX + col * (cardW + gapX);
       const y = startY + row * (cardH + gapY);
-      const parts = byFamily.get(fam) ?? [];
       createSmallButton(
         this,
         x,
         y,
-        `${fam.toUpperCase()} (${parts.length})`,
+        `${fam.toUpperCase()} (${countOf(fam)})`,
         cardW,
         () => {
           this.scene.start("WeaponAssemblyScene", { family: fam });
@@ -145,14 +140,9 @@ export class WeaponAssemblyScene extends Phaser.Scene {
       (c) => weaponFamily(c.id) === UNIVERSAL,
     );
 
-    this.add
-      .text(CX, 90, `Семейство: ${fam.toUpperCase()}`, {
-        color: "#E8B547",
-        fontFamily: "Oswald, sans-serif",
-        fontSize: "18px",
-        fontStyle: "bold",
-      })
-      .setOrigin(0.5);
+    // M14-PR1 (F1/D1): inline family-табы вместо статического заголовка —
+    // переключение семейства без round-trip «Назад → picker».
+    this.renderFamilyTabs(stash, fam);
 
     this.renderPartGrid("Детали семейства", 120, familyParts);
     this.renderPartGrid(
@@ -160,6 +150,15 @@ export class WeaponAssemblyScene extends Phaser.Scene {
       350,
       universalParts,
     );
+
+    // M14-PR1 (F3/D3/D4): preview статов кандидата. Пересчитывается на
+    // каждом ре-рендере (card toggle уже делает scene.restart → create),
+    // нового реактивного state не нужно. Независим от energy-gate (D4):
+    // игрок видит «что получит» до того как копить энергию.
+    const picked = familyParts
+      .concat(universalParts)
+      .filter((p) => this.selectedPartIds.has(p.id));
+    this.renderPreview(picked);
 
     // M13 PR-6b-3 — Verstak gate UI. Кнопка disabled при `energy < cost`,
     // inline-help `⚡нужно X, есть Y` под кнопкой. D2 в preflight:
@@ -192,6 +191,106 @@ export class WeaponAssemblyScene extends Phaser.Scene {
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "15px",
         align: "center",
+      })
+      .setOrigin(0.5);
+  }
+
+  /**
+   * M14-PR1 (F1/D1) — ряд family-табов сверху селектора. Тап по неактивному
+   * табу → `scene.start` с новым семейством БЕЗ `pickedIds` → выбор
+   * сбрасывается (D2/G4). Это ровно тот же эффект что текущий «Назад →
+   * picker»: межсемейную химеру (`pm_frame` + `akm_barrel`) собрать нельзя,
+   * family-gate цел.
+   */
+  private renderFamilyTabs(stash: ComponentItem[], activeFam: string): void {
+    const families = availableFamilies(stash);
+    // Активное семейство всегда показываем табом, даже если его партов в
+    // стеше не осталось (edge: все парты семейства уже израсходованы/выбраны).
+    if (!families.includes(activeFam)) {
+      families.push(activeFam);
+      families.sort();
+    }
+
+    const n = families.length;
+    const gap = 8;
+    const maxRowW = W - 120;
+    const chipW = Math.min(150, Math.floor((maxRowW - gap * (n - 1)) / n));
+    const chipH = 28;
+    const totalW = n * chipW + (n - 1) * gap;
+    const startX = (W - totalW) / 2 + chipW / 2;
+    const y = 92;
+
+    families.forEach((famName, idx) => {
+      const x = startX + idx * (chipW + gap);
+      const isActive = famName === activeFam;
+      const bg = this.add.rectangle(
+        x,
+        y,
+        chipW,
+        chipH,
+        isActive ? 0x3a2e1a : 0x1f1c17,
+        1,
+      );
+      bg.setStrokeStyle(2, isActive ? 0xc5a267 : 0x4a4035);
+      if (!isActive) {
+        bg.setInteractive({ useHandCursor: true });
+        bg.on("pointerup", () => {
+          this.scene.start("WeaponAssemblyScene", { family: famName });
+        });
+      }
+      this.add
+        .text(x, y, famName.toUpperCase(), {
+          color: isActive ? "#E8B547" : "#D4C5A0",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "13px",
+          fontStyle: isActive ? "bold" : "normal",
+        })
+        .setOrigin(0.5);
+    });
+  }
+
+  /**
+   * M14-PR1 (F3/D3) — preview статов кандидата через `previewAssembly`
+   * (единственный санкционированный путь к статам, G2). На `ok` —
+   * `Урон: min–max • Прочность: dur`; на invalid — контекстная подсказка
+   * inline-RU (D5). `duplicate_part` из UI недостижим (выбор — Set), но
+   * union покрыт ради exhaustiveness.
+   */
+  private renderPreview(picked: ComponentItem[]): void {
+    const preview = previewAssembly(picked);
+    const labelY = 500;
+    const valueY = 524;
+
+    this.add
+      .text(CX, labelY, "Превью сборки", {
+        color: "#8A8070",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "14px",
+      })
+      .setOrigin(0.5);
+
+    let line: string;
+    let color: string;
+    if (preview.ok) {
+      line = `Урон: ${preview.stats.damage_min}–${preview.stats.damage_max}   •   Прочность: ${preview.durability_max}`;
+      color = "#D4C5A0";
+    } else if (preview.reason === "empty_parts") {
+      line = "Выберите детали для сборки";
+      color = "#8A8070";
+    } else if (preview.reason === "no_structural_part") {
+      line = "Нужна основа (рамка или ствольная коробка)";
+      color = "#E8B547";
+    } else {
+      line = "—";
+      color = "#8A8070";
+    }
+
+    this.add
+      .text(CX, valueY, line, {
+        color,
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "16px",
+        fontStyle: preview.ok ? "bold" : "normal",
       })
       .setOrigin(0.5);
   }

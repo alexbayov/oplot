@@ -121,3 +121,55 @@ export const attemptAssembly = (
     throw e;
   }
 };
+
+// ─── M14-PR1 — pure preview helper (stat preview до сборки) ─────────
+
+/**
+ * Результат `previewAssembly` — discriminated union. На `ok` несёт
+ * замороженные статы кандидата; на invalid — reason-код (UI локализует
+ * или показывает контекстную подсказку).
+ */
+export type AssemblyPreviewResult =
+  | {
+      ok: true;
+      stats: { damage_min: number; damage_max: number };
+      durability_max: number;
+    }
+  | { ok: false; reason: AssemblyInvalidReason };
+
+const PREVIEW_INSTANCE_ID = "__preview__";
+
+/**
+ * Pure preview статов кандидата (M14-PR1 F3/D3). Считает через
+ * `assembleWeapon` — единственный санкционированный путь к статам (G2:
+ * нет дублирующей preview-суммы поверх `parts[].stats`). Sentinel id
+ * `"__preview__"` (D7): инстанс выбрасывается, НИЧЕГО не персистится,
+ * стеш/энергия не трогаются — `assembleWeapon` чистый, а consume живёт
+ * отдельно в `assembleFromStash`.
+ *
+ * `assembleWeapon` throws `AssemblyError` на invalid input (3 reason-кода)
+ * — ловим и возвращаем `{ ok: false, reason }`. Достижимые из UI: пустой
+ * выбор (`empty_parts`) и только `mod_*` (`no_structural_part`).
+ * `duplicate_part` из UI недостижим (выбор — `Set<id>`). Defensive
+ * не-AssemblyError (его тут быть не должно) пробрасываем.
+ */
+export const previewAssembly = (
+  parts: ComponentItem[],
+): AssemblyPreviewResult => {
+  try {
+    const instance = assembleWeapon(parts, PREVIEW_INSTANCE_ID);
+    return {
+      ok: true,
+      stats: {
+        damage_min: instance.stats.damage_min,
+        damage_max: instance.stats.damage_max,
+      },
+      durability_max: instance.durability_max,
+    };
+  } catch (e) {
+    if (e instanceof AssemblyError) {
+      return { ok: false, reason: e.reason };
+    }
+    throw e;
+  }
+};
