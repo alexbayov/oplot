@@ -3,7 +3,7 @@ import { GameState } from "../state/GameState";
 import { createButton, createSmallButton, createTitle, createPanel, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { isBroken } from "../systems/durability";
-import { sortInstancesForDisplay, canEquipInstance } from "../systems/craftedWeapons";
+import { sortInstancesForDisplay, canEquipInstance, disassembleInstance } from "../systems/craftedWeapons";
 import { H, CX } from "../ui/layout";
 import type { WeaponInstance } from "../systems/weaponAssembly";
 
@@ -14,12 +14,23 @@ import type { WeaponInstance } from "../systems/weaponAssembly";
  * crafted-инстансы копились без UI). Даёт: список инстансов, equip-swap между
  * ними, inspect (разбор частей + статы + прочность).
  *
- * Scope этого PR (A): READ `crafted_weapons` + MUTATE только `equipped_weapon`.
- * Add/remove инстансов (disassembly) — следующим PR (B). Никаких правок
- * save-схемы: `crafted_weapons` уже в схеме и cloudSave whitelist.
+ * M14-PR3 (B): + disassembly «Разобрать» — возврат частей на склад и
+ * remove инстанса. Мутирует `crafted_weapons` / `baseStash` /
+ * `equipped_weapon` (всё в схеме + cloudSave whitelist, без SAVE bump).
  */
 interface InitData {
   selectedId?: string;
+  /**
+   * D5 — confirm-state двухшагового разбора. КЛЮЧУЕТСЯ id инстанса (не
+   * голый boolean): «Точно разобрать?» показывается только если
+   * `confirmDisassembleId === selectedId`. Любой ре-рендер, который не
+   * протянул это поле (клик по карточке, equip, возврат в Арсенал),
+   * сбрасывает confirm — игрок не может «улететь» без второго клика
+   * после смены выбора или ухода из detail-панели.
+   */
+  confirmDisassembleId?: string;
+  /** Transient toast-сообщение, переживающее scene.restart (D5 execute). */
+  flash?: string;
 }
 
 const DETAIL = { x: 920, y: 110, w: 340, h: 540 } as const;
@@ -33,12 +44,16 @@ export class CraftedWeaponsScene extends Phaser.Scene {
   }
 
   private selectedId: string | null = null;
+  private confirmDisassembleId: string | null = null;
+  private flash: string | null = null;
 
   public init(data?: InitData): void {
     // selectedId протягивается через scene.restart — иначе init() стирает
     // выбор на каждом ре-рендере (тот же паттерн, что pickedIds в
     // WeaponAssemblyScene, PR-6b-2).
     this.selectedId = data?.selectedId ?? null;
+    this.confirmDisassembleId = data?.confirmDisassembleId ?? null;
+    this.flash = data?.flash ?? null;
   }
 
   public create(): void {
@@ -64,8 +79,16 @@ export class CraftedWeaponsScene extends Phaser.Scene {
 
     this.renderList(ordered, equippedCraftedId);
     this.renderDetailPanel(selected);
+    if (selected) {
+      // D5: confirm honored ТОЛЬКО если ключ совпал с текущим выбором —
+      // belt-and-suspenders к сбросу через init (смена выбора не тянет
+      // confirmDisassembleId).
+      this.renderDisassembleFooter(selected, this.confirmDisassembleId === selected.id);
+    }
 
     createButton(this, H - 50, "Назад", () => this.scene.start("InventoryScene"));
+
+    if (this.flash) this.showToast(this.flash);
   }
 
   // ── Пустое состояние ────────────────────────────────────────────
@@ -258,6 +281,94 @@ export class CraftedWeaponsScene extends Phaser.Scene {
         wordWrap: { width: DETAIL.w - 60 },
       });
       y += 22;
+    });
+  }
+
+  // ── Disassembly footer (D5/D6) ──────────────────────────────────
+  // Кнопка живёт в detail-панели (inspect-then-act), на фиксированной y у
+  // дна панели — независимо от длины списка частей. Доступна и для
+  // сломанных инстансов (D3): recovery частей — главный кейс B.
+  private renderDisassembleFooter(selected: WeaponInstance, confirming: boolean): void {
+    const px = DETAIL.x + DETAIL.w / 2;
+    const footerY = DETAIL.y + DETAIL.h - 44;
+
+    if (!confirming) {
+      createSmallButton(this, px, footerY, "Разобрать", 240, () =>
+        this.scene.restart({ selectedId: selected.id, confirmDisassembleId: selected.id }),
+      );
+      this.add
+        .text(px, footerY - 28, "Части вернутся на склад", {
+          color: "#8A8070",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "12px",
+        })
+        .setOrigin(0.5);
+      return;
+    }
+
+    // Confirm-state: destructive emphasis через красное предупреждение +
+    // два шага. Разбор только по «Да, разобрать».
+    this.add
+      .text(px, footerY - 30, "Точно разобрать? Инстанс исчезнет.", {
+        color: "#e8896b",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "bold",
+        align: "center",
+      })
+      .setOrigin(0.5);
+    createSmallButton(this, px - 64, footerY, "Да, разобрать", 120, () =>
+      this.disassemble(selected.id), true,
+    );
+    createSmallButton(this, px + 64, footerY, "Отмена", 120, () =>
+      this.scene.restart({ selectedId: selected.id }),
+    );
+  }
+
+  // ── Disassemble (execute) ───────────────────────────────────────
+  private disassemble(id: string): void {
+    const result = disassembleInstance(
+      id,
+      GameState.player.crafted_weapons,
+      GameState.baseStash,
+      GameState.player.equipped_weapon,
+    );
+    // G1: применяем РОВНО три поля state, ничего больше.
+    GameState.player.crafted_weapons = result.crafted_weapons;
+    GameState.baseStash = result.baseStash;
+    GameState.player.equipped_weapon = result.equipped_weapon;
+    // G4: персист как в equip/assemble-флоу.
+    void saveToCloud();
+
+    // D4: при авто-снятии — уведомить, что экипирован дефолтный нож.
+    const n = result.returned_parts.length;
+    let msg = `Разобрано. Частей на склад: ${n}`;
+    if (result.was_equipped) msg += " · оружие снято, экипирован нож";
+
+    // Сброс выбора (инстанс исчез) + confirm-state; toast переживает restart.
+    this.scene.restart({ flash: msg });
+  }
+
+  // ── Toast (fade) ────────────────────────────────────────────────
+  private showToast(msg: string): void {
+    const toast = this.add
+      .text(CX, 92, msg, {
+        color: "#9cd17f",
+        fontFamily: "Oswald, sans-serif",
+        fontSize: "16px",
+        fontStyle: "bold",
+        align: "center",
+        stroke: "#1a1a1a",
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5)
+      .setDepth(200);
+    this.tweens.add({
+      targets: toast,
+      y: 72,
+      alpha: { from: 1, to: 0 },
+      duration: 1600,
+      onComplete: () => toast.destroy(),
     });
   }
 
