@@ -370,6 +370,19 @@ export class InventoryScene extends Phaser.Scene {
       },
     );
 
+    // M14 PR-2 — вход в «Арсенал» (менеджер собранного оружия). Аддитивно:
+    // catalog-cycler выше не трогаем. crafted-инстансы живут на отдельном
+    // экране (этот слот циклит только catalog-стволы, см. коммент выше).
+    const craftedCount = player.crafted_weapons.length;
+    createSmallButton(
+      this,
+      panelCenterX,
+      dp.y + dp.h - 26,
+      `Собранное оружие (${craftedCount}) ▸`,
+      290,
+      () => this.scene.start("CraftedWeaponsScene"),
+    );
+
     createButton(this, H - 50, "Назад", () => this.scene.start("BaseScene"));
   }
 }

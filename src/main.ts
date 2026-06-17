@@ -3,6 +3,7 @@ import { BACKGROUND_COLOR, GAME_HEIGHT, GAME_WIDTH } from "./config";
 import { BaseScene } from "./scenes/BaseScene";
 import { BootScene } from "./scenes/BootScene";
 import { CraftScene } from "./scenes/CraftScene";
+import { CraftedWeaponsScene } from "./scenes/CraftedWeaponsScene";
 import { InventoryScene } from "./scenes/InventoryScene";
 import { LootScene } from "./scenes/LootScene";
 import { EncounterScene } from "./scenes/EncounterScene";
@@ -54,6 +55,7 @@ const config: Phaser.Types.Core.GameConfig = {
     InventoryScene,
     CraftScene,
     WeaponAssemblyScene,
+    CraftedWeaponsScene,
     RadioScene,
     ProgressionScene,
     SkillTreeScene,
