@@ -43,6 +43,22 @@ export const weaponFamily = (id: string): string => {
   return prefix === undefined || prefix === "" ? id : prefix;
 };
 
+/**
+ * M14-PR1 (D6) — список семейств, для которых в `parts` есть хоть один
+ * не-универсальный парт. Sorted ASC, unique, без `"universal"`. Pure —
+ * выделено из inline-группировки в `WeaponAssemblyScene.renderFamilyPicker`,
+ * чтобы family-список (и family-табы D1) были unit-тестируемы без Phaser.
+ */
+export const availableFamilies = (parts: ComponentItem[]): string[] => {
+  const set = new Set<string>();
+  for (const p of parts) {
+    const fam = weaponFamily(p.id);
+    if (fam === "universal") continue;
+    set.add(fam);
+  }
+  return Array.from(set).sort();
+};
+
 export const validateAssemblyParts = (
   parts: ComponentItem[],
 ): AssemblyValidationResult => {
