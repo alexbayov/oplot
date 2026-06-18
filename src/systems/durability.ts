@@ -60,8 +60,8 @@ export const isBroken = (weapon: WeaponInstance): boolean =>
  * - При durability_current ≤ 0 после удара → unequip:
  *   `equipped_weapon = { kind: "catalog", id: HERO_START_WEAPON_ID }`
  *   (= craft_knife, тот же дефолт что у `createDefaultPlayer`).
- *   Сломанный инстанс ОСТАЁТСЯ в crafted_weapons — repair UI (C6,
- *   долг следующего PR) сможет его починить.
+ *   Сломанный инстанс ОСТАЁТСЯ в crafted_weapons — repair (M15-PR1,
+ *   `systems/repair.ts`, закрыл C6) чинит его за металл.
  *   `broken=true` сигнализирует caller-у показать тост.
  */
 export interface DurabilityHitResult {

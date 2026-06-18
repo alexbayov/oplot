@@ -4,6 +4,7 @@ import { createButton, createSmallButton, createTitle, createPanel, createHpBar 
 import { saveToCloud } from "../systems/cloudSave";
 import { isBroken } from "../systems/durability";
 import { sortInstancesForDisplay, canEquipInstance, disassembleInstance } from "../systems/craftedWeapons";
+import { attemptRepair } from "../systems/repair";
 import { H, CX } from "../ui/layout";
 import type { WeaponInstance } from "../systems/weaponAssembly";
 
@@ -80,10 +81,14 @@ export class CraftedWeaponsScene extends Phaser.Scene {
     this.renderList(ordered, equippedCraftedId);
     this.renderDetailPanel(selected);
     if (selected) {
+      const confirming = this.confirmDisassembleId === selected.id;
+      // M15-PR1: top-up изношенного (D2) при осмотре. Скрыт во время
+      // disassemble-confirm, чтобы не размывать destructive-фокус.
+      if (!confirming) this.renderRepairControl(selected);
       // D5: confirm honored ТОЛЬКО если ключ совпал с текущим выбором —
       // belt-and-suspenders к сбросу через init (смена выбора не тянет
       // confirmDisassembleId).
-      this.renderDisassembleFooter(selected, this.confirmDisassembleId === selected.id);
+      this.renderDisassembleFooter(selected, confirming);
     }
 
     createButton(this, H - 50, "Назад", () => this.scene.start("InventoryScene"));
@@ -180,16 +185,45 @@ export class CraftedWeaponsScene extends Phaser.Scene {
         true,
       );
     } else if (!isEquipped && broken) {
-      // Сломанное — экипировать нельзя (две тихие подмены, см. craftedWeapons.ts).
-      this.add
-        .text(left + CARD_W - 100, cy + CARD_H / 2 - 24, "Нельзя (сломано)", {
-          color: "#6b6055",
-          fontFamily: "Roboto Condensed, sans-serif",
-          fontSize: "12px",
-          fontStyle: "italic",
-        })
-        .setOrigin(0.5);
+      // M15-PR1: сломанное больше не тупик (C6). Заменяем мёртвый текст
+      // «Нельзя (сломано)» на repair-аффорданс. Решение по affordability /
+      // терминальности берём из `attemptRepair` — единый источник gate'а,
+      // UI не дублирует логику.
+      this.renderCardRepair(inst, left + CARD_W - 100, cy + CARD_H / 2 - 24);
     }
+  }
+
+  /**
+   * Repair-аффорданс на сломанной карточке (слот бывшего «Экипировать»).
+   * Три состояния по `attemptRepair`:
+   *  - ok        → интерактивная кнопка «Починить (N)».
+   *  - no_resource → серый текст «Починить: N металла» (не хватает).
+   *  - beyond_repair → «Не подлежит ремонту» (лом — только разобрать).
+   */
+  private renderCardRepair(inst: WeaponInstance, x: number, y: number): void {
+    const metal = GameState.baseResources.metal ?? 0;
+    const result = attemptRepair(inst, metal);
+
+    if (result.kind === "ok") {
+      createSmallButton(this, x, y, `Починить (${result.metal_spent})`, 168, () =>
+        this.repairInstance(inst.id),
+        true,
+      );
+      return;
+    }
+
+    const label =
+      result.kind === "no_resource"
+        ? `Починить: ${result.required} металла`
+        : "Не подлежит ремонту";
+    this.add
+      .text(x, y, label, {
+        color: result.kind === "no_resource" ? "#a08c5a" : "#6b6055",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "12px",
+        fontStyle: "italic",
+      })
+      .setOrigin(0.5);
   }
 
   private renderBadge(rightX: number, cy: number, label: string, textColor: string, bgColor: number): void {
@@ -323,6 +357,79 @@ export class CraftedWeaponsScene extends Phaser.Scene {
     createSmallButton(this, px + 64, footerY, "Отмена", 120, () =>
       this.scene.restart({ selectedId: selected.id }),
     );
+  }
+
+  // ── Repair control (detail-панель: top-up изношенного) ──────────
+  // Сломанное чинится с карточки (`renderCardRepair`). Здесь — top-up
+  // изношенного-не-сломанного при осмотре (D2: repair при current < max).
+  // Кнопка пинится над disassemble-footer. Изношенное-не-сломанное всегда
+  // имеет durability_max ≥ 2 ⇒ ветка beyond_repair недостижима.
+  private renderRepairControl(selected: WeaponInstance): void {
+    if (isBroken(selected) || selected.durability_current >= selected.durability_max) {
+      return; // сломанное → карточка; целое → нечего чинить
+    }
+    const metal = GameState.baseResources.metal ?? 0;
+    const result = attemptRepair(selected, metal);
+    const px = DETAIL.x + DETAIL.w / 2;
+    const ry = DETAIL.y + DETAIL.h - 116;
+
+    if (result.kind === "ok") {
+      createSmallButton(this, px, ry, `Починить (${result.metal_spent} металла)`, 220, () =>
+        this.repairInstance(selected.id),
+        true,
+      );
+      return;
+    }
+    const label =
+      result.kind === "no_resource"
+        ? `Починить: нужно ${result.required} металла`
+        : "Починить недоступно";
+    this.add
+      .text(px, ry, label, {
+        color: "#a08c5a",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "italic",
+      })
+      .setOrigin(0.5);
+  }
+
+  // ── Repair (execute) ────────────────────────────────────────────
+  private repairInstance(id: string): void {
+    const instances = GameState.player.crafted_weapons;
+    const idx = instances.findIndex((w) => w.id === id);
+    const before = instances[idx];
+    const result = attemptRepair(before, GameState.baseResources.metal ?? 0);
+
+    if (result.kind !== "ok") {
+      // Gate провалился между рендером и кликом (race / двойной клик):
+      // не мутируем, показываем причину. metal_spent инвариант сохранён —
+      // металл не тронут ни на одной не-ok ветке.
+      const msg =
+        result.kind === "no_resource"
+          ? `Не хватает металла: нужно ${result.required}, есть ${result.available}`
+          : result.kind === "beyond_repair"
+            ? "Не подлежит ремонту — только разобрать"
+            : result.kind === "already_full"
+              ? "Оружие уже целое"
+              : "Инстанс не найден";
+      this.scene.restart({ selectedId: id, flash: msg });
+      return;
+    }
+
+    // G1: применяем РОВНО нужные поля state (инстанс + металл), ничего больше.
+    const next = instances.slice();
+    next[idx] = result.instance;
+    GameState.player.crafted_weapons = next;
+    GameState.baseResources.metal = (GameState.baseResources.metal ?? 0) - result.metal_spent;
+    // G4: персист как в equip/disassemble-флоу.
+    void saveToCloud();
+
+    const after = result.instance;
+    const decay = (before?.durability_max ?? after.durability_max) - after.durability_max;
+    let msg = `Починено: ${after.durability_current}/${after.durability_max} · −${result.metal_spent} металла`;
+    if (decay > 0) msg += ` · потолок −${decay} (усталость)`;
+    this.scene.restart({ selectedId: id, flash: msg });
   }
 
   // ── Disassemble (execute) ───────────────────────────────────────
