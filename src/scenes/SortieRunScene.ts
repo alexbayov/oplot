@@ -16,6 +16,7 @@ import type {
 } from "../types/sortie";
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
+import { resolveEquippedDamage } from "../systems/weaponDamage";
 import type { InventoryStack } from "../state/types";
 
 /**
@@ -119,25 +120,15 @@ export class SortieRunScene extends Phaser.Scene {
     // crafted_weapons (источник истины — `stats` инстанса, НЕ parts;
     // re-assemble на load запрещён, C4). Сломанный crafted падает
     // в bare-hands fallback 4/7, как было до PR-6a (OP3 default).
-    let damageMin = 4;
-    let damageMax = 7;
-    const eq = p.equipped_weapon;
-    if (eq) {
-      if (eq.kind === "catalog") {
-        const w = items[eq.id];
-        if (w && w.kind === "weapon" && w.stats) {
-          if (typeof w.stats.damage_min === "number") damageMin = w.stats.damage_min;
-          if (typeof w.stats.damage_max === "number") damageMax = w.stats.damage_max;
-        }
-      } else {
-        const inst = p.crafted_weapons.find((wi) => wi.id === eq.id);
-        if (inst && inst.durability_current > 0) {
-          damageMin = inst.stats.damage_min;
-          damageMax = inst.stats.damage_max;
-        }
-        // else: broken / missing — fallback 4/7 как при полном unequip.
-      }
-    }
+    //
+    // M15-PR3: switch вынесен в `resolveEquippedDamage` (systems/weaponDamage),
+    // тот же хелпер зовёт арсенальная stat-delta — паритет «дельта == бой»
+    // структурно гарантирован (R1). Менять baseline 4/7 / путь резолва — ТАМ.
+    const { damage_min: damageMin, damage_max: damageMax } = resolveEquippedDamage(
+      p.equipped_weapon,
+      items,
+      p.crafted_weapons,
+    );
 
     // M13 PR-6a: 3-slot armor aggregation (C7/C8). Собираем slot-предметы
     // в массив и передаём в computeArmorReduction, который суммирует

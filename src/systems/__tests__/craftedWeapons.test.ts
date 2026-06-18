@@ -4,6 +4,7 @@ import {
   canEquipInstance,
   disassembleInstance,
   disassembleRefund,
+  weaponStatDelta,
 } from "../craftedWeapons";
 import { assembleFromStash } from "../assemblyFlow";
 import { countInStacks } from "../../state/GameState";
@@ -14,6 +15,7 @@ import {
 import type { WeaponInstance } from "../weaponAssembly";
 import type { ComponentItem } from "../../types";
 import type { EquippedWeapon, InventoryStack } from "../../state/types";
+import type { Item } from "../../types/item";
 
 const mk = (
   id: string,
@@ -314,5 +316,110 @@ describe("disassembleInstance — M14-PR3 (B) + M15-PR2 lossy", () => {
     const sumBefore = ids.reduce((s, id) => s + countInStacks(original, id), 0);
     const sumAfter = ids.reduce((s, id) => s + countInStacks(r.baseStash, id), 0);
     expect(sumAfter).toBeLessThan(sumBefore); // строго лоссово
+  });
+});
+
+// ── M15-PR3: weaponStatDelta (Variant B) ────────────────────────────
+describe("weaponStatDelta", () => {
+  const wpn = (id: string, dmin: number, dmax: number): Item =>
+    ({
+      kind: "weapon",
+      id,
+      name_ru: id,
+      tier: 1,
+      weight_kg: 1,
+      zone_origin: "test",
+      description_ru: "",
+      recipe_id: null,
+      slot: "action",
+      stats: { damage_min: dmin, damage_max: dmax },
+    }) as Item;
+
+  const wi = (
+    id: string,
+    dmin: number,
+    dmax: number,
+    durability_current = 10,
+  ): WeaponInstance => ({
+    id,
+    name_ru: id,
+    slot: "action",
+    stats: { damage_min: dmin, damage_max: dmax },
+    durability_max: 10,
+    durability_current,
+    parts: [],
+  });
+
+  const items: Record<string, Item> = {
+    craft_knife: wpn("craft_knife", 4, 7),
+    akm: wpn("akm", 13, 19),
+  };
+
+  it("vs catalog-нож (доминирующий ранний кейс): кандидат 5/9 → +1/+2", () => {
+    const cand = wi("c1", 5, 9);
+    const eq: EquippedWeapon = { kind: "catalog", id: "craft_knife" };
+    const d = weaponStatDelta(cand, eq, items, [cand]);
+    expect(d.equipped).toEqual({ damage_min: 4, damage_max: 7 });
+    expect(d.candidate).toEqual({ damage_min: 5, damage_max: 9 });
+    expect(d.delta_min).toBe(1);
+    expect(d.delta_max).toBe(2);
+    expect(d.is_equipped_self).toBe(false);
+    expect(d.candidate_broken).toBe(false);
+  });
+
+  it("vs null equipped → дельта от bare-hands 4/7", () => {
+    const cand = wi("c1", 10, 14);
+    const d = weaponStatDelta(cand, null, items, [cand]);
+    expect(d.equipped).toEqual({ damage_min: 4, damage_max: 7 });
+    expect(d.delta_min).toBe(6);
+    expect(d.delta_max).toBe(7);
+  });
+
+  it("vs crafted equipped: кандидат слабее → отрицательная дельта", () => {
+    const cand = wi("c1", 6, 10);
+    const equipped = wi("e1", 11, 16);
+    const eq: EquippedWeapon = { kind: "crafted", id: "e1" };
+    const d = weaponStatDelta(cand, eq, items, [cand, equipped]);
+    expect(d.delta_min).toBe(-5);
+    expect(d.delta_max).toBe(-6);
+  });
+
+  it("смешанный знак: кандидат 3/12 vs equipped 5/9 → dmin<0, dmax>0", () => {
+    const cand = wi("c1", 3, 12);
+    const equipped = wi("e1", 5, 9);
+    const eq: EquippedWeapon = { kind: "crafted", id: "e1" };
+    const d = weaponStatDelta(cand, eq, items, [cand, equipped]);
+    expect(d.delta_min).toBe(-2);
+    expect(d.delta_max).toBe(3);
+  });
+
+  it("кандидат == текущий эквип-crafted → is_equipped_self, дельта 0/0", () => {
+    const cand = wi("c1", 8, 12);
+    const eq: EquippedWeapon = { kind: "crafted", id: "c1" };
+    const d = weaponStatDelta(cand, eq, items, [cand]);
+    expect(d.is_equipped_self).toBe(true);
+    expect(d.delta_min).toBe(0);
+    expect(d.delta_max).toBe(0);
+  });
+
+  it("R3: broken кандидат → его эффективный урон 4/7, дельта от 4/7", () => {
+    const cand = wi("c1", 20, 30, 0); // сломан
+    const eq: EquippedWeapon = { kind: "catalog", id: "akm" }; // 13/19
+    const d = weaponStatDelta(cand, eq, items, [cand]);
+    expect(d.candidate).toEqual({ damage_min: 4, damage_max: 7 });
+    expect(d.candidate_broken).toBe(true);
+    expect(d.delta_min).toBe(4 - 13);
+    expect(d.delta_max).toBe(7 - 19);
+  });
+
+  it("R3: оба сломаны (broken кандидат vs broken equipped-crafted) → дельта 0/0", () => {
+    const cand = wi("c1", 20, 30, 0);
+    const equipped = wi("e1", 50, 60, 0);
+    const eq: EquippedWeapon = { kind: "crafted", id: "e1" };
+    const d = weaponStatDelta(cand, eq, items, [cand, equipped]);
+    expect(d.candidate).toEqual({ damage_min: 4, damage_max: 7 });
+    expect(d.equipped).toEqual({ damage_min: 4, damage_max: 7 });
+    expect(d.delta_min).toBe(0);
+    expect(d.delta_max).toBe(0);
   });
 });

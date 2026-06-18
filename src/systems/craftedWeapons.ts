@@ -6,7 +6,9 @@ import { isBroken } from "./durability";
 import { isStructuralPart } from "./assemblyValidation";
 import { addToStack } from "../state/GameState";
 import { HERO_START_WEAPON_ID, DISASSEMBLE_RECOVERY_RATE } from "../state/balance";
+import { resolveEquippedDamage } from "./weaponDamage";
 import type { EquippedWeapon, InventoryStack } from "../state/types";
+import type { Item } from "../types/item";
 
 /**
  * Можно ли экипировать инстанс из «Арсенала». Сломанный
@@ -176,5 +178,53 @@ export const disassembleInstance = (
     equipped_weapon: nextEquipped,
     returned_parts: returned,
     was_equipped: wasEquipped,
+  };
+};
+
+// ── M15-PR3: Arsenal stat-delta (Variant B) ─────────────────────────
+// Сравнение урона осматриваемого инстанса против ЭФФЕКТИВНОГО урона
+// текущего эквипа. «Эффективный» = тот, что реально уходит в бой:
+// резолвится через `resolveEquippedDamage` (тот же путь, что snapshotHero,
+// R1). Catalog-эквип (вкл. стартовый craft_knife 4/7) сравним и потому
+// показывается — это доминирующий ранний кейс, не «не с чем сравнить».
+// Damage-only (D-PR3): accuracy/weight/durability в бой не идут до M16.
+
+export interface WeaponStatDelta {
+  /** Эффективный урон кандидата (broken → bare-hands 4/7, R3). */
+  candidate: { damage_min: number; damage_max: number };
+  /** Эффективный урон текущего эквипа (catalog/crafted/null/broken). */
+  equipped: { damage_min: number; damage_max: number };
+  /** candidate − equipped (может быть отрицательной/смешанной по знаку). */
+  delta_min: number;
+  delta_max: number;
+  /** Кандидат == текущий эквип-crafted → метка «Экипировано», не нулевая дельта. */
+  is_equipped_self: boolean;
+  /** Кандидат сломан → его боевой урон = 4/7 (для UI-ноты). */
+  candidate_broken: boolean;
+}
+
+/**
+ * Дельта урона кандидата против текущего эквипа. Чистая, без Phaser.
+ *
+ * Кандидат всегда crafted-инстанс (Арсенал). Его эффективный урон берём
+ * через тот же `resolveEquippedDamage`, что и бой — для сломанного это даёт
+ * 4/7 (R3), а не его замороженные `stats`. Эквип резолвится так же.
+ * `crafted` — полный список инстансов героя (резолвер ищет по id).
+ */
+export const weaponStatDelta = (
+  candidate: WeaponInstance,
+  equipped: EquippedWeapon | null,
+  items: Record<string, Item>,
+  crafted: readonly WeaponInstance[],
+): WeaponStatDelta => {
+  const cand = resolveEquippedDamage({ kind: "crafted", id: candidate.id }, items, crafted);
+  const eqDmg = resolveEquippedDamage(equipped, items, crafted);
+  return {
+    candidate: cand,
+    equipped: eqDmg,
+    delta_min: cand.damage_min - eqDmg.damage_min,
+    delta_max: cand.damage_max - eqDmg.damage_max,
+    is_equipped_self: equipped?.kind === "crafted" && equipped.id === candidate.id,
+    candidate_broken: candidate.durability_current <= 0,
   };
 };
