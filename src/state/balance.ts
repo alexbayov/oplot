@@ -108,6 +108,29 @@ export const VETERAN_CONDITIONING_HP_BONUS = 10;
  */
 export const PER_ENCOUNTER_HIT = 1;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M15 PR-1 — weapon repair (закрывает C6 repair-debt)
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * Стоимость починки в металле за 1 очко восстановленной прочности.
+ * `repairCost = ceil((durability_max − durability_current) × этого)`.
+ * DF1 (Alex GO): ресурс = металл, не энергия — энергия уже гейтит сборку
+ * (`ASSEMBLE_ENERGY_COST`), у металла мало стоков, repair даёт ему смысл.
+ * Тюнится свободно — тесты бьют по пропорции/знаку, не по числу.
+ */
+export const METAL_PER_DURABILITY_POINT = 1;
+
+/**
+ * DF1b (Alex GO): каждая починка необратимо снижает `durability_max` на
+ * это значение — «усталость металла». Делает жизненный цикл оружия
+ * конечным: ~durability_max починок → `durability_max` упирается в пол
+ * ⇒ единственный путь = разобрать на детали. Без decay repair = вечный
+ * 100%-restore и разбор теряет смысл (см. preflight DF1b). Schema-neutral
+ * (`durability_max` уже в персисте). decay=0 отключает механику.
+ */
+export const REPAIR_MAX_DECAY = 1;
+
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;
 export const MARAUDER_FLEE_INITIATIVE_PENALTY = 0.05;
