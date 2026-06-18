@@ -3,8 +3,9 @@
 // здесь и покрыты unit-тестами; форматирование/рендер — в сцене.
 import type { WeaponInstance } from "./weaponAssembly";
 import { isBroken } from "./durability";
+import { isStructuralPart } from "./assemblyValidation";
 import { addToStack } from "../state/GameState";
-import { HERO_START_WEAPON_ID } from "../state/balance";
+import { HERO_START_WEAPON_ID, DISASSEMBLE_RECOVERY_RATE } from "../state/balance";
 import type { EquippedWeapon, InventoryStack } from "../state/types";
 
 /**
@@ -64,8 +65,56 @@ export interface DisassembleResult {
 }
 
 /**
- * Разобрать инстанс из «Арсенала»: вернуть его `parts` на склад (по 1
- * каждой) и убрать из `crafted_weapons[]`.
+ * M15-PR2 (DF2) — лоссовый возврат частей при разборе. Возвращаем
+ * `K = max(1, floor(N × DISASSEMBLE_RECOVERY_RATE))` частей; остальные
+ * (N−K) теряются как лом. Оставляем САМЫЕ ценные, выбрасываем дешёвые.
+ *
+ * Drop-приоритет (что выбрасываем ПЕРВЫМ), сортировка ASC:
+ *   1. non-structural (`mod_*`/стволы/слайды) раньше structural (frame/
+ *      receiver) — «скелет» оружия ценнее навесок, его и возвращаем;
+ *   2. tier ASC — низкий тир дешевле, выбрасываем первым;
+ *   3. id ASC — детерминированный tiebreak (никакого rng);
+ *   4. исходный индекс — стабильность для полностью идентичных дублей.
+ * Возвращаем «хвост» отсортированного массива (самые ценные K) в drop-
+ * priority-порядке — детерминированно и тестируемо.
+ *
+ * min-1 floor: 1-партовый инстанс всегда отдаёт ≥1 (RATE=0.5 даёт
+ * floor(0.5)=0 — заменяем на 1, иначе feel-bad полной потери). При RATE≥1
+ * (или K≥N) — возврат всех частей (lossless вырожденный режим).
+ *
+ * `tierOf` инжектится caller'ом (сцена → `GameState.data.items[id]?.tier`,
+ * deprecated id → дефолт). Чистая, детерминированная, без побочных эффектов.
+ */
+export const disassembleRefund = (
+  parts: readonly string[],
+  tierOf: (id: string) => number,
+): string[] => {
+  const n = parts.length;
+  if (n === 0) return [];
+  const keep = Math.max(1, Math.floor(n * DISASSEMBLE_RECOVERY_RATE));
+  if (keep >= n) return parts.slice();
+
+  const ranked = parts
+    .map((id, i) => ({ id, i }))
+    .sort((a, b) => {
+      const sa = isStructuralPart(a.id) ? 1 : 0;
+      const sb = isStructuralPart(b.id) ? 1 : 0;
+      if (sa !== sb) return sa - sb; // non-structural first (dropped first)
+      const ta = tierOf(a.id);
+      const tb = tierOf(b.id);
+      if (ta !== tb) return ta - tb; // tier asc
+      if (a.id !== b.id) return a.id < b.id ? -1 : 1; // id asc
+      return a.i - b.i; // stable order for identical dups
+    });
+
+  // Первые (n−keep) — лом, хвост (keep) — самые ценные, их возвращаем.
+  return ranked.slice(n - keep).map((r) => r.id);
+};
+
+/**
+ * Разобрать инстанс из «Арсенала»: вернуть ЧАСТЬ его `parts` на склад (по 1
+ * каждой, см. `disassembleRefund` — M15-PR2 DF2 лоссовый возврат) и убрать
+ * инстанс из `crafted_weapons[]`. До M15-PR2 возврат был 1:1 (lossless).
  *
  * Решения (M14-PR3 preflight):
  * - **D2** энергию НЕ трогаем (ни cost, ни refund): энергия сборки = уже
@@ -93,6 +142,7 @@ export const disassembleInstance = (
   crafted_weapons: readonly WeaponInstance[],
   baseStash: readonly InventoryStack[],
   equipped_weapon: EquippedWeapon | null,
+  tierOf: (id: string) => number,
 ): DisassembleResult => {
   const target = crafted_weapons.find((wi) => wi.id === instanceId);
   if (!target) {
@@ -105,8 +155,10 @@ export const disassembleInstance = (
     };
   }
 
+  // M15-PR2 (DF2): лоссовый возврат — на склад идёт только подмножество.
+  const returned = disassembleRefund(target.parts, tierOf);
   let nextStash: InventoryStack[] = baseStash.slice();
-  for (const partId of target.parts) {
+  for (const partId of returned) {
     nextStash = addToStack(nextStash, partId, 1);
   }
 
@@ -122,7 +174,7 @@ export const disassembleInstance = (
     crafted_weapons: nextCrafted,
     baseStash: nextStash,
     equipped_weapon: nextEquipped,
-    returned_parts: target.parts.slice(),
+    returned_parts: returned,
     was_equipped: wasEquipped,
   };
 };

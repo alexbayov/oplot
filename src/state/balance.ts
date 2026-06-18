@@ -131,6 +131,25 @@ export const METAL_PER_DURABILITY_POINT = 1;
  */
 export const REPAIR_MAX_DECAY = 1;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M15 PR-2 — disassembly economy (фрикция разбора, DF2)
+// ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * DF2 (Alex GO): доля частей, возвращаемых при разборе инстанса.
+ * `K = max(1, floor(N × этого))` — лоссовый возврат с min-1 floor.
+ * Зачем лосс: без него петля repair→decay→beyond_repair→разбор возвращает
+ * 100% частей ⇒ оружие де-факто вечное, металл единственный сток. Утечка
+ * делает каждую сборку обязательством и образует пару к
+ * `METAL_PER_DURABILITY_POINT`. Deterministic, без rng (drop-order:
+ * non-structural → tier asc → id; см. `disassembleRefund`). min-1 floor:
+ * 1-партовый инстанс всегда отдаёт ≥1 (иначе feel-bad полной потери сильнее
+ * выгоды от закрытия «фрейм-only» лазейки, которая и так bounded слабыми
+ * статами). Тюнится свободно — тесты бьют по знаку/порядку, не по числу.
+ * RATE=1.0 ⇒ lossless-режим (вырожденный случай) через тот же путь.
+ */
+export const DISASSEMBLE_RECOVERY_RATE = 0.5;
+
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;
 export const MARAUDER_FLEE_INITIATIVE_PENALTY = 0.05;

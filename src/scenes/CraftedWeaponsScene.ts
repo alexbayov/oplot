@@ -3,7 +3,7 @@ import { GameState } from "../state/GameState";
 import { createButton, createSmallButton, createTitle, createPanel, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { isBroken } from "../systems/durability";
-import { sortInstancesForDisplay, canEquipInstance, disassembleInstance } from "../systems/craftedWeapons";
+import { sortInstancesForDisplay, canEquipInstance, disassembleInstance, disassembleRefund } from "../systems/craftedWeapons";
 import { attemptRepair } from "../systems/repair";
 import { H, CX } from "../ui/layout";
 import type { WeaponInstance } from "../systems/weaponAssembly";
@@ -47,6 +47,12 @@ export class CraftedWeaponsScene extends Phaser.Scene {
   private selectedId: string | null = null;
   private confirmDisassembleId: string | null = null;
   private flash: string | null = null;
+
+  // M15-PR2 (DF2): тир части из каталога для drop-приоритета лоссового
+  // возврата. Deprecated id (старый сейв) → дефолт 1 (низкий тир ⇒ лом
+  // выбрасывается раньше). Инжектится в disassembleRefund/disassembleInstance.
+  private readonly partTier = (id: string): number =>
+    GameState.data.items[id]?.tier ?? 1;
 
   public init(data?: InitData): void {
     // selectedId протягивается через scene.restart — иначе init() стирает
@@ -326,12 +332,23 @@ export class CraftedWeaponsScene extends Phaser.Scene {
     const px = DETAIL.x + DETAIL.w / 2;
     const footerY = DETAIL.y + DETAIL.h - 44;
 
+    // M15-PR2 (DF2): превью лоссового возврата — точное «K из N», без rng,
+    // тот же helper что и execute (disassembleRefund), чтобы цифра в превью
+    // и фактический результат всегда совпадали.
+    const total = selected.parts.length;
+    const back = disassembleRefund(selected.parts, this.partTier).length;
+    const lost = total - back;
+
     if (!confirming) {
       createSmallButton(this, px, footerY, "Разобрать", 240, () =>
         this.scene.restart({ selectedId: selected.id, confirmDisassembleId: selected.id }),
       );
+      const previewLabel =
+        lost > 0
+          ? `Вернётся ${back} из ${total} (теряется ${lost})`
+          : `Вернётся ${back} из ${total}`;
       this.add
-        .text(px, footerY - 28, "Части вернутся на склад", {
+        .text(px, footerY - 28, previewLabel, {
           color: "#8A8070",
           fontFamily: "Roboto Condensed, sans-serif",
           fontSize: "12px",
@@ -342,13 +359,18 @@ export class CraftedWeaponsScene extends Phaser.Scene {
 
     // Confirm-state: destructive emphasis через красное предупреждение +
     // два шага. Разбор только по «Да, разобрать».
+    const confirmLabel =
+      lost > 0
+        ? `Точно разобрать? Инстанс исчезнет, вернётся ${back} из ${total} частей.`
+        : "Точно разобрать? Инстанс исчезнет.";
     this.add
-      .text(px, footerY - 30, "Точно разобрать? Инстанс исчезнет.", {
+      .text(px, footerY - 30, confirmLabel, {
         color: "#e8896b",
         fontFamily: "Roboto Condensed, sans-serif",
         fontSize: "13px",
         fontStyle: "bold",
         align: "center",
+        wordWrap: { width: DETAIL.w - 40 },
       })
       .setOrigin(0.5);
     createSmallButton(this, px - 64, footerY, "Да, разобрать", 120, () =>
@@ -434,11 +456,14 @@ export class CraftedWeaponsScene extends Phaser.Scene {
 
   // ── Disassemble (execute) ───────────────────────────────────────
   private disassemble(id: string): void {
+    const total =
+      GameState.player.crafted_weapons.find((wi) => wi.id === id)?.parts.length ?? 0;
     const result = disassembleInstance(
       id,
       GameState.player.crafted_weapons,
       GameState.baseStash,
       GameState.player.equipped_weapon,
+      this.partTier,
     );
     // G1: применяем РОВНО три поля state, ничего больше.
     GameState.player.crafted_weapons = result.crafted_weapons;
@@ -447,9 +472,12 @@ export class CraftedWeaponsScene extends Phaser.Scene {
     // G4: персист как в equip/assemble-флоу.
     void saveToCloud();
 
+    // M15-PR2 (DF2): возврат лоссовый — показываем «K из N», потеря явно.
+    const k = result.returned_parts.length;
+    const lost = total - k;
+    let msg = `Разобрано. На склад: ${k} из ${total}`;
+    if (lost > 0) msg += ` · потеряно ${lost}`;
     // D4: при авто-снятии — уведомить, что экипирован дефолтный нож.
-    const n = result.returned_parts.length;
-    let msg = `Разобрано. Частей на склад: ${n}`;
     if (result.was_equipped) msg += " · оружие снято, экипирован нож";
 
     // Сброс выбора (инстанс исчез) + confirm-state; toast переживает restart.
