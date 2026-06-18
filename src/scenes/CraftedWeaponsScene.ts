@@ -3,7 +3,7 @@ import { GameState } from "../state/GameState";
 import { createButton, createSmallButton, createTitle, createPanel, createHpBar } from "./sceneUi";
 import { saveToCloud } from "../systems/cloudSave";
 import { isBroken } from "../systems/durability";
-import { sortInstancesForDisplay, canEquipInstance, disassembleInstance, disassembleRefund } from "../systems/craftedWeapons";
+import { sortInstancesForDisplay, canEquipInstance, disassembleInstance, disassembleRefund, weaponStatDelta } from "../systems/craftedWeapons";
 import { attemptRepair } from "../systems/repair";
 import { H, CX } from "../ui/layout";
 import type { WeaponInstance } from "../systems/weaponAssembly";
@@ -291,7 +291,13 @@ export class CraftedWeaponsScene extends Phaser.Scene {
       fontFamily: "Roboto Condensed, sans-serif",
       fontSize: "14px",
     });
-    y += 26;
+    y += 24;
+
+    // M15-PR3: дельта урона vs текущий эквип (Variant B). Эффективный урон
+    // считается тем же резолвером, что и бой (catalog/crafted/null/broken→4/7),
+    // потому дельта всегда честная — включая «vs стартовый нож».
+    y = this.renderStatDelta(selected, leftX, y);
+    y += 2;
 
     const broken = isBroken(selected);
     this.add.text(leftX, y, `Прочность: ${selected.durability_current}/${selected.durability_max}`, {
@@ -322,6 +328,78 @@ export class CraftedWeaponsScene extends Phaser.Scene {
       });
       y += 22;
     });
+  }
+
+  // ── M15-PR3: stat-delta строка в detail-панели ──────────────────
+  // Чистая дельта считается в `weaponStatDelta` (systems, unit-tested);
+  // здесь только форматирование/цвет. Эффективный урон (broken→4/7,
+  // catalog/crafted/null) резолвится тем же путём, что и бой (R1).
+  private renderStatDelta(selected: WeaponInstance, leftX: number, y: number): number {
+    const delta = weaponStatDelta(
+      selected,
+      GameState.player.equipped_weapon,
+      GameState.data.items,
+      GameState.player.crafted_weapons,
+    );
+
+    // Кандидат уже экипирован → дельта тривиально 0; показываем метку.
+    if (delta.is_equipped_self) {
+      this.add.text(leftX, y, "✓ Экипировано", {
+        color: "#e6c860",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "italic",
+      });
+      return y + 22;
+    }
+
+    const fmt = (d: number): string => (d > 0 ? `+${d}` : `${d}`);
+    const colorOf = (d: number): string =>
+      d > 0 ? "#6fae5e" : d < 0 ? "#e25d3a" : "#8a8170";
+
+    const label = this.add.text(leftX, y, "vs экип.: ", {
+      color: "#8a8170",
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "13px",
+    });
+    let x = leftX + label.width;
+
+    const minTxt = this.add.text(x, y, fmt(delta.delta_min), {
+      color: colorOf(delta.delta_min),
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "13px",
+      fontStyle: "bold",
+    });
+    x += minTxt.width;
+
+    const sep = this.add.text(x, y, " / ", {
+      color: "#8a8170",
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "13px",
+    });
+    x += sep.width;
+
+    this.add.text(x, y, fmt(delta.delta_max), {
+      color: colorOf(delta.delta_max),
+      fontFamily: "Roboto Condensed, sans-serif",
+      fontSize: "13px",
+      fontStyle: "bold",
+    });
+    y += 20;
+
+    // R3: сломанный кандидат в бою даёт 4–7, не свои stats — поясняем,
+    // чтобы дельта «−N» не выглядела как ошибка против frozen «Урон».
+    if (delta.candidate_broken) {
+      this.add.text(leftX, y, "сломано — в бою 4–7", {
+        color: "#e25d3a",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "12px",
+        fontStyle: "italic",
+      });
+      y += 18;
+    }
+
+    return y;
   }
 
   // ── Disassembly footer (D5/D6) ──────────────────────────────────
