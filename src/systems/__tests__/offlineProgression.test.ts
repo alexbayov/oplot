@@ -9,6 +9,7 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 import {
   accrualHasYield,
   accrueBed,
+  accrueDecay,
   accrueOffline,
   formatOfflineSummary,
   type AccrualState,
@@ -16,6 +17,7 @@ import {
 import { createDefaultBuildings } from "../../state/GameState";
 import {
   BED_ENERGY_GATE,
+  BED_ENERGY_PER_HOUR,
   BED_HP_PER_HOUR,
   BUNK_CYCLE_MS,
   BUNK_FOOD_PER_CYCLE,
@@ -174,12 +176,12 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 5, garden_water_spent: 1, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0, bed_energy_spent: 0,
     })).toBe(true);
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 5, bunk_food_spent: 1,
-      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0, bed_energy_spent: 0,
     })).toBe(true);
   });
 
@@ -187,12 +189,12 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0, bed_energy_spent: 0,
     })).toBe(false);
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: true, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0, bed_energy_spent: 0,
     })).toBe(false);
   });
 
@@ -200,7 +202,7 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 3, generator_fuel_spent: 3, bed_hp_added: 0,
+      generator_energy_added: 3, generator_fuel_spent: 3, bed_hp_added: 0, bed_energy_spent: 0,
     })).toBe(true);
   });
 });
@@ -329,10 +331,11 @@ describe("accrueBed — M17 PR1 hourly bed production", () => {
   it("accrueOffline elapsed-hours dispatcher includes bed tick", () => {
     const s = baseState({
       hp: 10,
-      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 2 * BED_ENERGY_PER_HOUR },
     });
     const r = accrueOffline(s, 2);
     expect(r.summary.bed_hp_added).toBe(2 * BED_HP_PER_HOUR);
+    expect(r.summary.bed_energy_spent).toBe(2 * BED_ENERGY_PER_HOUR);
     expect(r.state.hp).toBe(10 + 2 * BED_HP_PER_HOUR);
   });
 });
@@ -350,9 +353,56 @@ describe("formatOfflineSummary — M17 PR2 summary dialog text", () => {
       bunk_food_spent: 0,
       generator_energy_added: 3,
       generator_fuel_spent: 3,
-      bed_hp_added: 2,
+      bed_hp_added: 2, bed_energy_spent: 0,
     });
     expect(text).toContain("+3 HP");
     expect(text).toContain("+3 energy");
+  });
+});
+
+
+describe("accrueDecay — M17 PR3 bed energy sink", () => {
+  it("48h dry run drains energy to zero and bed stops healing", () => {
+    const s = baseState({
+      hp: 0,
+      hp_max: 100,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 1 },
+    });
+    const r = accrueOffline(s, 48);
+    expect(r.state.baseResources.energy).toBe(0);
+    expect(r.summary.bed_hp_added).toBe(1 / BED_ENERGY_PER_HOUR * BED_HP_PER_HOUR);
+
+    const stopped = accrueOffline(r.state, 1);
+    expect(stopped.summary.bed_hp_added).toBe(0);
+  });
+
+  it("zero-energy cascade: bed does not heal, generator still produces from fuel", () => {
+    const s = baseState({
+      hp: 10,
+      baseResources: { water: 0, fuel: 2, metal: 0, food: 0, energy: 0 },
+    });
+    const r = accrueOffline(s, 1);
+    expect(r.summary.bed_hp_added).toBe(0);
+    expect(r.summary.generator_energy_added).toBe(2);
+    expect(r.state.baseResources.energy).toBe(2);
+  });
+
+  it("after 12h offline energy below bed gate motivates sortie", () => {
+    const s = baseState({
+      hp: 0,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+    });
+    const r = accrueOffline(s, 12);
+    expect(r.state.baseResources.energy).toBeLessThan(BED_ENERGY_GATE);
+  });
+
+  it("accrueDecay is pure and input-bounds energy consumption", () => {
+    const s = baseState({
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0.2 },
+    });
+    const r = accrueDecay(s, 10);
+    expect(s.baseResources.energy).toBe(0.2);
+    expect(r.state.baseResources.energy).toBe(0);
+    expect(r.bed_hours_available).toBe(0.2 / BED_ENERGY_PER_HOUR);
   });
 });
