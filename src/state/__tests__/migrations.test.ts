@@ -402,3 +402,13 @@ describe("v7 -> v8 migration (M13 PR-6b-3 Verstak energy gate)", () => {
     expect(v8.baseResources?.energy).toBe(0);
   });
 });
+
+// M16-PR2/PR3 schema-neutral guard. Только PR1 бампит SAVE_VERSION (8→9);
+// последующие PR вехи M16 НЕ трогают схему. Этот страж падает мгновенно,
+// если случайный bump просочится в schema-neutral PR (migration discipline,
+// preflight §6 / roadmap §138).
+describe("M16 schema-neutral guard", () => {
+  test("SAVE_VERSION зафиксирован на 9 (PR2/PR3 без bump)", () => {
+    expect(SAVE_VERSION).toBe(9);
+  });
+});

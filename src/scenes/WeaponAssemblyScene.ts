@@ -272,7 +272,15 @@ export class WeaponAssemblyScene extends Phaser.Scene {
     let line: string;
     let color: string;
     if (preview.ok) {
-      line = `Урон: ${preview.stats.damage_min}–${preview.stats.damage_max}   •   Прочность: ${preview.durability_max}`;
+      // M16-PR2: показываем полную combat-поверхность сборки до commit —
+      // урон, точность, combat-вес, прочность. accuracy/weight приходят из
+      // того же `previewAssembly` (== assembleWeapon().stats), не из своей
+      // суммы. weight_kg форматируем до 0.1 кг (вклад частей дробный).
+      line =
+        `Урон: ${preview.stats.damage_min}–${preview.stats.damage_max}` +
+        `   •   Точность: ${preview.stats.accuracy}` +
+        `   •   Вес: ${preview.weight_kg.toFixed(1)} кг` +
+        `   •   Прочность: ${preview.durability_max}`;
       color = "#D4C5A0";
     } else if (preview.reason === "empty_parts") {
       line = "Выберите детали для сборки";
