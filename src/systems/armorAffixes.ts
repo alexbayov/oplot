@@ -101,3 +101,33 @@ export const computeMaxWeightWithArmor = (
   equipped: EquippedArmor,
   items: Record<string, Item>,
 ): number => baseMaxWeight + resolveEquippedArmor(equipped, items).carry_kg;
+
+export interface ArmorStatDelta {
+  candidate: ResolvedArmor;
+  equipped: ResolvedArmor;
+  delta_carry_kg: number;
+  delta_inventory_slots: number;
+  delta_scavenge_chance: number;
+  delta_armor_def: number;
+}
+
+export const armorStatDelta = (
+  candidate: ArmorItem,
+  equipped: EquippedArmor,
+  items: Record<string, Item>,
+): ArmorStatDelta => {
+  const nextEquipped: EquippedArmor = {
+    ...equipped,
+    [candidate.slot]: candidate.id,
+  };
+  const candidateResolved = resolveEquippedArmor(nextEquipped, items);
+  const equippedResolved = resolveEquippedArmor(equipped, items);
+  return {
+    candidate: candidateResolved,
+    equipped: equippedResolved,
+    delta_carry_kg: candidateResolved.carry_kg - equippedResolved.carry_kg,
+    delta_inventory_slots: candidateResolved.inventory_slots - equippedResolved.inventory_slots,
+    delta_scavenge_chance: candidateResolved.scavenge_chance - equippedResolved.scavenge_chance,
+    delta_armor_def: candidateResolved.armor_def - equippedResolved.armor_def,
+  };
+};
