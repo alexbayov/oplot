@@ -1,4 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
+import { SAVE_VERSION } from "../../config";
 import type { Perk } from "../../types";
 
 const mockPerks: Perk[] = [
@@ -227,10 +228,12 @@ describe("cloudSave", () => {
       id: "wi_round",
       name_ru: "Сборка",
       slot: "action" as const,
-      stats: { damage_min: 4, damage_max: 9 },
+      stats: { damage_min: 4, damage_max: 9, accuracy: 0 },
+      weight_kg: 0,
       durability_max: 5,
       durability_current: 2,
       parts: ["pm_frame", "pm_barrel"],
+      affixes: [],
     };
     GameState.player.crafted_weapons = [wi];
     GameState.player.equipped_weapon = { kind: "crafted", id: "wi_round" };
@@ -291,7 +294,7 @@ describe("cloudSave", () => {
     const v6 = makeSnapshot({ version: 6, saved_at: "2026-06-14T00:00:00Z" });
     const once = migrateSnapshot(v6 as never);
     const twice = migrateSnapshot(once);
-    expect(once.version).toBe(8);
+    expect(once.version).toBe(SAVE_VERSION);
     expect(twice).toEqual(once);
   });
 

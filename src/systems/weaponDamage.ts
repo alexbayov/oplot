@@ -6,6 +6,7 @@
 // реально уходит в бой — иначе дельта врёт. Чтобы паритет не протух на первом
 // же тюне baseline'а, резолв вынесен сюда и зовётся ОБОИМИ местами
 // (snapshotHero + weaponStatDelta). См. M15-PR3-PREFLIGHT.md R1.
+import { ACCURACY_BASELINE } from "../state/balance";
 import type { EquippedWeapon } from "../state/types";
 import type { Item } from "../types/item";
 import type { WeaponInstance } from "./weaponAssembly";
@@ -19,6 +20,21 @@ export const BARE_HANDS_DAMAGE = { damage_min: 4, damage_max: 7 } as const;
 export interface WeaponDamage {
   damage_min: number;
   damage_max: number;
+}
+
+/**
+ * M16 PR-1: полный combat-блок эквип-оружия — damage + accuracy + combat-вес.
+ * accuracy/weight потребляются `computeHeroPower` (offense множители).
+ * - bare-hands / null / сломанный crafted → accuracy = ACCURACY_BASELINE,
+ *   weight = 0 ⇒ factor 1.0 ⇒ нейтрально (zero regression).
+ * - catalog: accuracy из `items[id].stats.accuracy` (typeof-guard, M16 не
+ *   заполняет → BASELINE); combat-weight каталога = 0 (см. preflight §6-B).
+ */
+export interface WeaponCombat {
+  damage_min: number;
+  damage_max: number;
+  accuracy: number;
+  weight: number;
 }
 
 /**
@@ -37,8 +53,25 @@ export function resolveEquippedDamage(
   items: Record<string, Item>,
   crafted: readonly WeaponInstance[],
 ): WeaponDamage {
+  const { damage_min, damage_max } = resolveEquippedCombat(eq, items, crafted);
+  return { damage_min, damage_max };
+}
+
+/**
+ * M16 PR-1: полный combat-резолв (damage + accuracy + combat-вес). Тот же
+ * единый путь (R1, продолжение M15-PR3): зовётся из `snapshotHero` (бой)
+ * И из арсенальной дельты/preview. `resolveEquippedDamage` — тонкая
+ * обёртка над этим резолвером (damage-проекция для legacy-вызовов).
+ */
+export function resolveEquippedCombat(
+  eq: EquippedWeapon | null,
+  items: Record<string, Item>,
+  crafted: readonly WeaponInstance[],
+): WeaponCombat {
   let damage_min: number = BARE_HANDS_DAMAGE.damage_min;
   let damage_max: number = BARE_HANDS_DAMAGE.damage_max;
+  let accuracy: number = ACCURACY_BASELINE;
+  let weight = 0;
 
   if (eq) {
     if (eq.kind === "catalog") {
@@ -46,16 +79,21 @@ export function resolveEquippedDamage(
       if (w && w.kind === "weapon" && w.stats) {
         if (typeof w.stats.damage_min === "number") damage_min = w.stats.damage_min;
         if (typeof w.stats.damage_max === "number") damage_max = w.stats.damage_max;
+        if (typeof w.stats.accuracy === "number") accuracy = w.stats.accuracy;
       }
+      // combat-weight каталога = 0 (preflight §6-B): found-стволы не несут
+      // handling-штрафа в M16; их trade-off — вечная прочность.
     } else {
       const inst = crafted.find((wi) => wi.id === eq.id);
       if (inst && inst.durability_current > 0) {
         damage_min = inst.stats.damage_min;
         damage_max = inst.stats.damage_max;
+        accuracy = inst.stats.accuracy;
+        weight = inst.weight_kg;
       }
-      // else: broken / missing — bare-hands (R3), как в snapshotHero.
+      // else: broken / missing — bare-hands (R3), accuracy=BASELINE, weight=0.
     }
   }
 
-  return { damage_min, damage_max };
+  return { damage_min, damage_max, accuracy, weight };
 }

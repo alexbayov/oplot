@@ -8,10 +8,12 @@ const make = (currentDur: number, maxDur = 10): WeaponInstance => ({
   id: "wi_test",
   name_ru: "Тест",
   slot: "action",
-  stats: { damage_min: 1, damage_max: 2 },
+  stats: { damage_min: 1, damage_max: 2, accuracy: 0 },
+  weight_kg: 0,
   durability_max: maxDur,
   durability_current: currentDur,
   parts: [],
+  affixes: [],
 });
 
 describe("applyDurabilityHit — per-encounter decrement", () => {
@@ -50,10 +52,12 @@ describe("applyDurabilityHit — per-encounter decrement", () => {
       id: "wi_keep",
       name_ru: "Сохрани меня",
       slot: "action",
-      stats: { damage_min: 3, damage_max: 7 },
+      stats: { damage_min: 3, damage_max: 7, accuracy: 0 },
+      weight_kg: 0,
       durability_max: 50,
       durability_current: 25,
       parts: ["a", "b"],
+      affixes: [],
     };
     const after = applyDurabilityHit(w, 5);
     expect(after.id).toBe(w.id);
@@ -97,10 +101,12 @@ describe("applyPerEncounterDurabilityHit", () => {
     id,
     name_ru: `сборка ${id}`,
     slot: "action",
-    stats: { damage_min: 2, damage_max: 5 },
+    stats: { damage_min: 2, damage_max: 5, accuracy: 0 },
+    weight_kg: 0,
     durability_max: maxDur,
     durability_current: currentDur,
     parts: ["pm_frame", "pm_barrel"],
+    affixes: [],
   });
 
   it("crafted+won → durability_current уменьшается на дефолт 1", () => {

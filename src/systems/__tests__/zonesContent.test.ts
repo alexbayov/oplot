@@ -86,6 +86,8 @@ const buildWarehouseInput = (zone: Zone, depth: 1 | 2 | 3): EncounterInput => {
       hp_max: 100,
       level: 3,
       weapon_damage_avg: 12,
+      weapon_accuracy: 0,
+      weapon_weight: 0,
       armor_reduction: 0.2,
       skill_combat: 2,
       injuries: [],

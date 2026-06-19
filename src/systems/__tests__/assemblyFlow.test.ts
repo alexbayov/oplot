@@ -43,7 +43,7 @@ describe("assembleFromStash — pure orchestrator", () => {
       stash,
       seedRng(),
     );
-    expect(instance.stats).toEqual({ damage_min: 3, damage_max: 8 });
+    expect(instance.stats).toEqual({ damage_min: 3, damage_max: 8, accuracy: 0 });
     expect(instance.durability_max).toBe(15);
     expect(nextStash.find((s) => s.item_id === "pm_frame")).toBeUndefined();
     expect(nextStash.find((s) => s.item_id === "pm_slide")).toBeUndefined();

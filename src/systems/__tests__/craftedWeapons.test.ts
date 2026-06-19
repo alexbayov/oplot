@@ -25,10 +25,12 @@ const mk = (
   id,
   name_ru: id,
   slot: "action",
-  stats: { damage_min: 1, damage_max: 2 },
+  stats: { damage_min: 1, damage_max: 2, accuracy: 0 },
+  weight_kg: 0,
   durability_max: 10,
   durability_current,
   parts,
+  affixes: [],
 });
 
 const part = (id: string): ComponentItem => ({
@@ -344,10 +346,12 @@ describe("weaponStatDelta", () => {
     id,
     name_ru: id,
     slot: "action",
-    stats: { damage_min: dmin, damage_max: dmax },
+    stats: { damage_min: dmin, damage_max: dmax, accuracy: 0 },
+    weight_kg: 0,
     durability_max: 10,
     durability_current,
     parts: [],
+    affixes: [],
   });
 
   const items: Record<string, Item> = {

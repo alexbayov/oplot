@@ -16,7 +16,7 @@ import type {
 } from "../types/sortie";
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
-import { resolveEquippedDamage } from "../systems/weaponDamage";
+import { resolveEquippedCombat } from "../systems/weaponDamage";
 import type { InventoryStack } from "../state/types";
 
 /**
@@ -121,14 +121,17 @@ export class SortieRunScene extends Phaser.Scene {
     // re-assemble на load запрещён, C4). Сломанный crafted падает
     // в bare-hands fallback 4/7, как было до PR-6a (OP3 default).
     //
-    // M15-PR3: switch вынесен в `resolveEquippedDamage` (systems/weaponDamage),
-    // тот же хелпер зовёт арсенальная stat-delta — паритет «дельта == бой»
+    // M15-PR3: switch вынесен в резолвер (systems/weaponDamage), тот же
+    // хелпер зовёт арсенальная stat-delta — паритет «дельта == бой»
     // структурно гарантирован (R1). Менять baseline 4/7 / путь резолва — ТАМ.
-    const { damage_min: damageMin, damage_max: damageMax } = resolveEquippedDamage(
-      p.equipped_weapon,
-      items,
-      p.crafted_weapons,
-    );
+    // M16-PR1: `resolveEquippedCombat` отдаёт ещё accuracy + combat-вес,
+    // которые входят в computeHeroPower (offense множители).
+    const {
+      damage_min: damageMin,
+      damage_max: damageMax,
+      accuracy: weaponAccuracy,
+      weight: weaponWeight,
+    } = resolveEquippedCombat(p.equipped_weapon, items, p.crafted_weapons);
 
     // M13 PR-6a: 3-slot armor aggregation (C7/C8). Собираем slot-предметы
     // в массив и передаём в computeArmorReduction, который суммирует
@@ -149,6 +152,8 @@ export class SortieRunScene extends Phaser.Scene {
       hp_max: p.hp_max,
       level: p.level,
       weapon_damage_avg: (damageMin + damageMax) / 2,
+      weapon_accuracy: weaponAccuracy,
+      weapon_weight: weaponWeight,
       armor_reduction: armorReduction,
       skill_combat: Math.floor(p.level / 2),
       injuries: (p.injuries ?? []).map((i) => ({ kind: i.kind, duration_days: i.days_left })),

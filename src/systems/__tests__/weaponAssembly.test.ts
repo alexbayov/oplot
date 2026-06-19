@@ -5,13 +5,19 @@ import type { ComponentItem } from "../../types";
 
 const part = (
   id: string,
-  contribute: { damage_min?: number; damage_max?: number; durability_max?: number },
+  contribute: {
+    damage_min?: number;
+    damage_max?: number;
+    accuracy?: number;
+    durability_max?: number;
+  },
+  weight_kg = 0.5,
 ): ComponentItem => ({
   kind: "component",
   id,
   name_ru: id,
   tier: 1,
-  weight_kg: 0.5,
+  weight_kg,
   zone_origin: "test",
   description_ru: "",
   recipe_id: null,
@@ -34,6 +40,33 @@ describe("assembleWeapon — sum по contribute_* (additive scalar)", () => {
     expect(w.durability_current).toBe(15);
     expect(w.slot).toBe("action");
     expect(w.parts).toEqual(["pm_frame", "pm_slide"]);
+  });
+
+  it("M16-PR1: суммирует accuracy и weight_kg, affixes пустой", () => {
+    const w = assembleWeapon(
+      [
+        part("pm_frame", { damage_min: 1, damage_max: 2, accuracy: 3 }, 0.6),
+        part("mod_optic", { accuracy: 4 }, 0.8),
+        part("pm_slide", { damage_min: 2, damage_max: 4 }, 0.4),
+      ],
+      "wi_acc",
+    );
+    expect(w.stats.accuracy).toBe(7);
+    expect(w.weight_kg).toBeCloseTo(1.8);
+    expect(w.affixes).toEqual([]);
+  });
+
+  it("M16-PR1: парты без accuracy → инстанс accuracy 0 (нейтрально)", () => {
+    const w = assembleWeapon(
+      [
+        part("pm_frame", { damage_min: 1, damage_max: 2, durability_max: 5 }),
+        part("pm_slide", { damage_min: 2, damage_max: 3, durability_max: 5 }),
+      ],
+      "wi_noacc",
+    );
+    expect(w.stats.accuracy).toBe(0);
+    expect(w.weight_kg).toBeCloseTo(1.0);
+    expect(w.affixes).toEqual([]);
   });
 
   it("commutativity: порядок частей не влияет на результат", () => {

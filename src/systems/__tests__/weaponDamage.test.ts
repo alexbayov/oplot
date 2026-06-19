@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { resolveEquippedDamage, BARE_HANDS_DAMAGE } from "../weaponDamage";
+import {
+  resolveEquippedCombat,
+  resolveEquippedDamage,
+  BARE_HANDS_DAMAGE,
+} from "../weaponDamage";
+import { ACCURACY_BASELINE } from "../../state/balance";
 import type { WeaponInstance } from "../weaponAssembly";
 import type { Item } from "../../types/item";
 import type { EquippedWeapon } from "../../state/types";
@@ -29,10 +34,12 @@ const inst = (
   id,
   name_ru: id,
   slot: "action",
-  stats: { damage_min, damage_max },
+  stats: { damage_min, damage_max, accuracy: 0 },
+  weight_kg: 0,
   durability_max: 10,
   durability_current,
   parts: [],
+  affixes: [],
 });
 
 const items: Record<string, Item> = {
@@ -107,5 +114,104 @@ describe("resolveEquippedDamage", () => {
     const eqD: EquippedWeapon = { kind: "crafted", id: "d" };
     expect(resolveEquippedDamage(eqA, items, [alive, dead])).toEqual({ damage_min: 20, damage_max: 30 });
     expect(resolveEquippedDamage(eqD, items, [alive, dead])).toEqual({ damage_min: 4, damage_max: 7 });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// M16 PR-1: resolveEquippedCombat — расширяет резолв до accuracy + веса.
+// damage-проекция идентична resolveEquippedDamage (тонкая обёртка).
+// ─────────────────────────────────────────────────────────────────────
+describe("resolveEquippedCombat", () => {
+  // crafted-инстанс с заданными accuracy/weight (фабрика `inst` даёт 0/0).
+  const craftedFull = (
+    id: string,
+    accuracy: number,
+    weight_kg: number,
+    durability_current = 10,
+  ): WeaponInstance => ({
+    id,
+    name_ru: id,
+    slot: "action",
+    stats: { damage_min: 11, damage_max: 16, accuracy },
+    weight_kg,
+    durability_max: 10,
+    durability_current,
+    parts: [],
+    affixes: [],
+  });
+
+  it("null (голые руки) → bare-hands damage + baseline accuracy + вес 0", () => {
+    expect(resolveEquippedCombat(null, items, [])).toEqual({
+      damage_min: BARE_HANDS_DAMAGE.damage_min,
+      damage_max: BARE_HANDS_DAMAGE.damage_max,
+      accuracy: ACCURACY_BASELINE,
+      weight: 0,
+    });
+  });
+
+  it("catalog без accuracy → baseline accuracy; combat-вес каталога = 0", () => {
+    const eq: EquippedWeapon = { kind: "catalog", id: "akm" };
+    expect(resolveEquippedCombat(eq, items, [])).toEqual({
+      damage_min: 13,
+      damage_max: 19,
+      accuracy: ACCURACY_BASELINE,
+      weight: 0,
+    });
+  });
+
+  it("catalog с accuracy в stats → читается; вес всё равно 0", () => {
+    const withAcc: Record<string, Item> = {
+      scoped: {
+        kind: "weapon",
+        id: "scoped",
+        name_ru: "scoped",
+        tier: 1,
+        weight_kg: 5, // инвентарный вес каталога — НЕ combat-вес
+        zone_origin: "test",
+        description_ru: "",
+        recipe_id: null,
+        slot: "action",
+        stats: { damage_min: 10, damage_max: 14, accuracy: 7 },
+      } as Item,
+    };
+    const eq: EquippedWeapon = { kind: "catalog", id: "scoped" };
+    expect(resolveEquippedCombat(eq, withAcc, [])).toEqual({
+      damage_min: 10,
+      damage_max: 14,
+      accuracy: 7,
+      weight: 0,
+    });
+  });
+
+  it("crafted живой → frozen accuracy + combat-вес инстанса", () => {
+    const w = craftedFull("w1", 5, 2.3, 8);
+    const eq: EquippedWeapon = { kind: "crafted", id: "w1" };
+    expect(resolveEquippedCombat(eq, items, [w])).toEqual({
+      damage_min: 11,
+      damage_max: 16,
+      accuracy: 5,
+      weight: 2.3,
+    });
+  });
+
+  it("crafted broken (durability 0) → bare-hands, accuracy/вес обнуляются", () => {
+    const w = craftedFull("w1", 5, 2.3, 0);
+    const eq: EquippedWeapon = { kind: "crafted", id: "w1" };
+    expect(resolveEquippedCombat(eq, items, [w])).toEqual({
+      damage_min: BARE_HANDS_DAMAGE.damage_min,
+      damage_max: BARE_HANDS_DAMAGE.damage_max,
+      accuracy: ACCURACY_BASELINE,
+      weight: 0,
+    });
+  });
+
+  it("resolveEquippedDamage — damage-проекция combat (паритет R1)", () => {
+    const w = craftedFull("w1", 9, 4.0, 6);
+    const eq: EquippedWeapon = { kind: "crafted", id: "w1" };
+    const combat = resolveEquippedCombat(eq, items, [w]);
+    expect(resolveEquippedDamage(eq, items, [w])).toEqual({
+      damage_min: combat.damage_min,
+      damage_max: combat.damage_max,
+    });
   });
 });

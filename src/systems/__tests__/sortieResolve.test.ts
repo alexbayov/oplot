@@ -2,13 +2,22 @@ import { describe, expect, it, beforeEach } from "vitest";
 import {
   BASE_RESOURCE_ITEMS,
   buildEncounterLootPool,
+  accuracyToPowerFactor,
   computeArmorReduction,
   computeMobThreat,
   resolveEncounter,
   resolveFullSortie,
   setNarrative,
   SORTIE_GOALS,
+  weightToPowerFactor,
 } from "../sortieResolve";
+import {
+  ACC_FACTOR_MAX,
+  ACC_FACTOR_MIN,
+  ACCURACY_BASELINE,
+  WEIGHT_FACTOR_MIN,
+  WEIGHT_FREE_KG,
+} from "../../state/balance";
 import type {
   EncounterInput,
   HeroSnapshot,
@@ -30,6 +39,11 @@ const baseHero = (overrides: Partial<HeroSnapshot> = {}): HeroSnapshot => ({
   hp_max: 100,
   level: 3,
   weapon_damage_avg: 8,
+  // M16-PR1 zero-regression baseline: accuracy=BASELINE(0), вес=0 →
+  // оба offense-множителя = 1.0 → heroPower бит-в-бит как до M16.
+  // Golden-исходы ниже опираются на этот нейтральный default.
+  weapon_accuracy: 0,
+  weapon_weight: 0,
   armor_reduction: 0.2,
   skill_combat: 2,
   injuries: [],
@@ -404,5 +418,103 @@ describe("sortieResolve · computeArmorReduction", () => {
         { armor_reduction: 0.1 },        // 0.1
       ]),
     ).toBeCloseTo(0.6, 5);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// M16 PR-1: offense-множители accuracy/weight в computeHeroPower.
+// Тесты бьют по инвариантам (baseline=1.0, монотонность, clamp, zero-
+// regression), НЕ по конкретным числам тюнинга.
+// ─────────────────────────────────────────────────────────────────────
+describe("sortieResolve · accuracyToPowerFactor (M16-PR1)", () => {
+  it("baseline accuracy → ровно 1.0 (нейтрально, zero-regression)", () => {
+    expect(accuracyToPowerFactor(ACCURACY_BASELINE)).toBe(1);
+  });
+
+  it("монотонно растёт с accuracy", () => {
+    const lo = accuracyToPowerFactor(ACCURACY_BASELINE + 1);
+    const hi = accuracyToPowerFactor(ACCURACY_BASELINE + 10);
+    expect(lo).toBeGreaterThan(1);
+    expect(hi).toBeGreaterThan(lo);
+  });
+
+  it("accuracy ниже baseline → фактор < 1 (штраф)", () => {
+    expect(accuracyToPowerFactor(ACCURACY_BASELINE - 5)).toBeLessThan(1);
+  });
+
+  it("clamp в [ACC_FACTOR_MIN, ACC_FACTOR_MAX] на экстремумах", () => {
+    expect(accuracyToPowerFactor(ACCURACY_BASELINE + 100000)).toBe(ACC_FACTOR_MAX);
+    expect(accuracyToPowerFactor(ACCURACY_BASELINE - 100000)).toBe(ACC_FACTOR_MIN);
+  });
+});
+
+describe("sortieResolve · weightToPowerFactor (M16-PR1)", () => {
+  it("вес ≤ WEIGHT_FREE_KG → ровно 1.0 (без штрафа)", () => {
+    expect(weightToPowerFactor(0)).toBe(1);
+    expect(weightToPowerFactor(WEIGHT_FREE_KG)).toBe(1);
+  });
+
+  it("сверх порога — монотонно падает, но никогда > 1", () => {
+    const a = weightToPowerFactor(WEIGHT_FREE_KG + 1);
+    const b = weightToPowerFactor(WEIGHT_FREE_KG + 5);
+    expect(a).toBeLessThan(1);
+    expect(b).toBeLessThan(a);
+  });
+
+  it("пол WEIGHT_FACTOR_MIN на экстремальном весе", () => {
+    expect(weightToPowerFactor(WEIGHT_FREE_KG + 100000)).toBe(WEIGHT_FACTOR_MIN);
+  });
+});
+
+describe("sortieResolve · M16 zero-regression в бою", () => {
+  it("baseline accuracy + вес 0 → исход идентичен (множители = 1.0)", () => {
+    // Контрольная группа = нейтральный baseHero. Если formula-вставка
+    // M16 не нейтральна на baseline, детерминированный исход разойдётся.
+    const neutral = resolveEncounter(baseEncounter(), makeRng(7));
+    const explicit = resolveEncounter(
+      baseEncounter({
+        hero: baseHero({ weapon_accuracy: ACCURACY_BASELINE, weapon_weight: 0 }),
+      }),
+      makeRng(7),
+    );
+    expect(explicit).toEqual(neutral);
+  });
+
+  it("высокая accuracy усиливает героя (≥ исход при baseline по силе)", () => {
+    // Прокси-проверка через win-rate на спектре сидов: больше accuracy →
+    // не меньше побед (монотонный вклад в heroPower).
+    const wins = (acc: number): number => {
+      let w = 0;
+      for (let s = 0; s < 40; s++) {
+        const r = resolveEncounter(
+          baseEncounter({
+            mob_total_threat: 18,
+            hero: baseHero({ weapon_accuracy: acc }),
+          }),
+          makeRng(s + 1),
+        );
+        if (r.outcome === "won") w++;
+      }
+      return w;
+    };
+    expect(wins(ACCURACY_BASELINE + 20)).toBeGreaterThanOrEqual(wins(ACCURACY_BASELINE));
+  });
+
+  it("тяжёлое оружие ослабляет героя (≤ побед против baseline)", () => {
+    const wins = (weight: number): number => {
+      let w = 0;
+      for (let s = 0; s < 40; s++) {
+        const r = resolveEncounter(
+          baseEncounter({
+            mob_total_threat: 18,
+            hero: baseHero({ weapon_weight: weight }),
+          }),
+          makeRng(s + 1),
+        );
+        if (r.outcome === "won") w++;
+      }
+      return w;
+    };
+    expect(wins(WEIGHT_FREE_KG + 20)).toBeLessThanOrEqual(wins(0));
   });
 });
