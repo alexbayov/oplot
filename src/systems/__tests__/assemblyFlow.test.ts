@@ -110,3 +110,21 @@ describe("assembleFromStash — pure orchestrator", () => {
     expect(stash).toEqual(snapshot);
   });
 });
+
+
+describe("assembleFromStash — combined determinism pin", () => {
+  it("same parts and seed preserve instance id plus affix snapshot", () => {
+    const parts = [
+      part("pm_frame", { damage_min: 2, damage_max: 5, durability_max: 10 }),
+      part("pm_slide", { damage_min: 1, damage_max: 3, durability_max: 5 }),
+      part("mod_optic", { damage_min: 0, damage_max: 1, durability_max: 2 }),
+    ];
+    const stash: InventoryStack[] = parts.map((p) => ({ item_id: p.id, count: 1 }));
+
+    const a = assembleFromStash(parts, stash, seedRng(0.37)).instance;
+    const b = assembleFromStash(parts, stash, seedRng(0.37)).instance;
+
+    expect({ id: a.id, affixes: a.affixes }).toEqual({ id: b.id, affixes: b.affixes });
+    expect(a.id).toMatch(/^wi_/);
+  });
+});
