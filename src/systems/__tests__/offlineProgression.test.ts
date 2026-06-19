@@ -8,11 +8,14 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import {
   accrualHasYield,
+  accrueBed,
   accrueOffline,
   type AccrualState,
 } from "../offlineProgression";
 import { createDefaultBuildings } from "../../state/GameState";
 import {
+  BED_ENERGY_GATE,
+  BED_HP_PER_HOUR,
   BUNK_CYCLE_MS,
   BUNK_FOOD_PER_CYCLE,
   BUNK_HP_PER_CYCLE,
@@ -22,6 +25,7 @@ import {
   GARDEN_WATER_PER_CYCLE,
   MAX_OFFLINE_WINDOW_MS,
   MIN_ACCRUAL_WINDOW_MS,
+  OFFLINE_ACCUMULATION_CAP_HOURS,
 } from "../../state/balance";
 
 const T0 = 1_000_000_000_000; // arbitrary fixed anchor (avoids Date.now drift)
@@ -168,12 +172,12 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 5, garden_water_spent: 1, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
     })).toBe(true);
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 5, bunk_food_spent: 1,
-      generator_energy_added: 0, generator_fuel_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
     })).toBe(true);
   });
 
@@ -181,12 +185,12 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
     })).toBe(false);
     expect(accrualHasYield({
       delta_ms: 0, rolled_back: true, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 0, generator_fuel_spent: 0,
+      generator_energy_added: 0, generator_fuel_spent: 0, bed_hp_added: 0,
     })).toBe(false);
   });
 
@@ -194,7 +198,7 @@ describe("accrualHasYield — toast guard", () => {
     expect(accrualHasYield({
       delta_ms: 1, rolled_back: false, capped_at_max: false,
       garden_food_added: 0, garden_water_spent: 0, bunk_hp_added: 0, bunk_food_spent: 0,
-      generator_energy_added: 3, generator_fuel_spent: 3,
+      generator_energy_added: 3, generator_fuel_spent: 3, bed_hp_added: 0,
     })).toBe(true);
   });
 });
@@ -273,5 +277,60 @@ describe("accrueOffline — generator (M13 PR-6b-3)", () => {
     expect(r.summary.generator_energy_added).toBeGreaterThan(0);
     expect(r.summary.garden_food_added).toBeGreaterThan(0);
     expect(r.summary.bunk_hp_added).toBeGreaterThan(0);
+  });
+});
+
+
+// ─── M17 PR1 bed production tick ───────────────────────────────────────
+
+describe("accrueBed — M17 PR1 hourly bed production", () => {
+  it("monotonic by elapsed hours when energy gate is satisfied", () => {
+    const s = baseState({
+      hp: 50,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+    });
+    const one = accrueBed(s, 1).state.hp;
+    const three = accrueBed(s, 3).state.hp;
+    expect(three).toBeGreaterThan(one);
+  });
+
+  it("caps 100h at exactly 24h × rate", () => {
+    const s = baseState({
+      hp: 0,
+      hp_max: 100,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+    });
+    const r = accrueBed(s, 100);
+    expect(r.hp_added).toBe(OFFLINE_ACCUMULATION_CAP_HOURS * BED_HP_PER_HOUR);
+  });
+
+  it("energy gate: energy below gate does not heal", () => {
+    const s = baseState({
+      hp: 50,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE - 0.01 },
+    });
+    const r = accrueBed(s, 10);
+    expect(r.state.hp).toBe(s.hp);
+    expect(r.hp_added).toBe(0);
+  });
+
+  it("idempotency: tick(1h) three times equals tick(3h)", () => {
+    const s = baseState({
+      hp: 50,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+    });
+    const sequential = [1, 1, 1].reduce((state, hours) => accrueBed(state, hours).state, s);
+    const single = accrueBed(s, 3).state;
+    expect(sequential).toEqual(single);
+  });
+
+  it("accrueOffline elapsed-hours dispatcher includes bed tick", () => {
+    const s = baseState({
+      hp: 10,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: BED_ENERGY_GATE },
+    });
+    const r = accrueOffline(s, 2);
+    expect(r.summary.bed_hp_added).toBe(2 * BED_HP_PER_HOUR);
+    expect(r.state.hp).toBe(10 + 2 * BED_HP_PER_HOUR);
   });
 });

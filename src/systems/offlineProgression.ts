@@ -24,6 +24,8 @@
 import {
   BUNK_CYCLE_MS,
   BUNK_FOOD_PER_CYCLE,
+  BED_ENERGY_GATE,
+  BED_HP_PER_HOUR,
   BUNK_HP_PER_CYCLE,
   GARDEN_CAP,
   GARDEN_CYCLE_MS,
@@ -34,6 +36,7 @@ import {
   GENERATOR_FUEL_PER_CYCLE,
   MAX_OFFLINE_WINDOW_MS,
   MIN_ACCRUAL_WINDOW_MS,
+  OFFLINE_ACCUMULATION_CAP_HOURS,
 } from "../state/balance";
 import { consumeBaseResource } from "../state/GameState";
 import type { BaseResources, BuildingState } from "../state/types";
@@ -66,6 +69,8 @@ export interface AccrualSummary {
   generator_energy_added: number;
   /** M13 PR-6b-3: fuel потраченный генератором за этот accrual. */
   generator_fuel_spent: number;
+  /** M17 PR1: HP added by bed hourly production (energy-gated, no consumption). */
+  bed_hp_added: number;
 }
 
 /**
@@ -95,8 +100,22 @@ const EMPTY_SUMMARY: AccrualSummary = {
   garden_water_spent: 0,
   generator_energy_added: 0,
   generator_fuel_spent: 0,
+  bed_hp_added: 0,
   bunk_hp_added: 0,
   bunk_food_spent: 0,
+};
+
+
+export interface BedAccrualBalance {
+  hpPerHour: number;
+  energyGate: number;
+  capHours: number;
+}
+
+export const DEFAULT_BED_ACCRUAL_BALANCE: BedAccrualBalance = {
+  hpPerHour: BED_HP_PER_HOUR,
+  energyGate: BED_ENERGY_GATE,
+  capHours: OFFLINE_ACCUMULATION_CAP_HOURS,
 };
 
 const findBuilding = (
@@ -217,6 +236,41 @@ const accrueGenerator = (
   };
 };
 
+
+/**
+ * M17 PR1 — bed production tick. The bed heals HP at an hourly rate when
+ * the base has enough energy. PR1 gates on energy only; PR3 will add
+ * consumption/decay. Pure function: returns a new state and never mutates
+ * the input state.
+ */
+export const accrueBed = (
+  state: AccrualState,
+  elapsedHours: number,
+  balance: BedAccrualBalance = DEFAULT_BED_ACCRUAL_BALANCE,
+): { state: AccrualState; hp_added: number } => {
+  const bed = findBuilding(state.buildings, "bunk");
+  if (!bed) return { state, hp_added: 0 };
+  if (!Number.isFinite(elapsedHours) || elapsedHours <= 0) {
+    return { state, hp_added: 0 };
+  }
+  if ((state.baseResources.energy ?? 0) < balance.energyGate) {
+    return { state, hp_added: 0 };
+  }
+
+  const cappedHours = Math.min(elapsedHours, balance.capHours);
+  const hpDeficit = Math.max(0, state.hp_max - state.hp);
+  const hp_added = Math.min(hpDeficit, cappedHours * balance.hpPerHour);
+  if (hp_added <= 0) return { state, hp_added: 0 };
+
+  return {
+    state: {
+      ...state,
+      hp: Math.min(state.hp_max, state.hp + hp_added),
+    },
+    hp_added,
+  };
+};
+
 /**
  * Считает койку: потребляет food, лечит player.hp напрямую (clamp ≤ hp_max).
  *
@@ -275,10 +329,12 @@ const accrueBunk = (
  */
 export const accrueOffline = (
   state: AccrualState,
-  savedAtMs: number,
-  nowMs: number,
+  savedAtMsOrElapsedHours: number,
+  nowMs?: number,
 ): AccrualResult => {
-  const rawDelta = nowMs - savedAtMs;
+  const rawDelta = nowMs === undefined
+    ? savedAtMsOrElapsedHours * 60 * 60 * 1000
+    : nowMs - savedAtMsOrElapsedHours;
   if (!Number.isFinite(rawDelta) || rawDelta < 0) {
     track("offline_rollback", { raw_delta_ms: Number.isFinite(rawDelta) ? rawDelta : -1 });
     return { state, summary: { ...EMPTY_SUMMARY, rolled_back: true } };
@@ -297,9 +353,10 @@ export const accrueOffline = (
   const generatorResult = accrueGenerator(state, delta);
   const gardenResult = accrueGarden(generatorResult.state, delta);
   const bunkResult = accrueBunk(gardenResult.state, delta);
+  const bedResult = accrueBed(bunkResult.state, delta / (60 * 60 * 1000));
 
   return {
-    state: bunkResult.state,
+    state: bedResult.state,
     summary: {
       delta_ms: delta,
       rolled_back: false,
@@ -308,6 +365,7 @@ export const accrueOffline = (
       garden_water_spent: gardenResult.water_spent,
       generator_energy_added: generatorResult.energy_added,
       generator_fuel_spent: generatorResult.fuel_spent,
+      bed_hp_added: bedResult.hp_added,
       bunk_hp_added: bunkResult.hp_added,
       bunk_food_spent: bunkResult.food_spent,
     },
@@ -318,4 +376,5 @@ export const accrueOffline = (
 export const accrualHasYield = (summary: AccrualSummary): boolean =>
   summary.garden_food_added > 0 ||
   summary.bunk_hp_added > 0 ||
+  summary.bed_hp_added > 0 ||
   summary.generator_energy_added > 0;
