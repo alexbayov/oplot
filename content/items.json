@@ -1139,7 +1139,13 @@
     "slot": "helm",
     "stats": {
       "armor_value": 0
-    }
+    },
+    "intrinsic_affixes": [
+      {
+        "id": "scavenger_eye",
+        "value": 0.15
+      }
+    ]
   },
   {
     "kind": "consumable",
@@ -1218,7 +1224,17 @@
     "slot": "strap",
     "stats": {
       "armor_value": 2
-    }
+    },
+    "intrinsic_affixes": [
+      {
+        "id": "carry_extra",
+        "value": 2
+      },
+      {
+        "id": "pocket_grid",
+        "value": 2
+      }
+    ]
   },
   {
     "kind": "armor",
@@ -1233,7 +1249,13 @@
     "slot": "plate",
     "stats": {
       "armor_value": 4
-    }
+    },
+    "intrinsic_affixes": [
+      {
+        "id": "reinforced_plate",
+        "value": 1
+      }
+    ]
   },
   {
     "kind": "consumable",

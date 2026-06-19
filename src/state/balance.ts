@@ -49,11 +49,21 @@ export const BUNK_HP_PER_CYCLE = 5;
 /** Койка: длина цикла. */
 export const BUNK_CYCLE_MS = 10 * 60 * 1000;
 
+// M17 PR1 — bed production tick (schema-neutral).
+/** Bed: HP/hour when the energy gate is satisfied. */
+export const BED_HP_PER_HOUR = 0.5;
+/** Bed: minimum energy required to heal. */
+export const BED_ENERGY_GATE = 0.1;
+/** Bed: energy consumed per healing hour. */
+export const BED_ENERGY_PER_HOUR = 0.1;
+/** Offline producer cap in hours. */
+export const OFFLINE_ACCUMULATION_CAP_HOURS = 24;
+
 /**
- * Максимальное окно офлайн-прогрессии. После 8ч delta клампится — не
+ * Максимальное окно офлайн-прогрессии. После 24ч delta клампится — не
  * вознаграждаем бесконечное отсутствие (sortie loop важнее).
  */
-export const MAX_OFFLINE_WINDOW_MS = 8 * 60 * 60 * 1000;
+export const MAX_OFFLINE_WINDOW_MS = 24 * 60 * 60 * 1000;
 /**
  * Минимальное окно для accrual. Открыл-закрыл за минуту — no-op.
  * Гасит спам от частых заходов и F5-refresh.

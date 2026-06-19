@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { GameState, setSfxMute, setSfxVolume, addBaseResource } from "../state/GameState";
 import { computeWeight } from "../systems/weight";
 import { consumePendingAccrualSummary, saveToCloud } from "../systems/cloudSave";
-import { accrualHasYield } from "../systems/offlineProgression";
+import { accrualHasYield, formatOfflineSummary } from "../systems/offlineProgression";
 import { activeSignals } from "../systems/radio";
 import {
   GARDEN_CAP,
@@ -591,21 +591,35 @@ export class BaseScene extends Phaser.Scene {
    */
   private maybeShowOfflineToast(): void {
     const summary = consumePendingAccrualSummary();
-    if (!summary || !accrualHasYield(summary)) return;
-    const parts: string[] = [];
-    const hours = Math.round(summary.delta_ms / (60 * 60 * 1000));
-    parts.push(`Пока вас не было (${hours} ч):`);
-    if (summary.garden_food_added > 0) {
-      parts.push(`грядка +${summary.garden_food_added} еды`);
-    }
-    if (summary.bunk_hp_added > 0) {
-      parts.push(`койка +${summary.bunk_hp_added} HP`);
-    }
-    const spent: string[] = [];
-    if (summary.garden_water_spent > 0) spent.push(`${summary.garden_water_spent} воды`);
-    if (summary.bunk_food_spent > 0) spent.push(`${summary.bunk_food_spent} еды`);
-    if (spent.length > 0) parts.push(`Потрачено: ${spent.join(", ")}`);
-    this.showToast(parts.join(". "));
+    if (!summary || !accrualHasYield(summary) || summary.delta_ms <= 0) return;
+    this.showOfflineSummaryDialog(formatOfflineSummary(summary));
+  }
+
+  private showOfflineSummaryDialog(message: string): void {
+    const overlay = this.add.container(0, 0).setDepth(30);
+    const bg = this.add.rectangle(W / 2, H / 2, 560, 220, 0x1a1208, 0.94);
+    const border = this.add.rectangle(W / 2, H / 2, 568, 228).setStrokeStyle(2, 0xd4c5a0);
+    const title = this.add.text(W / 2, H / 2 - 76, "Пока тебя не было", {
+      color: "#d4c5a0",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "22px",
+    }).setOrigin(0.5);
+    const body = this.add.text(W / 2, H / 2 - 18, message, {
+      color: "#f1e3bd",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "16px",
+      align: "center",
+      wordWrap: { width: 500 },
+    }).setOrigin(0.5);
+    const ok = this.add.text(W / 2, H / 2 + 72, "Ок", {
+      color: "#1a1208",
+      backgroundColor: "#d4c5a0",
+      fontFamily: "Oswald, sans-serif",
+      fontSize: "18px",
+      padding: { x: 28, y: 8 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    ok.on("pointerdown", () => overlay.destroy());
+    overlay.add([border, bg, title, body, ok]);
   }
 
   private showToast(msg: string): void {
