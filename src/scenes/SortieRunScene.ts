@@ -3,7 +3,6 @@ import { GameState, addToStack, countInStacks, removeFromStack } from "../state/
 import { applyPerEncounterDurabilityHit } from "../systems/durability";
 import {
   buildEncounterLootPool,
-  computeArmorReduction,
   computeMobThreat,
   resolveEncounter,
   setNarrative,
@@ -17,6 +16,7 @@ import type {
 import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 import { resolveEquippedCombat } from "../systems/weaponDamage";
+import { resolveEquippedArmor } from "../systems/armorAffixes";
 import type { InventoryStack } from "../state/types";
 
 /**
@@ -133,19 +133,7 @@ export class SortieRunScene extends Phaser.Scene {
       weight: weaponWeight,
     } = resolveEquippedCombat(p.equipped_weapon, items, p.crafted_weapons);
 
-    // M13 PR-6a: 3-slot armor aggregation (C7/C8). Собираем slot-предметы
-    // в массив и передаём в computeArmorReduction, который суммирует
-    // armor_value с floor+clamp НА ИТОГЕ (не per-slot — иначе три пустых
-    // слота дали бы 0.3 вместо baseline 0.1).
-    const armorPieces = [
-      p.equipped_armor_ids.helm,
-      p.equipped_armor_ids.plate,
-      p.equipped_armor_ids.strap,
-    ]
-      .filter((id): id is string => typeof id === "string")
-      .map((id) => items[id])
-      .filter((it): it is NonNullable<typeof it> => it != null);
-    const armorReduction = computeArmorReduction(armorPieces);
+    const armorReduction = resolveEquippedArmor(p.equipped_armor_ids, items).armor_reduction;
 
     return {
       hp: p.hp,
