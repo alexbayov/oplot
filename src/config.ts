@@ -30,5 +30,15 @@ export const MAX_LEVEL = 5;
  *      и crafted_weapons: []. Trap A: `null` у equipped_weapon —
  *      валидное «слот пуст», проверяем через `in`, не `?? default`,
  *      иначе `null ?? default` стёр бы намеренно пустой слот.
+ * v8 = M13 (PR-6b-3): Verstak energy gate + generator. Миграция v7→v8 —
+ *      DATA-FULL: добивает `baseResources.energy=0` и generator-постройку.
+ * v9 = M16 (PR-1): WeaponInstance получает персистимые поля craft-depth —
+ *      `stats.accuracy`, top-level `weight_kg`, `affixes[]`. Миграция
+ *      v8→v9 — DATA-FULL default-stamp: каждый crafted-инстанс получает
+ *      `accuracy=ACCURACY_BASELINE`, `weight_kg=0`, `affixes=[]`. НЕ
+ *      пересчитываем из parts (freeze-on-assembly, C4) — legacy-инстансы
+ *      получают нейтральные значения ⇒ combat бит-в-бит прежний. Один
+ *      bump на всю веху M16 (PR2/PR3 schema-neutral, только заполняют
+ *      `affixes`). crafted_weapons отсутствует → passthrough.
  */
-export const SAVE_VERSION = 8 as const;
+export const SAVE_VERSION = 9 as const;

@@ -14,10 +14,12 @@
  */
 
 import type { CloudSaveSnapshot } from "../systems/cloudSave";
+import { ACCURACY_BASELINE } from "./balance";
 import { SAVE_VERSION } from "../config";
 import { PERK_MIGRATION_MAP } from "./SkillTree";
 import { createDefaultBaseResources } from "./GameState";
 import type { BaseResources, BuildingState } from "./types";
+import type { WeaponAffix, WeaponInstance } from "../systems/weaponAssembly";
 
 /**
  * Карта переименований v1 → v2.
@@ -92,6 +94,9 @@ export const migrateSnapshot = (snapshot: VersionedSnapshot): VersionedSnapshot 
   }
   if (version < 8) {
     next = migrateV7ToV8(next);
+  }
+  if (version < 9) {
+    next = migrateV8ToV9(next);
   }
 
   return next;
@@ -311,4 +316,53 @@ const migrateV7ToV8 = (snap: VersionedSnapshot): VersionedSnapshot => {
     ? ensureBuildingPresent(snap.buildings, "generator")
     : snap.buildings;
   return { ...snap, version: 8, baseResources, buildings };
+};
+
+/**
+ * v8 → v9 (M16 PR-1: craft-depth stat-поверхность на WeaponInstance).
+ *
+ * DATA-FULL default-stamp. WeaponInstance в v9 несёт три новых
+ * персистимых поля: `stats.accuracy`, top-level `weight_kg`, `affixes[]`.
+ * v8-сейвы их не несут → каждый crafted-инстанс получает нейтральные
+ * дефолты:
+ *   - `stats.accuracy = ACCURACY_BASELINE` (default-first spread: уже
+ *     присутствующее значение побеждает — идемпотентно).
+ *   - `weight_kg = 0`, `affixes = []` (`?? `: существующее значение,
+ *     включая 0/непустой массив, сохраняется на повторе).
+ *
+ * Почему default-stamp, а не derive из `parts`: freeze-on-assembly (C4).
+ * Пересчёт статов из частей на load запрещён — баланс-патч молча
+ * переписал бы статы каждого сейв-инстанса. Legacy-оружие получает
+ * нейтральные значения ⇒ accuracyFactor=1.0, weightFactor=1.0 ⇒
+ * combat бит-в-бит прежний (zero regression, см. computeHeroPower).
+ *
+ * `crafted_weapons` отсутствует/undefined → passthrough (НЕ инжектим
+ * пустой массив; applySnapshot подставит `?? []`, как для v6→v7).
+ * Idempotent: главный guard в migrateSnapshot гасит re-entry на v9, но
+ * сама функция тоже идемпотентна (default-first spread + `??`).
+ */
+type LegacyCraftedInstance = Omit<
+  WeaponInstance,
+  "stats" | "weight_kg" | "affixes"
+> & {
+  stats: { damage_min: number; damage_max: number; accuracy?: number };
+  weight_kg?: number;
+  affixes?: WeaponAffix[];
+};
+
+const stampCraftedInstanceV9 = (
+  inst: LegacyCraftedInstance,
+): WeaponInstance => ({
+  ...inst,
+  stats: { accuracy: ACCURACY_BASELINE, ...inst.stats },
+  weight_kg: inst.weight_kg ?? 0,
+  affixes: inst.affixes ?? [],
+});
+
+const migrateV8ToV9 = (snap: VersionedSnapshot): VersionedSnapshot => {
+  if (!snap.crafted_weapons) return { ...snap, version: 9 };
+  const crafted_weapons = (
+    snap.crafted_weapons as unknown as LegacyCraftedInstance[]
+  ).map(stampCraftedInstanceV9);
+  return { ...snap, version: 9, crafted_weapons };
 };

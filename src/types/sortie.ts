@@ -40,6 +40,16 @@ export interface HeroSnapshot {
   level: number;
   /** Средний урон оружия за ход (weapon.damage_min..max усреднённый). */
   weapon_damage_avg: number;
+  /**
+   * M16 PR-1: accuracy эквип-оружия (additive scalar). Входит в оффенс
+   * через `accuracyToPowerFactor`. ACCURACY_BASELINE = нейтрально.
+   */
+  weapon_accuracy: number;
+  /**
+   * M16 PR-1: combat-вес эквип-оружия (кг). Входит в оффенс через
+   * `weightToPowerFactor`. 0 = без handling-штрафа (catalog/bare-hands).
+   */
+  weapon_weight: number;
   /** Снижение урона броней в [0..0.9]. */
   armor_reduction: number;
   /** Уровень навыка боя в [0..10]; на старте M13 = level/2. */

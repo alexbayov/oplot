@@ -10,10 +10,12 @@ const make = (currentDur: number, maxDur = 10): WeaponInstance => ({
   id: "wi_test",
   name_ru: "Тест",
   slot: "action",
-  stats: { damage_min: 1, damage_max: 2 },
+  stats: { damage_min: 1, damage_max: 2, accuracy: 0 },
+  weight_kg: 0,
   durability_max: maxDur,
   durability_current: currentDur,
   parts: [],
+  affixes: [],
 });
 
 describe("repairCost — пропорционально пробою", () => {

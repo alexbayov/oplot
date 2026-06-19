@@ -6,6 +6,15 @@
 //
 // Контракт и тестовые gate-ы: docs/redesign/M13-PIVOT.md §«Авторесолв».
 
+import {
+  ACCURACY_BASELINE,
+  ACCURACY_TO_POWER,
+  ACC_FACTOR_MAX,
+  ACC_FACTOR_MIN,
+  WEIGHT_FACTOR_MIN,
+  WEIGHT_FREE_KG,
+  WEIGHT_TO_POWER_PENALTY,
+} from "../state/balance";
 import type { InventoryStack } from "../state/types";
 import type { ZoneLootCategory, ZoneLootProfile } from "../types/zone";
 import type {
@@ -188,13 +197,42 @@ export const computeMobThreat = (
 };
 
 /**
+ * M16 PR-1: множитель оффенса от accuracy оружия. Монотонно растёт с
+ * accuracy, clamp в [ACC_FACTOR_MIN, ACC_FACTOR_MAX]. `accuracy ===
+ * ACCURACY_BASELINE` ⇒ ровно 1.0 (zero-regression инвариант).
+ */
+export const accuracyToPowerFactor = (accuracy: number): number => {
+  const raw = 1 + (accuracy - ACCURACY_BASELINE) * ACCURACY_TO_POWER;
+  return Math.min(ACC_FACTOR_MAX, Math.max(ACC_FACTOR_MIN, raw));
+};
+
+/**
+ * M16 PR-1: множитель оффенса от combat-веса оружия (handling-штраф).
+ * `weight <= WEIGHT_FREE_KG` ⇒ ровно 1.0; сверх порога монотонно падает,
+ * clamp снизу WEIGHT_FACTOR_MIN. Никогда не превышает 1.0 (вес — только
+ * штраф, не бонус).
+ */
+export const weightToPowerFactor = (weight: number): number => {
+  const over = Math.max(0, weight - WEIGHT_FREE_KG);
+  const raw = 1 - over * WEIGHT_TO_POWER_PENALTY;
+  return Math.min(1, Math.max(WEIGHT_FACTOR_MIN, raw));
+};
+
+/**
  * Считает «силу героя» против энкаунтера. С учётом цели, ранений и скилла.
  */
 const computeHeroPower = (hero: HeroSnapshot, goal: SortieGoalDef): number => {
   const skillBonus = 1 + Math.min(10, hero.skill_combat) * 0.08;
   const levelBonus = 1 + hero.level * 0.05;
   const injuryPenalty = Math.max(0, 1 - hero.injuries.length * 0.1);
-  const base = (hero.weapon_damage_avg + 2) * skillBonus * levelBonus * injuryPenalty;
+  // M16 PR-1: accuracy и combat-вес входят как множители эффективного
+  // урона. Baseline accuracy + вес ≤ порога → оба фактора 1.0 ⇒
+  // effectiveDamage == weapon_damage_avg ⇒ бит-в-бит прежний оффенс.
+  const effectiveDamage =
+    hero.weapon_damage_avg *
+    accuracyToPowerFactor(hero.weapon_accuracy) *
+    weightToPowerFactor(hero.weapon_weight);
+  const base = (effectiveDamage + 2) * skillBonus * levelBonus * injuryPenalty;
   // Цель «Тихо» снижает урон, «Жадно» оставляет как есть, точечные нейтральны.
   const goalDamageScale =
     goal.id === "quiet" ? 0.9 : goal.id === "greedy" ? 1.05 : 1.0;

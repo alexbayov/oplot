@@ -82,9 +82,15 @@ const materialSchema = z.object({
 // sum(part.weight_kg) из commonItemFields. Одно «вес» на одно поле,
 // без семантического пересечения.
 //
-// Когда в M14+ появится accuracy/noise и реально процентный мод,
-// добавим `contribute_mult` отдельным объектом. Сейчас additive
-// scalar — единственная форма с живым потребителем (ассемблер).
+// M16 PR-1: `accuracy` добавлен — additive scalar, как damage. Ассемблер
+// суммирует `part.stats.accuracy` в `WeaponInstance.stats.accuracy`,
+// который входит в `computeHeroPower` через `accuracyToPowerFactor`
+// (sortieResolve). Процентный мод по-прежнему отклонён в пользу additive
+// (порядко-независимость); процент живёт в combat-формуле, не на части.
+//
+// weight_kg ОСТАЁТСЯ вне contribute — combat-вес собранного оружия =
+// sum(part.weight_kg) из commonItemFields (см. assembleWeapon), без
+// семантического пересечения.
 const componentSchema = z.object({
   kind: z.literal("component"),
   ...commonItemFields,
@@ -93,6 +99,7 @@ const componentSchema = z.object({
     .object({
       damage_min: z.number().int().optional(),
       damage_max: z.number().int().optional(),
+      accuracy: z.number().int().optional(),
       durability_max: z.number().int().nonnegative().optional(),
     })
     .strict()
@@ -159,10 +166,16 @@ const weaponSchema = z.object({
   kind: z.literal("weapon"),
   ...commonItemFields,
   slot: weaponSlotSchema,
+  // M16 PR-1: `accuracy` optional на каталог-оружии под будущее (M17+),
+  // НЕ заполняется в M16 (craft depth = crafted-only). Отсутствует →
+  // резолвер подставит ACCURACY_BASELINE ⇒ factor 1.0 ⇒ zero regression.
+  // Schema-поле заведено сейчас, чтобы авторская accuracy на found-стволах
+  // не требовала второго bump'а.
   stats: z
     .object({
       damage_min: z.number().nonnegative().optional(),
       damage_max: z.number().nonnegative().optional(),
+      accuracy: z.number().int().optional(),
     })
     .optional(),
   intrinsic_affixes: z.array(intrinsicAffixSchema).max(3).optional(),

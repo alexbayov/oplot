@@ -150,6 +150,42 @@ export const REPAIR_MAX_DECAY = 1;
  */
 export const DISASSEMBLE_RECOVERY_RATE = 0.5;
 
+// ─────────────────────────────────────────────────────────────────────────
+// M16 PR-1 — accuracy/weight combat surface (craft depth)
+// ─────────────────────────────────────────────────────────────────────────
+//
+// accuracy и weapon-weight входят в оффенс `computeHeroPower` как два
+// независимых множителя (см. sortieResolve `accuracyToPowerFactor` /
+// `weightToPowerFactor`, preflight M16 §2):
+//   effectiveDamage = weapon_damage_avg × accuracyFactor × weightFactor
+// Baseline-значения дают factor 1.0 ⇒ zero combat regression для legacy
+// (миграция стампит accuracy=BASELINE/weight=0) и каталога (accuracy
+// отсутствует → BASELINE; combat-weight каталога = 0). Все ставки тюнятся
+// свободно после плейтеста — тесты бьют по знаку/инвариантам, не по числам.
+
+/**
+ * Нейтральная accuracy: `accuracyFactor(BASELINE) === 1.0`. accuracy —
+ * additive scalar, суммируемый из `part.stats.accuracy` на сборке (как
+ * damage). Базовый ствол без accuracy-модов суммирует в 0 ⇒ BASELINE = 0.
+ */
+export const ACCURACY_BASELINE = 0;
+/** Вклад одного очка accuracy сверх baseline в множитель оффенса. */
+export const ACCURACY_TO_POWER = 0.02;
+/** Пол множителя accuracy (защита от инверсии оффенса на сильном минусе). */
+export const ACC_FACTOR_MIN = 0.6;
+/** Потолок множителя accuracy (предел отдачи от стека accuracy). */
+export const ACC_FACTOR_MAX = 1.5;
+/**
+ * «Бесплатный» вес ствола: `weight_kg <= этого` ⇒ `weightFactor === 1.0`.
+ * Типичная сборка из 4 партов весит ~1.2-2.5 кг (part.weight_kg 0.2-0.8) —
+ * порог отделяет лёгкие сборки (без штрафа) от тяжёлых (handling-штраф).
+ */
+export const WEIGHT_FREE_KG = 1.5;
+/** Штраф к множителю оффенса за каждый кг ствола сверх WEIGHT_FREE_KG. */
+export const WEIGHT_TO_POWER_PENALTY = 0.05;
+/** Пол множителя веса — даже самый тяжёлый ствол не обнуляет оффенс. */
+export const WEIGHT_FACTOR_MIN = 0.7;
+
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;
 export const MARAUDER_FLEE_INITIATIVE_PENALTY = 0.05;

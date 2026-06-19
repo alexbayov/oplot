@@ -139,10 +139,12 @@ describe("migrateSnapshot v1 → v2", () => {
     expect(migrated.inventory).toEqual(v6.inventory);
   });
 
-  test("v8 идемпотентен — повторный запуск ничего не меняет", () => {
-    const v8: VersionedSnapshot = {
+  test("v9 идемпотентен — повторный запуск ничего не меняет", () => {
+    // M16-PR1: вход уже в v9-shape (accuracy/weight_kg/affixes на
+    // crafted-инстансе). migrateSnapshot не должна его трогать.
+    const v9: VersionedSnapshot = {
       ...makeV1Snapshot(),
-      version: 8,
+      version: 9,
       buildings: [
         { id: "garden", accumulated_output: 12 },
         { id: "bunk", accumulated_output: 0 },
@@ -156,15 +158,67 @@ describe("migrateSnapshot v1 → v2", () => {
           id: "wi_a",
           name_ru: "сборка",
           slot: "action",
+          stats: { damage_min: 3, damage_max: 6, accuracy: 2 },
+          weight_kg: 1.4,
+          durability_max: 5,
+          durability_current: 4,
+          parts: ["pm_frame"],
+          affixes: [{ id: "sharp", value: 1 }],
+        },
+      ],
+    };
+    const migrated = migrateSnapshot(v9);
+    expect(migrated).toEqual(v9);
+  });
+
+  test("v8 → v9: crafted-инстанс получает accuracy/weight_kg/affixes default-stamp", () => {
+    // M16-PR1 G1: legacy v8-инстанс не несёт новых полей. Миграция
+    // добивает нейтральные дефолты (accuracy=BASELINE=0, weight_kg=0,
+    // affixes=[]) БЕЗ derive из parts (freeze-on-assembly) ⇒ combat
+    // нейтрален. Прочие поля (damage/durability/parts) не трогаются.
+    const v8: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 8,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0 },
+      hp: 73,
+      equipped_weapon: { kind: "crafted", id: "wi_a" },
+      crafted_weapons: [
+        {
+          id: "wi_a",
+          name_ru: "сборка",
+          slot: "action",
           stats: { damage_min: 3, damage_max: 6 },
           durability_max: 5,
           durability_current: 4,
           parts: ["pm_frame"],
         },
-      ],
+      ] as never,
     };
     const migrated = migrateSnapshot(v8);
-    expect(migrated).toEqual(v8);
+    expect(migrated.version).toBe(SAVE_VERSION);
+    const inst = migrated.crafted_weapons?.[0];
+    expect(inst?.stats).toEqual({ damage_min: 3, damage_max: 6, accuracy: 0 });
+    expect(inst?.weight_kg).toBe(0);
+    expect(inst?.affixes).toEqual([]);
+    // Не-затронутые поля сохранены.
+    expect(inst?.durability_current).toBe(4);
+    expect(inst?.parts).toEqual(["pm_frame"]);
+    // Двойной прогон идемпотентен.
+    expect(migrateSnapshot(migrated)).toEqual(migrated);
+  });
+
+  test("v8 → v9 без crafted_weapons → passthrough (массив НЕ инжектится)", () => {
+    // Симметрично v6→v7: отсутствующий crafted_weapons остаётся
+    // отсутствующим; applySnapshot подставит `?? []`. Инжект `[]` здесь
+    // замаскировал бы этот путь.
+    const v8: VersionedSnapshot = {
+      ...makeV1Snapshot(),
+      version: 8,
+      baseResources: { water: 0, fuel: 0, metal: 0, food: 0, energy: 0 },
+    };
+    const migrated = migrateSnapshot(v8);
+    expect(migrated.version).toBe(SAVE_VERSION);
+    expect("crafted_weapons" in migrated).toBe(false);
   });
 
   test("migrateSnapshot идемпотентна на любой версии", () => {
