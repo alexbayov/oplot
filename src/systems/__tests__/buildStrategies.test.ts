@@ -17,9 +17,10 @@ import {
   type WeaponCombat,
 } from "../weaponDamage";
 import { accuracyToPowerFactor, weightToPowerFactor } from "../sortieResolve";
-import type { ComponentItem } from "../../types";
-import type { EquippedWeapon } from "../../state/types";
+import type { ArmorItem, ComponentItem } from "../../types";
+import type { EquippedArmor, EquippedWeapon } from "../../state/types";
 import type { Item } from "../../types/item";
+import { resolveEquippedArmor } from "../armorAffixes";
 
 const part = (
   id: string,
@@ -50,6 +51,25 @@ const tankParts: ComponentItem[] = [
   part("akm_receiver", { damage_min: 9, damage_max: 14, accuracy: 1, durability_max: 30 }, 1.2),
   part("akm_barrel", { damage_min: 5, damage_max: 8, accuracy: 0, durability_max: 16 }, 1.0),
 ];
+
+
+const armor = (
+  id: string,
+  intrinsic_affixes: { id: string; value: number }[] = [],
+): ArmorItem => ({
+  kind: "armor",
+  id,
+  name_ru: id,
+  tier: 2,
+  weight_kg: 1,
+  zone_origin: "test",
+  description_ru: "",
+  recipe_id: null,
+  flavor_ru: "",
+  slot: "plate",
+  stats: { armor_value: 1 },
+  intrinsic_affixes,
+});
 
 const items: Record<string, Item> = {};
 
@@ -98,5 +118,30 @@ describe("M16 DoD gate — Стрелок / Танк собираемы и ра�
     expect(weightToPowerFactor(s.weight)).toBeGreaterThanOrEqual(
       weightToPowerFactor(t.weight),
     );
+  });
+});
+
+
+describe("Armor-affix pass gate — Гриндер strategy", () => {
+  const armorItems: Record<string, Item> = {
+    strelok_armor: armor("strelok_armor"),
+    tank_armor: armor("tank_armor"),
+    grinder_pack: armor("grinder_pack", [
+      { id: "carry_extra", value: 6 },
+      { id: "scavenger_eye", value: 0.25 },
+    ]),
+  };
+
+  const resolveArmor = (equipped: EquippedArmor) => resolveEquippedArmor(equipped, armorItems);
+
+  it("Гриндер отличим от Стрелка/Танка по carry_kg и scavenge_chance", () => {
+    const strelokArmor = resolveArmor({ plate: "strelok_armor" });
+    const tankArmor = resolveArmor({ plate: "tank_armor" });
+    const grinderArmor = resolveArmor({ plate: "grinder_pack" });
+
+    expect(grinderArmor.carry_kg).toBeGreaterThan(strelokArmor.carry_kg);
+    expect(grinderArmor.carry_kg).toBeGreaterThan(tankArmor.carry_kg);
+    expect(grinderArmor.scavenge_chance).toBeGreaterThan(strelokArmor.scavenge_chance);
+    expect(grinderArmor.scavenge_chance).toBeGreaterThan(tankArmor.scavenge_chance);
   });
 });
