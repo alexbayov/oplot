@@ -128,11 +128,19 @@ export const attemptAssembly = (
  * Результат `previewAssembly` — discriminated union. На `ok` несёт
  * замороженные статы кандидата; на invalid — reason-код (UI локализует
  * или показывает контекстную подсказку).
+ *
+ * M16-PR2: `stats` теперь зеркалит `WeaponInstance.stats` целиком
+ * (включая `accuracy`, добавленный в PR1), а `weight_kg` поднят на
+ * top-level — ровно как в инстансе. Forma плоская по combat-статам:
+ * `{damage_min, damage_max, accuracy}` в `stats` + `weight_kg` +
+ * `durability_max`. Это даёт чистый per-field parity-инвариант с
+ * `assembleWeapon().stats`/`.weight_kg`/`.durability_max` (см. тест).
  */
 export type AssemblyPreviewResult =
   | {
       ok: true;
-      stats: { damage_min: number; damage_max: number };
+      stats: { damage_min: number; damage_max: number; accuracy: number };
+      weight_kg: number;
       durability_max: number;
     }
   | { ok: false; reason: AssemblyInvalidReason };
@@ -158,12 +166,14 @@ export const previewAssembly = (
 ): AssemblyPreviewResult => {
   try {
     const instance = assembleWeapon(parts, PREVIEW_INSTANCE_ID);
+    // M16-PR2: спред `instance.stats` (а не поэлементный пик) гарантирует,
+    // что preview.stats бит-в-бит совпадает с frozen-статами инстанса —
+    // summation-логика не двоится (она вся в `assembleWeapon`). `weight_kg`
+    // поднимается так же, как живёт на инстансе (top-level, не в `stats`).
     return {
       ok: true,
-      stats: {
-        damage_min: instance.stats.damage_min,
-        damage_max: instance.stats.damage_max,
-      },
+      stats: { ...instance.stats },
+      weight_kg: instance.weight_kg,
       durability_max: instance.durability_max,
     };
   } catch (e) {

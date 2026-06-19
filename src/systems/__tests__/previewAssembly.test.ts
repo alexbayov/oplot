@@ -12,21 +12,26 @@
 
 import { describe, expect, it } from "vitest";
 import { previewAssembly } from "../assemblyFlow";
+import { assembleWeapon } from "../weaponAssembly";
 import type { ComponentItem } from "../../types";
 
+// M16-PR2: factory принимает accuracy-вклад и override веса детали, чтобы
+// покрыть полную combat-поверхность preview (damage/accuracy/weight).
 const part = (
   id: string,
   contribute: {
     damage_min?: number;
     damage_max?: number;
+    accuracy?: number;
     durability_max?: number;
   } = {},
+  weight_kg = 0.5,
 ): ComponentItem => ({
   kind: "component",
   id,
   name_ru: id,
   tier: 1,
-  weight_kg: 0.5,
+  weight_kg,
   zone_origin: "test",
   description_ru: "",
   recipe_id: null,
@@ -58,7 +63,9 @@ describe("previewAssembly — ok (frozen stats)", () => {
     ]);
     expect(r).toEqual({
       ok: true,
-      stats: { damage_min: 3, damage_max: 6 },
+      // M16-PR2: accuracy=0 (детали без вклада), weight_kg=1.0 (2×0.5).
+      stats: { damage_min: 3, damage_max: 6, accuracy: 0 },
+      weight_kg: 1,
       durability_max: 15,
     });
   });
@@ -70,8 +77,20 @@ describe("previewAssembly — ok (frozen stats)", () => {
     ]);
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.stats).toEqual({ damage_min: 8, damage_max: 14 });
+      expect(r.stats).toEqual({ damage_min: 8, damage_max: 14, accuracy: 0 });
       expect(r.durability_max).toBe(42);
+    }
+  });
+
+  it("M16-PR2: accuracy и combat-вес суммируются в preview", () => {
+    const r = previewAssembly([
+      part("pm_frame", { damage_min: 2, damage_max: 4, accuracy: 3 }, 0.8),
+      part("pm_barrel", { damage_min: 1, damage_max: 3, accuracy: 5 }, 0.6),
+    ]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.stats.accuracy).toBe(8); // 3 + 5
+      expect(r.weight_kg).toBeCloseTo(1.4, 5); // 0.8 + 0.6
     }
   });
 
@@ -86,6 +105,29 @@ describe("previewAssembly — ok (frozen stats)", () => {
       // damage_min floor → 0; damage_max клампится до ≥ damage_min.
       expect(r.stats.damage_min).toBe(0);
       expect(r.stats.damage_max).toBeGreaterThanOrEqual(r.stats.damage_min);
+    }
+  });
+});
+
+describe("previewAssembly — parity с assembleWeapon (§3 PR2)", () => {
+  // Суть §3: единый summation-helper ⇒ preview бит-в-бит == то, что
+  // assembleWeapon производит из тех же parts. Per-field (НЕ
+  // toEqual(instance)): preview не несёт id/name/parts/affixes/
+  // durability_current — только combat-поверхность. preview.stats
+  // зеркалит instance.stats целиком {damage_min,damage_max,accuracy};
+  // weight_kg/durability_max — отдельные top-level поля.
+  it("каждое поле preview совпадает с тем, что assembleWeapon даёт из тех же parts", () => {
+    const parts = [
+      part("pm_frame", { damage_min: 3, damage_max: 6, accuracy: 2, durability_max: 20 }, 0.8),
+      part("pm_barrel", { damage_min: 4, damage_max: 7, accuracy: 5, durability_max: 12 }, 0.6),
+    ];
+    const preview = previewAssembly(parts);
+    const instance = assembleWeapon(parts, "wi_parity");
+    expect(preview.ok).toBe(true);
+    if (preview.ok) {
+      expect(preview.stats).toEqual(instance.stats);
+      expect(preview.weight_kg).toBe(instance.weight_kg);
+      expect(preview.durability_max).toBe(instance.durability_max);
     }
   });
 });
