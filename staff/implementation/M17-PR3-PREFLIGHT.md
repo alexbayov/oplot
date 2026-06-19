@@ -17,6 +17,11 @@ Schema-neutral PR. M17-PR2 is stacked but not merged into `origin/main`; this br
 - D2: consume first, produce after; if starting energy is zero, bed does not heal in that tick, while generator can still produce energy from fuel.
 - D3: expose `accrueDecay(state, hours)` and call it before production in `accrueOffline`.
 
+
+## HP-source semantics
+
+Chosen narrow default: keep two capped HP sources for this pass. `accrueBunk` remains the legacy food-based heal path (food sink, coarse cycle), while `accrueBed` is the new energy-gated passive comfort path (energy sink, hourly). They are additive but both clamp through `hp_max`, so HP-spam is impossible. No consolidation in M17-PR3; a later balance pass can collapse rates after playtest data.
+
 ## Invariants
 
 - SAVE-DISCIPLINE: schema-neutral; no SAVE_VERSION bump or migration edits.
