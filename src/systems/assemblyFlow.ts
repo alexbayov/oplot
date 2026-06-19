@@ -23,6 +23,7 @@ import {
   nextWeaponInstanceId,
   type WeaponInstance,
 } from "./weaponAssembly";
+import { rollAffixes } from "./weaponAffixes";
 
 export interface AssemblyFlowResult {
   instance: WeaponInstance;
@@ -62,7 +63,15 @@ export const assembleFromStash = (
     nextStash = removeFromStack(nextStash, part.id, 1);
   }
 
-  const instance = assembleWeapon(parts, nextWeaponInstanceId(rng));
+  // M16-PR3: порядок потребления rng зафиксирован — сначала id, затем
+  // affix-roll (preflight §6-fork-G), чтобы save-snapshot тесты были
+  // стабильны на одном seed. Roll живёт здесь (не в `assembleWeapon`):
+  // тот остаётся чистой суммой, а preview (sentinel id) аффиксов не катит —
+  // ролл — часть commit'а, не превью.
+  const id = nextWeaponInstanceId(rng);
+  const base = assembleWeapon(parts, id);
+  const affixes = rollAffixes(parts, rng);
+  const instance: WeaponInstance = { ...base, affixes };
   return { instance, nextStash };
 };
 

@@ -7,6 +7,7 @@ import { sortInstancesForDisplay, canEquipInstance, disassembleInstance, disasse
 import { attemptRepair } from "../systems/repair";
 import { H, CX } from "../ui/layout";
 import type { WeaponInstance } from "../systems/weaponAssembly";
+import { describeAffix } from "../systems/weaponAffixes";
 
 /**
  * M14 PR-2 — «Арсенал»: менеджер собранного оружия (`crafted_weapons[]`).
@@ -292,6 +293,43 @@ export class CraftedWeaponsScene extends Phaser.Scene {
       fontSize: "14px",
     });
     y += 24;
+
+    // M16-PR3: combat-поверхность сборки (frozen база). Точность входит в
+    // оффенс множителем, combat-вес — handling-штрафом (sortieResolve).
+    this.add.text(
+      leftX,
+      y,
+      `Точность: ${selected.stats.accuracy}   •   Вес: ${selected.weight_kg.toFixed(1)} кг`,
+      {
+        color: "#c8c0b0",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "14px",
+      },
+    );
+    y += 24;
+
+    // M16-PR3: список frozen-аффиксов (слой качества). describeAffix скрывает
+    // строку для id вне реестра (старый сейв). Эффект отражает frozen value.
+    if (selected.affixes.length > 0) {
+      this.add.text(leftX, y, "Аффиксы:", {
+        color: "#8A8070",
+        fontFamily: "Roboto Condensed, sans-serif",
+        fontSize: "13px",
+        fontStyle: "italic",
+      });
+      y += 22;
+      selected.affixes.forEach((affix) => {
+        const desc = describeAffix(affix);
+        if (!desc) return;
+        this.add.text(leftX + 8, y, `• ${desc.name_ru} (${desc.effect})`, {
+          color: "#cdbf86",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "13px",
+          wordWrap: { width: DETAIL.w - 60 },
+        });
+        y += 22;
+      });
+    }
 
     // M15-PR3: дельта урона vs текущий эквип (Variant B). Эффективный урон
     // считается тем же резолвером, что и бой (catalog/crafted/null/broken→4/7),
