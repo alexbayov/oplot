@@ -10,6 +10,7 @@ import {
   accrualHasYield,
   accrueBed,
   accrueOffline,
+  formatOfflineSummary,
   type AccrualState,
 } from "../offlineProgression";
 import { createDefaultBuildings } from "../../state/GameState";
@@ -71,11 +72,12 @@ describe("accrueOffline — pure function contract", () => {
     expect(summary.rolled_back).toBe(true);
   });
 
-  it("cap window: delta=100ч клампится до 8ч, capped_at_max=true", () => {
+  it("cap window: delta=100ч клампится до 24ч, capped_at_max=true", () => {
     const s = baseState({ baseResources: { water: 1000, fuel: 0, metal: 0, food: 0, energy: 0 } });
     const { summary } = accrueOffline(s, T0, T0 + 100 * 3600 * 1000);
     expect(summary.capped_at_max).toBe(true);
     expect(summary.delta_ms).toBe(MAX_OFFLINE_WINDOW_MS);
+    expect(summary.delta_ms).toBe(24 * 3600 * 1000);
   });
 
   it("garden cap: 100ч offline → буфер ровно GARDEN_CAP, без переполнения", () => {
@@ -332,5 +334,25 @@ describe("accrueBed — M17 PR1 hourly bed production", () => {
     const r = accrueOffline(s, 2);
     expect(r.summary.bed_hp_added).toBe(2 * BED_HP_PER_HOUR);
     expect(r.state.hp).toBe(10 + 2 * BED_HP_PER_HOUR);
+  });
+});
+
+
+describe("formatOfflineSummary — M17 PR2 summary dialog text", () => {
+  it("includes HP and energy gains for the offline summary dialog", () => {
+    const text = formatOfflineSummary({
+      delta_ms: 2 * 3600 * 1000,
+      rolled_back: false,
+      capped_at_max: false,
+      garden_food_added: 0,
+      garden_water_spent: 0,
+      bunk_hp_added: 1,
+      bunk_food_spent: 0,
+      generator_energy_added: 3,
+      generator_fuel_spent: 3,
+      bed_hp_added: 2,
+    });
+    expect(text).toContain("+3 HP");
+    expect(text).toContain("+3 energy");
   });
 });
