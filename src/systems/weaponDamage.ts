@@ -10,6 +10,7 @@ import { ACCURACY_BASELINE } from "../state/balance";
 import type { EquippedWeapon } from "../state/types";
 import type { Item } from "../types/item";
 import type { WeaponInstance } from "./weaponAssembly";
+import { affixContribution } from "./weaponAffixes";
 
 /**
  * Урон голыми руками — fallback при null / сломанном / отсутствующем оружии.
@@ -86,10 +87,20 @@ export function resolveEquippedCombat(
     } else {
       const inst = crafted.find((wi) => wi.id === eq.id);
       if (inst && inst.durability_current > 0) {
-        damage_min = inst.stats.damage_min;
-        damage_max = inst.stats.damage_max;
-        accuracy = inst.stats.accuracy;
-        weight = inst.weight_kg;
+        // M16-PR3: эффективные статы = frozen база (+) аффиксы. frozen.stats
+        // НЕ мутируется (freeze-on-assembly) — вклад складывается локально
+        // здесь, на единственном combat-пути (R1). Тот же резолвер кормит
+        // и бой (snapshotHero), и арсенальную дельту ⇒ аффиксы видны везде.
+        // Аффиксы — crafted-only (preflight §6-F); catalog-ветка их не знает.
+        const af = affixContribution(inst.affixes);
+        // Re-floor после применения (как `assembleWeapon`): отрицательный
+        // affix не должен дать инвертированный диапазон / отрицательный
+        // оффенс. accuracy/weight clamp'ятся ещё и в *ToPowerFactor, но
+        // нормализуем здесь для честной арсенальной дельты.
+        damage_min = Math.max(0, inst.stats.damage_min + af.damage_min);
+        damage_max = Math.max(damage_min, inst.stats.damage_max + af.damage_max);
+        accuracy = Math.max(0, inst.stats.accuracy + af.accuracy);
+        weight = Math.max(0, inst.weight_kg + af.weight_kg);
       }
       // else: broken / missing — bare-hands (R3), accuracy=BASELINE, weight=0.
     }

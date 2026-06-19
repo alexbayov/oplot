@@ -16,6 +16,7 @@ import { createButton, createSmallButton, createTitle } from "./sceneUi";
 import { CX, H, W } from "../ui/layout";
 import { availableFamilies, weaponFamily } from "../systems/assemblyValidation";
 import { attemptAssembly, previewAssembly } from "../systems/assemblyFlow";
+import { AFFIX_TIER2_THRESHOLD } from "../systems/weaponAffixes";
 import { t } from "../systems/locale";
 import { saveToCloud } from "../systems/cloudSave";
 import { ASSEMBLE_ENERGY_COST } from "../state/balance";
@@ -301,6 +302,22 @@ export class WeaponAssemblyScene extends Phaser.Scene {
         fontStyle: preview.ok ? "bold" : "normal",
       })
       .setOrigin(0.5);
+
+    // M16-PR3: подсказка о слое аффиксов. Конкретный ролл случаен и
+    // происходит на commit (assembleFromStash), потому показываем ВОЗМОЖНЫЙ
+    // диапазон по максимальному тиру частей (fork D), не предсказание.
+    if (preview.ok) {
+      const maxTier = picked.reduce((m, p) => Math.max(m, p.tier), 0);
+      const maxAffixes = maxTier >= AFFIX_TIER2_THRESHOLD ? 2 : 1;
+      this.add
+        .text(CX, valueY + 22, `Возможные аффиксы: до ${maxAffixes}`, {
+          color: "#8A8070",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "13px",
+          fontStyle: "italic",
+        })
+        .setOrigin(0.5);
+    }
   }
 
   /** Non-interactive grey rectangle вместо «Собрать» когда energy

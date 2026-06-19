@@ -214,4 +214,101 @@ describe("resolveEquippedCombat", () => {
       damage_max: combat.damage_max,
     });
   });
+
+  // ── M16-PR3: применение аффиксов (effective = frozen база (+) аффиксы) ──
+  describe("M16-PR3 affix application", () => {
+    const withAffixes = (
+      affixes: WeaponInstance["affixes"],
+      base = { damage_min: 11, damage_max: 16, accuracy: 5 },
+      weight_kg = 2.0,
+    ): WeaponInstance => ({
+      id: "wa",
+      name_ru: "wa",
+      slot: "action",
+      stats: { ...base },
+      weight_kg,
+      durability_max: 10,
+      durability_current: 10,
+      parts: [],
+      affixes,
+    });
+
+    it("пустые аффиксы → frozen база без изменений (zero-regression)", () => {
+      const w = withAffixes([]);
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      expect(resolveEquippedCombat(eq, items, [w])).toEqual({
+        damage_min: 11,
+        damage_max: 16,
+        accuracy: 5,
+        weight: 2.0,
+      });
+    });
+
+    it("аффиксы складываются с базой по своему stat (через реестр)", () => {
+      // suf_precise: accuracy +6; pre_heavy: damage_max +3; suf_balanced: weight -0.4
+      const w = withAffixes([
+        { id: "suf_precise", value: 6 },
+        { id: "pre_heavy", value: 3 },
+        { id: "suf_balanced", value: -0.4 },
+      ]);
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      const c = resolveEquippedCombat(eq, items, [w]);
+      expect(c.damage_min).toBe(11);
+      expect(c.damage_max).toBe(19); // 16 + 3
+      expect(c.accuracy).toBe(11); // 5 + 6
+      expect(c.weight).toBeCloseTo(1.6, 5); // 2.0 - 0.4
+    });
+
+    it("frozen.stats НЕ мутируется — повторный резолв стабилен", () => {
+      const w = withAffixes([{ id: "pre_heavy", value: 3 }]);
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      const first = resolveEquippedCombat(eq, items, [w]);
+      const second = resolveEquippedCombat(eq, items, [w]);
+      expect(second).toEqual(first);
+      expect(w.stats).toEqual({ damage_min: 11, damage_max: 16, accuracy: 5 }); // вход цел
+    });
+
+    it("отрицательный affix не уводит ниже floor (damage≥0, max≥min, acc≥0, weight≥0)", () => {
+      const w = withAffixes(
+        [
+          { id: "suf_precise", value: -999 }, // accuracy → floor 0
+          { id: "pre_honed", value: -999 }, // damage_min → floor 0
+          { id: "pre_heavy", value: -999 }, // damage_max → clamp ≥ min
+          { id: "suf_balanced", value: -999 }, // weight → floor 0
+        ],
+        { damage_min: 3, damage_max: 5, accuracy: 2 },
+        1.0,
+      );
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      const c = resolveEquippedCombat(eq, items, [w]);
+      expect(c.damage_min).toBe(0);
+      expect(c.damage_max).toBe(0); // clamp ≥ damage_min(0)
+      expect(c.damage_max).toBeGreaterThanOrEqual(c.damage_min);
+      expect(c.accuracy).toBe(0);
+      expect(c.weight).toBe(0);
+    });
+
+    it("R3: сломанный инстанс с аффиксами → bare-hands, аффиксы игнорируются", () => {
+      const w = withAffixes([{ id: "pre_heavy", value: 3 }]);
+      w.durability_current = 0;
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      expect(resolveEquippedCombat(eq, items, [w])).toEqual({
+        damage_min: BARE_HANDS_DAMAGE.damage_min,
+        damage_max: BARE_HANDS_DAMAGE.damage_max,
+        accuracy: ACCURACY_BASELINE,
+        weight: 0,
+      });
+    });
+
+    it("unknown affix id → no-op (старый сейв не ломает резолв)", () => {
+      const w = withAffixes([{ id: "__removed__", value: 50 }]);
+      const eq: EquippedWeapon = { kind: "crafted", id: "wa" };
+      expect(resolveEquippedCombat(eq, items, [w])).toEqual({
+        damage_min: 11,
+        damage_max: 16,
+        accuracy: 5,
+        weight: 2.0,
+      });
+    });
+  });
 });
