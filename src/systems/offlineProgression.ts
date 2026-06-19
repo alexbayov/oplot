@@ -378,3 +378,31 @@ export const accrualHasYield = (summary: AccrualSummary): boolean =>
   summary.bunk_hp_added > 0 ||
   summary.bed_hp_added > 0 ||
   summary.generator_energy_added > 0;
+
+
+/**
+ * M17 PR2 — plain-text offline summary for the BaseScene dialog.
+ * Kept pure/exported so tests can assert the UI contract without Phaser.
+ */
+export const formatOfflineSummary = (summary: AccrualSummary): string => {
+  const parts: string[] = [];
+  const hours = Math.round(summary.delta_ms / (60 * 60 * 1000));
+  parts.push(`Пока вас не было (${hours} ч):`);
+
+  const hpAdded = summary.bunk_hp_added + summary.bed_hp_added;
+  if (hpAdded > 0) parts.push(`+${hpAdded} HP`);
+  if (summary.generator_energy_added > 0) {
+    parts.push(`+${summary.generator_energy_added} energy`);
+  }
+  if (summary.garden_food_added > 0) {
+    parts.push(`+${summary.garden_food_added} еды`);
+  }
+
+  const spent: string[] = [];
+  if (summary.garden_water_spent > 0) spent.push(`${summary.garden_water_spent} воды`);
+  if (summary.bunk_food_spent > 0) spent.push(`${summary.bunk_food_spent} еды`);
+  if (summary.generator_fuel_spent > 0) spent.push(`${summary.generator_fuel_spent} топлива`);
+  if (spent.length > 0) parts.push(`Потрачено: ${spent.join(", ")}`);
+
+  return parts.join(". ");
+};
