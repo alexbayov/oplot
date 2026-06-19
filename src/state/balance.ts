@@ -52,8 +52,10 @@ export const BUNK_CYCLE_MS = 10 * 60 * 1000;
 // M17 PR1 — bed production tick (schema-neutral).
 /** Bed: HP/hour when the energy gate is satisfied. */
 export const BED_HP_PER_HOUR = 0.5;
-/** Bed: minimum energy required to heal; PR1 gates but does not consume. */
+/** Bed: minimum energy required to heal. */
 export const BED_ENERGY_GATE = 0.1;
+/** Bed: energy consumed per healing hour. */
+export const BED_ENERGY_PER_HOUR = 0.1;
 /** Offline producer cap in hours. */
 export const OFFLINE_ACCUMULATION_CAP_HOURS = 24;
 

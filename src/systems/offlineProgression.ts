@@ -25,6 +25,7 @@ import {
   BUNK_CYCLE_MS,
   BUNK_FOOD_PER_CYCLE,
   BED_ENERGY_GATE,
+  BED_ENERGY_PER_HOUR,
   BED_HP_PER_HOUR,
   BUNK_HP_PER_CYCLE,
   GARDEN_CAP,
@@ -69,8 +70,10 @@ export interface AccrualSummary {
   generator_energy_added: number;
   /** M13 PR-6b-3: fuel потраченный генератором за этот accrual. */
   generator_fuel_spent: number;
-  /** M17 PR1: HP added by bed hourly production (energy-gated, no consumption). */
+  /** M17 PR1: HP added by bed hourly production. */
   bed_hp_added: number;
+  /** M17 PR3: energy consumed by bed decay before production. */
+  bed_energy_spent: number;
 }
 
 /**
@@ -101,6 +104,7 @@ const EMPTY_SUMMARY: AccrualSummary = {
   generator_energy_added: 0,
   generator_fuel_spent: 0,
   bed_hp_added: 0,
+  bed_energy_spent: 0,
   bunk_hp_added: 0,
   bunk_food_spent: 0,
 };
@@ -109,12 +113,14 @@ const EMPTY_SUMMARY: AccrualSummary = {
 export interface BedAccrualBalance {
   hpPerHour: number;
   energyGate: number;
+  energyPerHour: number;
   capHours: number;
 }
 
 export const DEFAULT_BED_ACCRUAL_BALANCE: BedAccrualBalance = {
   hpPerHour: BED_HP_PER_HOUR,
   energyGate: BED_ENERGY_GATE,
+  energyPerHour: BED_ENERGY_PER_HOUR,
   capHours: OFFLINE_ACCUMULATION_CAP_HOURS,
 };
 
@@ -237,6 +243,42 @@ const accrueGenerator = (
 };
 
 
+
+/**
+ * M17 PR3 — consume bed energy before production. Returns how many bed
+ * hours remain eligible for healing after input-bounding by available energy.
+ */
+export const accrueDecay = (
+  state: AccrualState,
+  elapsedHours: number,
+  balance: BedAccrualBalance = DEFAULT_BED_ACCRUAL_BALANCE,
+): { state: AccrualState; bed_energy_spent: number; bed_hours_available: number } => {
+  const bed = findBuilding(state.buildings, "bunk");
+  if (!bed || !Number.isFinite(elapsedHours) || elapsedHours <= 0) {
+    return { state, bed_energy_spent: 0, bed_hours_available: 0 };
+  }
+  const currentEnergy = state.baseResources.energy ?? 0;
+  if (currentEnergy < balance.energyGate) {
+    return { state, bed_energy_spent: 0, bed_hours_available: 0 };
+  }
+
+  const cappedHours = Math.min(elapsedHours, balance.capHours);
+  const energyBoundedHours = Math.min(cappedHours, currentEnergy / balance.energyPerHour);
+  const bed_energy_spent = energyBoundedHours * balance.energyPerHour;
+
+  return {
+    state: {
+      ...state,
+      baseResources: {
+        ...state.baseResources,
+        energy: Math.max(0, currentEnergy - bed_energy_spent),
+      },
+    },
+    bed_energy_spent,
+    bed_hours_available: energyBoundedHours,
+  };
+};
+
 /**
  * M17 PR1 — bed production tick. The bed heals HP at an hourly rate when
  * the base has enough energy. PR1 gates on energy only; PR3 will add
@@ -345,15 +387,21 @@ export const accrueOffline = (
   const capped = rawDelta > MAX_OFFLINE_WINDOW_MS;
   const delta = Math.min(rawDelta, MAX_OFFLINE_WINDOW_MS);
 
-  // M13 PR-6b-3: fixed-order [generator, garden, bunk] для детерминизма.
+  const elapsedHours = delta / (60 * 60 * 1000);
+  const decayResult = accrueDecay(state, elapsedHours);
+
+  // M17 PR3: fixed-order [decay, generator, garden, bunk, bed] for deterministic consume-before-produce.
   // Здания независимы по storage (generator: fuel→energy, garden:
   // water→buffer, bunk: food→hp), порядок не влияет на резалт, но
   // зафиксирован чтобы убрать класс «порядок зданий влияет» из
   // тестов и ревью.
-  const generatorResult = accrueGenerator(state, delta);
+  const generatorResult = accrueGenerator(decayResult.state, delta);
   const gardenResult = accrueGarden(generatorResult.state, delta);
   const bunkResult = accrueBunk(gardenResult.state, delta);
-  const bedResult = accrueBed(bunkResult.state, delta / (60 * 60 * 1000));
+  const bedResult = accrueBed(bunkResult.state, decayResult.bed_hours_available, {
+    ...DEFAULT_BED_ACCRUAL_BALANCE,
+    energyGate: 0,
+  });
 
   return {
     state: bedResult.state,
@@ -366,6 +414,7 @@ export const accrueOffline = (
       generator_energy_added: generatorResult.energy_added,
       generator_fuel_spent: generatorResult.fuel_spent,
       bed_hp_added: bedResult.hp_added,
+      bed_energy_spent: decayResult.bed_energy_spent,
       bunk_hp_added: bunkResult.hp_added,
       bunk_food_spent: bunkResult.food_spent,
     },
@@ -402,6 +451,7 @@ export const formatOfflineSummary = (summary: AccrualSummary): string => {
   if (summary.garden_water_spent > 0) spent.push(`${summary.garden_water_spent} воды`);
   if (summary.bunk_food_spent > 0) spent.push(`${summary.bunk_food_spent} еды`);
   if (summary.generator_fuel_spent > 0) spent.push(`${summary.generator_fuel_spent} топлива`);
+  if (summary.bed_energy_spent > 0) spent.push(`${summary.bed_energy_spent} energy`);
   if (spent.length > 0) parts.push(`Потрачено: ${spent.join(", ")}`);
 
   return parts.join(". ");
