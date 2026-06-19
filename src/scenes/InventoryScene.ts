@@ -5,7 +5,8 @@ import { computeWeight } from "../systems/weight";
 import { createButton, createPanel, createTitle, createSmallButton, createHpBar } from "./sceneUi";
 import { showBanner } from "../systems/banner";
 import { H, W, LAYOUT } from "../ui/layout";
-import type { Item } from "../types";
+import type { ArmorItem, Item } from "../types";
+import { armorStatDelta } from "../systems/armorAffixes";
 
 // ─── Тир → цвет рамки ──────────────────────────────────────────────
 const TIER_COLOR: Record<number, number> = {
@@ -272,12 +273,30 @@ export class InventoryScene extends Phaser.Scene {
       fontStyle: "bold",
     }).setOrigin(0.5);
 
+    const formatDelta = (label: string, value: number, suffix = ""): string | null => {
+      if (value === 0) return null;
+      const sign = value > 0 ? "+" : "";
+      return `${label}: ${sign}${value}${suffix}`;
+    };
+
+    const armorDeltaLines = (candidate: ArmorItem | null): string[] => {
+      if (!candidate) return [];
+      const delta = armorStatDelta(candidate, player.equipped_armor_ids, items);
+      return [
+        formatDelta("carry", delta.delta_carry_kg, "kg"),
+        formatDelta("slots", delta.delta_inventory_slots),
+        formatDelta("scavenge", delta.delta_scavenge_chance),
+        formatDelta("def", delta.delta_armor_def),
+      ].filter((line): line is string => line !== null);
+    };
+
     const renderEquipmentSlot = (
       label: string,
       itemId: string | null,
       yBase: number,
       btnLabel: string,
       btnAction: () => void,
+      extraLines: string[] = [],
     ) => {
       this.add.text(panelCenterX, yBase, label, {
         color: "#8A8070",
@@ -297,7 +316,7 @@ export class InventoryScene extends Phaser.Scene {
         fontStyle: "bold",
       }).setOrigin(0.5);
 
-      const stats = item ? formatStats(item) : [];
+      const stats = item ? [...formatStats(item), ...extraLines] : extraLines;
       this.add.text(panelCenterX, yBase + 130, stats.join("  ·  "), {
         color: "#c8c0b0",
         fontFamily: "Roboto Condensed, sans-serif",
@@ -348,6 +367,12 @@ export class InventoryScene extends Phaser.Scene {
       },
     );
     const currentEquippedPlateId = player.equipped_armor_ids.plate ?? null;
+    const currentArmorIdx = armorInStash.findIndex((s) => s.item_id === currentEquippedPlateId);
+    const nextArmorStack = armorInStash.length > 0
+      ? armorInStash[(currentArmorIdx + 1) % armorInStash.length]
+      : undefined;
+    const nextArmorItem = nextArmorStack ? items[nextArmorStack.item_id] : null;
+    const nextArmor = nextArmorItem?.kind === "armor" ? nextArmorItem : null;
     renderEquipmentSlot(
       "Броня",
       currentEquippedPlateId,
@@ -368,6 +393,7 @@ export class InventoryScene extends Phaser.Scene {
         }
         this.scene.restart();
       },
+      armorDeltaLines(nextArmor),
     );
 
     // M14 PR-2 — вход в «Арсенал» (менеджер собранного оружия). Аддитивно:
