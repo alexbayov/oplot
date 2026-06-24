@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  applyNarrativeChoice,
   canSelectNarrativeChoice,
   eligibleNarrativeEvents,
   pickNarrativeEvent,
@@ -118,5 +119,67 @@ describe("resolveNarrativeChoice", () => {
     const zero = { loot: [], hp_delta: 0, consume: null };
     expect(resolveNarrativeChoice(FOREST_ONLY, "skip")).toEqual(zero);
     expect(resolveNarrativeChoice(FOREST_ONLY, "nope")).toEqual(zero);
+  });
+});
+
+describe("applyNarrativeChoice", () => {
+  const base = () => ({
+    hp: 50,
+    hp_max: 100,
+    backpack: [{ item_id: "bandage", count: 2 }],
+    pending_loot: [{ item_id: "water", count: 1 }],
+  });
+
+  test("loot merges into pending_loot via addToStack", () => {
+    const out = applyNarrativeChoice(base(), {
+      loot: [{ item_id: "water", count: 4 }, { item_id: "scrap_metal", count: 2 }],
+      hp_delta: 0,
+      consume: null,
+    });
+    expect(out.pending_loot).toEqual([
+      { item_id: "water", count: 5 },
+      { item_id: "scrap_metal", count: 2 },
+    ]);
+  });
+
+  test("hp_delta heals and clamps to hp_max", () => {
+    expect(applyNarrativeChoice(base(), { loot: [], hp_delta: 80, consume: null }).hp).toBe(100);
+  });
+
+  test("hp_delta damage clamps to 0", () => {
+    expect(applyNarrativeChoice(base(), { loot: [], hp_delta: -80, consume: null }).hp).toBe(0);
+  });
+
+  test("consume removes item when enough in backpack", () => {
+    const out = applyNarrativeChoice(base(), {
+      loot: [],
+      hp_delta: 5,
+      consume: { item_id: "bandage", count: 1 },
+    });
+    expect(out.backpack).toEqual([{ item_id: "bandage", count: 1 }]);
+    expect(out.hp).toBe(55);
+  });
+
+  test("consume is a no-op when backpack lacks the item; other effects still apply", () => {
+    const out = applyNarrativeChoice(base(), {
+      loot: [{ item_id: "fuel", count: 1 }],
+      hp_delta: 5,
+      consume: { item_id: "medkit", count: 1 },
+    });
+    expect(out.backpack).toEqual([{ item_id: "bandage", count: 2 }]);
+    expect(out.pending_loot.some((s) => s.item_id === "fuel")).toBe(true);
+    expect(out.hp).toBe(55);
+  });
+
+  test("does not mutate the input slice", () => {
+    const input = base();
+    applyNarrativeChoice(input, {
+      loot: [{ item_id: "water", count: 9 }],
+      hp_delta: -10,
+      consume: { item_id: "bandage", count: 2 },
+    });
+    expect(input.hp).toBe(50);
+    expect(input.backpack).toEqual([{ item_id: "bandage", count: 2 }]);
+    expect(input.pending_loot).toEqual([{ item_id: "water", count: 1 }]);
   });
 });

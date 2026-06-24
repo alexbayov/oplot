@@ -15,9 +15,10 @@
  * Модуль чистый: без мутаций GameState и без I/O. Тот же контракт, что у
  * systems/encounters.ts (zone-filter + selectable-гейт, UI решает рендер).
  */
-import type { NarrativeEvent, NarrativeEventChoice } from "../state/types";
+import type { InventoryStack, NarrativeEvent, NarrativeEventChoice } from "../state/types";
 import type { Rng } from "./sortieResolve";
 import { NARRATIVE_EVENT_CHANCE } from "../state/balance";
+import { addToStack, countInStacks, removeFromStack } from "../state/GameState";
 
 /**
  * Дельта от выбора, применяемая сценой. item_id/count — нормализованная
@@ -84,4 +85,39 @@ export function resolveNarrativeChoice(
       ? { item_id: outcome.consume_item, count: outcome.consume_n ?? 1 }
       : null,
   };
+}
+
+/** Срез state, который трогает narrative-исход. */
+export interface NarrativeApplyState {
+  hp: number;
+  hp_max: number;
+  backpack: InventoryStack[];
+  pending_loot: InventoryStack[];
+}
+
+/**
+ * Применяет дельту выбора к срезу состояния и возвращает новый срез (вход
+ * не мутируется). Тот же путь, что бой в SortieRunScene.applyResult:
+ *  - consume снимается только если в рюкзаке хватает (иначе no-op — но UI
+ *    уже грейит недоступный выбор через canSelectNarrativeChoice);
+ *  - hp клампится в [0, hp_max] (узел может и лечить, и ранить);
+ *  - loot уходит в pending_loot тем же addToStack, что лут энкаунтера.
+ */
+export function applyNarrativeChoice(
+  state: NarrativeApplyState,
+  result: NarrativeChoiceResult,
+): NarrativeApplyState {
+  let backpack = state.backpack;
+  if (
+    result.consume &&
+    countInStacks(backpack, result.consume.item_id) >= result.consume.count
+  ) {
+    backpack = removeFromStack(backpack, result.consume.item_id, result.consume.count);
+  }
+  const hp = Math.max(0, Math.min(state.hp_max, state.hp + result.hp_delta));
+  let pending_loot = state.pending_loot;
+  for (const l of result.loot) {
+    pending_loot = addToStack(pending_loot, l.item_id, l.count);
+  }
+  return { hp, hp_max: state.hp_max, backpack, pending_loot };
 }

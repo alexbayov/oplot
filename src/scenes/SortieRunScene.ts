@@ -17,7 +17,13 @@ import { W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 import { resolveEquippedCombat } from "../systems/weaponDamage";
 import { resolveEquippedArmor } from "../systems/armorAffixes";
-import type { InventoryStack } from "../state/types";
+import {
+  applyNarrativeChoice,
+  canSelectNarrativeChoice,
+  pickNarrativeEvent,
+  resolveNarrativeChoice,
+} from "../systems/narrativeEvents";
+import type { InventoryStack, NarrativeEvent } from "../state/types";
 
 /**
  * SortieRunScene (M13 PR-1) — основная сцена вылазки.
@@ -304,8 +310,112 @@ export class SortieRunScene extends Phaser.Scene {
 
     this.makeButton(W / 2 - 170, H - 70, 300, 52, "Вернуться сейчас", false, () => this.finishSortie("success"));
     this.makeButton(W / 2 + 170, H - 70, 300, 52, "Идти дальше", true, () => {
-      this.scene.restart();
+      this.advanceOrEvent();
     });
+  }
+
+  /**
+   * M18-PR2: между энкаунтерами катим narrative-событие. Если выпало —
+   * показываем модалку выбора; иначе сразу следующий энкаунтер (как было).
+   */
+  private advanceOrEvent(): void {
+    const sortie = GameState.currentSortie;
+    if (!sortie) {
+      this.scene.restart();
+      return;
+    }
+    const event = pickNarrativeEvent(
+      GameState.data.narrativeEvents ?? [],
+      sortie.zone_id,
+      Math.random,
+    );
+    if (!event) {
+      this.scene.restart();
+      return;
+    }
+    this.renderNarrativeEvent(event);
+  }
+
+  private renderNarrativeEvent(event: NarrativeEvent): void {
+    // Полноэкранный оверлей поверх сводки энкаунтера. Делаем интерактивным,
+    // чтобы он перехватывал клики и кнопки сводки под ним (depth 12) не
+    // ловили pointer сквозь оверлей.
+    this.add
+      .rectangle(W / 2, H / 2, W, H, 0x0a0806, 1)
+      .setDepth(20)
+      .setInteractive();
+
+    this.add
+      .text(W / 2, 70, "СОБЫТИЕ", {
+        color: "#a89968",
+        fontFamily: "Roboto Mono, monospace",
+        fontSize: "13px",
+        backgroundColor: "#1a1208",
+        padding: { x: 12, y: 4 },
+      })
+      .setOrigin(0.5)
+      .setDepth(21);
+
+    this.add
+      .text(W / 2, 170, event.text, {
+        color: "#D4C5A0",
+        fontFamily: "Oswald, sans-serif",
+        fontSize: "19px",
+        align: "center",
+        wordWrap: { width: W - 200 },
+        lineSpacing: 6,
+      })
+      .setOrigin(0.5, 0)
+      .setDepth(21);
+
+    const backpack = GameState.player.backpack;
+    const baseY = H - 60 - (event.choices.length - 1) * 64;
+    event.choices.forEach((choice, i) => {
+      const enabled = canSelectNarrativeChoice(choice, (id) =>
+        countInStacks(backpack, id),
+      );
+      this.makeButton(
+        W / 2,
+        baseY + i * 64,
+        420,
+        52,
+        choice.text,
+        i === 0 && enabled,
+        () => this.resolveNarrativeAndAdvance(event, choice.id),
+        enabled,
+        22,
+      );
+    });
+  }
+
+  private resolveNarrativeAndAdvance(event: NarrativeEvent, choiceId: string): void {
+    const sortie = GameState.currentSortie;
+    const player = GameState.player;
+    const result = resolveNarrativeChoice(event, choiceId);
+
+    const applied = applyNarrativeChoice(
+      {
+        hp: player.hp,
+        hp_max: player.hp_max,
+        backpack: player.backpack,
+        pending_loot: sortie?.pending_loot ?? [],
+      },
+      result,
+    );
+    player.hp = applied.hp;
+    player.backpack = applied.backpack;
+    if (sortie) sortie.pending_loot = applied.pending_loot;
+
+    track("narrative_event_resolved", {
+      event_id: event.id,
+      choice_id: choiceId,
+      hp_delta: result.hp_delta,
+      loot_count: result.loot.reduce((s, l) => s + l.count, 0),
+      consumed: result.consume?.item_id ?? "",
+    });
+
+    // Следующий энкаунтер. create() сам уведёт в финал, если hp<=0.
+    this.scene.restart();
   }
 
   private itemName(id: string): string {
@@ -320,22 +430,32 @@ export class SortieRunScene extends Phaser.Scene {
     label: string,
     accent: boolean,
     onClick: () => void,
+    enabled = true,
+    depthBase = 12,
   ): void {
+    // Disabled (например, narrative-выбор без нужного предмета) — приглушённый
+    // фон, без интерактива и hover-твинов.
+    const fill = !enabled ? 0x231f18 : accent ? 0xd4a04a : 0x2d2820;
+    const stroke = !enabled ? 0x3a3326 : accent ? 0xffd070 : 0x4a3f30;
+    const strokeAlpha = enabled ? 1 : 0.5;
+    const textColor = !enabled ? "#6b6354" : accent ? "#1a1208" : "#d4c5a0";
+
     const bg = this.add
-      .rectangle(x, y, w, h, accent ? 0xd4a04a : 0x2d2820, 1)
-      .setStrokeStyle(2, accent ? 0xffd070 : 0x4a3f30, 1)
-      .setDepth(12)
-      .setInteractive({ useHandCursor: true });
+      .rectangle(x, y, w, h, fill, 1)
+      .setStrokeStyle(2, stroke, strokeAlpha)
+      .setDepth(depthBase);
     this.add
       .text(x, y, label, {
-        color: accent ? "#1a1208" : "#d4c5a0",
+        color: textColor,
         fontFamily: "Oswald, sans-serif",
         fontSize: "16px",
         fontStyle: "bold",
       })
       .setOrigin(0.5)
-      .setDepth(13);
+      .setDepth(depthBase + 1);
 
+    if (!enabled) return;
+    bg.setInteractive({ useHandCursor: true });
     bg.on("pointerover", () => this.tweens.add({ targets: bg, scale: 1.03, duration: 100 }));
     bg.on("pointerout", () => this.tweens.add({ targets: bg, scale: 1, duration: 100 }));
     bg.on("pointerdown", onClick);
