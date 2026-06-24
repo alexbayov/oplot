@@ -199,3 +199,8 @@ export const WEIGHT_FACTOR_MIN = 0.7;
 // Marauder flee threshold (GDD §5).
 export const MARAUDER_FLEE_HP_RATIO = 0.3;
 export const MARAUDER_FLEE_INITIATIVE_PENALTY = 0.05;
+
+// M18: шанс показать narrative-событие между энкаунтерами (на каждый
+// межэнкаунтерный шаг). Гейт катится один раз перед выбором eligible-
+// события зоны. Тюн частоты/покрытия зон — в M18-PR3.
+export const NARRATIVE_EVENT_CHANCE = 0.35;
