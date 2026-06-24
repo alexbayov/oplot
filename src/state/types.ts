@@ -203,18 +203,23 @@ export interface NarrativeEventOutcome {
   hp_delta?: number;
   consume_item?: string;
   consume_n?: number;
-  trust_delta?: number;
+  // M18 fork C: `trust_delta` снят. Стат-долг под одно событие («раненый
+  // пёс») заводить рано — механики на доверие выживших ещё нет. Резолвер
+  // его не потребляет; вернём вместе с механикой. Радио-trust в
+  // types/encounter.ts — другая система, не затронута.
+}
+
+export interface NarrativeEventChoice {
+  id: string;
+  text: string;
+  outcome: NarrativeEventOutcome;
 }
 
 export interface NarrativeEvent {
   id: string;
   zones: string[];
   text: string;
-  choices: {
-    id: string;
-    text: string;
-    outcome: NarrativeEventOutcome;
-  }[];
+  choices: NarrativeEventChoice[];
 }
 
 export interface GameStateShape {
