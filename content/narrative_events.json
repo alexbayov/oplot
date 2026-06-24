@@ -2,7 +2,7 @@
   "events": [
     {
       "id": "stash_under_floor",
-      "zones": ["forest", "warehouse", "city"],
+      "zones": ["forest", "warehouse", "factory"],
       "text": "Половица скрипит иначе, чем остальные. Под ней что-то завернутое в тряпку.",
       "choices": [
         {
@@ -30,7 +30,7 @@
         {
           "id": "help",
           "text": "Перевязать (расходуется бинт)",
-          "outcome": { "consume_item": "bandage", "trust_delta": 5 }
+          "outcome": { "consume_item": "bandage", "loot": [{ "id": "canned_food", "n": 1 }] }
         },
         {
           "id": "kill",
@@ -46,18 +46,18 @@
     },
     {
       "id": "abandoned_car",
-      "zones": ["warehouse", "city"],
+      "zones": ["warehouse", "factory"],
       "text": "Машина с открытым багажником. Бак ещё пахнет соляркой.",
       "choices": [
         {
           "id": "siphon",
           "text": "Слить остатки топлива",
-          "outcome": { "loot": [{ "id": "fuel", "n": 3 }] }
+          "outcome": { "loot": [{ "id": "machine_oil", "n": 3 }] }
         },
         {
           "id": "strip_wires",
           "text": "Снять проводку",
-          "outcome": { "loot": [{ "id": "electronics", "n": 2 }, { "id": "metal", "n": 1 }] }
+          "outcome": { "loot": [{ "id": "electronics", "n": 2 }, { "id": "scrap_metal", "n": 1 }] }
         },
         {
           "id": "skip",
