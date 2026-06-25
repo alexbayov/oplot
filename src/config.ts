@@ -2,7 +2,8 @@ export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;
 export const BACKGROUND_COLOR = "#111210";
 export const MAX_WEIGHT_KG = 30;
-export const MAX_LEVEL = 5;
+// M19-PR1: мёртвый `MAX_LEVEL = 5` удалён — его никто не импортировал.
+// Живой потолок уровня — `state/balance.ts MAX_LEVEL = 10` через `xp.ts`.
 
 /**
  * Текущая версия save-snapshot. Используется migrations.
