@@ -7,6 +7,7 @@ import {
   canUnlock,
   unlockNode,
   derivePerks,
+  deriveHeroStats,
 } from "../state/SkillTree";
 import type { SkillBranch, SkillNode } from "../types/skillNode";
 import { CX, W, H } from "../ui/layout";
@@ -125,6 +126,13 @@ export class SkillTreeScene extends Phaser.Scene {
       player.skillPoints = result.skillPoints;
       // B-2 fix: rebuild legacy perks[] so combat/loot/craft pick up the new bonus.
       player.perks = derivePerks(player.unlockedSkillNodes);
+      // M20-PR1: пересчитать персистентные характеристики из дерева. Прирост
+      // hp_max сразу даём как текущий HP — узел «+HP» должен двигать полоску.
+      const prevMax = player.hp_max;
+      const stats = deriveHeroStats(player.unlockedSkillNodes);
+      player.hp_max = stats.hp_max;
+      player.max_weight_kg = stats.max_weight_kg;
+      if (player.hp_max > prevMax) player.hp += player.hp_max - prevMax;
       this.refresh();
     });
 
