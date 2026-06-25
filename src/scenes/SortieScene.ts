@@ -3,12 +3,18 @@ import { GameState } from "../state/GameState";
 import { generateSortieEncounters, generateZoneLoot } from "../systems/loot";
 import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
-import { createButton, createPanel, createSubtitle, createTitle } from "./sceneUi";
+import { createButton, createPanel, createSmallButton, createSubtitle, createTitle } from "./sceneUi";
 import { hideBanner } from "../systems/banner";
 import { CX, CY, W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 import { computeWeight } from "../systems/weight";
-import { allLoadoutPicks, buildLoadout } from "../systems/loadout";
+import {
+  allLoadoutPicks,
+  buildLoadout,
+  defaultLoadoutPicks,
+  loadoutOptions,
+  summarizeLoadout,
+} from "../systems/loadout";
 import { HERO_MAX_WEIGHT_KG } from "../state/balance";
 import type { SortieGoal } from "../types/sortie";
 import { SORTIE_GOALS } from "../systems/sortieResolve";
@@ -23,6 +29,10 @@ export class SortieScene extends Phaser.Scene {
   private zoneId: string | null = null;
   private selectedDepth: 1 | 2 | 3 = 1;
   private selectedGoal: SortieGoal = "quiet";
+  /** M19-PR2: выбранный лоадаут (item_id → кол-во). null = ещё не открывали. */
+  private selectedPicks: Record<string, number> | null = null;
+  /** Объекты оверлея-пикера, чтобы снести их при закрытии/перерисовке. */
+  private loadoutObjects: Phaser.GameObjects.GameObject[] = [];
 
   public constructor() {
     super("SortieScene");
@@ -67,8 +77,13 @@ export class SortieScene extends Phaser.Scene {
     createSubtitle(this, 180, `Зона: ${zone.name_ru}`);
     createSubtitle(this, 220, "Выбери глубину и цель вылазки");
 
+    if (this.selectedPicks === null) {
+      this.selectedPicks = defaultLoadoutPicks(GameState.baseStash);
+    }
+
     this.renderDepthRow(zone);
     this.renderGoalRow();
+    this.renderLoadoutSummary();
     this.renderGoSummary(zone);
 
     createButton(this, H - 60, "Назад", () => this.scene.start("MapScene"));
@@ -147,6 +162,119 @@ export class SortieScene extends Phaser.Scene {
     });
   }
 
+  /** Сводка выбранного лоадаута на главном экране вылазки + кнопка открытия. */
+  private renderLoadoutSummary(): void {
+    const picks = this.selectedPicks ?? {};
+    const items = GameState.data.items;
+    const line = summarizeLoadout(GameState.baseStash, picks, items);
+    const { weightKg } = buildLoadout(GameState.baseStash, picks, items, HERO_MAX_WEIGHT_KG);
+    createSubtitle(this, 520, `Снаряжение: ${line}  ·  ${weightKg.toFixed(1)} кг`);
+    createSmallButton(this, CX, 552, "Снаряжение", 220, () => this.openLoadout(), false);
+  }
+
+  /** Помечает объект оверлея глубиной и регистрирует на снос. */
+  private trackOverlay<T extends Phaser.GameObjects.GameObject>(obj: T, depth: number): T {
+    (obj as unknown as { setDepth: (d: number) => void }).setDepth(depth);
+    this.loadoutObjects.push(obj);
+    return obj;
+  }
+
+  private clearLoadout(): void {
+    for (const o of this.loadoutObjects) o.destroy();
+    this.loadoutObjects = [];
+  }
+
+  /** Закрыть пикер и обновить главный экран (сводку лоадаута). */
+  private finishLoadout(): void {
+    this.clearLoadout();
+    this.scene.restart();
+  }
+
+  private bumpPick(itemId: string, delta: number, have: number): void {
+    const picks: Record<string, number> = { ...(this.selectedPicks ?? {}) };
+    // 0 = «не берём»; buildLoadout это и так трактует как take-nothing, поэтому
+    // ключ не удаляем (eslint no-dynamic-delete), просто обнуляем.
+    picks[itemId] = Math.max(0, Math.min(have, (picks[itemId] ?? 0) + delta));
+    this.selectedPicks = picks;
+    this.openLoadout();
+  }
+
+  /** Оверлей-пикер: степлеры на каждый расходник + вес-бар vs cap. */
+  private openLoadout(): void {
+    this.clearLoadout();
+    const items = GameState.data.items;
+    const picks = this.selectedPicks ?? {};
+    const options = loadoutOptions(GameState.baseStash);
+
+    this.trackOverlay(this.add.rectangle(CX, CY, W, H, 0x0a0806, 0.93).setInteractive(), 50);
+    this.trackOverlay(createSubtitle(this, 116, "Что взять в вылазку"), 52);
+
+    const { weightKg, overCap } = buildLoadout(GameState.baseStash, picks, items, HERO_MAX_WEIGHT_KG);
+    this.trackOverlay(
+      this.add
+        .text(CX, 150, `Вес: ${weightKg.toFixed(1)} / ${HERO_MAX_WEIGHT_KG} кг`, {
+          color: overCap ? "#d36b5a" : "#C8C0B0",
+          fontFamily: "Roboto Condensed, sans-serif",
+          fontSize: "16px",
+        })
+        .setOrigin(0.5),
+      52,
+    );
+
+    if (options.length === 0) {
+      this.trackOverlay(createSubtitle(this, 230, "В стеше нет расходников."), 52);
+    }
+
+    const rowH = 56;
+    const baseY = 210;
+    options.forEach((opt, i) => {
+      const y = baseY + i * rowH;
+      const have = opt.count;
+      const n = Math.min(picks[opt.item_id] ?? 0, have);
+      const name = items[opt.item_id]?.name_ru ?? opt.item_id;
+      const wKg = items[opt.item_id]?.weight_kg ?? 0;
+      this.trackOverlay(createSubtitle(this, y, `${name}  (есть ${have}, ${wKg} кг)`, CX - 190), 52);
+      this.trackOverlay(
+        createSmallButton(this, CX + 40, y, "−", 44, () => this.bumpPick(opt.item_id, -1, have), false),
+        52,
+      );
+      this.trackOverlay(
+        this.add
+          .text(CX + 110, y, `${n}`, {
+            color: "#D4C5A0",
+            fontFamily: "Oswald, sans-serif",
+            fontSize: "18px",
+            fontStyle: "bold",
+          })
+          .setOrigin(0.5),
+        52,
+      );
+      this.trackOverlay(
+        createSmallButton(this, CX + 180, y, "+", 44, () => this.bumpPick(opt.item_id, +1, have), false),
+        52,
+      );
+    });
+
+    this.trackOverlay(
+      createSmallButton(this, CX - 200, H - 80, "Очистить", 150, () => {
+        this.selectedPicks = {};
+        this.openLoadout();
+      }, false),
+      52,
+    );
+    this.trackOverlay(
+      createSmallButton(this, CX, H - 80, "Взять всё", 150, () => {
+        this.selectedPicks = allLoadoutPicks(GameState.baseStash);
+        this.openLoadout();
+      }, false),
+      52,
+    );
+    this.trackOverlay(
+      createSmallButton(this, CX + 200, H - 80, "Готово", 150, () => this.finishLoadout(), true),
+      52,
+    );
+  }
+
   private renderGoSummary(zone: { id: string; name_ru: string }): void {
     const def = SORTIE_GOALS[this.selectedGoal];
     createSubtitle(this, H - 130, def.description_ru);
@@ -197,11 +325,12 @@ export class SortieScene extends Phaser.Scene {
   }
 
   private takeConsumables(): InventoryStack[] {
-    // M19-PR1: выбор вынесен в чистую модель loadout. Здесь пока берём весь
-    // eligible-стек (= прежний авто-свип); пикер выбора придёт в M19-PR2.
+    // M19-PR2: несём выбранный игроком набор (selectedPicks). Если пикер не
+    // открывали — безопасный дефолт (до 2 бинтов), а не авто-свип всего стеша.
+    const picks = this.selectedPicks ?? defaultLoadoutPicks(GameState.baseStash);
     const { backpack, keptStash } = buildLoadout(
       GameState.baseStash,
-      allLoadoutPicks(GameState.baseStash),
+      picks,
       GameState.data.items,
       HERO_MAX_WEIGHT_KG,
     );
