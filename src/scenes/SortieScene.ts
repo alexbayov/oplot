@@ -16,6 +16,7 @@ import {
   summarizeLoadout,
 } from "../systems/loadout";
 import { HERO_MAX_WEIGHT_KG } from "../state/balance";
+import { formatGoalRisk } from "../systems/sortieStakes";
 import type { SortieGoal } from "../types/sortie";
 import { SORTIE_GOALS } from "../systems/sortieResolve";
 
@@ -277,7 +278,7 @@ export class SortieScene extends Phaser.Scene {
 
   private renderGoSummary(zone: { id: string; name_ru: string }): void {
     const def = SORTIE_GOALS[this.selectedGoal];
-    createSubtitle(this, H - 130, def.description_ru);
+    createSubtitle(this, H - 135, `${def.description_ru}\n${formatGoalRisk(def)}`);
     createButton(
       this,
       H - 90,
