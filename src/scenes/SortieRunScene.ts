@@ -23,7 +23,8 @@ import {
   pickNarrativeEvent,
   resolveNarrativeChoice,
 } from "../systems/narrativeEvents";
-import type { InventoryStack, NarrativeEvent } from "../state/types";
+import { survivesKnockout } from "../systems/sortieStakes";
+import type { NarrativeEvent } from "../state/types";
 
 /**
  * SortieRunScene (M13 PR-1) — основная сцена вылазки.
@@ -466,8 +467,11 @@ export class SortieRunScene extends Phaser.Scene {
     if (sortie) {
       sortie.final_outcome = outcome;
       if (outcome === "knocked_out") {
-        // Часть лута теряется. Применим простое правило: половина.
-        sortie.pending_loot = halveStacks(sortie.pending_loot);
+        // M19-PR3: нокаут стоит доли и лута, И несомого снаряжения — иначе
+        // «взять весь стеш» было бы без риска. Одно правило на оба (системный
+        // survivesKnockout через LOOT_LOSS_ON_DEFEAT).
+        sortie.pending_loot = survivesKnockout(sortie.pending_loot);
+        GameState.player.backpack = survivesKnockout(GameState.player.backpack);
       }
     }
     track("sortie_finished", {
@@ -479,9 +483,3 @@ export class SortieRunScene extends Phaser.Scene {
     this.scene.start(outcome === "knocked_out" ? "ReturnScene" : "LootScene");
   }
 }
-
-const halveStacks = (stacks: InventoryStack[]): InventoryStack[] => {
-  return stacks
-    .map((s) => ({ item_id: s.item_id, count: Math.max(0, Math.floor(s.count / 2)) }))
-    .filter((s) => s.count > 0);
-};
