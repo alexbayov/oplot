@@ -24,6 +24,8 @@ import {
   resolveNarrativeChoice,
 } from "../systems/narrativeEvents";
 import { survivesKnockout } from "../systems/sortieStakes";
+import { applyPassivesToHero } from "../systems/heroPassives";
+import { getPassiveEffects } from "../state/SkillTree";
 import type { NarrativeEvent } from "../state/types";
 
 /**
@@ -142,7 +144,7 @@ export class SortieRunScene extends Phaser.Scene {
 
     const armorReduction = resolveEquippedArmor(p.equipped_armor_ids, items).armor_reduction;
 
-    return {
+    const base: HeroSnapshot = {
       hp: p.hp,
       hp_max: p.hp_max,
       level: p.level,
@@ -153,6 +155,11 @@ export class SortieRunScene extends Phaser.Scene {
       skill_combat: Math.floor(p.level / 2),
       injuries: (p.injuries ?? []).map((i) => ({ kind: i.kind, duration_days: i.days_left })),
     };
+
+    // M20-PR2: пассивы дерева (accuracy/damage/defense) накладываются на
+    // боевой снапшот. Нейтральный бандл → base без изменений.
+    const bundle = getPassiveEffects(p.unlockedSkillNodes ?? []);
+    return applyPassivesToHero(base, bundle);
   }
 
   private applyResult(result: EncounterResult, _mob_ids: string[]): void {
