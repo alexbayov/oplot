@@ -5,6 +5,7 @@ import {
   defaultLoadoutPicks,
   isLoadoutItem,
   loadoutOptions,
+  summarizeLoadout,
 } from "../loadout";
 import type { InventoryStack } from "../../state/types";
 import type { Item } from "../../types";
@@ -111,5 +112,21 @@ describe("loadoutOptions", () => {
       { item_id: "bandage", count: 5 },
       { item_id: "water", count: 3 },
     ]);
+  });
+});
+
+describe("summarizeLoadout", () => {
+  test("renders picked eligible items by name, clamped to availability", () => {
+    expect(summarizeLoadout(STASH, { bandage: 2, water: 9 }, ITEMS)).toBe(
+      "bandage×2 · water×3",
+    );
+  });
+
+  test("skips zero/negative picks and non-eligible materials", () => {
+    expect(summarizeLoadout(STASH, { bandage: 0, scrap_metal: 5 }, ITEMS)).toBe("пусто");
+  });
+
+  test("empty picks → 'пусто'", () => {
+    expect(summarizeLoadout(STASH, {}, ITEMS)).toBe("пусто");
   });
 });

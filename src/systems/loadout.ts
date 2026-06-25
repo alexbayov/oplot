@@ -95,3 +95,20 @@ export function loadoutOptions(
     .filter((s) => isLoadoutItem(s.item_id) && s.count > 0)
     .map((s) => ({ item_id: s.item_id, count: s.count }));
 }
+
+/**
+ * Человекочитаемая сводка выбора для UI: «бинт×2 · вода×1» или «пусто».
+ * Кол-во клампится к наличию, нулевые и не-eligible позиции отсекаются.
+ */
+export function summarizeLoadout(
+  stash: readonly InventoryStack[],
+  picks: Readonly<Record<string, number>>,
+  items: Record<string, Item>,
+): string {
+  const parts: string[] = [];
+  for (const opt of loadoutOptions(stash)) {
+    const n = Math.min(Math.max(0, picks[opt.item_id] ?? 0), opt.count);
+    if (n > 0) parts.push(`${items[opt.item_id]?.name_ru ?? opt.item_id}×${n}`);
+  }
+  return parts.length ? parts.join(" · ") : "пусто";
+}
