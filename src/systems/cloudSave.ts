@@ -5,7 +5,7 @@ import { getPlatform } from "./platform";
 import { t } from "./locale";
 import { SAVE_VERSION } from "../config";
 import { migrateSnapshot } from "../state/migrations";
-import { derivePerks } from "../state/SkillTree";
+import { derivePerks, deriveHeroStats } from "../state/SkillTree";
 import { accrueOffline, type AccrualSummary } from "./offlineProgression";
 
 export const MIN_CLOUD_SAVE_INTERVAL_MS = 10_000;
@@ -167,6 +167,13 @@ export function applySnapshot(snapshot: CloudSaveSnapshot): void {
   GameState.player.unlockedSkillNodes = migrated.unlockedSkillNodes ?? [];
   GameState.player.skillPoints = migrated.skillPoints ?? 0;
   GameState.player.perks = derivePerks(GameState.player.unlockedSkillNodes);
+  // M20-PR1: дерево — источник истины для hp_max / max_weight_kg. Пересчёт на
+  // загрузке нормализует значения (и чинит сейвы, где бонусы не применялись).
+  // hp не растим, лишь клампим к новому максимуму.
+  const derivedStats = deriveHeroStats(GameState.player.unlockedSkillNodes);
+  GameState.player.hp_max = derivedStats.hp_max;
+  GameState.player.max_weight_kg = derivedStats.max_weight_kg;
+  GameState.player.hp = Math.min(GameState.player.hp, GameState.player.hp_max);
   // Restore unlock flags; missing keys default to false.
   const flags = migrated.progress_flags ?? {};
   GameState.progress.forest_depth_2_completed = flags.forest_depth_2_completed ?? false;

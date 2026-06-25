@@ -8,8 +8,10 @@ import {
   unlockNode,
   getPassiveEffects,
   derivePerks,
+  deriveHeroStats,
   migratePerksToSkillNodes,
 } from "../SkillTree";
+import { HERO_HP_MAX, HERO_MAX_WEIGHT_KG } from "../balance";
 import type { SkillNode } from "../../types/skillNode";
 
 const N = (
@@ -93,5 +95,54 @@ describe("SkillTree", () => {
     expect(r).toHaveProperty("unlocked");
     expect(r).toHaveProperty("bonusSkillPoints");
     expect(r.bonusSkillPoints).toBe(1); // unknown → bonus point
+  });
+});
+
+describe("deriveHeroStats", () => {
+  const stat = (
+    id: string,
+    s: "hp_max" | "max_weight_kg",
+    value: number,
+    requires?: string,
+  ): SkillNode => ({
+    id,
+    name: id,
+    description: id,
+    branch: "survivor",
+    position: 1,
+    tier: 1,
+    kind: "passive",
+    requires,
+    effects: [{ stat: s, type: "additive", value }],
+  });
+
+  beforeEach(() => {
+    loadSkillNodes([
+      stat("hp_1", "hp_max", 15),
+      stat("hp_2", "hp_max", 25, "hp_1"),
+      stat("wt_1", "max_weight_kg", 5),
+    ]);
+  });
+
+  test("base stats when nothing unlocked", () => {
+    expect(deriveHeroStats([])).toEqual({
+      hp_max: HERO_HP_MAX,
+      max_weight_kg: HERO_MAX_WEIGHT_KG,
+    });
+  });
+
+  test("sums hp_max effects onto the base", () => {
+    expect(deriveHeroStats(["hp_1", "hp_2"]).hp_max).toBe(HERO_HP_MAX + 40);
+  });
+
+  test("sums max_weight effects onto the base", () => {
+    expect(deriveHeroStats(["wt_1"]).max_weight_kg).toBe(HERO_MAX_WEIGHT_KG + 5);
+  });
+
+  test("ignores unknown node ids", () => {
+    expect(deriveHeroStats(["does_not_exist"])).toEqual({
+      hp_max: HERO_HP_MAX,
+      max_weight_kg: HERO_MAX_WEIGHT_KG,
+    });
   });
 });

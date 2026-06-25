@@ -18,6 +18,7 @@ import type {
   SkillNode,
 } from "../types/skillNode";
 import type { Perk } from "../types";
+import { HERO_HP_MAX, HERO_MAX_WEIGHT_KG } from "./balance";
 
 let nodeRegistry = new Map<string, SkillNode>();
 
@@ -206,6 +207,27 @@ export const getPassiveEffects = (unlocked: string[]): PassiveEffectsBundle => {
  *
  * Каждый открытый узел даёт один legacy-Perk эквивалент.
  */
+/**
+ * M20-PR1: персистентные характеристики героя, производные от дерева.
+ * До этого `getPassiveEffects` считал hp_max/вес-бонусы, но никто их не
+ * применял к `player.hp_max` / `player.max_weight_kg` — прокачка survivor-
+ * ветки была косметической. Дерево — единственный источник этих полей
+ * (база + сумма эффектов узлов). Пересчитывается при анлоке узла и на
+ * загрузке сейва (те же две точки, что `derivePerks`).
+ */
+export interface DerivedHeroStats {
+  hp_max: number;
+  max_weight_kg: number;
+}
+
+export const deriveHeroStats = (unlocked: string[]): DerivedHeroStats => {
+  const eff = getPassiveEffects(unlocked);
+  return {
+    hp_max: HERO_HP_MAX + eff.hp_max_bonus,
+    max_weight_kg: HERO_MAX_WEIGHT_KG + eff.max_weight_kg_bonus,
+  };
+};
+
 export const derivePerks = (unlocked: string[]): Perk[] => {
   const perks: Perk[] = [];
   for (const id of unlocked) {
