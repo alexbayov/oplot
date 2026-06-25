@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { GameState, addToStack } from "../state/GameState";
+import { GameState } from "../state/GameState";
 import { generateSortieEncounters, generateZoneLoot } from "../systems/loot";
 import { runTween } from "../systems/tweens";
 import type { InventoryStack, SortieState } from "../state/types";
@@ -8,6 +8,8 @@ import { hideBanner } from "../systems/banner";
 import { CX, CY, W, H } from "../ui/layout";
 import { track } from "../systems/telemetry";
 import { computeWeight } from "../systems/weight";
+import { allLoadoutPicks, buildLoadout } from "../systems/loadout";
+import { HERO_MAX_WEIGHT_KG } from "../state/balance";
 import type { SortieGoal } from "../types/sortie";
 import { SORTIE_GOALS } from "../systems/sortieResolve";
 
@@ -16,11 +18,6 @@ interface SortieInit {
 }
 
 const FIGHTS_PER_DEPTH: Record<1 | 2 | 3, number> = { 1: 2, 2: 3, 3: 4 };
-
-const CONSUMABLE_PASSTHROUGH = (itemId: string): boolean => {
-  // M13: герой берёт расходники в вылазку автоматом. UI выбора — PR-1.5.
-  return ["bandage", "medkit", "ammo_pistol", "canned_food", "water"].includes(itemId);
-};
 
 export class SortieScene extends Phaser.Scene {
   private zoneId: string | null = null;
@@ -200,16 +197,14 @@ export class SortieScene extends Phaser.Scene {
   }
 
   private takeConsumables(): InventoryStack[] {
-    const stash = GameState.baseStash;
-    const keptStash: InventoryStack[] = [];
-    let backpack: InventoryStack[] = [];
-    for (const stack of stash) {
-      if (CONSUMABLE_PASSTHROUGH(stack.item_id) && stack.count > 0) {
-        backpack = addToStack(backpack, stack.item_id, stack.count);
-      } else {
-        keptStash.push({ ...stack });
-      }
-    }
+    // M19-PR1: выбор вынесен в чистую модель loadout. Здесь пока берём весь
+    // eligible-стек (= прежний авто-свип); пикер выбора придёт в M19-PR2.
+    const { backpack, keptStash } = buildLoadout(
+      GameState.baseStash,
+      allLoadoutPicks(GameState.baseStash),
+      GameState.data.items,
+      HERO_MAX_WEIGHT_KG,
+    );
     GameState.baseStash = keptStash;
     return backpack;
   }
