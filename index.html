@@ -2,11 +2,59 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>OPLOT</title>
+  <title>OPLOT - Combat RPG</title>
   <style>
-    * { margin: 0; padding: 0; }
-    body, html { width: 100%; height: 100%; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { width: 100%; height: 100%; font-family: Arial, sans-serif; }
     canvas#renderCanvas { width: 100%; height: 100%; display: block; }
+    
+    /* HUD */
+    #hud {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: #fff;
+      z-index: 100;
+      font-size: 14px;
+    }
+    .stat { margin: 10px 0; }
+    .label { color: #aaa; }
+    .value { color: #0f0; font-weight: bold; }
+    
+    /* Enemy HP */
+    #enemyInfo {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      color: #fff;
+      text-align: right;
+      z-index: 100;
+    }
+    .hp-bar {
+      width: 200px;
+      height: 20px;
+      background: #333;
+      border: 2px solid #666;
+      margin: 5px 0;
+      overflow: hidden;
+    }
+    .hp-fill {
+      height: 100%;
+      background: #0f0;
+      width: 100%;
+      transition: width 0.2s;
+    }
+    .hp-text {
+      position: absolute;
+      width: 200px;
+      text-align: center;
+      line-height: 20px;
+      color: #000;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    /* Combat UI */
     #ui {
       position: fixed;
       bottom: 30px;
@@ -23,99 +71,225 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: transform 0.1s, opacity 0.2s;
     }
     button:active { transform: scale(0.95); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .light { background: #00ff00; color: #000; }
     .heavy { background: #ff6600; color: #fff; }
     .retreat { background: #0099ff; color: #fff; }
+    
+    /* Status */
+    #status {
+      position: fixed;
+      bottom: 120px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-align: center;
+      z-index: 99;
+      display: none;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .victory { color: #0f0; }
+    .defeat { color: #f00; }
   </style>
 </head>
 <body>
   <canvas id="renderCanvas"></canvas>
+  
+  <div id="hud">
+    <div class="stat"><span class="label">Hero HP:</span> <span class="value" id="playerHp">100/100</span></div>
+    <div class="stat"><span class="label">Level:</span> <span class="value" id="playerLevel">1</span></div>
+    <div class="stat"><span class="label">XP:</span> <span class="value" id="playerXp">0/100</span></div>
+  </div>
+  
+  <div id="enemyInfo">
+    <div><span id="enemyName">Looter</span> Lv<span id="enemyLevel">1</span></div>
+    <div class="hp-bar">
+      <div class="hp-fill" id="enemyHpBar"></div>
+      <div class="hp-text" id="enemyHpText">100/100</div>
+    </div>
+  </div>
+  
+  <div id="status"></div>
+  
   <div id="ui">
-    <button class="light" onclick="window.gameAttack('light')">⚡ LIGHT</button>
-    <button class="heavy" onclick="window.gameAttack('heavy')">💥 HEAVY</button>
-    <button class="retreat" onclick="window.gameAttack('retreat')">🏃 RETREAT</button>
+    <button class="light" id="lightBtn" onclick="window.gameAttack('light')">⚡ LIGHT</button>
+    <button class="heavy" id="heavyBtn" onclick="window.gameAttack('heavy')">💥 HEAVY</button>
+    <button class="retreat" id="retreatBtn" onclick="window.gameAttack('retreat')">🏃 RETREAT</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/babylonjs@6/babylon.js"></script>
   <script>
-    console.log('[INIT] Starting game initialization...');
+    console.log('[INIT] Starting OPLOT game...');
     
+    // Game state
+    const game = {
+      player: {
+        hp: 100,
+        maxHp: 100,
+        level: 1,
+        xp: 0,
+        maxXp: 100
+      },
+      enemy: null,
+      inBattle: false,
+      enemies: [
+        { name: 'Looter', hp: 30, maxHp: 30, damage: [3, 7], xp: 50, level: 1 },
+        { name: 'Soldier', hp: 60, maxHp: 60, damage: [5, 12], xp: 100, level: 2 },
+        { name: 'Mutant', hp: 80, maxHp: 80, damage: [8, 15], xp: 150, level: 3 }
+      ]
+    };
+    
+    // Initialize Babylon.js
     try {
       const canvas = document.getElementById('renderCanvas');
-      console.log('[INIT] Canvas found:', canvas);
-      
       const engine = new BABYLON.Engine(canvas, true);
-      console.log('[INIT] Engine created');
-      
       const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color4(0.15, 0.15, 0.15, 1);
-      console.log('[INIT] Scene created');
+      scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.1, 1);
       
       // Camera
-      const camera = new BABYLON.ArcRotateCamera('camera', Math.PI, Math.PI / 2.5, 20, new BABYLON.Vector3(0, 0, 0), scene);
+      const camera = new BABYLON.ArcRotateCamera('camera', Math.PI, Math.PI / 2.5, 20, BABYLON.Vector3.Zero(), scene);
       camera.attachControl(canvas, true);
-      console.log('[INIT] Camera created');
       
       // Light
       const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0.5, 1, 0.5), scene);
       light.intensity = 1;
-      console.log('[INIT] Light created');
       
-      // Enemy box
-      const enemy = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1.5 }, scene);
-      enemy.position.z = 5;
-      
+      // Enemy mesh
+      const enemy3D = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1.5 }, scene);
+      enemy3D.position.z = 5;
       const material = new BABYLON.StandardMaterial('enemyMat', scene);
       material.emissiveColor = new BABYLON.Color3(1, 0.2, 0.2);
-      material.wireframe = false;
-      enemy.material = material;
-      console.log('[INIT] Enemy created at', enemy.position);
-      
-      // Game state
-      window.gameState = {
-        enemy: enemy,
-        camera: camera,
-        rotationSpeed: 0.005
-      };
-      
-      // Attack function
-      window.gameAttack = function(type) {
-        console.log('[ATTACK] Type:', type);
-        if (type === 'light') {
-          enemy.position.x += 0.5;
-        } else if (type === 'heavy') {
-          enemy.position.x -= 0.5;
-          enemy.rotation.z += 0.4;
-        } else if (type === 'retreat') {
-          camera.radius = Math.min(camera.radius + 3, 50);
-        }
-      };
+      enemy3D.material = material;
       
       // Render loop
-      engine.runRenderLoop(function() {
-        enemy.rotation.y += window.gameState.rotationSpeed;
+      engine.runRenderLoop(() => {
+        enemy3D.rotation.y += 0.005;
         scene.render();
       });
       
-      // Resize handler
-      window.addEventListener('resize', function() {
-        engine.resize();
-        console.log('[RESIZE] Engine resized');
-      });
+      // Resize
+      window.addEventListener('resize', () => engine.resize());
+      setTimeout(() => engine.resize(), 100);
       
-      // Initial resize
-      setTimeout(() => {
-        engine.resize();
-        console.log('[INIT] Initial resize done');
-      }, 100);
+      // Game functions
+      window.gameState = game;
+      window.gameCamera = camera;
+      window.gameEnemy3D = enemy3D;
       
-      console.log('[SUCCESS] Game fully loaded! Ready to play.');
+      function spawnEnemy() {
+        const enemyTemplate = game.enemies[Math.floor(Math.random() * game.enemies.length)];
+        game.enemy = {
+          ...enemyTemplate,
+          hp: enemyTemplate.maxHp,
+          currentHp: enemyTemplate.maxHp
+        };
+        game.inBattle = true;
+        updateUI();
+      }
+      
+      function updateUI() {
+        document.getElementById('playerHp').textContent = `${game.player.hp}/${game.player.maxHp}`;
+        document.getElementById('playerLevel').textContent = game.player.level;
+        document.getElementById('playerXp').textContent = `${game.player.xp}/${game.player.maxXp}`;
+        
+        if (game.enemy) {
+          document.getElementById('enemyName').textContent = game.enemy.name;
+          document.getElementById('enemyLevel').textContent = game.enemy.level;
+          document.getElementById('enemyHpText').textContent = `${game.enemy.currentHp}/${game.enemy.maxHp}`;
+          const hpPercent = (game.enemy.currentHp / game.enemy.maxHp) * 100;
+          document.getElementById('enemyHpBar').style.width = hpPercent + '%';
+        }
+      }
+      
+      window.gameAttack = function(type) {
+        if (!game.inBattle || !game.enemy) {
+          if (!game.inBattle) spawnEnemy();
+          return;
+        }
+        
+        // Calculate damage
+        let damage = 0;
+        if (type === 'light') {
+          damage = Math.floor(Math.random() * 10) + 5;
+          enemy3D.position.x += 0.3;
+        } else if (type === 'heavy') {
+          damage = Math.floor(Math.random() * 15) + 10;
+          enemy3D.position.x -= 0.3;
+          enemy3D.rotation.z += 0.3;
+        } else if (type === 'retreat') {
+          game.inBattle = false;
+          game.enemy = null;
+          updateUI();
+          showStatus('Retreated!', 'neutral');
+          return;
+        }
+        
+        // Player attacks
+        game.enemy.currentHp -= damage;
+        console.log(`[COMBAT] ${type} attack: ${damage} damage to ${game.enemy.name}`);
+        
+        if (game.enemy.currentHp <= 0) {
+          game.inBattle = false;
+          game.player.xp += game.enemy.xp;
+          console.log(`[VICTORY] Defeated ${game.enemy.name}! Got ${game.enemy.xp} XP`);
+          
+          if (game.player.xp >= game.player.maxXp) {
+            game.player.level++;
+            game.player.xp = 0;
+            game.player.maxHp += 20;
+            game.player.hp = game.player.maxHp;
+            showStatus(`LEVEL UP! Now level ${game.player.level}`, 'victory');
+          } else {
+            showStatus(`Victory! +${game.enemy.xp} XP`, 'victory');
+          }
+          
+          game.enemy = null;
+          updateUI();
+          return;
+        }
+        
+        // Enemy counter attack
+        const enemyDamage = Math.floor(Math.random() * (game.enemy.damage[1] - game.enemy.damage[0] + 1)) + game.enemy.damage[0];
+        game.player.hp -= enemyDamage;
+        console.log(`[COMBAT] ${game.enemy.name} counter attacks: ${enemyDamage} damage`);
+        
+        if (game.player.hp <= 0) {
+          game.inBattle = false;
+          game.player.hp = 0;
+          console.log('[DEFEAT] You were defeated!');
+          showStatus('You were defeated!', 'defeat');
+          setTimeout(() => {
+            game.player.hp = game.player.maxHp;
+            game.enemy = null;
+            updateUI();
+          }, 2000);
+          return;
+        }
+        
+        updateUI();
+      };
+      
+      function showStatus(text, type) {
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = text;
+        statusEl.className = type;
+        statusEl.style.display = 'block';
+        setTimeout(() => statusEl.style.display = 'none', 2000);
+      }
+      
+      // Start first battle
+      spawnEnemy();
+      console.log('[SUCCESS] OPLOT game loaded!');
       
     } catch(error) {
-      console.error('[ERROR] Game initialization failed:', error);
+      console.error('[ERROR]', error);
       alert('Error: ' + error.message);
     }
   </script>
