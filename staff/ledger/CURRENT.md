@@ -1,58 +1,24 @@
-# Ledger — текущее состояние
+# CURRENT — ledger
 
-> **Это единственный live-файл, который инженер читает в начале каждой сессии.**
-> Контракт описан в `staff/ledger/README.md`. Slack — для исключений.
+> Обновлено: 2026-07-29 (Lindy redesign kickoff)
+> Ветка работы: `redesign/r-series`
+> main HEAD на момент ответвления: `3c4ae68` (M20 closed, SAVE_VERSION=9, vitest 592)
 
----
+## North star
+Полный редизайн: **3D изометрия (Babylon.js) + пошаговый бой с hit%/прицелом + реальные стволы и моды**.
+Канон: `docs/redesign/R-MASTER.md`.
 
-## main HEAD
+## Package in flight
+**R0 Foundation** — следующий код-PR.
+Спеки уже в ветке: R-MASTER, R0, R2, R3, CRITIC role.
 
-- SHA: `f02c2e5`
-- Дата: 2026-06-25
-- `SAVE_VERSION`: `9`
-- Последний закрытый PR: `#219` (M20-PR3 — economy-gate проводки дерева навыков)
-- Baseline gates на этом SHA: `tsc 0` · `eslint(src) 0` · `vitest 592 passed` · `vite build ✓`
+## Next PR status
+GO — Engineer/Lindy implements R0 per `docs/redesign/R0-FOUNDATION.md`.
 
-Инженер: сверь `git rev-parse main` с этим SHA. Если расходится — `git fetch && git pull --ff-only` и перечитай файл.
+## Critic
+Role live: `staff/roles/CRITIC.md`. No merge without Critic APPROVE on R-milestones.
 
----
-
-## Текущий пакет
-
-**ID:** M21-part-A (добивка дерева навыков)
-**Preflight:** ⏳ ещё не написан. Ведущий инженер пишет `staff/implementation/M21A-PACKAGE-PREFLIGHT.md` (code-grounded на `f02c2e5`) перед первым PR.
-**Якорь пакета:** из 24 узлов дерева навыков живых в геймплее `7/24`. Гейт `skillEffectCoverage.test` фиксирует, что осталось инертным. Этот пакет — прямая проводка economy/survival/crafting узлов в геймплей (`extra_loot_1/2` → `rollLoot`, `med_boost` → консумы, `last_breath` → KO, `recipe_t2/t3` + `craft_eff` → craft-система). `crit_*`/`aimed_shot` и тактик-узлы укрытий/перезарядки — отдельный design-fork (нужен call Алекса), в этот пакет НЕ входят.
-
-### Закрыто в этом пакете
-
-(пусто — пакет ещё не начат)
-
-### Следующий PR
-
-**Статус:** `GO`
-**Слот:** M21-part-A, первый PR — прямая проводка одного inert economy/survival узла (например `extra_loot_1` → `rollLoot`) как узкая вертикаль с тестом. Ведущий — новый разработчик, ревью — Ross.
-
-Инженер: едешь. Сначала package-preflight (если ещё не написан), потом ветка → код → 4 гейта зелёные → PR → ревью Ross → merge `--no-ff`. Дерево навыков по сейву neutral (узлы уже в модели, проводка читает существующий бандл). Если конкретная проводка где-то потребует bump `SAVE_VERSION` — стоп: это правило «миграции = четыре глаза», эскалируй до начала кода.
-
----
-
-## Блокер
-
-(нет)
-
----
-
-## Журнал последних обновлений ledger'а
-
-| Дата | Кто | Что |
-|---|---|---|
-| 2026-06-21 | Ross | Создан ledger-протокол. Seed состоянием на main `8b38bba` (M17 + ARMOR-PR3 пакет закрыт). Ожидание M18 package preflight. |
-| 2026-06-27 | Ross | Освежён до канона: main `f02c2e5`, `SAVE_VERSION=9`, M20 закрыт (живых узлов дерева `7/24`). Между seed'ом и сейчас закрыты M18 (события вылазки), M19 (sortie loadout), M20 (эффекты дерева). Следующий пакет — M21-part-A (прямая проводка inert-узлов), `Статус: GO`. |
-
----
-
-## Архив закрытых пакетов
-
-Закрытые пакеты переезжают в `staff/ledger/archive/PACKAGE-<id>.md`. Текущий список:
-
-(архив-файлов пока нет; закрытые M18/M19/M20 разобраны в `docs/ROADMAP.md` → «Горизонт M18+», исторические M-вехи — в `staff/handoff/`)
+## Do not
+- Не возвращать combat auto-resolve как player-facing core
+- Не спрашивать владельца базовые GD-решения (автономный режим)
+- Не коммитить секреты/токены
