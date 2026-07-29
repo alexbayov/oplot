@@ -1,88 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <title>OPLOT</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    body { margin: 0; }
-    canvas { display: block; width: 100% !important; height: 100% !important; }
+    * { margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; }
+    canvas#renderCanvas { width: 100%; height: 100%; display: block; }
     #ui {
       position: fixed;
-      bottom: 20px;
+      bottom: 30px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 10px;
+      gap: 15px;
       z-index: 100;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      padding: 12px 24px;
+      font-size: 18px;
       font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s;
     }
+    button:active { transform: scale(0.95); }
     .light { background: #00ff00; color: #000; }
     .heavy { background: #ff6600; color: #fff; }
     .retreat { background: #0099ff; color: #fff; }
   </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+  <canvas id="renderCanvas"></canvas>
   <div id="ui">
-    <button class="light" onclick="attack('light')">⚡ LIGHT</button>
-    <button class="heavy" onclick="attack('heavy')">💥 HEAVY</button>
-    <button class="retreat" onclick="attack('retreat')">🏃 RETREAT</button>
+    <button class="light" onclick="window.gameAttack('light')">⚡ LIGHT</button>
+    <button class="heavy" onclick="window.gameAttack('heavy')">💥 HEAVY</button>
+    <button class="retreat" onclick="window.gameAttack('retreat')">🏃 RETREAT</button>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/babylonjs@6.48.0/babylon.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/babylonjs@6/babylon.js"></script>
   <script>
-    window.addEventListener('load', function() {
-      const canvas = document.getElementById('canvas');
+    console.log('[INIT] Starting game initialization...');
+    
+    try {
+      const canvas = document.getElementById('renderCanvas');
+      console.log('[INIT] Canvas found:', canvas);
+      
       const engine = new BABYLON.Engine(canvas, true);
+      console.log('[INIT] Engine created');
+      
       const scene = new BABYLON.Scene(engine);
+      scene.clearColor = new BABYLON.Color4(0.15, 0.15, 0.15, 1);
+      console.log('[INIT] Scene created');
       
-      scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.1, 1);
-      
-      // Камера
-      const camera = new BABYLON.ArcRotateCamera('cam', 0, Math.PI/2.5, 20, BABYLON.Vector3.Zero(), scene);
+      // Camera
+      const camera = new BABYLON.ArcRotateCamera('camera', Math.PI, Math.PI / 2.5, 20, new BABYLON.Vector3(0, 0, 0), scene);
       camera.attachControl(canvas, true);
+      console.log('[INIT] Camera created');
       
-      // Свет
-      const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(1, 1, 0), scene);
-      light.intensity = 0.8;
+      // Light
+      const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(0.5, 1, 0.5), scene);
+      light.intensity = 1;
+      console.log('[INIT] Light created');
       
-      // Враг
-      const enemy = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1 }, scene);
+      // Enemy box
+      const enemy = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1.5 }, scene);
       enemy.position.z = 5;
-      const mat = new BABYLON.StandardMaterial('mat', scene);
-      mat.emissiveColor = new BABYLON.Color3(1, 0, 0);
-      enemy.material = mat;
       
-      // Функция атаки
-      window.attack = function(type) {
-        console.log('Attack: ' + type);
-        if (type === 'light') enemy.position.x += 0.5;
-        if (type === 'heavy') { enemy.position.x -= 0.5; enemy.rotation.z += 0.3; }
-        if (type === 'retreat') camera.radius -= 2;
+      const material = new BABYLON.StandardMaterial('enemyMat', scene);
+      material.emissiveColor = new BABYLON.Color3(1, 0.2, 0.2);
+      material.wireframe = false;
+      enemy.material = material;
+      console.log('[INIT] Enemy created at', enemy.position);
+      
+      // Game state
+      window.gameState = {
+        enemy: enemy,
+        camera: camera,
+        rotationSpeed: 0.005
+      };
+      
+      // Attack function
+      window.gameAttack = function(type) {
+        console.log('[ATTACK] Type:', type);
+        if (type === 'light') {
+          enemy.position.x += 0.5;
+        } else if (type === 'heavy') {
+          enemy.position.x -= 0.5;
+          enemy.rotation.z += 0.4;
+        } else if (type === 'retreat') {
+          camera.radius = Math.min(camera.radius + 3, 50);
+        }
       };
       
       // Render loop
-      engine.runRenderLoop(() => {
-        enemy.rotation.y += 0.005;
+      engine.runRenderLoop(function() {
+        enemy.rotation.y += window.gameState.rotationSpeed;
         scene.render();
       });
       
-      // Resize
-      window.addEventListener('resize', () => {
+      // Resize handler
+      window.addEventListener('resize', function() {
         engine.resize();
+        console.log('[RESIZE] Engine resized');
       });
       
-      // Force resize on load
-      setTimeout(() => engine.resize(), 100);
+      // Initial resize
+      setTimeout(() => {
+        engine.resize();
+        console.log('[INIT] Initial resize done');
+      }, 100);
       
-      console.log('✅ ОПЛОТ Game loaded! v1.0');
-    });
+      console.log('[SUCCESS] Game fully loaded! Ready to play.');
+      
+    } catch(error) {
+      console.error('[ERROR] Game initialization failed:', error);
+      alert('Error: ' + error.message);
+    }
+  </script>
 </body>
 </html>
