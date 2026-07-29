@@ -16,10 +16,14 @@
       color: #fff;
       z-index: 100;
       font-size: 14px;
+      background: rgba(0,0,0,0.7);
+      padding: 15px;
+      border-radius: 5px;
     }
-    .stat { margin: 10px 0; }
+    .stat { margin: 8px 0; }
     .label { color: #aaa; }
     .value { color: #0f0; font-weight: bold; }
+    .weapon { color: #ff9900; font-size: 12px; }
     
     /* Enemy HP */
     #enemyInfo {
@@ -29,14 +33,18 @@
       color: #fff;
       text-align: right;
       z-index: 100;
+      background: rgba(0,0,0,0.7);
+      padding: 15px;
+      border-radius: 5px;
     }
     .hp-bar {
       width: 200px;
-      height: 20px;
+      height: 25px;
       background: #333;
       border: 2px solid #666;
       margin: 5px 0;
       overflow: hidden;
+      position: relative;
     }
     .hp-fill {
       height: 100%;
@@ -44,11 +52,12 @@
       width: 100%;
       transition: width 0.2s;
     }
+    .hp-fill.boss { background: #ff00ff; }
     .hp-text {
       position: absolute;
       width: 200px;
       text-align: center;
-      line-height: 20px;
+      line-height: 25px;
       color: #000;
       font-weight: bold;
       font-size: 12px;
@@ -85,27 +94,47 @@
       bottom: 120px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.9);
+      color: #fff;
+      padding: 15px 30px;
+      border-radius: 5px;
+      text-align: center;
+      z-index: 99;
+      display: none;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .victory { color: #0f0; }
+    .defeat { color: #f00; }
+    .boss { color: #ff00ff; }
+    
+    /* Loot */
+    #lootInfo {
+      position: fixed;
+      bottom: 200px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
       color: #fff;
       padding: 10px 20px;
       border-radius: 5px;
       text-align: center;
       z-index: 99;
       display: none;
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 14px;
     }
-    .victory { color: #0f0; }
-    .defeat { color: #f00; }
+    .loot-rare { color: #ff00ff; }
+    .loot-epic { color: #ff6600; }
   </style>
 </head>
 <body>
   <canvas id="renderCanvas"></canvas>
   
   <div id="hud">
-    <div class="stat"><span class="label">Hero HP:</span> <span class="value" id="playerHp">100/100</span></div>
     <div class="stat"><span class="label">Level:</span> <span class="value" id="playerLevel">1</span></div>
+    <div class="stat"><span class="label">HP:</span> <span class="value" id="playerHp">100/100</span></div>
     <div class="stat"><span class="label">XP:</span> <span class="value" id="playerXp">0/100</span></div>
+    <div class="stat weapon" id="weaponInfo">Fists (1-5 dmg)</div>
   </div>
   
   <div id="enemyInfo">
@@ -117,6 +146,7 @@
   </div>
   
   <div id="status"></div>
+  <div id="lootInfo"></div>
   
   <div id="ui">
     <button class="light" id="lightBtn" onclick="window.gameAttack('light')">⚡ LIGHT</button>
@@ -126,7 +156,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/babylonjs@6/babylon.js"></script>
   <script>
-    console.log('[INIT] Starting OPLOT game...');
+    console.log('[INIT] Starting OPLOT v2.0...');
     
     // Game state
     const game = {
@@ -135,14 +165,23 @@
         maxHp: 100,
         level: 1,
         xp: 0,
-        maxXp: 100
+        maxXp: 100,
+        weapon: { name: 'Fists', damage: [1, 5] }
       },
       enemy: null,
       inBattle: false,
-      enemies: [
-        { name: 'Looter', hp: 30, maxHp: 30, damage: [3, 7], xp: 50, level: 1 },
-        { name: 'Soldier', hp: 60, maxHp: 60, damage: [5, 12], xp: 100, level: 2 },
-        { name: 'Mutant', hp: 80, maxHp: 80, damage: [8, 15], xp: 150, level: 3 }
+      weapons: [
+        { name: 'Makarov', damage: [5, 10], rarity: 'common' },
+        { name: 'Lee-Enfield', damage: [10, 20], rarity: 'common' },
+        { name: 'Plasma Rifle', damage: [20, 35], rarity: 'rare' },
+        { name: 'Commandant Sword', damage: [25, 40], rarity: 'epic' }
+      ],
+      enemyTypes: [
+        { name: 'Looter', hp: 25, damage: [2, 6], xp: 40, level: 1, isBoss: false },
+        { name: 'Soldier', hp: 50, damage: [5, 12], xp: 80, level: 2, isBoss: false },
+        { name: 'Mutant', hp: 75, damage: [8, 18], xp: 120, level: 3, isBoss: false },
+        { name: 'Elite', hp: 100, damage: [12, 22], xp: 160, level: 4, isBoss: false },
+        { name: 'Commandant Alpha', hp: 200, damage: [20, 40], xp: 500, level: 5, isBoss: true }
       ]
     };
     
@@ -151,7 +190,7 @@
       const canvas = document.getElementById('renderCanvas');
       const engine = new BABYLON.Engine(canvas, true);
       const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.1, 1);
+      scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.05, 1);
       
       // Camera
       const camera = new BABYLON.ArcRotateCamera('camera', Math.PI, Math.PI / 2.5, 20, BABYLON.Vector3.Zero(), scene);
@@ -184,13 +223,46 @@
       window.gameEnemy3D = enemy3D;
       
       function spawnEnemy() {
-        const enemyTemplate = game.enemies[Math.floor(Math.random() * game.enemies.length)];
+        // Boss every 5 levels
+        const isBoss = game.player.level > 0 && game.player.level % 5 === 0;
+        const enemyPool = isBoss 
+          ? game.enemyTypes.filter(e => e.isBoss)
+          : game.enemyTypes.filter(e => !e.isBoss);
+        
+        let enemyTemplate = enemyPool[Math.floor(Math.random() * enemyPool.length)];
+        
+        // Scale with level
+        const levelMultiplier = 1 + (game.player.level - 1) * 0.1;
+        
         game.enemy = {
           ...enemyTemplate,
-          hp: enemyTemplate.maxHp,
-          currentHp: enemyTemplate.maxHp
+          hp: Math.ceil(enemyTemplate.hp * levelMultiplier),
+          currentHp: Math.ceil(enemyTemplate.hp * levelMultiplier),
+          damage: [
+            Math.ceil(enemyTemplate.damage[0] * levelMultiplier),
+            Math.ceil(enemyTemplate.damage[1] * levelMultiplier)
+          ],
+          level: game.player.level,
+          isBoss: isBoss
         };
+        
         game.inBattle = true;
+        
+        // Visual changes based on enemy type
+        const colors = {
+          'Looter': new BABYLON.Color3(0.8, 0.2, 0.2),      // Red
+          'Soldier': new BABYLON.Color3(0.5, 0.5, 0.8),     // Blue
+          'Mutant': new BABYLON.Color3(0.2, 0.8, 0.2),      // Green
+          'Elite': new BABYLON.Color3(1, 0.8, 0.2),         // Yellow
+          'Commandant Alpha': new BABYLON.Color3(1, 0, 1)   // Magenta
+        };
+        
+        material.emissiveColor = colors[enemyTemplate.name] || new BABYLON.Color3(1, 0.2, 0.2);
+        
+        // Size based on level
+        const sizeScale = 1 + (game.player.level - 1) * 0.15;
+        enemy3D.scaling = new BABYLON.Vector3(sizeScale, sizeScale, sizeScale);
+        
         updateUI();
       }
       
@@ -198,14 +270,21 @@
         document.getElementById('playerHp').textContent = `${game.player.hp}/${game.player.maxHp}`;
         document.getElementById('playerLevel').textContent = game.player.level;
         document.getElementById('playerXp').textContent = `${game.player.xp}/${game.player.maxXp}`;
+        document.getElementById('weaponInfo').textContent = `${game.player.weapon.name} (${game.player.weapon.damage[0]}-${game.player.weapon.damage[1]} dmg)`;
         
         if (game.enemy) {
           document.getElementById('enemyName').textContent = game.enemy.name;
           document.getElementById('enemyLevel').textContent = game.enemy.level;
-          document.getElementById('enemyHpText').textContent = `${game.enemy.currentHp}/${game.enemy.maxHp}`;
-          const hpPercent = (game.enemy.currentHp / game.enemy.maxHp) * 100;
-          document.getElementById('enemyHpBar').style.width = hpPercent + '%';
+          document.getElementById('enemyHpText').textContent = `${game.enemy.currentHp}/${game.enemy.hp}`;
+          const hpPercent = (game.enemy.currentHp / game.enemy.hp) * 100;
+          const hpBar = document.getElementById('enemyHpBar');
+          hpBar.style.width = hpPercent + '%';
+          hpBar.className = 'hp-fill' + (game.enemy.isBoss ? ' boss' : '');
         }
+      }
+      
+      function getRandomWeapon() {
+        return game.weapons[Math.floor(Math.random() * game.weapons.length)];
       }
       
       window.gameAttack = function(type) {
@@ -217,10 +296,11 @@
         // Calculate damage
         let damage = 0;
         if (type === 'light') {
-          damage = Math.floor(Math.random() * 10) + 5;
+          damage = Math.floor(Math.random() * (game.player.weapon.damage[1] - game.player.weapon.damage[0] + 1)) + game.player.weapon.damage[0];
           enemy3D.position.x += 0.3;
         } else if (type === 'heavy') {
-          damage = Math.floor(Math.random() * 15) + 10;
+          damage = Math.floor(Math.random() * (game.player.weapon.damage[1] - game.player.weapon.damage[0] + 1)) + game.player.weapon.damage[0];
+          damage = Math.ceil(damage * 1.5); // Heavy = 1.5x
           enemy3D.position.x -= 0.3;
           enemy3D.rotation.z += 0.3;
         } else if (type === 'retreat') {
@@ -231,23 +311,57 @@
           return;
         }
         
+        // Critical hit chance 15%
+        if (Math.random() < 0.15) {
+          damage *= 2;
+          console.log('[CRITICAL HIT] x2 damage!');
+        }
+        
         // Player attacks
         game.enemy.currentHp -= damage;
         console.log(`[COMBAT] ${type} attack: ${damage} damage to ${game.enemy.name}`);
         
+        // Hit effect - enemy flashes white
+        const origColor = material.emissiveColor.clone();
+        material.emissiveColor = new BABYLON.Color3(1, 1, 1);
+        setTimeout(() => {
+          material.emissiveColor = origColor;
+        }, 100);
+        
+        // Scale enemy size based on remaining HP
+        const healthPercent = Math.max(0.3, game.enemy.currentHp / game.enemy.hp);
+        const newScale = (1 + (game.player.level - 1) * 0.15) * healthPercent;
+        enemy3D.scaling = new BABYLON.Vector3(newScale, newScale, newScale);
+        
         if (game.enemy.currentHp <= 0) {
           game.inBattle = false;
-          game.player.xp += game.enemy.xp;
-          console.log(`[VICTORY] Defeated ${game.enemy.name}! Got ${game.enemy.xp} XP`);
+          
+          // Loot
+          const weapon = Math.random() < 0.4 ? getRandomWeapon() : null;
+          const xpGain = Math.ceil(game.enemy.xp * (1 + (game.player.level - game.enemy.level) * 0.1));
+          
+          game.player.xp += xpGain;
+          console.log(`[VICTORY] Defeated ${game.enemy.name}! Got ${xpGain} XP`);
+          
+          // Show loot
+          if (weapon) {
+            const lootText = `+${xpGain} XP | Dropped: ${weapon.name} (${weapon.rarity})`;
+            document.getElementById('lootInfo').textContent = lootText;
+            document.getElementById('lootInfo').style.display = 'block';
+            setTimeout(() => document.getElementById('lootInfo').style.display = 'none', 3000);
+            game.player.weapon = weapon;
+          }
           
           if (game.player.xp >= game.player.maxXp) {
             game.player.level++;
             game.player.xp = 0;
-            game.player.maxHp += 20;
+            game.player.maxXp = Math.ceil(game.player.maxXp * 1.1);
+            game.player.maxHp += 10;
             game.player.hp = game.player.maxHp;
-            showStatus(`LEVEL UP! Now level ${game.player.level}`, 'victory');
+            showStatus(`⭐ LEVEL UP! Now level ${game.player.level}`, 'victory');
           } else {
-            showStatus(`Victory! +${game.enemy.xp} XP`, 'victory');
+            const statusMsg = game.enemy.isBoss ? `🏆 Boss defeated!` : `Victory! +${xpGain} XP`;
+            showStatus(statusMsg, 'victory');
           }
           
           game.enemy = null;
@@ -264,7 +378,7 @@
           game.inBattle = false;
           game.player.hp = 0;
           console.log('[DEFEAT] You were defeated!');
-          showStatus('You were defeated!', 'defeat');
+          showStatus('💀 You were defeated!', 'defeat');
           setTimeout(() => {
             game.player.hp = game.player.maxHp;
             game.enemy = null;
@@ -281,12 +395,12 @@
         statusEl.textContent = text;
         statusEl.className = type;
         statusEl.style.display = 'block';
-        setTimeout(() => statusEl.style.display = 'none', 2000);
+        setTimeout(() => statusEl.style.display = 'none', 2500);
       }
       
       // Start first battle
       spawnEnemy();
-      console.log('[SUCCESS] OPLOT game loaded!');
+      console.log('[SUCCESS] OPLOT v2.0 loaded! Boss every 5 levels!');
       
     } catch(error) {
       console.error('[ERROR]', error);
