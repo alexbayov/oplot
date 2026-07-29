@@ -2,8 +2,10 @@
 <html>
 <head>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body { margin: 0; }
+    canvas { display: block; width: 100% !important; height: 100% !important; }
     #ui {
       position: fixed;
       bottom: 20px;
@@ -36,45 +38,51 @@
 
   <script src="https://cdn.jsdelivr.net/npm/babylonjs@6.48.0/babylon.js"></script>
   <script>
-    const canvas = document.getElementById('canvas');
-    const engine = new BABYLON.Engine(canvas, true);
-    const scene = new BABYLON.Scene(engine);
-    
-    scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.1, 1);
-    
-    // Камера
-    const camera = new BABYLON.ArcRotateCamera('cam', 0, Math.PI/2.5, 20, BABYLON.Vector3.Zero(), scene);
-    camera.attachControl(canvas, true);
-    
-    // Свет
-    const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(1, 1, 0), scene);
-    light.intensity = 0.8;
-    
-    // Враг
-    const enemy = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1 }, scene);
-    enemy.position.z = 5;
-    const mat = new BABYLON.StandardMaterial('mat', scene);
-    mat.emissiveColor = new BABYLON.Color3(1, 0, 0);
-    enemy.material = mat;
-    
-    // Функция атаки
-    window.attack = function(type) {
-      console.log('Attack: ' + type);
-      if (type === 'light') enemy.position.x += 0.5;
-      if (type === 'heavy') { enemy.position.x -= 0.5; enemy.rotation.z += 0.3; }
-      if (type === 'retreat') camera.radius -= 2;
-    };
-    
-    // Render loop
-    engine.runRenderLoop(() => {
-      enemy.rotation.y += 0.005;
-      scene.render();
+    window.addEventListener('load', function() {
+      const canvas = document.getElementById('canvas');
+      const engine = new BABYLON.Engine(canvas, true);
+      const scene = new BABYLON.Scene(engine);
+      
+      scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.1, 1);
+      
+      // Камера
+      const camera = new BABYLON.ArcRotateCamera('cam', 0, Math.PI/2.5, 20, BABYLON.Vector3.Zero(), scene);
+      camera.attachControl(canvas, true);
+      
+      // Свет
+      const light = new BABYLON.HemisphericLight('light', new BABYLON.Vector3(1, 1, 0), scene);
+      light.intensity = 0.8;
+      
+      // Враг
+      const enemy = BABYLON.MeshBuilder.CreateBox('enemy', { size: 1 }, scene);
+      enemy.position.z = 5;
+      const mat = new BABYLON.StandardMaterial('mat', scene);
+      mat.emissiveColor = new BABYLON.Color3(1, 0, 0);
+      enemy.material = mat;
+      
+      // Функция атаки
+      window.attack = function(type) {
+        console.log('Attack: ' + type);
+        if (type === 'light') enemy.position.x += 0.5;
+        if (type === 'heavy') { enemy.position.x -= 0.5; enemy.rotation.z += 0.3; }
+        if (type === 'retreat') camera.radius -= 2;
+      };
+      
+      // Render loop
+      engine.runRenderLoop(() => {
+        enemy.rotation.y += 0.005;
+        scene.render();
+      });
+      
+      // Resize
+      window.addEventListener('resize', () => {
+        engine.resize();
+      });
+      
+      // Force resize on load
+      setTimeout(() => engine.resize(), 100);
+      
+      console.log('✅ ОПЛОТ Game loaded! v1.0');
     });
-    
-    // Resize
-    window.addEventListener('resize', () => engine.resize());
-    
-    console.log('✅ ОПЛОТ Game loaded! v1.0');
-  </script>
 </body>
 </html>
