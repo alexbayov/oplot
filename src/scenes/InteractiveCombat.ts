@@ -6,20 +6,29 @@
  * - Ready for first playtest
  */
 
-import { CombatSystem } from '../systems/combatSystem';
 import { ContentLoader } from '../utils/contentLoader';
-import { HUD } from '../ui/hud';
+import HUDSystem from '../ui/hud';
+import { Player } from '../entities/Player';
+import { Enemy } from '../entities/Enemy';
 
 export class InteractiveCombat {
-  private combatSystem: CombatSystem;
   private contentLoader: ContentLoader;
-  private hud: HUD;
+  private hud: HUDSystem;
+  private player: Player;
+  private currentEnemy: Enemy | null = null;
   private isActive: boolean = false;
 
   constructor() {
     this.contentLoader = new ContentLoader();
-    this.combatSystem = new CombatSystem();
-    this.hud = new HUD();
+    this.player = new Player();
+    this.hud = new HUDSystem({
+      hp: this.player.health,
+      maxHp: 100,
+      mp: this.player.stamina,
+      maxMp: 100,
+      level: 1,
+      exp: 0
+    });
   }
 
   public async initialize(): Promise<void> {
@@ -29,13 +38,26 @@ export class InteractiveCombat {
     this.isActive = true;
   }
 
-  public startBattle(): void {
+  public startBattle(enemyId: string): void {
     if (!this.isActive) return;
-    this.combatSystem.startCombat();
-    this.hud.update(this.combatSystem.getState());
+    const enemyData = this.contentLoader.getEnemy(enemyId);
+    if (enemyData) {
+      this.currentEnemy = new Enemy(enemyData.name, enemyData.health, enemyData.damage);
+      this.hud.render();
+    }
   }
 
   public getState() {
-    return this.combatSystem.getState();
+    return {
+      player: {
+        health: this.player.health,
+        stamina: this.player.stamina,
+        ammo: this.player.ammunition
+      },
+      enemy: this.currentEnemy ? {
+        health: this.currentEnemy.health,
+        isAlive: this.currentEnemy.isAlive()
+      } : null
+    };
   }
 }
