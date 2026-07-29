@@ -1,6 +1,6 @@
 {
   "name": "oplot",
-  "version": "0.1.0",
+  "version": "0.2.0-redesign",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,9 +9,12 @@
     "preview": "vite preview",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:3d": "vite --open /?mode=3d"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.0.0",
+    "@babylonjs/materials": "^8.0.0",
     "phaser": "3.90.0",
     "zod": "^3.25.76"
   },
