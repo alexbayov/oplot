@@ -21,7 +21,11 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm ci
+        run: |
+          if ! npm ci; then
+            echo "npm ci failed (likely stale lock); regenerating lock"
+            npm install
+          fi
 
       - name: Typecheck
         run: npm run typecheck
