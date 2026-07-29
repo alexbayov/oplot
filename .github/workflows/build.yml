@@ -1,16 +1,24 @@
 name: Build Oplot
-
 on:
   push:
     branches: [redesign/r-series, main]
   pull_request:
     branches: [redesign/r-series, main]
-
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'redesign/r-series'
+        type: choice
+        options: [redesign/r-series, main]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -21,5 +29,6 @@ jobs:
       - run: npm run build
       - uses: actions/upload-artifact@v4
         with:
-          name: oplot-dist
+          name: oplot-dist-${{ github.sha }}
           path: dist/
+          retention-days: 7
