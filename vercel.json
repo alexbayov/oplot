@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "framework": "vite",
+  "env": {
+    "CI": "true"
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
