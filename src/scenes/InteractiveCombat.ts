@@ -77,7 +77,7 @@ export class InteractiveCombat {
 
     // Проверка смерти врага
     if (!this.currentEnemy.isAlive()) {
-      this.audioSystem.playAttackSound('death');
+      this.audioSystem.playAttackSound('critical');
       this.onEnemyDefeated();
     } else {
       this.checkPhaseTransition();
